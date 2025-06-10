@@ -8,11 +8,11 @@
 		  <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
 			{/* Brand */}
 			<div>
-			  <h3 className="text-2xl font-bold mb-4">StudentHelp</h3>
+			  <h3 className="text-2xl font-bold mb-4">E-Studenti</h3>
 			  <p className="text-gray-400 mb-4">
 				Your unofficial resource hub for University of Pristina students
 			  </p>
-			  <p className="text-sm text-gray-500">Made by Dona</p>
+			  <p className="text-sm text-gray-500">Made by Edona Mulaj</p>
 			</div>
   
 			{/* Quick Links */}
@@ -69,7 +69,7 @@
   
 		  <div className="border-t border-gray-800 mt-8 pt-8 text-center">
 			<p className="text-gray-400">
-			  © 2024 StudentHelp. This is an unofficial student resource website.
+			  © 2024 E-Studenti. This is an unofficial student resource website.
 			</p>
 		  </div>
 		</div>
