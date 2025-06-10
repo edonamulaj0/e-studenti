@@ -9,8 +9,7 @@ import {
   Bell,
   Search,
 } from "lucide-react";
-import { useState } from "react";
-
+import {useState} from "react";
 export default function ExamSchedule() {
   const [selectedPeriod, setSelectedPeriod] = useState("current");
   const [selectedFaculty, setSelectedFaculty] = useState("");
