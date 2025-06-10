@@ -10,16 +10,16 @@
 		  <div className="container mx-auto px-4">
 			<div className="text-center max-w-4xl mx-auto">
 			  <h1 className="text-5xl font-bold text-gray-900 mb-6">
-				Student Help Platform
+				E-Studenti
 			  </h1>
 			  <p className="text-xl text-gray-600 mb-8">
-				Your unofficial resource hub for University of Pristina students
+				Your unofficial resource hub for University of Prishtina students
 			  </p>
 			  
 			  {/* Disclaimer */}
 			  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
 				<p className="text-yellow-800 font-medium">
-				  ⚠️ Disclaimer: This page is not official of UP (University of Pristina)
+				  ⚠️ Disclaimer: This page is not official of UP (University of Prishtina)
 				</p>
 			  </div>
   
@@ -94,11 +94,11 @@
 				</div>
 				<div className="space-y-2">
 				  <a href="https://fiek.uni-pr.edu" target="_blank" rel="noopener noreferrer" 
-					 className="block text-blue-600 hover:underline">
+					 className="block text-red-600 hover:underline">
 					FIEK - Faculty of Electrical and Computer Engineering
 				  </a>
 				  <a href="https://uni-pr.edu" target="_blank" rel="noopener noreferrer" 
-					 className="block text-blue-600 hover:underline">
+					 className="block text-red-600 hover:underline">
 					University of Pristina Main Site
 				  </a>
 				</div>
