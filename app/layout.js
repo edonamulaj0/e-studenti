@@ -6,7 +6,7 @@ import Footer from "./components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "Student Help - UP Resources",
+  title: "E-Studenti - UP Resources",
   description: "Unofficial student resource website for University of Pristina",
 };
 

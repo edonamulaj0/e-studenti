@@ -94,11 +94,11 @@
 				</div>
 				<div className="space-y-2">
 				  <a href="https://fiek.uni-pr.edu" target="_blank" rel="noopener noreferrer" 
-					 className="block text-red-600 hover:underline">
+					 className="block text-blue-600 hover:underline">
 					FIEK - Faculty of Electrical and Computer Engineering
 				  </a>
 				  <a href="https://uni-pr.edu" target="_blank" rel="noopener noreferrer" 
-					 className="block text-red-600 hover:underline">
+					 className="block text-blue-600 hover:underline">
 					University of Pristina Main Site
 				  </a>
 				</div>
