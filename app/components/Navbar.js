@@ -12,17 +12,17 @@
 		<div className="container mx-auto px-4">
 		  <div className="flex justify-between items-center h-16">
 			{/* Logo */}
-			<Link href="/" className="text-2xl font-bold text-blue-600">
+			<Link href="/" className="text-2xl font-bold text-red-600">
 			  E-Studenti
 			</Link>
   
 			{/* Desktop Menu */}
 			<div className="hidden md:flex items-center space-x-8">
-			  <Link href="/" className="text-gray-700 hover:text-blue-600 transition-colors">
+			  <Link href="/" className="text-gray-700 hover:text-red-600 transition-colors">
 				Home
 			  </Link>
 			  <div className="relative group">
-				<button className="text-gray-700 hover:text-blue-600 transition-colors">
+				<button className="text-gray-700 hover:text-red-600 transition-colors">
 				  Faculty
 				</button>
 				<div className="absolute top-full left-0 bg-white shadow-lg rounded-lg py-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
@@ -37,13 +37,13 @@
 				  </Link>
 				</div>
 			  </div>
-			  <Link href="/erasmus" className="text-gray-700 hover:text-blue-600 transition-colors">
+			  <Link href="/erasmus" className="text-gray-700 hover:text-red-600 transition-colors">
 				Erasmus
 			  </Link>
-			  <Link href="/contact" className="text-gray-700 hover:text-blue-600 transition-colors">
+			  <Link href="/contact" className="text-gray-700 hover:text-red-600 transition-colors">
 				Contact
 			  </Link>
-			  <Link href="/login" className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center">
+			  <Link href="/login" className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center">
 				<User className="w-4 h-4 mr-2" />
 				Log In
 			  </Link>
@@ -80,7 +80,7 @@
 				<Link href="/contact" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
 				  Contact
 				</Link>
-				<Link href="/login" className="block px-3 py-2 bg-blue-600 text-white rounded">
+				<Link href="/login" className="block px-3 py-2 bg-red-600 text-white rounded">
 				  Log In
 				</Link>
 			  </div>

@@ -103,7 +103,7 @@ export default function Departments() {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">Departments</h1>
@@ -123,7 +123,7 @@ export default function Departments() {
                   <h3 className="text-xl font-bold text-gray-900">
                     {dept.name}
                   </h3>
-                  <p className="text-sm text-blue-600 font-medium">
+                  <p className="text-sm text-red-600 font-medium">
                     {dept.faculty} • {dept.code}
                   </p>
                 </div>
@@ -158,7 +158,7 @@ export default function Departments() {
                   {dept.subjects.slice(0, 3).map((subject, idx) => (
                     <span
                       key={idx}
-                      className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full"
+                      className="bg-red-100 text-red-800 text-xs px-2 py-1 rounded-full"
                     >
                       {subject}
                     </span>
@@ -174,7 +174,7 @@ export default function Departments() {
               <div className="flex space-x-2">
                 <Link
                   href={`/departments/${dept.code.toLowerCase()}`}
-                  className="flex-1 bg-blue-600 text-white text-center py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                  className="flex-1 bg-red-600 text-white text-center py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
                 >
                   View Details
                 </Link>

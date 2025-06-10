@@ -155,7 +155,7 @@ export default function DepartmentDetail({ params }) {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
@@ -164,7 +164,7 @@ export default function DepartmentDetail({ params }) {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {dept.name}
               </h1>
-              <p className="text-lg text-blue-600 font-medium">
+              <p className="text-lg text-red-600 font-medium">
                 {dept.faculty} • {dept.code}
               </p>
             </div>
@@ -180,7 +180,7 @@ export default function DepartmentDetail({ params }) {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="flex items-center">
-              <Users className="w-5 h-5 text-blue-600 mr-2" />
+              <Users className="w-5 h-5 text-red-600 mr-2" />
               <div>
                 <p className="text-sm text-gray-500">Students</p>
                 <p className="font-semibold">{dept.students}</p>
@@ -217,7 +217,7 @@ export default function DepartmentDetail({ params }) {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center">
-              <Mail className="w-5 h-5 text-blue-600 mr-3" />
+              <Mail className="w-5 h-5 text-red-600 mr-3" />
               <div>
                 <p className="text-sm text-gray-500">Email</p>
                 <p className="font-medium">{dept.email}</p>
@@ -241,13 +241,13 @@ export default function DepartmentDetail({ params }) {
               <Link
                 key={index}
                 href={`/subjects/${subject.code.toLowerCase()}`}
-                className="block p-4 border border-gray-200 rounded-lg hover:bg-blue-50 hover:border-blue-300 transition-colors"
+                className="block p-4 border border-gray-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
                   <h3 className="font-semibold text-gray-900">
                     {subject.name}
                   </h3>
-                  <span className="text-sm text-blue-600 font-medium">
+                  <span className="text-sm text-red-600 font-medium">
                     {subject.code}
                   </span>
                 </div>
@@ -276,7 +276,7 @@ export default function DepartmentDetail({ params }) {
                     <h3 className="font-semibold text-gray-900">
                       {teacher.name}
                     </h3>
-                    <p className="text-sm text-blue-600">{teacher.position}</p>
+                    <p className="text-sm text-red-600">{teacher.position}</p>
                   </div>
                   <div className="flex items-center">
                     {renderStars(teacher.rating)}
@@ -335,11 +335,11 @@ export default function DepartmentDetail({ params }) {
               Leave a comment:
             </label>
             <textarea
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               rows="4"
               placeholder="Share your experience with this department..."
             ></textarea>
-            <button className="mt-3 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition-colors">
+            <button className="mt-3 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
               Submit Comment
             </button>
           </div>
@@ -352,7 +352,7 @@ export default function DepartmentDetail({ params }) {
 
             <div className="border-b border-gray-200 pb-4">
               <div className="flex items-center mb-2">
-                <div className="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
                   JS
                 </div>
                 <div className="ml-3">

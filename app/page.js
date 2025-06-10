@@ -4,7 +4,7 @@
   
   export default function Home() {
 	return (
-	  <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+	  <div className="min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
 		{/* Hero Section */}
 		<section className="pt-20 pb-16">
 		  <div className="container mx-auto px-4">
@@ -24,10 +24,10 @@
 			  </div>
   
 			  <div className="flex flex-col sm:flex-row gap-4 justify-center">
-				<Link href="/login" className="bg-blue-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-blue-700 transition-colors">
+				<Link href="/login" className="bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors">
 				  Log In with Student Email
 				</Link>
-				<Link href="/faculties" className="bg-white text-blue-600 px-8 py-3 rounded-lg font-semibold border-2 border-blue-600 hover:bg-blue-50 transition-colors">
+				<Link href="/faculties" className="bg-white text-red-600 px-8 py-3 rounded-lg font-semibold border-2 border-red-600 hover:bg-red-50 transition-colors">
 				  Browse Faculties
 				</Link>
 			  </div>
@@ -44,7 +44,7 @@
 			  {/* Departments */}
 			  <Link href="/departments" className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow group">
 				<div className="flex items-center mb-4">
-				  <BookOpen className="w-8 h-8 text-blue-600 mr-3" />
+				  <BookOpen className="w-8 h-8 text-red-600 mr-3" />
 				  <h3 className="text-xl font-semibold">Departments</h3>
 				</div>
 				<p className="text-gray-600">Browse all departments and their resources</p>
@@ -94,11 +94,11 @@
 				</div>
 				<div className="space-y-2">
 				  <a href="https://fiek.uni-pr.edu" target="_blank" rel="noopener noreferrer" 
-					 className="block text-blue-600 hover:underline">
+					 className="block text-red-600 hover:underline">
 					FIEK - Faculty of Electrical and Computer Engineering
 				  </a>
 				  <a href="https://uni-pr.edu" target="_blank" rel="noopener noreferrer" 
-					 className="block text-blue-600 hover:underline">
+					 className="block text-red-600 hover:underline">
 					University of Pristina Main Site
 				  </a>
 				</div>

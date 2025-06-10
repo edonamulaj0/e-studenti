@@ -26,7 +26,7 @@
 	}
   
 	return (
-	  <div className="pt-20 min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+	  <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
 		<div className="container mx-auto px-4 py-16">
 		  <div className="max-w-md mx-auto bg-white rounded-xl shadow-lg p-8">
 			<h1 className="text-3xl font-bold text-center mb-8">
@@ -46,7 +46,7 @@
 					  name="studentId"
 					  value={formData.studentId}
 					  onChange={handleChange}
-					  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+					  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
 					  placeholder="Enter your student ID"
 					  required={!isLogin}
 					/>
@@ -65,7 +65,7 @@
 					name="email"
 					value={formData.email}
 					onChange={handleChange}
-					className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+					className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
 					placeholder="your.email@student.uni-pr.edu"
 					required
 				  />
@@ -83,7 +83,7 @@
 					name="password"
 					value={formData.password}
 					onChange={handleChange}
-					className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+					className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
 					placeholder="Enter your password"
 					required
 				  />
@@ -102,7 +102,7 @@
 					  name="confirmPassword"
 					  value={formData.confirmPassword}
 					  onChange={handleChange}
-					  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+					  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
 					  placeholder="Confirm your password"
 					  required={!isLogin}
 					/>
@@ -112,7 +112,7 @@
   
 			  <button
 				type="submit"
-				className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold"
+				className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors font-semibold"
 			  >
 				{isLogin ? 'Log In' : 'Sign Up'}
 			  </button>
@@ -123,7 +123,7 @@
 				{isLogin ? "Don't have an account?" : "Already have an account?"}
 				<button
 				  onClick={() => setIsLogin(!isLogin)}
-				  className="text-blue-600 hover:underline ml-1"
+				  className="text-red-600 hover:underline ml-1"
 				>
 				  {isLogin ? 'Sign up' : 'Log in'}
 				</button>

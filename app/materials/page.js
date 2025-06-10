@@ -111,7 +111,7 @@ export default function Materials() {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
@@ -132,14 +132,14 @@ export default function Materials() {
                 placeholder="Search materials..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
               />
             </div>
 
             <select
               value={selectedFaculty}
               onChange={(e) => setSelectedFaculty(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="">All Faculties</option>
               <option value="FIEK">FIEK</option>
@@ -151,7 +151,7 @@ export default function Materials() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="">All Types</option>
               <option value="Lecture Notes">Lecture Notes</option>
@@ -161,7 +161,7 @@ export default function Materials() {
               <option value="Projects">Projects</option>
             </select>
 
-            <button className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center">
+            <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center">
               <Filter className="w-4 h-4 mr-2" />
               Apply Filters
             </button>
@@ -181,13 +181,13 @@ export default function Materials() {
                     {material.title}
                   </h3>
                   <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
-                    <span className="bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                    <span className="bg-red-100 text-red-800 px-2 py-1 rounded-full">
                       {material.faculty}
                     </span>
                     <span>{material.department}</span>
                   </div>
                 </div>
-                <FileText className="w-8 h-8 text-blue-600" />
+                <FileText className="w-8 h-8 text-red-600" />
               </div>
 
               <div className="space-y-2 mb-4">
@@ -229,7 +229,7 @@ export default function Materials() {
               </div>
 
               <div className="flex space-x-2">
-                <button className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium flex items-center justify-center">
+                <button className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center">
                   <Eye className="w-4 h-4 mr-2" />
                   Preview
                 </button>

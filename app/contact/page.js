@@ -33,7 +33,7 @@ export default function Contact() {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
         <div className="max-w-4xl mx-auto">
           <h1 className="text-4xl font-bold text-center mb-12">Contact Us</h1>
@@ -45,7 +45,7 @@ export default function Contact() {
 
               <div className="space-y-6">
                 <div className="flex items-center">
-                  <Phone className="w-6 h-6 text-blue-600 mr-4" />
+                  <Phone className="w-6 h-6 text-red-600 mr-4" />
                   <div>
                     <h3 className="font-semibold">Phone Numbers</h3>
                     <p className="text-gray-600">+383 XX XXX XXX</p>
@@ -54,7 +54,7 @@ export default function Contact() {
                 </div>
 
                 <div className="flex items-center">
-                  <Mail className="w-6 h-6 text-blue-600 mr-4" />
+                  <Mail className="w-6 h-6 text-red-600 mr-4" />
                   <div>
                     <h3 className="font-semibold">Email</h3>
                     <p className="text-gray-600">help@studenthelp.com</p>
@@ -62,7 +62,7 @@ export default function Contact() {
                 </div>
 
                 <div className="flex items-center">
-                  <MessageSquare className="w-6 h-6 text-blue-600 mr-4" />
+                  <MessageSquare className="w-6 h-6 text-red-600 mr-4" />
                   <div>
                     <h3 className="font-semibold">Social Groups</h3>
                     <p className="text-gray-600">WhatsApp: +383 XX XXX XXX</p>
@@ -71,7 +71,7 @@ export default function Contact() {
                 </div>
               </div>
 
-              <div className="mt-8 p-6 bg-blue-50 rounded-lg">
+              <div className="mt-8 p-6 bg-red-50 rounded-lg">
                 <h3 className="text-lg font-semibold mb-2">Send Materials!</h3>
                 <p className="text-gray-600">
                   Have study materials, past exams, or resources to share? Use
@@ -94,7 +94,7 @@ export default function Contact() {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     required
                   />
                 </div>
@@ -108,7 +108,7 @@ export default function Contact() {
                     name="email"
                     value={formData.email}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     required
                   />
                 </div>
@@ -121,7 +121,7 @@ export default function Contact() {
                     name="subject"
                     value={formData.subject}
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     required
                   >
                     <option value="">Select a subject</option>
@@ -141,7 +141,7 @@ export default function Contact() {
                     value={formData.message}
                     onChange={handleChange}
                     rows={5}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     required
                   />
                 </div>
@@ -154,7 +154,7 @@ export default function Contact() {
                     type="file"
                     name="materialFile"
                     onChange={handleChange}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
                     accept=".pdf,.doc,.docx,.ppt,.pptx,.txt"
                   />
                   <p className="text-xs text-gray-500 mt-1">
@@ -164,7 +164,7 @@ export default function Contact() {
 
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 transition-colors font-semibold flex items-center justify-center"
+                  className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors font-semibold flex items-center justify-center"
                 >
                   <Send className="w-4 h-4 mr-2" />
                   Send Message
