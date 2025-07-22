@@ -245,7 +245,7 @@ export default function Faculties() {
                   ))}
                   {faculty.departments.length > 3 && (
                     <li className="text-gray-500">
-                      • And {faculty.departments.length - 3} më shumë...
+                      • Dhe {faculty.departments.length - 3} më shumë...
                     </li>
                   )}
                 </ul>
