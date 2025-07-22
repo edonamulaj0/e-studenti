@@ -1,5 +1,5 @@
-// app/materialet/page.js
 // Remove "use client"; - we will make this a Server Component
+"use client";
 import { useState } from "react"; // Keep useState if you want client-side search/filters
 import { FileText, Download, Eye, Star, Filter, Search } from "lucide-react";
 
