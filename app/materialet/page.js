@@ -16,8 +16,6 @@ export default function Materials() {
       subject: "Data Structures",
       semester: "Fall 2024",
       teacher: "Prof. Smith",
-      rating: 4.8,
-      downloads: 245,
       uploadDate: "2024-01-15",
     },
     {
@@ -28,8 +26,6 @@ export default function Materials() {
       subject: "Circuit Analysis",
       semester: "Spring 2024",
       teacher: "Prof. Johnson",
-      rating: 4.6,
-      downloads: 189,
       uploadDate: "2024-01-10",
     },
     {
@@ -40,8 +36,6 @@ export default function Materials() {
       subject: "Anatomy",
       semester: "Fall 2024",
       teacher: "Dr. Williams",
-      rating: 4.9,
-      downloads: 312,
       uploadDate: "2024-01-20",
     },
     {
@@ -52,21 +46,7 @@ export default function Materials() {
       subject: "Financial Management",
       semester: "Spring 2024",
       teacher: "Prof. Brown",
-      rating: 4.4,
-      downloads: 156,
       uploadDate: "2024-01-12",
-    },
-    {
-      title: "Structural Engineering - Project Examples",
-      faculty: "ENG",
-      department: "Civil Engineering",
-      type: "Projects",
-      subject: "Structural Engineering",
-      semester: "Fall 2024",
-      teacher: "Prof. Davis",
-      rating: 4.7,
-      downloads: 198,
-      uploadDate: "2024-01-18",
     },
   ];
 

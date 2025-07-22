@@ -6,8 +6,8 @@ import Footer from "./components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "E-Studenti - UP Resources",
-  description: "Unofficial student resource website for University of Pristina",
+  title: "E-Studenti - Qendër Burimore",
+  description: "Qendra e burimeve jo-zyrtare për studentët e Universitetit të Prishtinës.",
 };
 
 export default function RootLayout({ children }) {

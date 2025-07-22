@@ -1,8 +1,6 @@
 import {
   BookOpen,
   Users,
-  Calendar,
-  FileText,
   ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
@@ -10,27 +8,28 @@ import Link from "next/link";
 export default function Faculties() {
   const faculties = [
     {
-      name: "Faculty of Electrical and Computer Engineering",
+      name: "Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike",
       acronym: "FIEK",
       departments: [
-        "Computer Engineering",
-        "Electrical Engineering",
-        "Electronics",
+        "Inxhinieri Kompjuterike",
+        "Elektronikë, Automatikë dhe Robotikë",
+        "Teknologji e Informimit dhe e Komunikimit",
+        "Elektroenergjetikë",
       ],
       students: "1,200+",
       website: "https://fiek.uni-pr.edu",
       color: "red",
     },
     {
-      name: "Faculty of Medicine",
+      name: "Fakulteti i Mjekësisë",
       acronym: "MED",
-      departments: ["General Medicine", "Dentistry", "Pharmacy"],
+      departments: ["Mjekësi e Përgjithshme", "Stomatologji", "Infermieri"],
       students: "800+",
       website: "https://med.uni-pr.edu",
       color: "red",
     },
     {
-      name: "Faculty of Law",
+      name: "Fakulteti Juridik",
       acronym: "LAW",
       departments: ["Civil Law", "Criminal Law", "International Law"],
       students: "900+",
@@ -38,7 +37,7 @@ export default function Faculties() {
       color: "green",
     },
     {
-      name: "Faculty of Economics",
+      name: "Fakulteti Ekonomik",
       acronym: "ECON",
       departments: ["Business Administration", "Economics", "Finance"],
       students: "1,000+",
@@ -46,7 +45,7 @@ export default function Faculties() {
       color: "purple",
     },
     {
-      name: "Faculty of Philosophy",
+      name: "Fakulteti Filologjik",
       acronym: "PHIL",
       departments: ["Psychology", "Sociology", "History", "Literature"],
       students: "700+",
@@ -54,7 +53,7 @@ export default function Faculties() {
       color: "indigo",
     },
     {
-      name: "Faculty of Engineering",
+      name: "Fakulteti i Ndërtimtarisë",
       acronym: "ENG",
       departments: [
         "Civil Engineering",
@@ -63,7 +62,19 @@ export default function Faculties() {
       ],
       students: "600+",
       website: "https://eng.uni-pr.edu",
-      color: "yellow",
+      color: "red",
+    },
+    {
+      name: "Fakulteti i Inxhinierisë Mekanike",
+      acronym: "MECH",
+      departments: [
+        "Civil Engineering",
+        "Mechanical Engineering",
+        "Architecture",
+      ],
+      students: "600+",
+      website: "https://eng.uni-pr.edu",
+      color: "red",
     },
   ];
 
@@ -83,9 +94,9 @@ export default function Faculties() {
     <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Faculties</h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Fakultetet</h1>
           <p className="text-xl text-gray-600">
-            Explore all faculties at University of Pristina
+            Eksploroni të gjitha fakultetet e Universitetit të Prishtinës
           </p>
         </div>
 
@@ -119,26 +130,26 @@ export default function Faculties() {
                 <div className="flex items-center">
                   <BookOpen className="w-5 h-5 text-gray-500 mr-2" />
                   <span className="text-sm text-gray-600">
-                    {faculty.departments.length} Departments
+                    {faculty.departments.length} Departamentet
                   </span>
                 </div>
                 <div className="flex items-center">
                   <Users className="w-5 h-5 text-gray-500 mr-2" />
                   <span className="text-sm text-gray-600">
-                    {faculty.students} Students
+                    {faculty.students} Studentët
                   </span>
                 </div>
               </div>
 
               <div className="space-y-2 mb-6">
-                <h5 className="font-semibold text-gray-700">Departments:</h5>
+                <h5 className="font-semibold text-gray-700">Departamentet:</h5>
                 <ul className="text-sm text-gray-600 space-y-1">
                   {faculty.departments.slice(0, 3).map((dept, idx) => (
                     <li key={idx}>• {dept}</li>
                   ))}
                   {faculty.departments.length > 3 && (
                     <li className="text-gray-500">
-                      • And {faculty.departments.length - 3} more...
+                      • And {faculty.departments.length - 3} më shumë...
                     </li>
                   )}
                 </ul>
@@ -149,13 +160,13 @@ export default function Faculties() {
                   href={`/faculties/${faculty.acronym.toLowerCase()}`}
                   className="flex-1 bg-red-600 text-white text-center py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
                 >
-                  View Details
+                  Shiko detajet
                 </Link>
                 <Link
                   href={`/materials?faculty=${faculty.acronym.toLowerCase()}`}
                   className="flex-1 bg-gray-600 text-white text-center py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
                 >
-                  Materials
+                  Materialet
                 </Link>
               </div>
             </div>

@@ -22,7 +22,7 @@
             <ul className="space-y-2">
               <li>
                 <a
-                  href="/faculties"
+                  href="/fakultetet"
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Fakultetet
@@ -30,7 +30,7 @@
               </li>
               <li>
                 <a
-                  href="/materials"
+                  href="/materialet"
                   className="text-gray-400 hover:text-white transition-colors"
                 >
                   Materialet

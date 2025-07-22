@@ -125,7 +125,7 @@ export default function DepartmentDetail({ params }) {
   };
 
   const dept = departmentData[code] || departmentData.ce; // Default to CE if code not found
-  
+
   return (
     <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
@@ -207,7 +207,7 @@ export default function DepartmentDetail({ params }) {
 
         {/* Subjects */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Subjects</h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Lëndët</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {dept.subjects.map((subject, index) => (
               <Link
@@ -224,147 +224,11 @@ export default function DepartmentDetail({ params }) {
                   </span>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>Credits: {subject.credits}</span>
-                  <span>Semester: {subject.semester}</span>
+                  <span>ECTS: {subject.credits}</span>
+                  <span>Semestri: {subject.semester}</span>
                 </div>
               </Link>
             ))}
-          </div>
-        </div>
-
-        {/* Teachers */}
-        <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Teaching Staff
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {dept.teachers.map((teacher, index) => (
-              <div
-                key={index}
-                className="border border-gray-200 rounded-lg p-4"
-              >
-                <div className="flex justify-between items-start mb-3">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">
-                      {teacher.name}
-                    </h3>
-                    <p className="text-sm text-red-600">{teacher.position}</p>
-                  </div>
-                  <div className="flex items-center">
-                    {renderStars(teacher.rating)}
-                    <span className="ml-1 text-sm text-gray-600">
-                      {teacher.rating}
-                    </span>
-                  </div>
-                </div>
-                <p className="text-sm text-gray-600 mb-2">
-                  Experience: {teacher.experience}
-                </p>
-                <div>
-                  <p className="text-sm font-medium text-gray-700 mb-1">
-                    Teaches:
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {teacher.subjects.map((subject, idx) => (
-                      <span
-                        key={idx}
-                        className="bg-gray-100 text-gray-700 text-xs px-2 py-1 rounded"
-                      >
-                        {subject}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Rating & Comments Section */}
-        <div className="bg-white rounded-xl shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Rate & Comment
-          </h2>
-
-          {/* Rating */}
-          <div className="mb-6">
-            <p className="text-sm font-medium text-gray-700 mb-2">
-              Rate this department:
-            </p>
-            <div className="flex items-center space-x-1">
-              {[1, 2, 3, 4, 5].map((star) => (
-                <Star
-                  key={star}
-                  className="w-6 h-6 text-gray-300 hover:text-yellow-400 cursor-pointer transition-colors"
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* Comment Form */}
-          <div className="mb-6">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Leave a comment:
-            </label>
-            <textarea
-              className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
-              rows="4"
-              placeholder="Share your experience with this department..."
-            ></textarea>
-            <button className="mt-3 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 transition-colors">
-              Submit Comment
-            </button>
-          </div>
-
-          {/* Sample Comments */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-900">
-              Recent Comments
-            </h3>
-
-            <div className="border-b border-gray-200 pb-4">
-              <div className="flex items-center mb-2">
-                <div className="w-8 h-8 bg-red-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                  JS
-                </div>
-                <div className="ml-3">
-                  <p className="font-medium text-gray-900">John Student</p>
-                  <div className="flex items-center">
-                    {renderStars(4)}
-                    <span className="ml-2 text-sm text-gray-600">
-                      2 days ago
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <p className="text-gray-700">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Great
-                department with knowledgeable professors and well-structured
-                curriculum.
-              </p>
-            </div>
-
-            <div className="border-b border-gray-200 pb-4">
-              <div className="flex items-center mb-2">
-                <div className="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                  MS
-                </div>
-                <div className="ml-3">
-                  <p className="font-medium text-gray-900">Maria Smith</p>
-                  <div className="flex items-center">
-                    {renderStars(5)}
-                    <span className="ml-2 text-sm text-gray-600">
-                      1 week ago
-                    </span>
-                  </div>
-                </div>
-              </div>
-              <p className="text-gray-700">
-                Excellent facilities and supportive faculty. The practical
-                approach to learning really helps in understanding complex
-                concepts.
-              </p>
-            </div>
           </div>
         </div>
       </div>

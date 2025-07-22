@@ -26,10 +26,10 @@
 				  Fakultetet
 				</button>
 				<div className="absolute top-full left-0 bg-white shadow-lg rounded-lg py-2 w-48 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all">
-				  <Link href="/departments" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
-					Departamentet
+				  <Link href="/fakultetet" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+					Fakultetet
 				  </Link>
-				  <Link href="/materials" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
+				  <Link href="/materialet" className="block px-4 py-2 text-gray-700 hover:bg-gray-100">
 					Materialet
 				  </Link>
 				</div>
@@ -37,7 +37,7 @@
 			  <Link href="/erasmus" className="text-gray-700 hover:text-red-600 transition-colors">
 				Erasmus
 			  </Link>
-			  <Link href="/contact" className="text-gray-700 hover:text-red-600 transition-colors">
+			  <Link href="/kontakto" className="text-gray-700 hover:text-red-600 transition-colors">
 				Kontakto
 			  </Link>
 			  {/* <Link href="/login" className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center">
@@ -62,19 +62,16 @@
 				<Link href="/" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
 				  Ballina
 				</Link>
-				<Link href="/faculties" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
+				<Link href="/fakultetet" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
 				  Fakultetet
 				</Link>
-				<Link href="/materials" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
+				<Link href="/materialet" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
 				  Materialet
-				</Link>
-				<Link href="/exam-schedule" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
-				  Orari i provimeve
 				</Link>
 				<Link href="/erasmus" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
 				  Erasmus
 				</Link>
-				<Link href="/contact" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
+				<Link href="/kontakto" className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded">
 				  Kontakto
 				</Link>
 				{/* <Link href="/login" className="block px-3 py-2 bg-red-600 text-white rounded">
