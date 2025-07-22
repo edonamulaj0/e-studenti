@@ -1,9 +1,12 @@
+import {
+  BookOpen,
+  FileText,
+  ExternalLink,
+} from "lucide-react";
+import Link from "next/link";
 
-  import { BookOpen, Calendar, Users, FileText, Star, ExternalLink } from 'lucide-react'
-  import Link from 'next/link'
-  
-  export default function Home() {
-	return (
+export default function Home() {
+  return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       {/* Hero Section */}
       <section className="pt-20 pb-16">
@@ -13,29 +16,29 @@
               E-Studenti
             </h1>
             <p className="text-xl text-gray-600 mb-8">
-              Your unofficial resource hub for University of Prishtina students
+              Qendra e burimeve jo-zyrtare për studentët e Universitetit të
+              Prishtinës
             </p>
 
             {/* Disclaimer */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
               <p className="text-yellow-800 font-medium">
-                ⚠️ Disclaimer: This page is not official of UP (University of
-                Prishtina)
+                ⚠️ Disclaimer: This page is not official of UP.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Link
-                href="/login"
+                href="/fakultetet"
                 className="bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
               >
-                Log In with Student Email
+                Eksploroni fakultetet
               </Link>
               <Link
-                href="/faculties"
+                href="/materialet"
                 className="bg-white text-red-600 px-8 py-3 rounded-lg font-semibold border-2 border-red-600 hover:bg-red-50 transition-colors"
               >
-                Browse Faculties
+                Shikoni materialet
               </Link>
             </div>
           </div>
@@ -45,9 +48,11 @@
       {/* Quick Access Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">Quick Access</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">
+            Qasje e shpejtë
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Departments */}
+            {/* Faculties */}
             <Link
               href="/fakultetet"
               className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow group"
@@ -125,4 +130,4 @@
       </section> */}
     </div>
   );
-  }
+}

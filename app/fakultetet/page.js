@@ -1,8 +1,5 @@
-import {
-  BookOpen,
-  Users,
-  ExternalLink,
-} from "lucide-react";
+"use client";
+import { BookOpen, Users, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 export default function Faculties() {

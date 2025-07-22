@@ -1,8 +1,8 @@
+"use client";
+import { Facebook, Instagram, Twitter, Phone, Mail } from "lucide-react";
 
-  import { Facebook, Instagram, Twitter, Phone, Mail } from 'lucide-react'
-  
-  export default function Footer() {
-	return (
+export default function Footer() {
+  return (
     <footer className="bg-gray-900 text-white">
       <div className="container mx-auto px-4 py-12">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
@@ -18,7 +18,9 @@
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Ndërlidhjet e shpejta</h4>
+            <h4 className="text-lg font-semibold mb-4">
+              Ndërlidhjet e shpejta
+            </h4>
             <ul className="space-y-2">
               <li>
                 <a
@@ -59,5 +61,4 @@
       </div>
     </footer>
   );
-  }
-  
+}

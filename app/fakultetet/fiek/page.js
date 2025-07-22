@@ -1,13 +1,5 @@
-import {
-  BookOpen,
-  Users,
-  Clock,
-  Star,
-  Mail,
-  Phone,
-  MapPin,
-  Award,
-} from "lucide-react";
+"use client";
+import { BookOpen, Users, Mail, Phone, MapPin, Award } from "lucide-react";
 import Link from "next/link";
 
 export default function DepartmentDetail({ params }) {
@@ -178,9 +170,7 @@ export default function DepartmentDetail({ params }) {
 
         {/* Contact Information */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Kontakti
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-4">Kontakti</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center">
               <Mail className="w-5 h-5 text-red-600 mr-3" />
