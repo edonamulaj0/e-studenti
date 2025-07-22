@@ -18,7 +18,7 @@
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-lg font-semibold mb-4">Vegëzat e shpejta</h4>
+            <h4 className="text-lg font-semibold mb-4">Ndërlidhjet e shpejta</h4>
             <ul className="space-y-2">
               <li>
                 <a
@@ -53,8 +53,8 @@
 
         <div className="border-t border-gray-800 mt-8 pt-8 text-center">
           <p className="text-gray-400">
-            © 2025 E-Studenti. Të gjitha të drejtat janë të
-           rezervuara.</p>
+            © 2025 E-Studenti. Të gjitha të drejtat janë të rezervuara.
+          </p>
         </div>
       </div>
     </footer>
