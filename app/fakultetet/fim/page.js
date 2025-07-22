@@ -74,27 +74,6 @@ export default function Error404() {
               Shko në fillim
             </button>
           </div>
-
-          {/* Additional help */}
-          <div className="mt-8 p-6 bg-indigo-50 rounded-lg border border-indigo-200">
-            <h3 className="text-lg font-semibold text-indigo-800 mb-2">
-              Keni nevojë për ndihmë?
-            </h3>
-            <p className="text-indigo-700 mb-4">
-              Nëse problemi vazhdon, na kontaktoni në info@e-studenti.com
-            </p>
-            <div className="flex flex-wrap justify-center gap-2 text-sm">
-              <span className="px-3 py-1 bg-white rounded-full text-indigo-600 border border-indigo-300">
-                Materiale studimi
-              </span>
-              <span className="px-3 py-1 bg-white rounded-full text-indigo-600 border border-indigo-300">
-                Afate provimesh
-              </span>
-              <span className="px-3 py-1 bg-white rounded-full text-indigo-600 border border-indigo-300">
-                Burime akademike
-              </span>
-            </div>
-          </div>
         </div>
       </div>
     </div>
