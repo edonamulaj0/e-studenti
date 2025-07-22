@@ -1,5 +1,5 @@
 "use client";
-import { Home, Search, RefreshCw, AlertTriangle } from "lucide-react";
+import { Home, RefreshCw, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 
 export default function Error404() {
@@ -64,14 +64,6 @@ export default function Error404() {
                 className={`w-5 h-5 mr-2 ${isLoading ? "animate-spin" : ""}`}
               />
               {isLoading ? "Po rifresko..." : "Rifresko faqen"}
-            </button>
-
-            <button
-              onClick={() => (window.location.href = "/")}
-              className="flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
-            >
-              <Search className="w-5 h-5 mr-2" />
-              Shko në fillim
             </button>
           </div>
         </div>
