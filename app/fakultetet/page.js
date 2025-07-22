@@ -253,13 +253,13 @@ export default function Faculties() {
 
               <div className="flex space-x-2">
                 <Link
-                  href={`/faculties/${faculty.acronym.toLowerCase()}`}
+                  href={`/fakultetet/${faculty.acronym.toLowerCase()}`}
                   className="flex-1 bg-red-600 text-white text-center py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
                 >
                   Shiko detajet
                 </Link>
                 <Link
-                  href={`/materials?faculty=${faculty.acronym.toLowerCase()}`}
+                  href={`/materialet?faculty=${faculty.acronym.toLowerCase()}`}
                   className="flex-1 bg-gray-600 text-white text-center py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
                 >
                   Materialet
