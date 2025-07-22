@@ -15,20 +15,9 @@ export default function RootLayout({ children }) {
   return (
     <html lang="en">
       <body className={inter.className}>
-        <div
-          className="origin-top-left"
-          style={{
-            transform: "scale(0.8)",
-            transformOrigin: "top left",
-            width: "125vw",
-            height: "125vh",
-            overflow: "hidden",
-          }}
-        >
           <Navbar />
           <main className="min-h-screen">{children}</main>
           <Footer />
-        </div>
       </body>
     </html>
   );
