@@ -25,13 +25,13 @@ export default function Navbar() {
             </Link>
             <Link
               href="/fakultetet"
-              className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+              className="text-gray-700 hover:text-red-600 transition-colors"
             >
               Fakultetet
             </Link>
             <Link
               href="/materialet"
-              className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
+              className="text-gray-700 hover:text-red-600 transition-colors"
             >
               Materialet
             </Link>
