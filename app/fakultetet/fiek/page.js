@@ -140,12 +140,6 @@ export default function DepartmentDetail({ params }) {
                 {dept.faculty} • {dept.code}
               </p>
             </div>
-            <div className="flex items-center">
-              {renderStars(dept.rating)}
-              <span className="ml-2 text-lg font-semibold text-gray-700">
-                {dept.rating}
-              </span>
-            </div>
           </div>
 
           <p className="text-gray-600 mb-6">{dept.description}</p>
@@ -154,28 +148,28 @@ export default function DepartmentDetail({ params }) {
             <div className="flex items-center">
               <Users className="w-5 h-5 text-red-600 mr-2" />
               <div>
-                <p className="text-sm text-gray-500">Students</p>
+                <p className="text-sm text-gray-500">Studentët</p>
                 <p className="font-semibold">{dept.students}</p>
               </div>
             </div>
             <div className="flex items-center">
               <BookOpen className="w-5 h-5 text-green-600 mr-2" />
               <div>
-                <p className="text-sm text-gray-500">Teachers</p>
+                <p className="text-sm text-gray-500">Profesorët</p>
                 <p className="font-semibold">{dept.totalTeachers}</p>
               </div>
             </div>
             <div className="flex items-center">
               <Award className="w-5 h-5 text-purple-600 mr-2" />
               <div>
-                <p className="text-sm text-gray-500">Established</p>
+                <p className="text-sm text-gray-500">Themeluar</p>
                 <p className="font-semibold">{dept.established}</p>
               </div>
             </div>
             <div className="flex items-center">
               <MapPin className="w-5 h-5 text-red-600 mr-2" />
               <div>
-                <p className="text-sm text-gray-500">Location</p>
+                <p className="text-sm text-gray-500">Vendndodhja</p>
                 <p className="font-semibold text-sm">{dept.location}</p>
               </div>
             </div>
@@ -185,7 +179,7 @@ export default function DepartmentDetail({ params }) {
         {/* Contact Information */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Contact Information
+            Kontakti
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="flex items-center">
@@ -198,7 +192,7 @@ export default function DepartmentDetail({ params }) {
             <div className="flex items-center">
               <Phone className="w-5 h-5 text-green-600 mr-3" />
               <div>
-                <p className="text-sm text-gray-500">Phone</p>
+                <p className="text-sm text-gray-500">Nr. Tel.</p>
                 <p className="font-medium">{dept.phone}</p>
               </div>
             </div>
