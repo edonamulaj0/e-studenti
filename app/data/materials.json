@@ -3,12 +3,12 @@
 		"id": "1",
 		"title": "Afati i provimeve",
 		"faculty": "FIEK",
-		"department": "Computer Engineering",
-		"type": "Lecture Notes",
-		"subject": "Data Structures",
-		"semester": "Fall 2024",
-		"teacher": "Prof. Smith",
-		"uploadDate": "2024-01-15",
+		"department": "",
+		"type": "Orar",
+		"subject": "",
+		"semester": "",
+		"teacher": "",
+		"uploadDate": "01.01.1970",
 		"r2Url": "https://pub-2a4f4cdb8779432fa1ba7d86b9550c05.r2.dev/provimet-orari.pdf"
 	},
 	{
