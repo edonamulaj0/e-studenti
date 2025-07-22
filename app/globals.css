@@ -1,20 +1,3 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-@layer utilities {
-  .responsive-container {
-    width: min(92vw, 1200px);
-    margin: 0 auto;
-    padding: clamp(1rem, 3vw, 3rem);
-  }
-  
-  /* Override Tailwind's container to be viewport-based */
-  .container {
-    width: 100% !important;
-    max-width: none !important;
-    margin: 0 !important;
-    padding-left: clamp(1rem, 4vw, 2rem) !important;
-    padding-right: clamp(1rem, 4vw, 2rem) !important;
-  }
-}
