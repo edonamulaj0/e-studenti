@@ -100,6 +100,14 @@ export default function Home() {
                 >
                   FIEK - Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike
                 </a>
+                <a
+                  href="https://filozofiku.uni-pr.edu/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-red-600 hover:underline"
+                >
+                  Fakulteti Filologjik
+                </a>
               </div>
             </div>
           </div>
