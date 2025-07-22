@@ -3,7 +3,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 to-indigo-100 responsive-container">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       {/* Hero Section */}
       <section className="pt-20 pb-16 mt-10">
         <div className="container mx-auto px-4">
