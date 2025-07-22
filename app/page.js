@@ -60,7 +60,9 @@ export default function Home() {
                 <h3 className="text-xl font-semibold">Fakultetet</h3>
               </div>
               <p className="text-gray-600">
-                Eksploroni të gjitha fakultetet e Universitetit të Prishtinës.
+                Këtu mund të eksploroni një listë të plotë të të gjitha
+                fakulteteve, të mësoni rreth departamenteve, programeve të
+                studimit bachelor, dhe të gjeni kontakt për secilin fakultet.
               </p>
             </Link>
 
@@ -74,7 +76,11 @@ export default function Home() {
                 <h3 className="text-xl font-semibold">Materialet</h3>
               </div>
               <p className="text-gray-600">
-                Shikoni materialet dhe burimet e tjera.
+                Qasuni në një koleksion të pasur materialesh mësimore dhe
+                burimesh thelbësore për studimet tuaja. Këtu do të gjeni shënime
+                ligjeratash, libra digjitalë, artikuj shkencorë, punime
+                kërkimore, udhëzues studimi, dhe burime shtesë të ofruara nga
+                profesorët dhe vetë universiteti.
               </p>
             </Link>
             {/* University Pages */}
@@ -101,12 +107,12 @@ export default function Home() {
                   FIEK - Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike
                 </a>
                 <a
-                  href="https://filozofiku.uni-pr.edu/"
+                  href="/erasmus"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-red-600 hover:underline"
                 >
-                  Fakulteti Filologjik
+                  Erasmus
                 </a>
               </div>
             </div>
