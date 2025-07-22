@@ -19,7 +19,9 @@ export default function Home() {
             {/* Disclaimer */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
               <p className="text-yellow-800 font-medium">
-                ⚠️ Vërejtje: Kjo faqe është ndërtuar nga studentët për studentët, dhe nuk ka lidhje zyrtare me Universitetin e Prishtinës.
+                ⚠️ Vërejtje: Kjo faqe është ndërtuar nga studentët për
+                studentët, dhe nuk ka lidhje zyrtare me Universitetin e
+                Prishtinës.
               </p>
             </div>
 
@@ -83,20 +85,20 @@ export default function Home() {
               </div>
               <div className="space-y-2">
                 <a
-                  href="https://fiek.uni-pr.edu"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block text-red-600 hover:underline"
-                >
-                  FIEK - Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike
-                </a>
-                <a
                   href="https://uni-pr.edu"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="block text-red-600 hover:underline"
                 >
                   Faqja kryesore e Universitetit të Prishtinës
+                </a>
+                <a
+                  href="https://fiek.uni-pr.edu"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block text-red-600 hover:underline"
+                >
+                  FIEK - Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike
                 </a>
               </div>
             </div>
