@@ -145,6 +145,7 @@ export default function MaterialsClient({ initialMaterials }) {
                 {material.r2Url && (
                   <a
                     href={material.r2Url}
+                    target="_blank"
                     download={
                       material.title.replace(/[^a-z0-9]/gi, "_") +
                       "." +
@@ -152,7 +153,7 @@ export default function MaterialsClient({ initialMaterials }) {
                     } // Added fallback for fileType
                     className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center"
                   >
-                    <Download className="w-4 h-4 mr-2" />
+                    <Download className="w-4 h-4 mr-2"/>
                     Download
                   </a>
                 )}
