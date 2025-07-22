@@ -1,56 +1,36 @@
-"use client";
-import { useState } from "react";
+// app/materialet/page.js
+// Remove "use client"; - we will make this a Server Component
+import { useState } from "react"; // Keep useState if you want client-side search/filters
 import { FileText, Download, Eye, Star, Filter, Search } from "lucide-react";
 
-export default function Materials() {
+// Import Node.js modules for file system access
+import fs from "fs/promises";
+import path from "path";
+
+// Async function to fetch data at build time (Server Component)
+async function getMaterialsData() {
+  const filePath = path.join(process.cwd(), "app", "data", "materials.json"); // Correct path based on your file tree
+  const fileContent = await fs.readFile(filePath, "utf8");
+  return JSON.parse(fileContent);
+}
+
+// Convert Materials to an async Server Component
+export default async function Materials() {
+  const allMaterials = await getMaterialsData(); // Fetch data here
+
+  // We need to pass initial data to the client component for filtering.
+  // The 'use client' directive is needed for stateful components.
+  // So, we'll wrap the filtering logic in a separate client component.
+  return <MaterialsClient initialMaterials={allMaterials} />;
+}
+
+// Create a separate client component to handle state (search, filters)
+function MaterialsClient({ initialMaterials }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFaculty, setSelectedFaculty] = useState("");
   const [selectedType, setSelectedType] = useState("");
 
-  const materials = [
-    {
-      title: "Data Structures and Algorithms - Lecture Notes",
-      faculty: "FIEK",
-      department: "Computer Engineering",
-      type: "Lecture Notes",
-      subject: "Data Structures",
-      semester: "Fall 2024",
-      teacher: "Prof. Smith",
-      uploadDate: "2024-01-15",
-    },
-    {
-      title: "Circuit Analysis - Past Exam Solutions",
-      faculty: "FIEK",
-      department: "Electrical Engineering",
-      type: "Exam Solutions",
-      subject: "Circuit Analysis",
-      semester: "Spring 2024",
-      teacher: "Prof. Johnson",
-      uploadDate: "2024-01-10",
-    },
-    {
-      title: "Anatomy Atlas - Study Guide",
-      faculty: "MED",
-      department: "General Medicine",
-      type: "Study Guide",
-      subject: "Anatomy",
-      semester: "Fall 2024",
-      teacher: "Dr. Williams",
-      uploadDate: "2024-01-20",
-    },
-    {
-      title: "Financial Management - Case Studies",
-      faculty: "ECON",
-      department: "Business Administration",
-      type: "Case Studies",
-      subject: "Financial Management",
-      semester: "Spring 2024",
-      teacher: "Prof. Brown",
-      uploadDate: "2024-01-12",
-    },
-  ];
-
-  const filteredMaterials = materials.filter((material) => {
+  const filteredMaterials = initialMaterials.filter((material) => {
     const matchesSearch =
       material.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       material.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -124,7 +104,7 @@ export default function Materials() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredMaterials.map((material, index) => (
             <div
-              key={index}
+              key={material.id || index}
               className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
             >
               <div className="flex items-start justify-between mb-4">
@@ -139,6 +119,7 @@ export default function Materials() {
                     <span>{material.department}</span>
                   </div>
                 </div>
+                {/* You might want to dynamically show different icons based on fileType (e.g., PDF, Video) */}
                 <FileText className="w-8 h-8 text-red-600" />
               </div>
 
@@ -168,14 +149,34 @@ export default function Materials() {
               </div>
 
               <div className="flex space-x-2">
-                <button className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center">
-                  <Eye className="w-4 h-4 mr-2" />
-                  Preview
-                </button>
-                <button className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
-                </button>
+                {/* Preview Button: Link directly to the R2 URL */}
+                {material.r2Url && (
+                  <a
+                    href={material.r2Url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Preview
+                  </a>
+                )}
+
+                {/* Download Button: Link directly to the R2 URL (often same as preview for PDFs/images) */}
+                {material.r2Url && (
+                  <a
+                    href={material.r2Url}
+                    download={
+                      material.title.replace(/[^a-z0-9]/gi, "_") +
+                      "." +
+                      material.fileType
+                    } // Suggests a filename for download
+                    className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </a>
+                )}
               </div>
             </div>
           ))}
