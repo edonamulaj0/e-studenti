@@ -226,7 +226,7 @@ export default function Faculties() {
                 <div className="flex items-center">
                   <BookOpen className="w-5 h-5 text-gray-500 mr-2" />
                   <span className="text-sm text-gray-600">
-                    {faculty.departments.length} Departamentet
+                    {faculty.departments.length} Departamente
                   </span>
                 </div>
                 <div className="flex items-center">
