@@ -8,7 +8,6 @@ export default function Footer() {
         <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
           {/* Brand and Links */}
           <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-8">
-            <h3 className="text-lg font-bold">E-Studenti</h3>
             <div className="flex space-x-6 text-sm">
               <a
                 href="/fakultetet"
@@ -22,6 +21,12 @@ export default function Footer() {
               >
                 Materialet
               </a>
+              <a
+                href="/erasmus"
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                Erasmus
+              </a>
             </div>
           </div>
 
@@ -31,7 +36,9 @@ export default function Footer() {
               <Mail className="w-4 h-4 mr-2" />
               <span>info@e-studenti.com</span>
             </div>
-            <p className="text-gray-500">© 2025 E-Studenti</p>
+            <p className="text-gray-500">
+              © 2025 E-Studenti. Të gjitha të drejtat janë të
+             rezervuara.</p>
           </div>
         </div>
       </div>
