@@ -17,7 +17,7 @@ export default function Footer() {
           {/* Contact and Copyright */}
           <div className="flex flex-col md:flex-row items-center space-y-2 md:space-y-0 md:space-x-6 text-sm">
             <div className="flex items-center text-gray-400">
-              <Mail className="w-4 h-4 mr-2" />
+              <Mail className="w-4 h-4 mr-8" />
               <span>info@e-studenti.com</span>
               <Phone className="w-4 h-4 mr-2" />
               <span>+383 48 855 355</span>
