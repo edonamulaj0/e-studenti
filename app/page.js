@@ -1,8 +1,4 @@
-import {
-  BookOpen,
-  FileText,
-  ExternalLink,
-} from "lucide-react";
+import { BookOpen, FileText, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 export default function Home() {
@@ -23,7 +19,7 @@ export default function Home() {
             {/* Disclaimer */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
               <p className="text-yellow-800 font-medium">
-                ⚠️ Disclaimer: This page is not official of UP.
+                ⚠️ Vërejtje: Kjo faqe është ndërtuar nga studentët për studentët, dhe nuk ka lidhje zyrtare me Universitetin e Prishtinës.
               </p>
             </div>
 
@@ -32,13 +28,13 @@ export default function Home() {
                 href="/fakultetet"
                 className="bg-red-600 text-white px-8 py-3 rounded-lg font-semibold hover:bg-red-700 transition-colors"
               >
-                Eksploroni fakultetet
+                Shikoni materialet
               </Link>
               <Link
                 href="/materialet"
                 className="bg-white text-red-600 px-8 py-3 rounded-lg font-semibold border-2 border-red-600 hover:bg-red-50 transition-colors"
               >
-                Shikoni materialet
+                Eksploroni fakultetet
               </Link>
             </div>
           </div>
