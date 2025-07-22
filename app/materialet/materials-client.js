@@ -25,11 +25,9 @@ export default function MaterialsClient({ initialMaterials }) {
     <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       <div className="container mx-auto px-4 py-16">
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            Study Materials
-          </h1>
+          <h1 className="text-4xl font-bold text-gray-900 mb-4">Materialet</h1>
           <p className="text-xl text-gray-600">
-            Access lecture notes, past exams, and study resources
+            Gjeni shënime, afate, projekte e të tjera këtu!
           </p>
         </div>
 
@@ -52,11 +50,11 @@ export default function MaterialsClient({ initialMaterials }) {
               onChange={(e) => setSelectedFaculty(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             >
-              <option value="">All Faculties</option>
+              <option value="">Të gjitha Fakultetet</option>
               <option value="FIEK">FIEK</option>
-              <option value="MED">Medicine</option>
-              <option value="ECON">Economics</option>
-              <option value="ENG">Engineering</option>
+              <option value="MED">Mjekesia</option>
+              <option value="ECON">Ekonomiku</option>
+              <option value="FIM">FIM</option>
             </select>
 
             <select
@@ -64,17 +62,17 @@ export default function MaterialsClient({ initialMaterials }) {
               onChange={(e) => setSelectedType(e.target.value)}
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             >
-              <option value="">All Types</option>
-              <option value="Lecture Notes">Lecture Notes</option>
-              <option value="Exam Solutions">Exam Solutions</option>
-              <option value="Study Guide">Study Guides</option>
-              <option value="Case Studies">Case Studies</option>
-              <option value="Projects">Projects</option>
+              <option value="">Të gjitha llojet</option>
+              <option value="Lecture Notes">Shënime ligjeratash</option>
+              <option value="Exam Solutions">Afate provimi</option>
+              <option value="Projects">Projekte</option>
+              <option value="Case Studies">Studime kërkimore</option>
+              <option value="Study Guide">Të tjera</option>
             </select>
 
             <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center">
               <Filter className="w-4 h-4 mr-2" />
-              Apply Filters
+              Vendos filtrat
             </button>
           </div>
         </div>
@@ -104,23 +102,23 @@ export default function MaterialsClient({ initialMaterials }) {
 
               <div className="space-y-2 mb-4">
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Subject:</span>
+                  <span className="text-sm text-gray-600">Lënda:</span>
                   <span className="text-sm font-medium">
                     {material.subject}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Type:</span>
+                  <span className="text-sm text-gray-600">Lloji:</span>
                   <span className="text-sm font-medium">{material.type}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Teacher:</span>
+                  <span className="text-sm text-gray-600">Prof.:</span>
                   <span className="text-sm font-medium">
                     {material.teacher}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Semester:</span>
+                  <span className="text-sm text-gray-600">Semestri:</span>
                   <span className="text-sm font-medium">
                     {material.semester}
                   </span>
@@ -137,7 +135,7 @@ export default function MaterialsClient({ initialMaterials }) {
                     className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center"
                   >
                     <Eye className="w-4 h-4 mr-2" />
-                    Preview
+                    Shiko
                   </a>
                 )}
 
@@ -153,8 +151,8 @@ export default function MaterialsClient({ initialMaterials }) {
                     } // Added fallback for fileType
                     className="flex-1 bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 transition-colors text-sm font-medium flex items-center justify-center"
                   >
-                    <Download className="w-4 h-4 mr-2"/>
-                    Download
+                    <Download className="w-4 h-4 mr-2" />
+                    Shkarko
                   </a>
                 )}
               </div>
@@ -166,9 +164,9 @@ export default function MaterialsClient({ initialMaterials }) {
           <div className="text-center py-12">
             <FileText className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-xl font-semibold text-gray-600 mb-2">
-              No materials found
+              Nuk ka të dhëna.
             </h3>
-            <p className="text-gray-500">Try adjusting your search criteria</p>
+            <p className="text-gray-500">Provoni të ndryshoni kriteret e kërkimit.</p>
           </div>
         )}
       </div>
