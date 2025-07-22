@@ -6,7 +6,7 @@ import Footer from "./components/Footer";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata = {
-  title: "E-Studenti - Qendër Burimore",
+  title: "E-Studenti - Qendra Burimore e UP",
   description: "Qendra e burimeve jo-zyrtare për studentët e Universitetit të Prishtinës.",
 };
 

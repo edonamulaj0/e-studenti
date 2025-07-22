@@ -1,4 +1,11 @@
-  @tailwind base;
-  @tailwind components;
-  @tailwind utilities;
-  
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer utilities {
+  .responsive-container {
+    width: min(90vw, 1200px);
+    margin: 0 auto;
+    padding: clamp(1rem, 3vw, 3rem);
+  }
+}

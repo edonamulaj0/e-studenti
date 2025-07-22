@@ -26,7 +26,7 @@ export default function Faculties() {
       departments: ["Matematikë", "Fizikë", "Kimi", "Biologji", "Gjeografi"],
       students: "700+",
       website: "http://fshmn.uni-pr.edu/",
-      color: "indigo",
+      color: "blue",
     },
     {
       name: "Fakulteti i Filologjisë",
