@@ -3,8 +3,7 @@
 import { BookOpen, Users, Mail, Phone, MapPin, Award } from "lucide-react";
 import Link from "next/link";
 
-export default function FIEKDetail() {
-  // Renamed to be specific for FIEK
+export default function FIEKDetail() { // Renamed to be specific for FIEK
   // FIEK's specific data
   const faculty = {
     name: "Faculty of Electrical and Computer Engineering",
@@ -49,7 +48,9 @@ export default function FIEKDetail() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {faculty.name}
               </h1>
-              <p className="text-lg text-red-600 font-medium">{faculty.code}</p>
+              <p className="text-lg text-red-600 font-medium">
+                {faculty.code}
+              </p>
             </div>
           </div>
 
@@ -110,13 +111,12 @@ export default function FIEKDetail() {
 
         {/* Departments */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">
-            Departamentet
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Departamentet</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {faculty.departments.map((department, index) => (
               <Link
                 key={index}
+                href={`/departments/${department.code.toLowerCase()}`}
                 className="block p-4 border border-gray-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
