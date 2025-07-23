@@ -121,7 +121,6 @@ export default function FilologjiaDetail() {
             {faculty.departments.map((department, index) => (
               <Link
                 key={index}
-                href={`/departments/${department.code.toLowerCase()}`}
                 className="block p-4 border border-gray-200 rounded-lg hover:bg-red-50 hover:border-red-300 transition-colors"
               >
                 <div className="flex justify-between items-start mb-2">
