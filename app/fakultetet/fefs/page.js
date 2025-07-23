@@ -3,7 +3,7 @@
 import { BookOpen, Users, Mail, Phone, MapPin, Award } from "lucide-react";
 import Link from "next/link";
 
-export default function FilologjiaDetail() {
+export default function FefsDetail() {
   const faculty = {
     name: "Fakulteti i Edukimit Fizik dhe i Sportit",
     code: "FEFS",

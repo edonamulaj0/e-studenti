@@ -125,17 +125,17 @@ export default function FIEKDetail() { // Renamed to be specific for FIEK
                   <h3 className="font-semibold text-gray-900">
                     {department.name}
                   </h3>
-                  <span className="text-sm text-red-600 font-medium">
+                  {/* <span className="text-sm text-red-600 font-medium">
                     {department.code}
-                  </span>
+                  </span> */}
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
                   <p>{department.description}</p>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600">
+                {/* <div className="flex justify-between text-sm text-gray-600">
                   <span>Studentët: {department.students}</span>
                   <span>Profesorët: {department.teachers}</span>
-                </div>
+                </div> */}
               </Link>
             ))}
           </div>

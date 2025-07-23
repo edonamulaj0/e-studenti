@@ -9,11 +9,11 @@ export default function FilologjiaDetail() {
     description: "",
     established: "1969",
     location: "Agim Ramadani, Prishtinë",
-    email: "TBD",
-    phone: "TBD",
+    email: "mjekesia@uni-pr.edu",
+    phone: "+383 38 512 221",
     totalDepartments: "5",
-    totalStudents: "TBD",
-    totalTeachers: "TBD",
+    totalStudents: "4489",
+    totalTeachers: "XX",
     departments: [
       {
         name: "Mjekësi e përgjithshme",
@@ -128,17 +128,17 @@ export default function FilologjiaDetail() {
                   <h3 className="font-semibold text-gray-900">
                     {department.name}
                   </h3>
-                  <span className="text-sm text-red-600 font-medium">
+                  {/* <span className="text-sm text-red-600 font-medium">
                     {department.code}
-                  </span>
+                  </span> */}
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
                   <p>{department.description}</p>
                 </div>
-                <div className="flex justify-between text-sm text-gray-600">
+                {/* <div className="flex justify-between text-sm text-gray-600">
                   <span>Studentët: {department.students}</span>
                   <span>Profesorët: {department.teachers}</span>
-                </div>
+                </div> */}
               </Link>
             ))}
           </div>
