@@ -4,14 +4,14 @@
 		"title": "Orari i përhershëm i provimeve",
 		"faculty": "FIEK",
 		"department": "IKS, EAR, TIK, EEN",
-		"type": "Orar",
+		"type": "Të tjera",
 		"subject": "-",
 		"teacher": "-",
 		"r2Url": "https://media.e-studenti.com/provimet-orari.pdf"
 	},
 	{
 		"id": "2",
-		"title": "Literaturë (RAR)",
+		"title": "Literatura - Elektronikë (RAR)",
 		"faculty": "FIEK",
 		"department": "",
 		"type": "Ligjerata",
@@ -21,7 +21,7 @@
 	},
 	{
 		"id": "3",
-		"title": "Prezantimet e Ligjeratave (RAR)",
+		"title": "Prezantimet e Ligjeratave - Kalkulus 2 (RAR)",
 		"faculty": "FIEK",
 		"department": "",
 		"type": "Ligjerata",
@@ -34,7 +34,7 @@
 		"title": "Calculus Workbook for Dummies - Mark Ryan",
 		"faculty": "FIEK",
 		"department": "",
-		"type": "Libër",
+		"type": "Të tjera",
 		"subject": "Matematikë",
 		"teacher": "-",
 		"r2Url": "https://media.e-studenti.com/Mark%20Ryan%20-%20Calculus%20Workbook%20For%20Dummies.pdf"
@@ -46,7 +46,7 @@
 		"department": "",
 		"type": "Ligjerata",
 		"subject": "Kalkulus 2",
-		"teacher": "-",
+		"teacher": "Qefsere Gjonbalaj",
 		"r2Url": "https://media.e-studenti.com/Kalkulus%202%20-%20Ligjerata.pdf"
 	}
 ]

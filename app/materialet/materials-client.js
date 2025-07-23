@@ -63,10 +63,10 @@ export default function MaterialsClient({ initialMaterials }) {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="">Të gjitha llojet</option>
-              <option value="Lecture Notes">Shënime ligjeratash</option>
-              <option value="Exam Solutions">Afate provimi</option>
-              <option value="Projects">Projekte</option>
-              <option value="Case Studies">Studime kërkimore</option>
+              <option value="Lecture Notes">Ligjerata</option>
+              <option value="Exam Solutions">Afat</option>
+              <option value="Projects">Projekt</option>
+              <option value="Case Studies">Studim kërkimor</option>
               <option value="Study Guide">Të tjera</option>
             </select>
 
