@@ -1,4 +1,3 @@
-// app/faculties/filologjia/page.js (Example for Filologjia)
 "use client";
 import { BookOpen, Users, Mail, Phone, MapPin, Award } from "lucide-react";
 import Link from "next/link";
