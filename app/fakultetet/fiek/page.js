@@ -4,37 +4,39 @@ import { BookOpen, Users, Mail, Phone, MapPin, Award } from "lucide-react";
 import Link from "next/link";
 
 export default function FIEKDetail() { // Renamed to be specific for FIEK
-  // FIEK's specific data
   const faculty = {
-    name: "Faculty of Electrical and Computer Engineering",
+    name: "Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike",
     code: "FIEK",
     description:
-      "The Faculty of Electrical and Computer Engineering (FIEK) is a leading institution for education and research in electrical engineering, computer engineering, and related fields. It offers a wide range of study programs designed to equip students with the knowledge and skills needed for successful careers in technology and innovation.",
-    established: "1971",
-    location: "Main Campus, Building C",
+      "Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike ofron programe në inxhinieri elektrike, inxhinieri kompjuterike, telekomunikacion dhe teknologji informacioni.",
+    established: "1961",
+    location: "Agim Ramadani, Prishtinë",
     email: "fiek@uni-pr.edu",
-    phone: "+383 38 244 100",
-    totalDepartments: 2, // New field for total departments
-    totalStudents: 1500, // Aggregate students from all departments
-    totalTeachers: 100, // Aggregate teachers from all departments
+    phone: "+383 38 554 896",
+    totalDepartments: "4",
+    totalStudents: "4076",
+    totalTeachers: "XX",
     departments: [
       {
-        name: "Computer Engineering",
-        code: "CE",
-        students: 800,
-        teachers: 40,
-        description:
-          "Focuses on the design, analysis, and application of computer systems.",
+        name: "Inxhinieri Kompjuterike dhe Softuerike",
+        code: "FIEKIKS",
+        description: "",
       },
       {
-        name: "Electrical Engineering",
-        code: "EE",
-        students: 700,
-        teachers: 60,
-        description:
-          "Deals with the study and application of electricity, electronics, and electromagnetism.",
+        name: "Elektronikë, Automatikë dhe Robotikë",
+        code: "FIEKEAR",
+        description: "",
       },
-      // Add more departments specific to FIEK
+      {
+        name: "Teknologjitë e Informacionit dhe Komunikimit",
+        code: "FIEKTIK",
+        description: "",
+      },
+      {
+        name: "Elektroenergjetikë",
+        code: "FIEKEEN",
+        description: "",
+      },
     ],
   };
 

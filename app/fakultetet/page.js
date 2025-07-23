@@ -23,7 +23,7 @@ export default function Faculties() {
     {
       name: "Fakulteti i Shkencave Matematike Natyrore",
       acronym: "FSHMN",
-      departments: ["Matematikë", "Fizikë", "Kimi", "Biologji", "Gjeografi"],
+      departments: ["Matematikë", "Matematikë", "Kimi", "Biologji", "Gjeografi"],
       students: "700+",
       website: "http://fshmn.uni-pr.edu/",
       color: "red",
@@ -170,7 +170,7 @@ export default function Faculties() {
       ],
       students: "600+",
       website: "http://fim.uni-pr.edu/",
-      color: "indigo",
+      color: "red",
     },
   ];
 
