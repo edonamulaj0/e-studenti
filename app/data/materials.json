@@ -1,14 +1,13 @@
 [
 	{
 		"id": "1",
-		"title": "Afati i provimeve",
+		"title": "Orari i përhershëm i provimeve",
 		"faculty": "FIEK",
-		"department": "",
+		"department": "IKS, EAR, TIK, EEN",
 		"type": "Orar",
-		"subject": "",
-		"semester": "",
-		"teacher": "",
-		"uploadDate": "01.01.1970",
+		"subject": "-",
+		"teacher": "-",
 		"r2Url": "https://pub-2a4f4cdb8779432fa1ba7d86b9550c05.r2.dev/provimet-orari.pdf"
 	}
+
 ]
