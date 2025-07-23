@@ -1,85 +1,42 @@
+// app/faculties/filologjia/page.js (Example for Filologjia)
 "use client";
 import { BookOpen, Users, Mail, Phone, MapPin, Award } from "lucide-react";
 import Link from "next/link";
 
-export default function FacultyDetail({ params }) {
-  const { code } = params;
-
-  // Mock data for Faculties - you can replace this with real data later
-  const facultyData = {
-    fiek: {
-      name: "Faculty of Electrical and Computer Engineering",
-      code: "FIEK",
-      description:
-        "The Faculty of Electrical and Computer Engineering (FIEK) is a leading institution for education and research in electrical engineering, computer engineering, and related fields. It offers a wide range of study programs designed to equip students with the knowledge and skills needed for successful careers in technology and innovation.",
-      established: "1971",
-      location: "Main Campus, Building C",
-      email: "fiek@uni-pr.edu",
-      phone: "+383 38 244 100",
-      totalDepartments: 2, // New field for total departments
-      totalStudents: 1500, // Aggregate students from all departments
-      totalTeachers: 100, // Aggregate teachers from all departments
-      departments: [
-        {
-          name: "Computer Engineering",
-          code: "CE",
-          students: 800,
-          teachers: 40,
-          description:
-            "Focuses on the design, analysis, and application of computer systems.",
-        },
-        {
-          name: "Electrical Engineering",
-          code: "EE",
-          students: 700,
-          teachers: 60,
-          description:
-            "Deals with the study and application of electricity, electronics, and electromagnetism.",
-        },
-        // Add more departments as needed for FIEK
-      ],
-    },
-    // Add more faculties as needed
-    filologjia: {
-      name: "Faculty of Philology",
-      code: "FIL",
-      description:
-        "The Faculty of Philology is dedicated to the study of language, literature, and culture. It offers diverse programs covering various languages, literary theories, and cultural studies, fostering critical thinking and communication skills.",
-      established: "1960",
-      location: "Main Campus, Building D",
-      email: "filologjia@uni-pr.edu",
-      phone: "+383 38 244 101",
-      totalDepartments: 3,
-      totalStudents: 1200,
-      totalTeachers: 80,
-      departments: [
-        {
-          name: "Albanian Language and Literature",
-          code: "ALL",
-          students: 500,
-          teachers: 30,
-          description: "Study of Albanian language, literature, and culture.",
-        },
-        {
-          name: "English Language and Literature",
-          code: "ELL",
-          students: 400,
-          teachers: 25,
-          description:
-            "Study of English language, literature, and linguistics.",
-        },
-        {
-          name: "German Language and Literature",
-          code: "GLL",
-          students: 300,
-          teachers: 25,
-          description: "Study of German language, literature, and culture.",
-        },
-      ],
-    },
+export default function ArtetDetail() {
+  const faculty = {
+    name: "Fakulteti i Arteve",
+    code: "ART",
+    description:
+      "Fakulteti i Arteve ofron programe në artet e bukura, muzikë, dramë dhe disiplina të tjera krijuese, duke nxitur shprehjen artistike dhe zhvillimin kulturor.",
+    established: "1973",
+    location: "Agim Ramadani, Prishtinë",
+    email: "arte@uni-pr.edu",
+    phone: "+383 38 247 129",
+    totalDepartments: "3",
+    totalStudents: "1472",
+    totalTeachers: "XX",
+    departments: [
+      {
+        name: "Artet e Bukura",
+        code: "AB",
+        description:
+          "Departamenti i Arteve të Bukura, është program studimor më i madhi në Fakultetin e  Arteve me 298 studentë aktivë, 25 profesorë me kohë të plotë, 31 profesorë me kohë të pjesshme nga Universiteti i Prishtinës dhe 13 profesorë ndihmës me kohë të pjesshme.",
+      },
+      {
+        name: "Artet Dramatike",
+        code: "DAD",
+        description:
+          "Departamenti i Arteve Dramatike (DAD) është program studimor në Fakultetin e  Arteve me 250 studentë aktivë, 32 profesorë me kohë të plotë, 1 profesor me kohë të pjesshme nga Universiteti i Prishtinës dhe 20 profesorë ndihmës me kohë të pjesshme dhe 3 profesorë vizitorë.",
+      },
+      {
+        name: "Artet Muzikore",
+        code: "AM",
+        description:
+          "Në Degen e Arteve Muzikore janë të organizuara gjithsej 2 programe studimi në Bachelor dhe 3 programe të studimit në Master që përfshijnë të gjitha specializimet e veçanta përmes specializimeve të ndryshme.",
+      },
+    ],
   };
-
-  const faculty = facultyData[code] || facultyData.fiek; // Default to FIEK if code not found
 
   return (
     <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
@@ -174,8 +131,8 @@ export default function FacultyDetail({ params }) {
                   <p>{department.description}</p>
                 </div>
                 <div className="flex justify-between text-sm text-gray-600">
-                  <span>Studentët: {department.students}</span>
-                  <span>Profesorët: {department.teachers}</span>
+                  <span>Studentë: {department.students}</span>
+                  <span>Profesorë: {department.teachers}</span>
                 </div>
               </Link>
             ))}

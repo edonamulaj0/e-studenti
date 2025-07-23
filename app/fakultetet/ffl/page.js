@@ -4,41 +4,58 @@ import { BookOpen, Users, Mail, Phone, MapPin, Award } from "lucide-react";
 import Link from "next/link";
 
 export default function FilologjiaDetail() {
-  // Renamed to be specific for Filologjia
-  // Filologjia's specific data
   const faculty = {
-    name: "Faculty of Philology",
-    code: "FIL",
+    name: "Fakulteti Filologjik",
+    code: "FFL",
     description:
-      "The Faculty of Philology is dedicated to the study of language, literature, and culture. It offers diverse programs covering various languages, literary theories, and cultural studies, fostering critical thinking and communication skills.",
-    established: "1960",
-    location: "Main Campus, Building D",
+      "Fakulteti i Filologjisë i është kushtuar studimit të gjuhës, letërsisë dhe kulturës. Ofron programe të larmishme që mbulojnë gjuhë të ndryshme, teori letrare dhe studime kulturore, duke nxitur të menduarit kritik dhe aftësitë e komunikimit.",
+    established: "XXXX",
+    location: "Agim Ramadani, Prishtinë",
     email: "filologjia@uni-pr.edu",
-    phone: "+383 38 244 101",
-    totalDepartments: 3,
-    totalStudents: 1200,
-    totalTeachers: 80,
+    phone: "+381 38 222 970",
+    totalDepartments: "8",
+    totalStudents: "5489",
+    totalTeachers: "XX",
     departments: [
       {
-        name: "Albanian Language and Literature",
-        code: "ALL",
-        students: 500,
-        teachers: 30,
-        description: "Study of Albanian language, literature, and culture.",
+        name: "Gjuhë Shqipe",
+        code: "FLGJSH",
+        description: "",
       },
       {
-        name: "English Language and Literature",
-        code: "ELL",
-        students: 400,
-        teachers: 25,
-        description: "Study of English language, literature, and linguistics.",
+        name: "Letërsi Shqipe",
+        code: "FLLSH",
+        description: "",
       },
       {
-        name: "German Language and Literature",
-        code: "GLL",
-        students: 300,
-        teachers: 25,
-        description: "Study of German language, literature, and culture.",
+        name: "Gjuhë dhe Letërsi Angleze",
+        code: "FLLA",
+        description: "",
+      },
+      {
+        name: "Gjuhë dhe Letërsi Gjermane",
+        code: "FLLGJ",
+        description: "",
+      },
+      {
+        name: "Gjuhë dhe Letërsi Frënge",
+        code: "FLLF",
+        description: "",
+      },
+      {
+        name: "Orientalistikë",
+        code: "FLOR",
+        description: "",
+      },
+      {
+        name: "Gjuhë dhe Letërsi Turke",
+        code: "FLLT",
+        description: "",
+      },
+      {
+        name: "Gazetari",
+        code: "FLGZ",
+        description: "",
       },
     ],
   };
