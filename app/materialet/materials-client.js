@@ -117,12 +117,6 @@ export default function MaterialsClient({ initialMaterials }) {
                     {material.teacher}
                   </span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Semestri:</span>
-                  <span className="text-sm font-medium">
-                    {material.semester}
-                  </span>
-                </div>
               </div>
 
               <div className="flex space-x-2">
