@@ -7,7 +7,46 @@
 		"type": "Orar",
 		"subject": "-",
 		"teacher": "-",
-		"r2Url": "https://pub-2a4f4cdb8779432fa1ba7d86b9550c05.r2.dev/provimet-orari.pdf"
+		"r2Url": "https://media.e-studenti.com/provimet-orari.pdf"
+	},
+	{
+		"id": "2",
+		"title": "Literaturë (RAR)",
+		"faculty": "FIEK",
+		"department": "",
+		"type": "Ligjerata",
+		"subject": "Elektronika",
+		"teacher": "-",
+		"r2Url": "https://media.e-studenti.com/Materiali%20i%20kompletuar%20nga%20ELektronika.rar"
+	},
+	{
+		"id": "3",
+		"title": "Prezantimet e Ligjeratave (RAR)",
+		"faculty": "FIEK",
+		"department": "",
+		"type": "Ligjerata",
+		"subject": "Kalkulus 2",
+		"teacher": "Qefsere Gjonbalaj",
+		"r2Url": "https://media.e-studenti.com/Math%202.rar"
+	},
+	{
+		"id": "4",
+		"title": "Calculus Workbook for Dummies - Mark Ryan",
+		"faculty": "FIEK",
+		"department": "",
+		"type": "Libër",
+		"subject": "Matematikë",
+		"teacher": "-",
+		"r2Url": "https://media.e-studenti.com/Mark%20Ryan%20-%20Calculus%20Workbook%20For%20Dummies.pdf"
+	},
+	{
+		"id": "5",
+		"title": "Shënime - Semestri Veror 2025",
+		"faculty": "FIEK",
+		"department": "",
+		"type": "Ligjerata",
+		"subject": "Kalkulus 2",
+		"teacher": "-",
+		"r2Url": "https://media.e-studenti.com/Kalkulus%202%20-%20Ligjerata.pdf"
 	}
-
 ]
