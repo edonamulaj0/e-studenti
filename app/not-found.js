@@ -2,7 +2,7 @@
 import { Home, RefreshCw, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 
-export default function Error404() {
+export default function NotFound() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleRefresh = () => {
