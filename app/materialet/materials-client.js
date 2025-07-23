@@ -63,11 +63,11 @@ export default function MaterialsClient({ initialMaterials }) {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="">Të gjitha llojet</option>
-              <option value="Lecture Notes">Ligjerata</option>
-              <option value="Exam Solutions">Afat</option>
-              <option value="Projects">Projekt</option>
-              <option value="Case Studies">Studim kërkimor</option>
-              <option value="Study Guide">Të tjera</option>
+              <option value="Ligjerata">Ligjerata</option>
+              <option value="Afat">Afat</option>
+              <option value="Projekt">Projekt</option>
+              <option value="Studim">Studim kërkimor</option>
+              <option value="Te tjera">Të tjera</option>
             </select>
 
             <button className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center justify-center">
