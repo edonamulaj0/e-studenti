@@ -30,8 +30,7 @@ export default function Kontakto() {
                   <li>• Fakulteti</li>
                   <li>• Departamenti</li>
                   <li>• Lënda</li>
-                  <li>• Semestri</li>
-                  <li>• Mësuesi</li>
+                  <li>• Profesori</li>
                 </ul>
               </div>
             </div>
@@ -80,9 +79,9 @@ export default function Kontakto() {
 
                 <div className="pt-4">
                   <textarea
-                    value="Lënda - Semestri - Mësuesi"
+                    value="Lënda - Semestri - Profesori"
                     readOnly
-                    rows={8}
+                    rows={5}
                     className="w-full px-3 py-2 bg-gray-50 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
                   />
                 </div>
