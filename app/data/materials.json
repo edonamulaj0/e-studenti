@@ -10,41 +10,4 @@
 		"teacher": "",
 		"uploadDate": "01.01.1970",
 		"r2Url": "https://pub-2a4f4cdb8779432fa1ba7d86b9550c05.r2.dev/provimet-orari.pdf"
-	},
-	{
-		"id": "2",
-		"title": "Circuit Analysis - Past Exam Solutions",
-		"faculty": "FIEK",
-		"department": "Electrical Engineering",
-		"type": "Exam Solutions",
-		"subject": "Circuit Analysis",
-		"semester": "Spring 2024",
-		"teacher": "Prof. Johnson",
-		"uploadDate": "2024-01-10",
-		"r2Url": "https://media.yourdomain.com/fiek/circuit-analysis-exam-solutions.pdf"
-	},
-	{
-		"id": "3",
-		"title": "Anatomy Atlas - Study Guide",
-		"faculty": "MED",
-		"department": "General Medicine",
-		"type": "Study Guide",
-		"subject": "Anatomy",
-		"semester": "Fall 2024",
-		"teacher": "Dr. Williams",
-		"uploadDate": "2024-01-20",
-		"r2Url": "https://media.yourdomain.com/med/anatomy-study-guide.pdf"
-	},
-	{
-		"id": "4",
-		"title": "Financial Management - Case Studies",
-		"faculty": "ECON",
-		"department": "Business Administration",
-		"type": "Case Studies",
-		"subject": "Financial Management",
-		"semester": "Spring 2024",
-		"teacher": "Prof. Brown",
-		"uploadDate": "2024-01-12",
-		"r2Url": "https://media.yourdomain.com/econ/financial-management-cases.pdf"
 	}
-]
