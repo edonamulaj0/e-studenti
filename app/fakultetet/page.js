@@ -26,7 +26,7 @@ export default function Faculties() {
       departments: ["Matematikë", "Fizikë", "Kimi", "Biologji", "Gjeografi"],
       students: "700+",
       website: "http://fshmn.uni-pr.edu/",
-      color: "blue",
+      color: "red",
     },
     {
       name: "Fakulteti i Filologjisë",
@@ -43,7 +43,7 @@ export default function Faculties() {
       ],
       students: "800+",
       website: "http://filologjia.uni-pr.edu/",
-      color: "red",
+      color: "green",
     },
     {
       name: "Fakulteti Juridik",
@@ -51,7 +51,7 @@ export default function Faculties() {
       departments: ["Juridik i Përgjithshëm"],
       students: "900+",
       website: "http://juridiku.uni-pr.edu/",
-      color: "green",
+      color: "red",
     },
     {
       name: "Fakulteti i Ekonomisë",
@@ -66,7 +66,7 @@ export default function Faculties() {
       ],
       students: "1,000+",
       website: "http://ekonomiku.uni-pr.edu/",
-      color: "green",
+      color: "indigo",
     },
     {
       name: "Fakulteti i Ndërtimtarisë",
@@ -92,7 +92,7 @@ export default function Faculties() {
       ],
       students: "1,200+",
       website: "https://fiek.uni-pr.edu",
-      color: "red",
+      color: "green",
     },
     {
       name: "Fakulteti i Mjekësisë",
@@ -106,7 +106,7 @@ export default function Faculties() {
       ],
       students: "800+",
       website: "http://mjekesia.uni-pr.edu/",
-      color: "red",
+      color: "indigo",
     },
     {
       name: "Fakulteti i Arteve",
@@ -128,7 +128,7 @@ export default function Faculties() {
       ],
       students: "800+",
       website: "http://fbv.uni-pr.edu/",
-      color: "red",
+      color: "green",
     },
     {
       name: "Fakulteti i Edukimit Fizik dhe i Sportit",
@@ -136,7 +136,7 @@ export default function Faculties() {
       departments: ["Edukim Fizik dhe Sport"],
       students: "800+",
       website: "http://fefs.uni-pr.edu/",
-      color: "red",
+      color: "indigo",
     },
     {
       name: "Fakulteti i Edukimit",
@@ -148,7 +148,7 @@ export default function Faculties() {
       ],
       students: "1,000+",
       website: "http://edukimi.uni-pr.edu/",
-      color: "purple",
+      color: "green",
     },
     {
       name: "Fakulteti i Arkitekturës",
@@ -170,7 +170,7 @@ export default function Faculties() {
       ],
       students: "600+",
       website: "http://fim.uni-pr.edu/",
-      color: "red",
+      color: "indigo",
     },
   ];
 
