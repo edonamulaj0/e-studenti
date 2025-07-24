@@ -1,5 +1,5 @@
 "use client";
-import { Mail, Phone } from "lucide-react";
+import { Mail, Phone, Send } from "lucide-react";
 
 export default function Footer() {
   return (
@@ -21,6 +21,8 @@ export default function Footer() {
               <span>info@e-studenti.com</span>
               <Phone className="w-4 h-4 mr-2 ml-5" />
               <span>+383 48 855 355</span>
+              <Send className="w-4 h-4 mr-2 ml-5" />
+              <span>@estudenti.up</span>
             </div>
           </div>
         </div>
