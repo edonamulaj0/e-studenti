@@ -112,7 +112,7 @@ export default function MaterialsClient({ initialMaterials }) {
                   <span className="text-sm font-medium">{material.type}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-sm text-gray-600">Prof.:</span>
+                  <span className="text-sm text-gray-600">Autor/e:</span>
                   <span className="text-sm font-medium">
                     {material.teacher}
                   </span>

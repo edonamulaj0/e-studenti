@@ -66,7 +66,7 @@
     "department": "//",
     "type": "Afat",
     "subject": "Anatomia 2 ",
-    "teacher": "//",
+    "teacher": "Jeta Mulaj",
     "r2Url": "https://media.e-studenti.com/Afatet-anatomia2.docx"
   },
   {
@@ -121,7 +121,7 @@
   },
   {
     "id": 13,
-    "title": "Harrison Interno - Venera",
+    "title": "Përmbledhje pyetjesh nga Mjekësia Interne",
     "faculty": "MED",
     "department": "//",
     "type": "Të tjera",
@@ -208,16 +208,6 @@
     "subject": "Patologji",
     "teacher": "//",
     "r2Url": "https://media.e-studenti.com/Pato%20-%20Leo%20and%20Oli.pdf"
-  },
-  {
-    "id": 22,
-    "title": "Shënime - Patologji (2021)",
-    "faculty": "MED",
-    "department": "//",
-    "type": "Ligjerata",
-    "subject": "Patologji",
-    "teacher": "Rina Skeraj",
-    "r2Url": "https://media.e-studenti.com/Pato%20-%20Rina%20Skeraj.pdf"
   },
   {
     "id": 23,
