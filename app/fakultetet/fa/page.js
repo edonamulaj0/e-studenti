@@ -27,7 +27,6 @@ export default function ArkitekturaDetail() {
   return (
     <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -72,7 +71,6 @@ export default function ArkitekturaDetail() {
           </div>
         </div>
 
-        {/* Contact Information */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Kontakti</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -93,7 +91,6 @@ export default function ArkitekturaDetail() {
           </div>
         </div>
 
-        {/* Departments */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Departamentet
@@ -109,17 +106,10 @@ export default function ArkitekturaDetail() {
                   <h3 className="font-semibold text-gray-900">
                     {department.name}
                   </h3>
-                  {/* <span className="text-sm text-red-600 font-medium">
-                    {department.code}
-                  </span> */}
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
                   <p>{department.description}</p>
                 </div>
-                {/* <div className="flex justify-between text-sm text-gray-600">
-                  <span>Studentë: {department.students}</span>
-                  <span>Profesorë: {department.teachers}</span>
-                </div> */}
               </Link>
             ))}
           </div>

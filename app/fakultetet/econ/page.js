@@ -1,17 +1,14 @@
-// app/faculties/filologjia/page.js (Example for Filologjia)
 "use client";
 import { BookOpen, Users, Mail, Phone, MapPin, Award } from "lucide-react";
 import Link from "next/link";
 
 export default function EkonomikuDetail() {
-  // Renamed to be specific for Filologjia
-  // Filologjia's specific data
   const faculty = {
     name: "Fakulteti Ekonomik",
     code: "ECON",
     description:
       "Fakulteti i Ekonomisë ofron programe në ekonomi, administrim biznesi, menaxhim dhe fusha të tjera të lidhura me të, duke i përgatitur studentët për karriera në sektorët e biznesit dhe ekonomisë.",
-    established: "1960", // One of the original faculties
+    established: "1960",
     location: "Agim Ramadani, Prishtinë",
     email: "ekonomiku@uni-pr.edu",
     phone: "+383 38 228 966",
@@ -61,7 +58,6 @@ export default function EkonomikuDetail() {
   return (
     <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
       <div className="container mx-auto px-4 py-8">
-        {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-8 mb-8">
           <div className="flex items-center justify-between mb-6">
             <div>
@@ -106,7 +102,6 @@ export default function EkonomikuDetail() {
           </div>
         </div>
 
-        {/* Contact Information */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Kontakti</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -127,7 +122,6 @@ export default function EkonomikuDetail() {
           </div>
         </div>
 
-        {/* Departments */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Departamentet
@@ -143,17 +137,10 @@ export default function EkonomikuDetail() {
                   <h3 className="font-semibold text-gray-900">
                     {department.name}
                   </h3>
-                  {/* <span className="text-sm text-red-600 font-medium">
-                    {department.code}
-                  </span> */}
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
                   <p>{department.description}</p>
                 </div>
-                {/* <div className="flex justify-between text-sm text-gray-600">
-                  <span>Studentët: {department.students}</span>
-                  <span>Profesorët: {department.teachers}</span>
-                </div> */}
               </Link>
             ))}
           </div>

@@ -1,5 +1,4 @@
-// app/materialet/materials-client.js
-"use client"; // <--- THIS IS ESSENTIAL FOR USESTATE AND OTHER HOOKS
+"use client"; 
 
 import { useState } from "react";
 import { FileText, Download, Eye, Star, Filter, Search } from "lucide-react";
@@ -31,7 +30,6 @@ export default function MaterialsClient({ initialMaterials }) {
           </p>
         </div>
 
-        {/* Search and Filters */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="relative">
@@ -51,10 +49,20 @@ export default function MaterialsClient({ initialMaterials }) {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500"
             >
               <option value="">Të gjitha Fakultetet</option>
-              <option value="FIEK">FIEK</option>
-              <option value="MED">Mjekesia</option>
+              <option value="ART">Artet</option>
               <option value="ECON">Ekonomiku</option>
+              <option value="EDU">Edukimi</option>
+              <option value="FA">Arkitektura</option>
+              <option value="FBV">FBV</option>
+              <option value="FEFS">FEFS</option>
+              <option value="FFL">Filologjiku</option>
+              <option value="FFZ">Filozofiku</option>
+              <option value="FIEK">FIEK</option>
               <option value="FIM">FIM</option>
+              <option value="FIN">FIN</option>
+              <option value="FSHMN">FSHMN</option>
+              <option value="LAW">Juridiku</option>
+              <option value="MED">Mjekësia</option>
             </select>
 
             <select
@@ -77,11 +85,10 @@ export default function MaterialsClient({ initialMaterials }) {
           </div>
         </div>
 
-        {/* Materials Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {filteredMaterials.map((material) => (
             <div
-              key={material.id} // Use material.id as the key, ensure it's unique in your JSON
+              key={material.id}
               className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
             >
               <div className="flex items-start justify-between mb-4">
@@ -96,7 +103,6 @@ export default function MaterialsClient({ initialMaterials }) {
                     <span>{material.department}</span>
                   </div>
                 </div>
-                {/* You might want to dynamically show different icons based on fileType (e.g., PDF, Video) */}
                 <FileText className="w-8 h-8 text-red-600" />
               </div>
 
@@ -120,7 +126,6 @@ export default function MaterialsClient({ initialMaterials }) {
               </div>
 
               <div className="flex space-x-2">
-                {/* Preview Button: Link directly to the R2 URL */}
                 {material.r2Url && (
                   <a
                     href={material.r2Url}
@@ -133,7 +138,6 @@ export default function MaterialsClient({ initialMaterials }) {
                   </a>
                 )}
 
-                {/* Download Button: Link directly to the R2 URL (often same as preview for PDFs/images) */}
                 {material.r2Url && (
                   <a
                     href={material.r2Url}
@@ -142,7 +146,7 @@ export default function MaterialsClient({ initialMaterials }) {
                       material.title.replace(/[^a-z0-9]/gi, "_") +
                       "." +
                       (material.fileType || "pdf")
-                    } // Added fallback for fileType
+                    }
                     className="flex-1 bg-gray-600 text-white py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium flex items-center justify-center"
                   >
                     <Download className="w-4 h-4 mr-2" />

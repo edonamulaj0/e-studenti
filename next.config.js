@@ -1,10 +1,10 @@
 /** @type {import('next').NextConfig} */
+
 const nextConfig = {
-  output: "export", // This is essential for static export
+  output: "export", 
   images: {
-    unoptimized: true, // Recommended for static export on Pages if not using Cloudflare Images
+    unoptimized: true, 
   },
-  // any other configurations you have
 };
 
 module.exports = nextConfig;

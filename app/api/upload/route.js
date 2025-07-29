@@ -3,10 +3,9 @@ import {
   PutObjectCommand,
   GetObjectCommand,
 } from "@aws-sdk/client-s3";
-import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { kv } from "@vercel/kv";
 
-// Configure R2 client (R2 is S3-compatible)
+// configure R2 client
 const r2Client = new S3Client({
   region: "auto",
   endpoint: `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -82,49 +81,6 @@ export async function POST(request) {
     console.error("R2 Upload error:", error);
     return Response.json(
       { error: "Upload failed: " + error.message },
-      { status: 500 }
-    );
-  }
-}
-
-// Generate secure download URL (optional - for private files)
-export async function GET(request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const materialId = searchParams.get("id");
-
-    if (!materialId) {
-      return Response.json({ error: "Material ID required" }, { status: 400 });
-    }
-
-    const material = await kv.hgetall(`material:${materialId}`);
-
-    if (!material) {
-      return Response.json({ error: "Material not found" }, { status: 404 });
-    }
-
-    // For public files, just return the URL
-    // For private files, generate a signed URL:
-    /*
-    const getCommand = new GetObjectCommand({
-      Bucket: process.env.R2_BUCKET_NAME,
-      Key: material.filePath,
-    });
-    
-    const signedUrl = await getSignedUrl(r2Client, getCommand, { 
-      expiresIn: 3600 // 1 hour
-    });
-    */
-
-    return Response.json({
-      success: true,
-      downloadUrl: material.fileUrl, // or signedUrl for private files
-      fileName: material.fileName,
-    });
-  } catch (error) {
-    console.error("Download error:", error);
-    return Response.json(
-      { error: "Failed to get download URL" },
       { status: 500 }
     );
   }
