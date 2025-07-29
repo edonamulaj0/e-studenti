@@ -49,6 +49,12 @@ export default function Navbar() {
               Erasmus
             </Link>
             <Link
+              href="/informacione"
+              className="text-gray-700 hover:text-red-600 transition-colors"
+            >
+              Informacione
+            </Link>
+            <Link
               href="/kontakto"
               className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors flex items-center"
             >
@@ -96,6 +102,13 @@ export default function Navbar() {
                 onClick={handleLinkClick}
               >
                 Erasmus
+              </Link>
+              <Link
+                href="/informacione"
+                className="block px-3 py-2 text-gray-700 hover:bg-gray-100 rounded"
+                onClick={handleLinkClick}
+              >
+                Informacione
               </Link>
               <Link
                 href="/kontakto"
