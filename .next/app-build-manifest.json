@@ -1,0 +1,176 @@
+{
+  "pages": {
+    "/not-found": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/app/not-found-d9b10347307da05d.js"
+    ],
+    "/_not-found/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/app/_not-found/page-c1bbe1b4bc8170a6.js"
+    ],
+    "/layout": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/css/5e57a39804e80278.css",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/layout-c71881161f865ac7.js"
+    ],
+    "/erasmus/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/app/erasmus/page-d25355e80fb45ef4.js"
+    ],
+    "/fakultetet/art/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/art/page-f2391948a70e9af7.js"
+    ],
+    "/fakultetet/econ/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/econ/page-093da8eb01480f9b.js"
+    ],
+    "/fakultetet/edu/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/edu/page-33c630aaf74bc983.js"
+    ],
+    "/fakultetet/fa/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/fa/page-107061ba2db09e63.js"
+    ],
+    "/fakultetet/fbv/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/fbv/page-d181c5fe2147abc7.js"
+    ],
+    "/fakultetet/fefs/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/fefs/page-c08fd7ba21a742df.js"
+    ],
+    "/fakultetet/ffl/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/ffl/page-886ef3a315888ba1.js"
+    ],
+    "/fakultetet/fiek/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/fiek/page-df3a4b1f95d010f2.js"
+    ],
+    "/fakultetet/ffz/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/ffz/page-017e7599bada63df.js"
+    ],
+    "/fakultetet/fim/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/fim/page-7cd2dad44ee33ea2.js"
+    ],
+    "/fakultetet/fin/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/fin/page-653873dd941d83f3.js"
+    ],
+    "/fakultetet/fshmn/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/fshmn/page-0856f8dffcff96b3.js"
+    ],
+    "/fakultetet/law/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/law/page-f6d5d3fdba172031.js"
+    ],
+    "/fakultetet/med/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/med/page-5b0e33a84974198b.js"
+    ],
+    "/fakultetet/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/fakultetet/page-638061fbd935af54.js"
+    ],
+    "/kontakto/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/app/kontakto/page-dacd242f0e171c94.js"
+    ],
+    "/materialet/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/app/materialet/page-6dccb4a4c85fc8c2.js"
+    ],
+    "/page": [
+      "static/chunks/webpack-fe77e788b80a9122.js",
+      "static/chunks/fd9d1056-357a9aa7cf7b0906.js",
+      "static/chunks/117-d6b0426f58694440.js",
+      "static/chunks/main-app-949a156d009cd71c.js",
+      "static/chunks/972-ed5ec83d6b8990f7.js",
+      "static/chunks/app/page-1a6862b306b2ec8a.js"
+    ]
+  }
+}
