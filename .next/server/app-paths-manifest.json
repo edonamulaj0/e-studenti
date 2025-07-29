@@ -1,0 +1,23 @@
+{
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/upload/route": "app/api/upload/route.js",
+  "/erasmus/page": "app/erasmus/page.js",
+  "/fakultetet/art/page": "app/fakultetet/art/page.js",
+  "/fakultetet/econ/page": "app/fakultetet/econ/page.js",
+  "/fakultetet/edu/page": "app/fakultetet/edu/page.js",
+  "/fakultetet/fa/page": "app/fakultetet/fa/page.js",
+  "/fakultetet/fbv/page": "app/fakultetet/fbv/page.js",
+  "/fakultetet/fefs/page": "app/fakultetet/fefs/page.js",
+  "/fakultetet/ffl/page": "app/fakultetet/ffl/page.js",
+  "/fakultetet/fiek/page": "app/fakultetet/fiek/page.js",
+  "/fakultetet/ffz/page": "app/fakultetet/ffz/page.js",
+  "/fakultetet/fim/page": "app/fakultetet/fim/page.js",
+  "/fakultetet/fin/page": "app/fakultetet/fin/page.js",
+  "/fakultetet/fshmn/page": "app/fakultetet/fshmn/page.js",
+  "/fakultetet/law/page": "app/fakultetet/law/page.js",
+  "/fakultetet/med/page": "app/fakultetet/med/page.js",
+  "/fakultetet/page": "app/fakultetet/page.js",
+  "/kontakto/page": "app/kontakto/page.js",
+  "/materialet/page": "app/materialet/page.js",
+  "/page": "app/page.js"
+}
