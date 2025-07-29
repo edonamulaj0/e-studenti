@@ -14,7 +14,6 @@ export default function Navbar() {
     <nav className="bg-white shadow-lg fixed w-full top-0 z-50">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center h-16">
-          {/* Logo */}
           <Link
             href="/"
             className="text-2xl font-bold text-red-600"
@@ -23,7 +22,7 @@ export default function Navbar() {
             E-Studenti
           </Link>
 
-          {/* Desktop Menu */}
+          {/* desktop menu */}
           <div className="hidden md:flex items-center space-x-8">
             <Link
               href="/"
@@ -57,7 +56,7 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
+          {/* mobile menu hamburger */}
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="md:hidden text-gray-700 hover:text-red-600 focus:outline-none focus:ring-2 focus:ring-red-600 rounded-md p-1"
@@ -67,7 +66,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {isOpen && (
           <div className="md:hidden bg-white border-t shadow-lg">
             <div className="px-2 pt-2 pb-3 space-y-1">
@@ -106,9 +104,6 @@ export default function Navbar() {
               >
                 Kontakto
               </Link>
-              {/* <Link href="/login" className="block px-3 py-2 bg-red-600 text-white rounded" onClick={handleLinkClick}>
-				  Log In
-				</Link> */}
             </div>
           </div>
         )}

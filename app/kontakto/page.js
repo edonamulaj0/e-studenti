@@ -11,7 +11,6 @@ export default function Kontakto() {
           </h1>
 
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Left side - Dërgo materiale */}
             <div className="p-8 bg-red-50 rounded-lg border-l-4 border-red-600 h-fit">
               <div className="flex items-center mb-4">
                 <Mail className="w-6 h-6 text-red-600 mr-3" />
@@ -35,9 +34,7 @@ export default function Kontakto() {
               </div>
             </div>
 
-            {/* Right side - Gmail-style compose window */}
             <div className="bg-white rounded-lg shadow-xl overflow-hidden">
-              {/* Gmail header */}
               <div className="bg-gray-100 px-4 py-3 flex items-center justify-between border-b">
                 <h3 className="text-sm font-medium text-gray-700">
                   New Message
@@ -55,7 +52,6 @@ export default function Kontakto() {
                 </div>
               </div>
 
-              {/* Gmail compose form */}
               <div className="p-4 space-y-3">
                 <div className="flex items-center">
                   <label className="text-sm text-gray-600 w-16">To:</label>

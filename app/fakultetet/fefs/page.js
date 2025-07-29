@@ -1,4 +1,3 @@
-// app/faculties/filologjia/page.js (Example for Filologjia)
 "use client";
 import { BookOpen, Users, Mail, Phone, MapPin, Award } from "lucide-react";
 import Link from "next/link";
@@ -73,7 +72,6 @@ export default function FefsDetail() {
           </div>
         </div>
 
-        {/* Contact Information */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-4">Kontakti</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -94,7 +92,6 @@ export default function FefsDetail() {
           </div>
         </div>
 
-        {/* Departments */}
         <div className="bg-white rounded-xl shadow-lg p-6 mb-8">
           <h2 className="text-2xl font-bold text-gray-900 mb-6">
             Departamentet
@@ -110,17 +107,10 @@ export default function FefsDetail() {
                   <h3 className="font-semibold text-gray-900">
                     {department.name}
                   </h3>
-                  {/* <span className="text-sm text-red-600 font-medium">
-                    {department.code}
-                  </span> */}
                 </div>
                 <div className="text-sm text-gray-600 mb-2">
                   <p>{department.description}</p>
                 </div>
-                {/* <div className="flex justify-between text-sm text-gray-600">
-                  <span>Studentët: {department.students}</span>
-                  <span>Profesorët: {department.teachers}</span>
-                </div> */}
               </Link>
             ))}
           </div>

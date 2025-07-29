@@ -16,7 +16,6 @@ export default function NotFound() {
     <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100 flex items-center justify-center">
       <div className="container mx-auto px-4 pb-8 safe-area-bottom">
         <div className="max-w-2xl mx-auto text-center">
-          {/* Large 404 */}
           <div className="mb-8">
             <h1 className="text-9xl font-bold text-red-600 mb-4 animate-pulse">
               404
@@ -26,7 +25,6 @@ export default function NotFound() {
             </div>
           </div>
 
-          {/* Main message */}
           <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
             <h2 className="text-3xl font-bold text-gray-800 mb-4">
               Faqja nuk u gjet!
@@ -36,7 +34,6 @@ export default function NotFound() {
               përmirësuar.
             </p>
 
-            {/* Status indicator */}
             <div className="flex items-center justify-center space-x-2 mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
               <RefreshCw className="w-5 h-5 text-yellow-600" />
               <span className="text-yellow-700 font-medium">
@@ -45,7 +42,6 @@ export default function NotFound() {
             </div>
           </div>
 
-          {/* Action buttons */}
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <button
               onClick={() => window.history.back()}

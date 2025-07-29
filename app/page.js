@@ -4,7 +4,6 @@ import Link from "next/link";
 export default function Home() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
-      {/* Hero Section */}
       <section className="pt-20 pb-16 mt-10">
         <div className="container mx-auto px-4">
           <div className="text-center max-w-4xl mx-auto">
@@ -16,7 +15,6 @@ export default function Home() {
               Prishtinës
             </p>
 
-            {/* Disclaimer */}
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 mb-8">
               <p className="text-yellow-800 font-medium">
                 ⚠️ Vërejtje: Kjo faqe është ndërtuar nga studentët për
@@ -43,14 +41,12 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick Access Grid */}
       <section className="py-16">
         <div className="container mx-auto px-4">
           <h2 className="text-3xl font-bold text-center mb-12">
             Qasje e shpejtë
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {/* Faculties */}
             <Link
               href="/fakultetet"
               className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow group"
@@ -66,7 +62,6 @@ export default function Home() {
               </p>
             </Link>
 
-            {/* Materials */}
             <Link
               href="/materialet"
               className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow group"
@@ -83,7 +78,7 @@ export default function Home() {
                 profesorët dhe vetë universiteti.
               </p>
             </Link>
-            {/* University Pages */}
+
             <div className="bg-white rounded-xl shadow-lg p-6">
               <div className="flex items-center mb-4">
                 <ExternalLink className="w-8 h-8 text-indigo-600 mr-3" />
@@ -137,6 +132,7 @@ export default function Home() {
           </div>
         </div>
       </section> */}
+      
     </div>
   );
 }
