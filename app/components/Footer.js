@@ -18,8 +18,6 @@ export default function Footer() {
             <div className="flex items-center text-gray-400">
               <Mail className="w-4 h-4 mr-2" />
               <span>info@e-studenti.com</span>
-              <Phone className="w-4 h-4 mr-2 ml-5" />
-              <span>+383 48 855 355</span>
               <MessageSquare className="w-4 h-4 mr-2 ml-5" />
               <span>@estudenti.up</span>
             </div>
