@@ -81,16 +81,6 @@
   },
   {
     "id": 9,
-    "title": "Essential MATLAB for Engineers and Scientists",
-    "faculty": "FIEK",
-    "department": "TIK",
-    "type": "Të tjera",
-    "subject": "Matlab",
-    "teacher": "Bujar Krasniqi",
-    "r2Url": "https://media.e-studenti.com/Brian%20D.%20Hahn_%20Daniel%20T%20Valentine%20-%20Essential%20MATLAB%20for%20Engineers%20and%20Scientists-Academic%20Press%20(2019).pdf"
-  },
-  {
-    "id": 10,
     "title": "Computer Networking - A Top Down Approach",
     "faculty": "FIEK",
     "department": "TIK",
@@ -100,7 +90,7 @@
     "r2Url": "https://media.e-studenti.com/Computer%20Networking%20-%20A%20Top%20Down%20Approach.pdf"
   },
   {
-    "id": 11,
+    "id": 10,
     "title": "Afat - Elektronika (Nëntor 2023)",
     "faculty": "FIEK",
     "department": "//",
@@ -110,7 +100,7 @@
     "r2Url": "https://media.e-studenti.com/Elekronika_Zgjidhjet_Nentori_2023.pdf"
   },
   {
-    "id": 12,
+    "id": 11,
     "title": "Elektronika - Pjesa 1 ",
     "faculty": "FIEK",
     "department": "//",
@@ -120,7 +110,7 @@
     "r2Url": "https://media.e-studenti.com/Elektronike%20-%20Pjesa%20pare.pdf"
   },
   {
-    "id": 13,
+    "id": 12,
     "title": "Përmbledhje pyetjesh nga Mjekësia Interne",
     "faculty": "MED",
     "department": "//",
@@ -130,7 +120,7 @@
     "r2Url": "https://media.e-studenti.com/Harrison%20Interno%20-%20Venera.pdf"
   },
   {
-    "id": 14,
+    "id": 13,
     "title": "Harrison - Infektiva",
     "faculty": "MED",
     "department": "//",
@@ -140,7 +130,7 @@
     "r2Url": "https://media.e-studenti.com/INFEKTIVE-HARRISON.docx"
   },
   {
-    "id": 15,
+    "id": 14,
     "title": "Shënime - Mjekësia Interne",
     "faculty": "MED",
     "department": "//",
@@ -150,17 +140,7 @@
     "r2Url": "https://media.e-studenti.com/JQ%20-%20INTERNO.pdf"
   },
   {
-    "id": 16,
-    "title": "Grokking Web Application Security",
-    "faculty": "FIEK",
-    "department": "//",
-    "type": "Të tjera",
-    "subject": "//",
-    "teacher": "//",
-    "r2Url": "https://media.e-studenti.com/Malcolm%20McDonald%20-%20Grokking%20Web%20Application%20Security-Manning%20Publications%20(2024).pdf"
-  },
-  {
-    "id": 17,
+    "id": 15,
     "title": "Prezantimet e Ligjeratave - Kalkulus 1 (RAR)",
     "faculty": "FIEK",
     "department": "//",
@@ -170,7 +150,7 @@
     "r2Url": "https://media.e-studenti.com/Math1-2022.rar"
   },
   {
-    "id": 18,
+    "id": 16,
     "title": "Prezantimet e Ligjeratave - Kalkulus 3 (RAR)",
     "faculty": "FIEK",
     "department": "TIK",
@@ -180,7 +160,7 @@
     "r2Url": "https://media.e-studenti.com/Math3(TIK)-VRH.rar"
   },
   {
-    "id": 19,
+    "id": 17,
     "title": "Shënime - Oftalmologji",
     "faculty": "MED",
     "department": "//",
@@ -190,7 +170,7 @@
     "r2Url": "https://media.e-studenti.com/OFTALMOLOGJI%20-%20shenime.pdf"
   },
   {
-    "id": 20,
+    "id": 18,
     "title": "Fundamentals of Pathology",
     "faculty": "MED",
     "department": "//",
@@ -200,7 +180,7 @@
     "r2Url": "https://media.e-studenti.com/PATHOMA.pdf"
   },
   {
-    "id": 21,
+    "id": 19,
     "title": "Leo and Oli's Pathology",
     "faculty": "MED",
     "department": "//",
@@ -210,7 +190,7 @@
     "r2Url": "https://media.e-studenti.com/Pato%20-%20Leo%20and%20Oli.pdf"
   },
   {
-    "id": 23,
+    "id": 20,
     "title": "Shënime - Patologji (Pjesa e përgjithshme)",
     "faculty": "MED",
     "department": "//",
@@ -220,7 +200,7 @@
     "r2Url": "https://media.e-studenti.com/Patologji%20-%20pjesa%20e%20pergjithshme..pdf"
   },
   {
-    "id": 24,
+    "id": 21,
     "title": "Shënime - Patologji (Pjesa speciale)",
     "faculty": "MED",
     "department": "//",
@@ -230,7 +210,7 @@
     "r2Url": "https://media.e-studenti.com/Patologji%20-%20pjesa%20speciale..pdf"
   },
   {
-    "id": 25,
+    "id": 22,
     "title": "Prezantimet e Ligjeratave - CPP (RAR) (22/23)",
     "faculty": "FIEK",
     "department": "//",
@@ -240,7 +220,7 @@
     "r2Url": "https://media.e-studenti.com/Programim1-KadriSylejmani.rar"
   },
   {
-    "id": 26,
+    "id": 23,
     "title": "Prezantimet e Ligjeratave - ASD2 (RAR) (22/23)",
     "faculty": "FIEK",
     "department": "//",
@@ -250,7 +230,7 @@
     "r2Url": "https://media.e-studenti.com/Programim2-KadriSylejmani.rar"
   },
   {
-    "id": 27,
+    "id": 24,
     "title": "Raport Laboratorik - Fizika 1 ",
     "faculty": "FIEK",
     "department": "//",
@@ -260,7 +240,7 @@
     "r2Url": "https://media.e-studenti.com/ProjektLabFizike.pdf"
   },
   {
-    "id": 28,
+    "id": 25,
     "title": "Pyetje nga Neuroanatomia",
     "faculty": "MED",
     "department": "//",
@@ -270,7 +250,7 @@
     "r2Url": "https://media.e-studenti.com/Pytje%20nga%20Neuroanatomia.pdf"
   },
   {
-    "id": 29,
+    "id": 26,
     "title": "Qarqe Kompjuterike Kombinuese",
     "faculty": "FIEK",
     "department": "//",
@@ -280,7 +260,7 @@
     "r2Url": "https://media.e-studenti.com/Qarqet%20Kompjuterike%20Kombinuese%20-%20Agni%20Dika.pdf"
   },
   {
-    "id": 30,
+    "id": 27,
     "title": "Shënime - Sëmundjet infektive",
     "faculty": "MED",
     "department": "//",
@@ -290,7 +270,7 @@
     "r2Url": "https://media.e-studenti.com/Semundje%20Infektive%20-%20JQ.pdf"
   },
   {
-    "id": 31,
+    "id": 28,
     "title": "Strabizmi, Ambliopia",
     "faculty": "MED",
     "department": "//",
@@ -300,7 +280,7 @@
     "r2Url": "https://media.e-studenti.com/Strabizmi%20-%20Ambliopia.docx"
   },
   {
-    "id": 32,
+    "id": 29,
     "title": "Temat e Infektives (Ilir Tolaj)",
     "faculty": "MED",
     "department": "//",
@@ -310,7 +290,7 @@
     "r2Url": "https://media.e-studenti.com/Temat%20-%20Ilir%20Tolaj%20-%20Infektive.docx"
   },
   {
-    "id": 33,
+    "id": 30,
     "title": "Veshi - Anatomia 2",
     "faculty": "MED",
     "department": "//",
@@ -320,7 +300,7 @@
     "r2Url": "https://media.e-studenti.com/Veshi.pdf"
   },
   {
-    "id": 34,
+    "id": 31,
     "title": "Afate - Patologji",
     "faculty": "MED",
     "department": "//",
@@ -330,7 +310,7 @@
     "r2Url": "https://media.e-studenti.com/afate-pato.docx"
   },
   {
-    "id": 35,
+    "id": 32,
     "title": "Shënime - Anatomia 2",
     "faculty": "MED",
     "department": "//",
@@ -340,7 +320,7 @@
     "r2Url": "https://media.e-studenti.com/shenime-anatomia2.pdf"
   },
   {
-    "id": 36,
+    "id": 33,
     "title": "Web Resources to Study",
     "faculty": "//",
     "department": "//",
