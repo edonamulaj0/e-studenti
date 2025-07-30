@@ -39,7 +39,7 @@ We welcome contributions! This project is built on transparency and community co
 - Write clear commit messages
 - Test your changes before submitting
 
-## 📋 Project Structure
+## Project Structure
 
 ```
 e-studenti/
