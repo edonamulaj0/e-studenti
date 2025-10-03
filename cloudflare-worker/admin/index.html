@@ -418,7 +418,13 @@
         >
           🚀 Save & Deploy
         </button>
-        <button class="btn btn-info" onclick="downloadForDeploy()" id="downloadDeployBtn" disabled title="Download materials.json for manual deployment">
+        <button
+          class="btn btn-info"
+          onclick="downloadForDeploy()"
+          id="downloadDeployBtn"
+          disabled
+          title="Download materials.json for manual deployment"
+        >
           📥 Download for Deploy
         </button>
         <button class="btn btn-secondary" onclick="downloadJSON()">
@@ -645,10 +651,10 @@
 
           // Step 2: Trigger local webhook to sync and push
           try {
-            const webhookResponse = await fetch('http://localhost:3001/sync', {
-              method: 'POST',
+            const webhookResponse = await fetch("http://localhost:3001/sync", {
+              method: "POST",
               headers: {
-                'Content-Type': 'application/json',
+                "Content-Type": "application/json",
               },
             });
 
@@ -658,7 +664,7 @@
                 "success"
               );
             } else {
-              throw new Error('Webhook server not responding');
+              throw new Error("Webhook server not responding");
             }
           } catch (webhookError) {
             showAlert(
