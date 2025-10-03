@@ -3,6 +3,7 @@
 ## ✨ Simple 2-Step Workflow
 
 ### Step 1: Edit in Admin UI
+
 1. Open: **https://admin-studenti.pages.dev**
 2. Click **"Load from R2"**
 3. Edit materials (fill in faculty, type, subject, etc.)
@@ -15,6 +16,7 @@ npm run sync
 ```
 
 **That's it!** This single command will:
+
 - ✅ Download from R2
 - ✅ Save to local `app/data/materials.json`
 - ✅ Commit to git
@@ -26,6 +28,7 @@ npm run sync
 ## What Happens Behind the Scenes
 
 When you run `npm run sync`:
+
 1. Downloads latest materials.json from R2
 2. Saves to `app/data/materials.json`
 3. Commits the changes
@@ -41,11 +44,13 @@ When you run `npm run sync`:
 If you want **zero terminal commands**, you can use the webhook server:
 
 ### Setup (One-time):
+
 ```bash
 npm run webhook
 ```
 
 ### Usage:
+
 Click **"🚀 Save & Deploy"** in admin UI
 
 But honestly, `npm run sync` is simpler! 😊
