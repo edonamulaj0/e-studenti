@@ -1,5 +1,17 @@
 [
     {
+        "id": 42,
+        "title": "Ushtrime numerike - Elektronikë",
+        "faculty": "MED",
+        "department": "//",
+        "type": "Ligjerata",
+        "subject": "Elektronika",
+        "teacher": "Milaim Zabeli",
+        "r2Url": "https://media.e-studenti.com/1.%20E_Ch1%26Ch2%26Ch3_Numerical%20exercises%20-%20Copy.ppt",
+        "fileType": "ppt",
+        "_isNew": true
+    },
+    {
         "id": 6,
         "title": "Projekt - Algjebër Lineare dhe Kalkulus 1 (22/23)",
         "faculty": "FIEK",
@@ -22,6 +34,18 @@
         "fileType": "docx"
     },
     {
+        "id": 43,
+        "title": "Automatikë - Teori (Skriptë)",
+        "faculty": "FIEK",
+        "department": "//",
+        "type": "Te tjera",
+        "subject": "Automatikë",
+        "teacher": "//",
+        "r2Url": "https://media.e-studenti.com/Automatike%20teori%20SKRIPT-%20Artina%20Krasniqi.rar",
+        "fileType": "rar",
+        "_isNew": true
+    },
+    {
         "id": 8,
         "title": "Prezantimet e Ligjeratave - BIE2 (RAR) (22/23)",
         "faculty": "FIEK",
@@ -31,6 +55,42 @@
         "teacher": "Luan Ahma",
         "r2Url": "https://media.e-studenti.com/BIE2-LuanAhma2022.rar",
         "fileType": "rar"
+    },
+    {
+        "id": 44,
+        "title": "Kapitulli 4 - Arkitektura e Kompjuterëve",
+        "faculty": "FIEK",
+        "department": "//",
+        "type": "Ligjerata",
+        "subject": "Arkitektura e Kompjuterëve",
+        "teacher": "Qamil Kabashi",
+        "r2Url": "https://media.e-studenti.com/Ch4_AOK_2024.pdf",
+        "fileType": "pdf",
+        "_isNew": true
+    },
+    {
+        "id": 45,
+        "title": "Kapitulli 5 - Arkitektura e Kompjuterëve",
+        "faculty": "FIEK",
+        "department": "//",
+        "type": "Ligjerata",
+        "subject": "Arkitektura e Kompjuterëve",
+        "teacher": "Qamil Kabashi",
+        "r2Url": "https://media.e-studenti.com/Ch5_AOK_2024.pdf",
+        "fileType": "pdf",
+        "_isNew": true
+    },
+    {
+        "id": 46,
+        "title": "Kapitulli 6 - Arkitektura e Kompjuterëve",
+        "faculty": "FIEK",
+        "department": "//",
+        "type": "Ligjerata",
+        "subject": "Arkitektura e Kompjuterëve",
+        "teacher": "Qamil Kabashi",
+        "r2Url": "https://media.e-studenti.com/Ch6_AOK_2024.pdf",
+        "fileType": "pdf",
+        "_isNew": true
     },
     {
         "id": 9,
@@ -178,6 +238,18 @@
         "fileType": "rar"
     },
     {
+        "id": 47,
+        "title": "Matjet elektronike",
+        "faculty": "FIEK",
+        "department": "EAR",
+        "type": "Ligjerata",
+        "subject": "Elektronika",
+        "teacher": "Milaim Zabeli",
+        "r2Url": "https://media.e-studenti.com/Matjet%20elektronike.pdf",
+        "fileType": "pdf",
+        "_isNew": true
+    },
+    {
         "id": 17,
         "title": "Shënime - Oftalmologji",
         "faculty": "MED",
@@ -201,11 +273,11 @@
     },
     {
         "id": 36,
-        "title": "PRAKTIKA TE MJEKSIA E PERGJITHSHME",
-        "faculty": "",
-        "department": "//",
-        "type": "",
-        "subject": "",
+        "title": "Mjekësia e Përgjithshme - Praktikë",
+        "faculty": "MED",
+        "department": "Mjekësia e Përgjithshme",
+        "type": "Te tjera",
+        "subject": "//",
         "teacher": "//",
         "r2Url": "https://media.e-studenti.com/PRAKTIKA%20TE%20MJEKSIA%20E%20PERGJITHSHME.docx",
         "fileType": "docx",
@@ -278,6 +350,18 @@
         "fileType": "pdf"
     },
     {
+        "id": 48,
+        "title": "Pyetjet nga Menaxhimi i Projekteve",
+        "faculty": "FIEK",
+        "department": "//",
+        "type": "Afat",
+        "subject": "Menaxhimi i Projekteve",
+        "teacher": "Nora Dushi",
+        "r2Url": "https://media.e-studenti.com/Pyetjet%20nga%20lenda%20Menaxhimi%20i%20Projekteve.docx",
+        "fileType": "docx",
+        "_isNew": true
+    },
+    {
         "id": 38,
         "title": "Infectious Diseases - Questions",
         "faculty": "MED",
@@ -310,18 +394,6 @@
         "teacher": "Agni Dika",
         "r2Url": "https://media.e-studenti.com/Qarqet%20Kompjuterike%20Kombinuese%20-%20Agni%20Dika.pdf",
         "fileType": "pdf"
-    },
-    {
-        "id": 39,
-        "title": "Qeshor 2023",
-        "faculty": "",
-        "department": "//",
-        "type": "",
-        "subject": "",
-        "teacher": "//",
-        "r2Url": "https://media.e-studenti.com/Qeshor%202023.zip",
-        "fileType": "zip",
-        "_isNew": true
     },
     {
         "id": 40,
@@ -401,6 +473,30 @@
         "teacher": "//",
         "r2Url": "https://media.e-studenti.com/afate-pato.docx",
         "fileType": "docx"
+    },
+    {
+        "id": 49,
+        "title": "Kolokviumi 1 - Arkitektura e Kompjuterëve",
+        "faculty": "FIEK",
+        "department": "//",
+        "type": "Afat",
+        "subject": "Arkitektura e Kompjuterëve",
+        "teacher": "Qamil Kabashi",
+        "r2Url": "https://media.e-studenti.com/k1%20aok%20qamili.pdf",
+        "fileType": "pdf",
+        "_isNew": true
+    },
+    {
+        "id": 50,
+        "title": "Mikroprocesorët dhe Mikrokontrollerët",
+        "faculty": "FIEK",
+        "department": "EAR",
+        "type": "Ligjerata",
+        "subject": "Mikroprocesorët dhe Mikrokontrollerët",
+        "teacher": "Lavdim Kurtaj",
+        "r2Url": "https://media.e-studenti.com/mm-ear.pdf",
+        "fileType": "pdf",
+        "_isNew": true
     },
     {
         "id": 1,
