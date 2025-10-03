@@ -475,6 +475,30 @@
         "fileType": "docx"
     },
     {
+        "id": 51,
+        "title": "Bazat e Gjeodezise Inxhinierike 1 - Shënime (ZIP)",
+        "faculty": "FIN",
+        "department": "Gjeodezi",
+        "type": "Te tjera",
+        "subject": "Bazat e Gjeodezisë Inxhinierike",
+        "teacher": "//",
+        "r2Url": "https://media.e-studenti.com/bazat%20e%20gjeodezise%20inxhinierike%201.zip",
+        "fileType": "zip",
+        "_isNew": true
+    },
+    {
+        "id": 52,
+        "title": "Gjeometria Diferenciale - Shënime (ZIP)",
+        "faculty": "FIN",
+        "department": "Gjeodezi",
+        "type": "Te tjera",
+        "subject": "Gjeometria Diferenciale",
+        "teacher": "//",
+        "r2Url": "https://media.e-studenti.com/gjeometria%20diferenciale.zip",
+        "fileType": "zip",
+        "_isNew": true
+    },
+    {
         "id": 49,
         "title": "Kolokviumi 1 - Arkitektura e Kompjuterëve",
         "faculty": "FIEK",
@@ -487,6 +511,42 @@
         "_isNew": true
     },
     {
+        "id": 53,
+        "title": "Matje në Terren - Shënime (ZIP)",
+        "faculty": "FIN",
+        "department": "Gjeodezi",
+        "type": "Te tjera",
+        "subject": "Matje në Terren",
+        "teacher": "//",
+        "r2Url": "https://media.e-studenti.com/matje%20ne%20terren.zip",
+        "fileType": "zip",
+        "_isNew": true
+    },
+    {
+        "id": 54,
+        "title": "Matje të Tokës - Shënime (ZIP)",
+        "faculty": "FIN",
+        "department": "Gjeodezi",
+        "type": "Te tjera",
+        "subject": "Matje të Tokës",
+        "teacher": "//",
+        "r2Url": "https://media.e-studenti.com/matje%20te%20tokes.zip",
+        "fileType": "zip",
+        "_isNew": true
+    },
+    {
+        "id": 55,
+        "title": "Menaxhimi i Ujërave - Shënime (ZIP)",
+        "faculty": "FIN",
+        "department": "Gjeodezi",
+        "type": "Te tjera",
+        "subject": "Menaxhimi i Ujërave",
+        "teacher": "//",
+        "r2Url": "https://media.e-studenti.com/menaxhimi%20i%20ujerave.zip",
+        "fileType": "zip",
+        "_isNew": true
+    },
+    {
         "id": 50,
         "title": "Mikroprocesorët dhe Mikrokontrollerët",
         "faculty": "FIEK",
@@ -496,6 +556,18 @@
         "teacher": "Lavdim Kurtaj",
         "r2Url": "https://media.e-studenti.com/mm-ear.pdf",
         "fileType": "pdf",
+        "_isNew": true
+    },
+    {
+        "id": 56,
+        "title": "Planifikimi Hapësinor - Shënime (ZIP)",
+        "faculty": "FIN",
+        "department": "Gjeodezi",
+        "type": "Te tjera",
+        "subject": "Planifikimi Hapësinor",
+        "teacher": "//",
+        "r2Url": "https://media.e-studenti.com/planifikim%20hapesinor.zip",
+        "fileType": "zip",
         "_isNew": true
     },
     {
