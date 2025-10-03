@@ -114,7 +114,7 @@ export default function MaterialsClient({ initialMaterials }) {
           {filteredMaterials.map((material) => (
             <div
               key={material.id}
-              className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow"
+              className="bg-white rounded-xl shadow-lg p-6 hover:shadow-xl transition-shadow flex flex-col"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
@@ -131,7 +131,7 @@ export default function MaterialsClient({ initialMaterials }) {
                 <FileText className="w-8 h-8 text-red-600" />
               </div>
 
-              <div className="space-y-2 mb-4">
+              <div className="space-y-2 mb-4 flex-1">
                 <div className="flex justify-between">
                   <span className="text-sm text-gray-600">Lënda:</span>
                   <span className="text-sm font-medium">
@@ -150,7 +150,7 @@ export default function MaterialsClient({ initialMaterials }) {
                 </div>
               </div>
 
-              <div className="flex space-x-2">
+              <div className="flex space-x-2 mt-auto">
                 {material.r2Url && (
                   <>
                     {isArchiveFile(material.fileType) ? (

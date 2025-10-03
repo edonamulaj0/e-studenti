@@ -4,8 +4,39 @@ import { unzipSync } from "fflate";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
-  "Access-Control-Allow-Headers": "Content-Type",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
 };
+
+// Check if request is authenticated for admin actions
+function checkAuth(request, env) {
+  const authHeader = request.headers.get("Authorization");
+
+  if (!authHeader || !authHeader.startsWith("Basic ")) {
+    return false;
+  }
+
+  const base64Credentials = authHeader.substring(6);
+  const credentials = atob(base64Credentials);
+  const [username, password] = credentials.split(":");
+
+  // Use environment variables for credentials
+  const adminUsername = env.ADMIN_USERNAME || "admin";
+  const adminPassword =
+    env.ADMIN_PASSWORD || "change-this-password-immediately";
+
+  return username === adminUsername && password === adminPassword;
+}
+
+// Return 401 Unauthorized response
+function unauthorizedResponse() {
+  return new Response("Unauthorized", {
+    status: 401,
+    headers: {
+      "WWW-Authenticate": 'Basic realm="Admin Panel"',
+      ...corsHeaders,
+    },
+  });
+}
 
 export default {
   async fetch(request, env) {
@@ -16,6 +47,16 @@ export default {
 
     const url = new URL(request.url);
     const action = url.searchParams.get("action");
+
+    // IMPORTANT: ALL requests require authentication except public GET action
+    // This protects the admin page itself and all admin operations
+    const publicActions = ["get"]; // Only catalog retrieval is public
+
+    if (!publicActions.includes(action)) {
+      if (!checkAuth(request, env)) {
+        return unauthorizedResponse();
+      }
+    }
 
     try {
       switch (action) {
