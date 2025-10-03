@@ -7,6 +7,11 @@ compatibility_date = "2024-01-01"
 binding = "MY_BUCKET"
 bucket_name = "e-studenti-materials"  # Replace with your actual R2 bucket name
 
+# Environment variables
+[vars]
+ADMIN_USERNAME = "admin-dona"
+# IMPORTANT: Set ADMIN_PASSWORD as a secret using: wrangler secret put ADMIN_PASSWORD
+
 # CORS settings for the worker
 [env.production]
 vars = { ENVIRONMENT = "production" }

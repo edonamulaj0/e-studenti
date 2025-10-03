@@ -1,1 +1,18 @@
 node_modules
+
+# Next.js
+.next
+out
+
+# Cloudflare
+.wrangler
+.dev.vars
+
+# Sensitive files
+cloudflare-worker/SECURITY_SETUP.md
+**/admin-credentials.txt
+**/*.secret
+
+# Build files
+*.log
+.DS_Store

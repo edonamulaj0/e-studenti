@@ -619,7 +619,7 @@
 
       async function saveToR2() {
         if (!promptForCredentials()) return;
-        
+
         if (
           !confirm(
             "Save all changes to R2? This will update the materials.json file."
@@ -633,7 +633,7 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              ...getAuthHeaders()
+              ...getAuthHeaders(),
             },
             body: JSON.stringify({ entries: catalogData }),
           });
@@ -658,7 +658,7 @@
 
       async function saveAndDeploy() {
         if (!promptForCredentials()) return;
-        
+
         if (
           !confirm(
             "Save to R2 and auto-deploy?\n\nThis will:\n1. Save changes to R2\n2. Sync to your local repo\n3. Push to GitHub\n4. Trigger auto-deployment\n\nMake sure your webhook server is running!"
@@ -673,7 +673,7 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              ...getAuthHeaders()
+              ...getAuthHeaders(),
             },
             body: JSON.stringify({ entries: catalogData }),
           });
@@ -1001,7 +1001,7 @@
 
       async function deleteEntry(id, filename) {
         if (!promptForCredentials()) return;
-        
+
         const entry = catalogData.find((e) => e.id === id);
         if (!entry) return;
 
@@ -1016,7 +1016,7 @@
             `${WORKER_URL}?action=delete&key=${encodeURIComponent(filename)}`,
             {
               method: "DELETE",
-              headers: getAuthHeaders()
+              headers: getAuthHeaders(),
             }
           );
 
@@ -1035,15 +1035,15 @@
           alert(`❌ Error deleting file: ${error.message}`);
         }
       }
-      
+
       // Prompt for credentials on page load
-      window.addEventListener('DOMContentLoaded', () => {
+      window.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => {
           if (promptForCredentials()) {
-            document.getElementById('entriesContainer').innerHTML = 
+            document.getElementById("entriesContainer").innerHTML =
               '<div class="loading"><p>👋 Welcome! Click "Load from R2" to start managing your catalog</p></div>';
           } else {
-            document.getElementById('entriesContainer').innerHTML = 
+            document.getElementById("entriesContainer").innerHTML =
               '<div class="loading"><p style="color: #dc3545;">❌ Authentication required. Reload the page to try again.</p></div>';
           }
         }, 500);

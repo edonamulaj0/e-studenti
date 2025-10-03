@@ -35,13 +35,13 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
       if (fileType === "zip") {
         await loadZipContents();
       } else if (fileType === "rar") {
-        // For RAR files, we'll show a message that we can't preview but can download
+        // For static sites, RAR files must be downloaded
         setFiles([
           {
-            name: "Arkivat RAR kërkojnë ekstraktim",
+            name: "Arkivat RAR duhet të shkarkohen",
             isRarNotice: true,
             message:
-              "Skedarët RAR nuk mund të shihen në shfletues. Ju lutemi shkarkoni skedarin për të parë përmbajtjen.",
+              "Për të parë përmbajtjen e skedarëve RAR, ju lutemi shkarkoni arkivin duke klikuar butonin 'Shkarko arkivin' më poshtë.",
           },
         ]);
       }
@@ -59,39 +59,24 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
     try {
       console.log("Duke ngarkuar ZIP nga:", material.r2Url);
 
+      // Direct fetch for static sites (CORS must be enabled on media.e-studenti.com)
       const response = await fetch(material.r2Url, {
-        mode: "cors",
         cache: "no-cache",
+        mode: "cors",
       });
 
-      console.log("Response status:", response.status, response.statusText);
-
       if (!response.ok) {
-        throw new Error(
-          `Dështoi ngarkimi: ${response.status} ${response.statusText}`
-        );
+        throw new Error(`Dështoi ngarkimi: ${response.status}`);
       }
 
       const arrayBuffer = await response.arrayBuffer();
-      console.log("ArrayBuffer size:", arrayBuffer.byteLength);
-
-      // Check if it's actually a ZIP file
-      if (arrayBuffer.byteLength < 4) {
-        throw new Error("Skedari është shumë i vogël për të qenë ZIP");
-      }
-
       const zip = await JSZip.loadAsync(arrayBuffer);
-      console.log("ZIP loaded successfully");
 
-      // Store the zip object for later extraction
       setZipObject(zip);
 
       const fileList = [];
-      let fileCount = 0;
-
       zip.forEach((relativePath, file) => {
         if (!file.dir) {
-          fileCount++;
           fileList.push({
             name: relativePath,
             size: file._data?.uncompressedSize || 0,
@@ -100,24 +85,11 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
         }
       });
 
-      console.log("Found", fileCount, "files in ZIP");
-
-      if (fileCount === 0) {
-        throw new Error("Arkivi është bosh");
-      }
-
-      // Sort files: folders first, then alphabetically
-      fileList.sort((a, b) => {
-        const aIsFolder = a.name.includes("/");
-        const bIsFolder = b.name.includes("/");
-        if (aIsFolder && !bIsFolder) return -1;
-        if (!aIsFolder && bIsFolder) return 1;
-        return a.name.localeCompare(b.name);
-      });
-
+      if (fileList.length === 0) throw new Error("Arkivi është bosh");
+      fileList.sort((a, b) => a.name.localeCompare(b.name));
       setFiles(fileList);
     } catch (err) {
-      console.error("Gabim detajuar:", err);
+      console.error("Gabim ZIP:", err);
       throw err;
     }
   };
@@ -131,7 +103,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
 
       const zipFile = zipObject.file(file.name);
       if (!zipFile) {
-        console.error("Skedari nuk u gjet në arkiv:", file.name);
+        console.error("Skedari nuk u gjet në ZIP:", file.name);
         return;
       }
 
@@ -139,13 +111,13 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
       const url = URL.createObjectURL(content);
       const link = document.createElement("a");
       link.href = url;
-      link.download = file.name.split("/").pop(); // Get just the filename
+      link.download = file.name.split("/").pop();
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
     } catch (err) {
-      console.error("Gabim gjatë shkarkimit të skedarit:", err);
+      console.error("Gabim gjatë shkarkimit:", err);
     }
   };
 
