@@ -7,9 +7,9 @@ out
 # Cloudflare
 .wrangler
 .dev.vars
+cloudflare-worker/
 
 # Sensitive files
-cloudflare-worker/SECURITY_SETUP.md
 **/admin-credentials.txt
 **/*.secret
 
