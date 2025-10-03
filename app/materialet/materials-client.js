@@ -1,12 +1,23 @@
-"use client"; 
+"use client";
 
 import { useState } from "react";
-import { FileText, Download, Eye, Star, Filter, Search } from "lucide-react";
+import {
+  FileText,
+  Download,
+  Eye,
+  Star,
+  Filter,
+  Search,
+  Archive,
+} from "lucide-react";
+import ArchiveModal from "../components/ArchiveModal";
 
 export default function MaterialsClient({ initialMaterials }) {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFaculty, setSelectedFaculty] = useState("");
   const [selectedType, setSelectedType] = useState("");
+  const [modalOpen, setModalOpen] = useState(false);
+  const [selectedMaterial, setSelectedMaterial] = useState(null);
 
   const filteredMaterials = initialMaterials.filter((material) => {
     const matchesSearch =
@@ -19,6 +30,20 @@ export default function MaterialsClient({ initialMaterials }) {
 
     return matchesSearch && matchesFaculty && matchesType;
   });
+
+  const isArchiveFile = (fileType) => {
+    return (
+      fileType?.toLowerCase() === "zip" || fileType?.toLowerCase() === "rar"
+    );
+  };
+
+  const handleViewClick = (material, e) => {
+    if (isArchiveFile(material.fileType)) {
+      e.preventDefault();
+      setSelectedMaterial(material);
+      setModalOpen(true);
+    }
+  };
 
   return (
     <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
@@ -127,15 +152,27 @@ export default function MaterialsClient({ initialMaterials }) {
 
               <div className="flex space-x-2">
                 {material.r2Url && (
-                  <a
-                    href={material.r2Url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center"
-                  >
-                    <Eye className="w-4 h-4 mr-2" />
-                    Shiko
-                  </a>
+                  <>
+                    {isArchiveFile(material.fileType) ? (
+                      <button
+                        onClick={(e) => handleViewClick(material, e)}
+                        className="flex-1 bg-transparent border-2 border-red-600 text-red-600 py-2 px-4 rounded-lg hover:bg-red-50 transition-colors text-sm font-medium flex items-center justify-center"
+                      >
+                        <Archive className="w-4 h-4 mr-2" />
+                        Shiko përmbajtjen
+                      </button>
+                    ) : (
+                      <a
+                        href={material.r2Url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium flex items-center justify-center"
+                      >
+                        <Eye className="w-4 h-4 mr-2" />
+                        Shiko
+                      </a>
+                    )}
+                  </>
                 )}
 
                 {material.r2Url && (
@@ -170,6 +207,12 @@ export default function MaterialsClient({ initialMaterials }) {
           </div>
         )}
       </div>
+
+      <ArchiveModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        material={selectedMaterial}
+      />
     </div>
   );
 }
