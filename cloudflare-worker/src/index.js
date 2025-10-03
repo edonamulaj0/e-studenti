@@ -50,7 +50,7 @@ export default {
 
     // IMPORTANT: ALL requests require authentication except public GET action
     // This protects the admin page itself and all admin operations
-    const publicActions = ["get"]; // Only catalog retrieval is public
+    const publicActions = ["get", "proxy"]; // Catalog retrieval and CORS proxy are public
 
     if (!publicActions.includes(action)) {
       if (!checkAuth(request, env)) {
@@ -74,6 +74,8 @@ export default {
           return await handleDownload(url, env);
         case "preview":
           return await handlePreview(url, env);
+        case "proxy":
+          return await handleProxy(url);
         default:
           return jsonResponse({ error: "Invalid action" }, 400);
       }
@@ -623,4 +625,55 @@ function formatBytes(bytes, decimals = 2) {
   const sizes = ["Bytes", "KB", "MB", "GB", "TB"];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
   return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + " " + sizes[i];
+}
+
+// CORS Proxy handler - allows fetching files from media.e-studenti.com without CORS issues
+async function handleProxy(url) {
+  try {
+    const fileUrl = url.searchParams.get("url");
+
+    if (!fileUrl) {
+      return jsonResponse({ error: "Missing url parameter" }, 400);
+    }
+
+    // Only allow proxying from media.e-studenti.com for security
+    if (!fileUrl.startsWith("https://media.e-studenti.com/")) {
+      return jsonResponse(
+        { error: "Only media.e-studenti.com URLs are allowed" },
+        403
+      );
+    }
+
+    console.log("Proxying request to:", fileUrl);
+
+    // Fetch the file from media server
+    const response = await fetch(fileUrl, {
+      cf: {
+        cacheTtl: 3600, // Cache for 1 hour
+        cacheEverything: true,
+      },
+    });
+
+    if (!response.ok) {
+      return jsonResponse(
+        { error: `Failed to fetch: ${response.status}` },
+        response.status
+      );
+    }
+
+    // Return the file with CORS headers
+    return new Response(response.body, {
+      status: response.status,
+      headers: {
+        "Content-Type":
+          response.headers.get("Content-Type") || "application/octet-stream",
+        "Content-Length": response.headers.get("Content-Length") || "",
+        "Cache-Control": "public, max-age=3600",
+        ...corsHeaders,
+      },
+    });
+  } catch (error) {
+    console.error("Proxy error:", error);
+    return jsonResponse({ error: error.message }, 500);
+  }
 }

@@ -59,10 +59,13 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
     try {
       console.log("Duke ngarkuar ZIP nga:", material.r2Url);
 
-      // Direct fetch for static sites (CORS must be enabled on media.e-studenti.com)
-      const response = await fetch(material.r2Url, {
+      // Use Cloudflare Worker proxy to avoid CORS issues
+      const proxyUrl = `https://r2-catalog-manager.edonaamulaj.workers.dev/?action=proxy&url=${encodeURIComponent(
+        material.r2Url
+      )}`;
+
+      const response = await fetch(proxyUrl, {
         cache: "no-cache",
-        mode: "cors",
       });
 
       if (!response.ok) {
@@ -70,6 +73,13 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
       }
 
       const arrayBuffer = await response.arrayBuffer();
+
+      if (!arrayBuffer || arrayBuffer.byteLength === 0) {
+        throw new Error("Skedari është bosh ose nuk mund të ngarkohet");
+      }
+
+      console.log("ZIP buffer size:", arrayBuffer.byteLength);
+
       const zip = await JSZip.loadAsync(arrayBuffer);
 
       setZipObject(zip);
@@ -88,6 +98,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
       if (fileList.length === 0) throw new Error("Arkivi është bosh");
       fileList.sort((a, b) => a.name.localeCompare(b.name));
       setFiles(fileList);
+      console.log("ZIP loaded successfully:", fileList.length, "files");
     } catch (err) {
       console.error("Gabim ZIP:", err);
       throw err;
