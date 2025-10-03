@@ -531,6 +531,36 @@
       let currentStatusFilter = "all";
       let currentFileTypeFilter = "all";
 
+      // Authentication credentials
+      let authUsername = null;
+      let authPassword = null;
+
+      // Prompt for credentials on page load
+      function promptForCredentials() {
+        if (!authUsername || !authPassword) {
+          authUsername = prompt("Enter admin username:");
+          if (!authUsername) {
+            alert("Username is required to access admin panel!");
+            return false;
+          }
+
+          authPassword = prompt("Enter admin password:");
+          if (!authPassword) {
+            alert("Password is required to access admin panel!");
+            return false;
+          }
+        }
+        return true;
+      }
+
+      // Create authorization header
+      function getAuthHeaders() {
+        const credentials = btoa(`${authUsername}:${authPassword}`);
+        return {
+          Authorization: `Basic ${credentials}`,
+        };
+      }
+
       function showAlert(message, type = "success") {
         const container = document.getElementById("alertContainer");
         const alert = document.createElement("div");
@@ -545,12 +575,16 @@
       }
 
       async function loadFromR2() {
+        if (!promptForCredentials()) return;
+
         const container = document.getElementById("entriesContainer");
         container.innerHTML =
           '<div class="loading"><div class="spinner"></div><p>Loading catalog from R2...</p></div>';
 
         try {
-          const response = await fetch(`${WORKER_URL}?action=generate`);
+          const response = await fetch(`${WORKER_URL}?action=generate`, {
+            headers: getAuthHeaders(),
+          });
           const data = await response.json();
 
           if (data.error) {
@@ -584,6 +618,8 @@
       }
 
       async function saveToR2() {
+        if (!promptForCredentials()) return;
+        
         if (
           !confirm(
             "Save all changes to R2? This will update the materials.json file."
@@ -597,6 +633,7 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              ...getAuthHeaders()
             },
             body: JSON.stringify({ entries: catalogData }),
           });
@@ -620,6 +657,8 @@
       }
 
       async function saveAndDeploy() {
+        if (!promptForCredentials()) return;
+        
         if (
           !confirm(
             "Save to R2 and auto-deploy?\n\nThis will:\n1. Save changes to R2\n2. Sync to your local repo\n3. Push to GitHub\n4. Trigger auto-deployment\n\nMake sure your webhook server is running!"
@@ -634,6 +673,7 @@
             method: "POST",
             headers: {
               "Content-Type": "application/json",
+              ...getAuthHeaders()
             },
             body: JSON.stringify({ entries: catalogData }),
           });
@@ -960,6 +1000,8 @@
       }
 
       async function deleteEntry(id, filename) {
+        if (!promptForCredentials()) return;
+        
         const entry = catalogData.find((e) => e.id === id);
         if (!entry) return;
 
@@ -974,6 +1016,7 @@
             `${WORKER_URL}?action=delete&key=${encodeURIComponent(filename)}`,
             {
               method: "DELETE",
+              headers: getAuthHeaders()
             }
           );
 
@@ -992,6 +1035,19 @@
           alert(`❌ Error deleting file: ${error.message}`);
         }
       }
+      
+      // Prompt for credentials on page load
+      window.addEventListener('DOMContentLoaded', () => {
+        setTimeout(() => {
+          if (promptForCredentials()) {
+            document.getElementById('entriesContainer').innerHTML = 
+              '<div class="loading"><p>👋 Welcome! Click "Load from R2" to start managing your catalog</p></div>';
+          } else {
+            document.getElementById('entriesContainer').innerHTML = 
+              '<div class="loading"><p style="color: #dc3545;">❌ Authentication required. Reload the page to try again.</p></div>';
+          }
+        }, 500);
+      });
     </script>
   </body>
 </html>
