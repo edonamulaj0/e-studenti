@@ -8,20 +8,28 @@ $LOCAL_FILE = Join-Path $PSScriptRoot "app\data\materials.json"
 Write-Host "Syncing materials.json from R2..." -ForegroundColor Cyan
 
 try {
-    # Fetch data from R2
-    $response = Invoke-RestMethod -Uri $WORKER_URL -Method Get
+    # Fetch raw JSON data from R2 (not parsed by PowerShell)
+    $response = Invoke-WebRequest -Uri $WORKER_URL -Method Get -UseBasicParsing
     
-    if ($response.entries -and $response.entries.Count -ge 0) {
-        # Convert to pretty-printed JSON
-        $jsonContent = $response.entries | ConvertTo-Json -Depth 10
+    if ($response.StatusCode -eq 200) {
+        # Parse to verify it's valid JSON and extract entries
+        $data = $response.Content | ConvertFrom-Json
         
-        # Write to local file
-        $jsonContent | Set-Content -Path $LOCAL_FILE -Encoding UTF8
-        
-        Write-Host "Successfully synced $($response.entries.Count) entries to $LOCAL_FILE" -ForegroundColor Green
-        Write-Host "Local materials.json updated!" -ForegroundColor Green
+        if ($data.entries) {
+            # Convert entries back to JSON with standard formatting
+            $jsonContent = $data.entries | ConvertTo-Json -Depth 10 -Compress:$false
+            
+            # Write to local file with UTF8 (no BOM)
+            [System.IO.File]::WriteAllText($LOCAL_FILE, $jsonContent, [System.Text.UTF8Encoding]::new($false))
+            
+            Write-Host "Successfully synced $($data.entries.Count) entries to $LOCAL_FILE" -ForegroundColor Green
+            Write-Host "Local materials.json updated!" -ForegroundColor Green
+        } else {
+            Write-Host "Invalid response format from R2" -ForegroundColor Red
+            exit 1
+        }
     } else {
-        Write-Host "Invalid response format from R2" -ForegroundColor Red
+        Write-Host "HTTP Error: $($response.StatusCode)" -ForegroundColor Red
         exit 1
     }
 } catch {

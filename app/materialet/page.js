@@ -7,7 +7,11 @@ async function getMaterialsData() {
   const filePath = path.join(process.cwd(), "app", "data", "materials.json");
   try {
     const fileContent = await fs.readFile(filePath, "utf8");
-    return JSON.parse(fileContent);
+    const data = JSON.parse(fileContent);
+    console.log(
+      `[Materials Page] Loaded ${data.length} materials from ${filePath}`
+    );
+    return data;
   } catch (error) {
     console.error("Error reading materials.json:", error);
     return [];
