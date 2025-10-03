@@ -1,15 +1,29 @@
-import fs from "fs/promises";
-import path from "path";
 import MaterialsClient from "./materials-client";
 
-// async function to fetch data at build time
+// Force dynamic rendering and revalidate every request
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
+// async function to fetch data from R2 at build time
 async function getMaterialsData() {
-  const filePath = path.join(process.cwd(), "app", "data", "materials.json");
   try {
-    const fileContent = await fs.readFile(filePath, "utf8");
-    return JSON.parse(fileContent);
+    // Fetch from R2 via the worker's public URL
+    const response = await fetch(
+      "https://r2-catalog-manager.edonaamulaj.workers.dev?action=get",
+      {
+        cache: "no-store", // Ensure we get fresh data
+      }
+    );
+
+    if (!response.ok) {
+      console.error("Error fetching materials from R2:", response.statusText);
+      return [];
+    }
+
+    const data = await response.json();
+    return data.entries || [];
   } catch (error) {
-    console.error("Error reading materials.json:", error);
+    console.error("Error fetching materials from R2:", error);
     return [];
   }
 }
@@ -17,7 +31,5 @@ async function getMaterialsData() {
 export default async function MaterialsPage() {
   const allMaterials = await getMaterialsData();
 
-  return (
-    <MaterialsClient initialMaterials={allMaterials} />
-  );
+  return <MaterialsClient initialMaterials={allMaterials} />;
 }
