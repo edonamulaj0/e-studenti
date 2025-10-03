@@ -17,22 +17,24 @@ This setup keeps your local `app/data/materials.json` in sync with the R2 bucket
 
 After saving changes in the admin UI, sync them to your local codebase:
 
-**Option A: PowerShell (Windows)**
-
-```powershell
-.\sync-materials.ps1
-```
-
-**Option B: Node.js (Cross-platform)**
+**✅ Recommended: Node.js (Cross-platform, proper JSON formatting)**
 
 ```bash
 npm run sync
 ```
 
-**Option C: Node script directly**
+Or directly:
 
 ```bash
 node sync-materials.js
+```
+
+**Alternative: PowerShell (Windows only)**
+
+⚠️ Note: PowerShell ConvertTo-Json may create formatting issues. Use Node.js for best results.
+
+```powershell
+.\sync-materials.ps1
 ```
 
 ### 3. **Verify Changes**
