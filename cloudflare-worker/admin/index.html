@@ -409,6 +409,18 @@
         >
           💾 Save to R2
         </button>
+        <button
+          class="btn btn-success"
+          onclick="saveAndDeploy()"
+          id="deployBtn"
+          disabled
+          title="Save to R2 and auto-sync to local repo + push to GitHub (requires webhook server)"
+        >
+          🚀 Save & Deploy
+        </button>
+        <button class="btn btn-info" onclick="downloadForDeploy()" id="downloadDeployBtn" disabled title="Download materials.json for manual deployment">
+          📥 Download for Deploy
+        </button>
         <button class="btn btn-secondary" onclick="downloadJSON()">
           ⬇️ Download JSON
         </button>
@@ -543,6 +555,7 @@
           updateStats();
           renderEntries();
           document.getElementById("saveBtn").disabled = false;
+          document.getElementById("deployBtn").disabled = false;
 
           // Show detailed summary
           const summary =
@@ -597,6 +610,67 @@
           setTimeout(() => loadFromR2(), 1000);
         } catch (error) {
           showAlert(`Error saving catalog: ${error.message}`, "error");
+        }
+      }
+
+      async function saveAndDeploy() {
+        if (
+          !confirm(
+            "Save to R2 and auto-deploy?\n\nThis will:\n1. Save changes to R2\n2. Sync to your local repo\n3. Push to GitHub\n4. Trigger auto-deployment\n\nMake sure your webhook server is running!"
+          )
+        ) {
+          return;
+        }
+
+        try {
+          // Step 1: Save to R2
+          const saveResponse = await fetch(`${WORKER_URL}?action=merge`, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ entries: catalogData }),
+          });
+
+          const saveResult = await saveResponse.json();
+
+          if (saveResult.error) {
+            throw new Error(saveResult.error);
+          }
+
+          showAlert(
+            `✅ Saved ${saveResult.entriesSaved} entries to R2. Triggering deployment...`,
+            "success"
+          );
+
+          // Step 2: Trigger local webhook to sync and push
+          try {
+            const webhookResponse = await fetch('http://localhost:3001/sync', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+            });
+
+            if (webhookResponse.ok) {
+              showAlert(
+                `🚀 Deployment triggered! Check your terminal for progress.`,
+                "success"
+              );
+            } else {
+              throw new Error('Webhook server not responding');
+            }
+          } catch (webhookError) {
+            showAlert(
+              `⚠️ Saved to R2 but couldn't trigger deployment. Is the webhook server running?\n\nRun: node webhook-server.js`,
+              "error"
+            );
+          }
+
+          // Reload to refresh the data
+          setTimeout(() => loadFromR2(), 2000);
+        } catch (error) {
+          showAlert(`Error: ${error.message}`, "error");
         }
       }
 

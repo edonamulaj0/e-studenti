@@ -1,0 +1,32 @@
+name: Auto-deploy on Materials Update
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/data/materials.json'
+  workflow_dispatch: # Manual trigger
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Build Next.js
+        run: npm run build
+        
+      - name: Deploy
+        run: echo "✅ Build successful! Your hosting platform will auto-deploy."
+        # Your hosting (Vercel/Cloudflare) will automatically deploy on push to main
