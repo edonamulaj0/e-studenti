@@ -1,0 +1,16 @@
+{
+	"name": "r2-catalog-manager",
+	"version": "1.0.0",
+	"description": "Cloudflare Worker for managing R2 catalog",
+	"main": "src/index.js",
+	"scripts": {
+		"deploy": "wrangler deploy",
+		"dev": "wrangler dev"
+	},
+	"dependencies": {
+		"fflate": "^0.8.1"
+	},
+	"devDependencies": {
+		"wrangler": "^3.0.0"
+	}
+}
