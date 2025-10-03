@@ -7,21 +7,15 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
-		"sync": "node sync-materials.js && git add app/data/materials.json && git commit -m \"Update materials from R2\" && git push",
-		"webhook": "node webhook-server.js"
+		"sync": "node sync-materials.js && git add app/data/materials.json && git commit -m \"Update materials from R2\" && git push"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.850.0",
 		"@aws-sdk/s3-request-presigner": "^3.850.0",
-		"@neondatabase/serverless": "^1.0.1",
-		"@supabase/supabase-js": "^2.50.2",
-		"@vercel/blob": "^1.1.1",
-		"@vercel/kv": "^3.0.0",
 		"dotenv": "^17.2.0",
 		"jszip": "^3.10.1",
 		"lucide-react": "^0.263.1",
 		"next": "^14.2.30",
-		"pg": "^8.16.3",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1"
 	},
