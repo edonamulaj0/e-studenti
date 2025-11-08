@@ -14,6 +14,10 @@ export default function InformacionePage() {
       name: "Jeta Mulaj",
       faculty: "Fakulteti i Mjekësisë",
     },
+    {
+      name: "Eriona Ahmeti",
+      faculty: "Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike",
+    },
   ];
 
   return (
