@@ -18,6 +18,10 @@ export default function InformacionePage() {
       name: "Eriona Ahmeti",
       faculty: "Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike",
     },
+    {
+      name: "Florian Hajredini",
+      faculty: "Fakulteti i Ndërtimtarisë",
+    },
   ];
 
   return (
