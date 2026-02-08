@@ -78,42 +78,60 @@ export default function InformacionePage() {
             </div>
           </section>
 
-          <section className="bg-white rounded-xl shadow-lg p-8 border-2 border-red-200">
-            <div className="flex items-center mb-6">
-              <Shield className="w-6 h-6 text-red-600 mr-3" />
-              <h2 className="text-2xl font-bold text-gray-900">
-                Politika e Privatësisë
-              </h2>
-            </div>
-            <div className="bg-red-50 p-6 rounded-lg">
-              <h3 className="font-bold text-gray-800 mb-4 text-lg">
-                Ne NUK mbledhim asnjë të dhënë personale:
-              </h3>
-              <ul className="space-y-3 text-gray-700">
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-                  Asnjë cookie ose gjurmues
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-                  Asnjë analitikë ose monitorim
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-                  Asnjë llogari përdoruesi të nevojshme
-                </li>
-                <li className="flex items-center">
-                  <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-                  Asnjë informacion personal i ruajtur
-                </li>
-              </ul>
-              <p className="mt-4 text-gray-600 italic">
-                Platforma jonë është 100% statike dhe nuk ruan asgjë për
-                përdoruesit.
-              </p>
-            </div>
-          </section>
 
+                      <section className="bg-white rounded-xl shadow-lg p-8 border-2 border-red-200">
+  <div className="flex items-center mb-6">
+    <Shield className="w-6 h-6 text-red-600 mr-3" />
+    <h2 className="text-2xl font-bold text-gray-900">
+      Politika e Privatësisë
+    </h2>
+  </div>
+  <div className="bg-red-50 p-6 rounded-lg mb-6">
+    <h3 className="font-bold text-gray-800 mb-4 text-lg">
+      Ne NUK mbledhim asnjë të dhënë personale:
+    </h3>
+    <ul className="space-y-3 text-gray-700">
+      <li className="flex items-center">
+        <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
+        Asnjë cookie ose gjurmues
+      </li>
+      <li className="flex items-center">
+        <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
+        Asnjë llogari përdoruesi të nevojshme
+      </li>
+      <li className="flex items-center">
+        <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
+        Asnjë informacion personal i ruajtur
+      </li>
+    </ul>
+  </div>
+  <div className="bg-gray-50 p-6 rounded-lg">
+    <h3 className="font-bold text-gray-800 mb-4 text-lg">
+      Çfarë mbledhim (përmes Cloudflare Analytics):
+    </h3>
+    <ul className="space-y-3 text-gray-700">
+      <li className="flex items-center">
+        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+        Statistika anonime të vizitave (sa persona vizitojnë faqen)
+      </li>
+      <li className="flex items-center">
+        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+        Rajoni gjeografik (vetëm nivel vendi, jo vendndodhje të saktë)
+      </li>
+      <li className="flex items-center">
+        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
+        Lloji i shfletuesit (për të përmirësuar përvojën)
+      </li>
+    </ul>
+    <p className="mt-4 text-gray-600 italic">
+      Të gjitha të dhënat janë 100% anonime dhe nuk mund të identifikojnë përdorues individualë.
+    </p>
+  </div>
+  <p className="mt-6 text-gray-600 text-center italic">
+    Platforma jonë është 100% statike dhe nuk ruan asgjë për përdoruesit.
+  </p>
+</section>
+          
           <section className="bg-white rounded-xl shadow-lg p-8 border-2 border-red-200">
             <div className="flex items-center mb-6">
               <Code className="w-6 h-6 text-red-600 mr-3" />
