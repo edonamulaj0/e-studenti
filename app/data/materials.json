@@ -602,5 +602,16 @@
         "teacher": "//",
         "r2Url": "https://media.e-studenti.com/webresources.docx",
         "fileType": "docx"
+    },
+        {
+        "id": 59,
+        "title": "Hematologji",
+        "faculty": "MED",
+        "department": "Mjekësia e Përgjithshme",
+        "type": "Libër",
+        "subject": "Hematologji",
+        "teacher": "Blendi Memaj",
+        "r2Url": "https://media.e-studenti.com/hematologji.pdf",
+        "fileType": "pdf"
     }
 ]

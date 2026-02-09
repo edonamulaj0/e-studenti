@@ -22,6 +22,10 @@ export default function InformacionePage() {
       name: "Florian Hajredini",
       faculty: "Fakulteti i Ndërtimtarisë",
     },
+     {
+      name: "Blendi Memaj",
+      faculty: "Fakulteti i Mjekësisë",
+    },
   ];
 
   return (

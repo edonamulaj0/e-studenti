@@ -21,10 +21,20 @@
       "static/chunks/main-app.js",
       "static/chunks/app/materialet/page.js"
     ],
-    "/_not-found/page": [
+    "/erasmus/page": [
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
-      "static/chunks/app/_not-found/page.js"
+      "static/chunks/app/erasmus/page.js"
+    ],
+    "/informacione/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/informacione/page.js"
+    ],
+    "/kontakto/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/kontakto/page.js"
     ]
   }
 }
