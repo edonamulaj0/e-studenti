@@ -12,7 +12,13 @@ cloudflare-worker/
 # Sensitive files
 **/admin-credentials.txt
 **/*.secret
+.env
+.env.local
+.env.production
 
 # Build files
 *.log
 .DS_Store
+e-studenti.git/
+e-studenti.git.bfg-report/
+e-studenti-clean/
