@@ -56,7 +56,6 @@ e-studenti/
 
 ## Privacy & Transparency
 
-- **No Tracking**: We don't use analytics, cookies, or any tracking mechanisms
 - **No Data Storage**: All resources are publicly available, no user accounts needed
 - **Open Source**: Full transparency with publicly available source code
 - **Author Rights**: Immediate response to takedown requests from content authors
@@ -79,7 +78,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 - Thanks to all students who inspired this project
 - Built with love for the educational community
-- Special thanks to authors who contribute educational resources
+- Special thanks to authors and students who contribute educational resources
 
 ## Contact & Support
 
