@@ -160,8 +160,8 @@ export default function HomeClient() {
               </motion.div>
 
               <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: 0.12 }}>
-                <div className="h-full rounded-2xl bg-white p-6 md:p-7 shadow-lg border-2 border-indigo-100/80">
-                  <ExternalLink className="w-11 h-11 text-indigo-600 mb-4" />
+                <div className="h-full rounded-2xl bg-white p-6 md:p-7 shadow-lg border-2 border-red-100/80">
+                  <ExternalLink className="w-11 h-11 text-red-600 mb-4" />
                   <h4 className="text-xl font-bold mb-3 text-gray-900">
                     Lidhje të jashtme
                   </h4>
