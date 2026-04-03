@@ -1,4 +1,36 @@
-import { Shield, Users, Code, Mail, Github, MessageSquare } from "lucide-react";
+import Link from "next/link";
+import {
+  Shield,
+  Lock,
+  Users,
+  Code,
+  Mail,
+  Github,
+  MessageSquare,
+  ArrowRight,
+} from "lucide-react";
+
+function SectionCard({ icon: Icon, title, children, border = "red" }) {
+  const borderCls =
+    border === "gray"
+      ? "border-gray-200"
+      : "border-red-100 hover:border-red-200";
+  return (
+    <section
+      className={`bg-white rounded-2xl shadow-lg p-7 md:p-9 border-2 ${borderCls} transition-colors`}
+    >
+      <div className="flex items-center gap-3 mb-6">
+        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
+          <Icon className="w-6 h-6" aria-hidden />
+        </span>
+        <h2 className="text-xl md:text-2xl font-extrabold text-gray-900">
+          {title}
+        </h2>
+      </div>
+      {children}
+    </section>
+  );
+}
 
 export default function InformacionePage() {
   const contributors = [
@@ -6,328 +38,242 @@ export default function InformacionePage() {
       name: "Edona Mulaj",
       faculty: "Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike",
     },
-    {
-      name: "Leart Lama",
-      faculty: "-",
-    },
-    {
-      name: "Jeta Mulaj",
-      faculty: "Fakulteti i Mjekësisë",
-    },
+    { name: "Leart Lama", faculty: "-" },
+    { name: "Jeta Mulaj", faculty: "Fakulteti i Mjekësisë" },
     {
       name: "Eriona Ahmeti",
       faculty: "Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike",
     },
-    {
-      name: "Florian Hajredini",
-      faculty: "Fakulteti i Ndërtimtarisë",
-    },
-     {
-      name: "Blendi Memaj",
-      faculty: "Fakulteti i Mjekësisë",
-    },
+    { name: "Florian Hajredini", faculty: "Fakulteti i Ndërtimtarisë" },
+    { name: "Blendi Memaj", faculty: "Fakulteti i Mjekësisë" },
   ];
 
   return (
-    <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">
+    <div className="pt-24 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100 pb-20">
+      <div className="container mx-auto px-4 py-10 md:py-12">
+        <header className="text-center mb-12 max-w-3xl mx-auto">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4 tracking-tight">
             Informacione
           </h1>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Transparenca e plotë, privatësia e garantuar dhe respekti për të
-            drejtat e autorëve
+          <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+            Transparencë, privatësi dhe respekt për të drejtat e autorëve.
           </p>
-        </div>
+        </header>
 
-        <div className="max-w-[75ch] mx-auto space-y-12">
-          <section className="bg-white rounded-xl shadow-lg p-8 border-2 border-red-200">
-            <div className="flex items-center mb-6">
-              <Shield className="w-6 h-6 text-red-600 mr-3" />
-              <h2 className="text-2xl font-bold text-gray-900">
-                Misioni ynë dhe Transparenca
-              </h2>
-            </div>
-            <div className="prose prose-gray max-w-none">
-              <p className="text-gray-700 mb-4">
-                E-Studenti është një platformë e hapur dhe transparente që synon
-                të ndihmojë studentët në qasjen në burime edukative. Ne besojmë
-                në transparencën e plotë dhe respektimin e të drejtave të
-                autorëve.
+        <div className="max-w-3xl mx-auto space-y-8 md:space-y-10">
+          <SectionCard icon={Shield} title="Misioni dhe transparenca">
+            <div className="text-base md:text-lg text-gray-700 space-y-4 leading-relaxed">
+              <p>
+                E-Studenti është një platformë e hapur që synon të ndihmojë
+                studentët në qasjen në burime edukative, me transparencë dhe
+                respekt për autorët.
               </p>
-              <div className="bg-red-50 p-4 rounded-lg mb-4">
-                <h3 className="font-semibold text-gray-800 mb-2">
-                  Parimet tona:
-                </h3>
-                <ul className="space-y-2 text-gray-700">
-                  <li>
-                    • <strong>100% transparent</strong> - kodi është publik në
-                    GitHub
+              <div className="bg-red-50 rounded-xl p-5 border border-red-100">
+                <h3 className="font-bold text-gray-900 mb-3">Parimet</h3>
+                <ul className="space-y-2.5">
+                  <li className="flex gap-2">
+                    <span className="text-red-600 font-bold">•</span>
+                    <span>
+                      <strong>Transparent</strong> — kodi publik në GitHub
+                    </span>
                   </li>
-                  <li>
-                    • <strong>Asnjë mbledhje të dhënash</strong> - nuk ruajmë
-                    informacione personale
+                  <li className="flex gap-2">
+                    <span className="text-red-600 font-bold">•</span>
+                    <span>
+                      <strong>Pa mbledhje të dhënash personale</strong> për
+                      shfletim
+                    </span>
                   </li>
-                  <li>
-                    • <strong>Respekt për autorët</strong> - heqim përmbajtjen
-                    menjëherë pas kërkesës
+                  <li className="flex gap-2">
+                    <span className="text-red-600 font-bold">•</span>
+                    <span>
+                      <strong>Autorët</strong> — heqje e përmbajtjes pas kërkesës
+                    </span>
                   </li>
-                  <li>
-                    • <strong>Falas dhe i hapur</strong> - gjithmonë do të jetë
-                    falas për studentët
+                  <li className="flex gap-2">
+                    <span className="text-red-600 font-bold">•</span>
+                    <span>
+                      <strong>Falas</strong> për studentët
+                    </span>
                   </li>
                 </ul>
               </div>
             </div>
-          </section>
+          </SectionCard>
 
-
-                      <section className="bg-white rounded-xl shadow-lg p-8 border-2 border-red-200">
-  <div className="flex items-center mb-6">
-    <Shield className="w-6 h-6 text-red-600 mr-3" />
-    <h2 className="text-2xl font-bold text-gray-900">
-      Politika e Privatësisë
-    </h2>
-  </div>
-  <div className="bg-red-50 p-6 rounded-lg mb-6">
-    <h3 className="font-bold text-gray-800 mb-4 text-lg">
-      Ne NUK mbledhim asnjë të dhënë personale:
-    </h3>
-    <ul className="space-y-3 text-gray-700">
-      <li className="flex items-center">
-        <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-        Asnjë cookie ose gjurmues
-      </li>
-      <li className="flex items-center">
-        <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-        Asnjë llogari përdoruesi të nevojshme
-      </li>
-      <li className="flex items-center">
-        <span className="w-2 h-2 bg-red-500 rounded-full mr-3"></span>
-        Asnjë informacion personal i ruajtur
-      </li>
-    </ul>
-  </div>
-  <div className="bg-gray-50 p-6 rounded-lg">
-    <h3 className="font-bold text-gray-800 mb-4 text-lg">
-      Çfarë mbledhim (përmes Cloudflare Analytics):
-    </h3>
-    <ul className="space-y-3 text-gray-700">
-      <li className="flex items-center">
-        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-        Statistika anonime të vizitave (sa persona vizitojnë faqen)
-      </li>
-      <li className="flex items-center">
-        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-        Rajoni gjeografik (vetëm nivel vendi, jo vendndodhje të saktë)
-      </li>
-      <li className="flex items-center">
-        <span className="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>
-        Lloji i shfletuesit (për të përmirësuar përvojën)
-      </li>
-    </ul>
-    <p className="mt-4 text-gray-600 italic">
-      Të gjitha të dhënat janë 100% anonime dhe nuk mund të identifikojnë përdorues individualë.
-    </p>
-  </div>
-  <p className="mt-6 text-gray-600 text-center italic">
-    Platforma jonë është 100% statike dhe nuk ruan asgjë për përdoruesit.
-  </p>
-</section>
-          
-          <section className="bg-white rounded-xl shadow-lg p-8 border-2 border-red-200">
-            <div className="flex items-center mb-6">
-              <Code className="w-6 h-6 text-red-600 mr-3" />
-              <h2 className="text-2xl font-bold text-gray-900">
-                Politika e të Drejtave të Autorit
-              </h2>
-            </div>
-            <p className="text-gray-700 mb-6">
-              Respektojmë plotësisht të drejtat e autorëve dhe krijuesve të
-              përmbajtjes:
-            </p>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="bg-red-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-800 mb-3">
-                  Për autorët:
-                </h3>
-                <ul className="space-y-2 text-gray-700 text-sm">
-                  <li>
-                    • Nëse dëshironi heqjen e përmbajtjes tuaj, na kontaktoni
-                    menjëherë
+          <SectionCard icon={Shield} title="Politika e privatësisë">
+            <div className="bg-red-50 rounded-xl p-6 border border-red-100 mb-6">
+              <h3 className="font-bold text-gray-900 mb-4 text-lg">
+                Ne nuk mbledhim të dhëna personale për përdorimin e faqes
+              </h3>
+              <ul className="space-y-3 text-gray-700">
+                {[
+                  "Asnjë cookie ose gjurmues për llogari",
+                  "Nuk kërkohet llogari për të parë materialet",
+                  "Nuk ruhen të dhëna personale nga ne për shfletim",
+                ].map((t) => (
+                  <li key={t} className="flex items-start gap-3">
+                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500" />
+                    <span>{t}</span>
                   </li>
-                  <li>• Do të përgjigjemi brenda 24 orëve</li>
-                  <li>• Heqja do të bëhet pa pyetje</li>
-                  <li>• Respektojmë plotësisht DMCA dhe ligjet</li>
-                </ul>
-              </div>
-
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-800 mb-3">
-                  Kontakti për heqjen:
-                </h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center text-gray-700">
-                    <Mail className="w-4 h-4 mr-2" />
-                    <span>info@e-studenti.com</span>
-                  </div>
-                  <div className="flex items-center text-gray-700">
-                    <Github className="w-4 h-4 mr-2" />
-                    <span>GitHub</span>
-                  </div>
-                  <div className="flex items-center text-gray-700">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    <span>Instagram: @estudenti.up</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="bg-white rounded-xl shadow-lg p-8 border-2 border-red-200">
-            <div className="flex items-center mb-6">
-              <Users className="w-6 h-6 text-red-600 mr-3" />
-              <h2 className="text-2xl font-bold text-gray-900">Kontribuesit</h2>
-            </div>
-
-            <p className="text-gray-600 mb-6 italic">
-              Faleminderit të gjithë studentëve dhe profesorëve që kanë ndarë
-              burimet e tyre edukative:
-            </p>
-
-            {contributors.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {contributors.map((contributor, index) => (
-                  <div
-                    key={index}
-                    className="bg-red-50 p-4 rounded-lg border border-red-200"
-                  >
-                    <h3 className="font-semibold text-gray-800">
-                      {contributor.name}
-                    </h3>
-                    <p className="text-sm text-gray-600 mt-1">
-                      {contributor.faculty}
-                    </p>
-                  </div>
                 ))}
-              </div>
-            ) : (
-              <div className="text-center py-8 bg-gray-50 rounded-lg">
-                <p className="text-gray-500 italic">Do të shtohen së shpejti</p>
-                <p className="text-sm text-gray-400 mt-2">
-                  Nëse keni kontribuar me burime dhe dëshironi të njiheni, na
-                  kontaktoni për t'u shtuar në listë.
-                </p>
-              </div>
-            )}
-          </section>
-
-          <section className="bg-white rounded-xl shadow-lg p-8 border-2 border-red-200">
-            <div className="flex items-center mb-6">
-              <Code className="w-6 h-6 text-red-600 mr-3" />
-              <h2 className="text-2xl font-bold text-gray-900">
-                Kodi i Hapur dhe Transparenca
-              </h2>
+              </ul>
             </div>
-
-            <div className="space-y-6">
-              <div className="bg-red-50 p-4 rounded-lg">
-                <h3 className="font-semibold text-gray-800 mb-2">
-                  Transparenca e Plotë:
-                </h3>
-                <ul className="space-y-2 text-gray-700">
-                  <li>
-                    • Çdo student mund të shohë saktësisht si funksionon
-                    platforma
+            <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
+              <h3 className="font-bold text-gray-900 mb-4 text-lg">
+                Statistika anonime (p.sh. përmes hostit / analitikës)
+              </h3>
+              <ul className="space-y-3 text-gray-700">
+                {[
+                  "Numri i vizitave në nivel të përgjithshëm",
+                  "Rajoni gjeografik në nivel vendi (jo vendndodhje e saktë)",
+                  "Lloji i shfletuesit për përmirësim të faqes",
+                ].map((t) => (
+                  <li key={t} className="flex items-start gap-3">
+                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-400" />
+                    <span>{t}</span>
                   </li>
-                  <li>• Asnjë kod i fshehur ose funksionalitet sekret</li>
-                  <li>• Transparent dhe i verifikueshëm nga të gjithë</li>
+                ))}
+              </ul>
+              <p className="mt-4 text-gray-600 text-sm italic leading-relaxed">
+                Faqja është statike; nuk ruajmë profil përdoruesi në platformë.
+              </p>
+            </div>
+          </SectionCard>
+
+          <SectionCard icon={Code} title="Të drejtat e autorit">
+            <p className="text-gray-700 mb-6 text-base md:text-lg leading-relaxed">
+              Respektojmë të drejtat e autorëve dhe krijuesve të përmbajtjes.
+            </p>
+            <div className="grid md:grid-cols-2 gap-5">
+              <div className="bg-red-50 rounded-xl p-5 border border-red-100">
+                <h3 className="font-bold text-gray-900 mb-3">Për autorët</h3>
+                <ul className="space-y-2 text-gray-700 text-sm md:text-base">
+                  <li>• Kërkesë për heqje — përgjigje sa më shpejt</li>
+                  <li>• Heqje pa pyetje të panevojshme</li>
+                  <li>• Respekt për kërkesat ligjore</li>
                 </ul>
               </div>
-
-              <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                <div>
-                  <h3 className="font-semibold text-gray-800">
-                    GitHub Repository
-                  </h3>
-                  <p className="text-sm text-gray-600">Shiko kodin e plotë</p>
+              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
+                <h3 className="font-bold text-gray-900 mb-3">Kontakt heqjeje</h3>
+                <div className="space-y-3 text-sm md:text-base">
+                  <a
+                    href="mailto:info@e-studenti.com"
+                    className="flex items-center gap-2 text-red-600 font-semibold hover:underline"
+                  >
+                    <Mail className="w-4 h-4" />
+                    info@e-studenti.com
+                  </a>
+                  <a
+                    href="https://github.com/edonamulaj0/e-studenti"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 text-gray-800 font-semibold hover:text-red-600"
+                  >
+                    <Github className="w-4 h-4" />
+                    GitHub
+                  </a>
+                  <div className="flex items-center gap-2 text-gray-700">
+                    <MessageSquare className="w-4 h-4" />
+                    @estudenti.up
+                  </div>
                 </div>
-                <a
-                  href="https://github.com/edonamulaj0/e-studenti"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center bg-gray-800 text-white px-4 py-2 rounded-lg hover:bg-gray-900 transition-colors"
-                >
-                  <Github className="w-4 h-4 mr-2" />
-                  Shiko në GitHub
-                </a>
               </div>
             </div>
-          </section>
+          </SectionCard>
 
-          <section className="bg-white rounded-xl shadow-lg p-8 border-2 border-gray-200">
-            <h2 className="text-2xl font-bold text-gray-900 mb-6">
-              Vërejtje dhe Kufizime
-            </h2>
+          <SectionCard icon={Users} title="Kontribuesit">
+            <p className="text-gray-600 mb-6 italic text-base">
+              Faleminderit studentëve dhe profesorëve që kanë ndarë burime.
+            </p>
+            <div className="grid sm:grid-cols-2 gap-4">
+              {contributors.map((c, index) => (
+                <div
+                  key={index}
+                  className="bg-red-50/80 rounded-xl p-4 border border-red-100"
+                >
+                  <p className="font-bold text-gray-900">{c.name}</p>
+                  <p className="text-sm text-gray-600 mt-1">{c.faculty}</p>
+                </div>
+              ))}
+            </div>
+          </SectionCard>
 
-            <div className="grid md:grid-cols-2 gap-6">
+          <SectionCard icon={Code} title="Kodi i hapur">
+            <div className="space-y-5">
+              <div className="bg-red-50 rounded-xl p-5 border border-red-100">
+                <h3 className="font-bold text-gray-900 mb-2">Transparencë</h3>
+                <ul className="space-y-2 text-gray-700 text-sm md:text-base">
+                  <li>• Struktura dhe funksionimi të verifikueshëm nga kodi</li>
+                  <li>• Pa funksionalitet të fshehur</li>
+                </ul>
+              </div>
+              <a
+                href="https://github.com/edonamulaj0/e-studenti"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center justify-between gap-4 p-5 rounded-xl bg-gray-900 text-white hover:bg-gray-800 transition-colors group"
+              >
+                <div>
+                  <p className="font-bold text-lg">GitHub</p>
+                  <p className="text-sm text-gray-300">Shiko kodin</p>
+                </div>
+                <ArrowRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+            </div>
+          </SectionCard>
+
+          <SectionCard icon={Shield} title="Vërejtje dhe kufizime" border="gray">
+            <div className="grid md:grid-cols-2 gap-6 text-sm md:text-base text-gray-700">
               <div>
-                <h3 className="font-semibold text-gray-800 mb-3">
-                  Përgjegjësia:
-                </h3>
-                <ul className="space-y-2 text-gray-700 text-sm">
+                <h3 className="font-bold text-gray-900 mb-2">Përgjegjësia</h3>
+                <ul className="space-y-2">
                   <li>• Vetëm për qëllime edukative</li>
-                  <li>• Nuk jemi përgjegjës për saktësinë e përmbajtjes</li>
-                  <li>• Studentët duhet të verifikojnë informacionin</li>
+                  <li>• Verifikoni saktësinë me burimet zyrtare</li>
                   <li>• Përmbajtja mund të jetë e vjetër</li>
                 </ul>
               </div>
-
               <div>
-                <h3 className="font-semibold text-gray-800 mb-3">Përdorimi:</h3>
-                <ul className="space-y-2 text-gray-700 text-sm">
-                  <li>• Falas dhe e hapur për të gjithë</li>
-                  <li>• Përdoreni në përputhje me ligjet</li>
-                  <li>• Respektoni të drejtat e autorëve</li>
+                <h3 className="font-bold text-gray-900 mb-2">Përdorimi</h3>
+                <ul className="space-y-2">
+                  <li>• Respektoni ligjet dhe autorët</li>
+                  <li>• Përdorni në mënyrë etike</li>
                 </ul>
               </div>
             </div>
-          </section>
+          </SectionCard>
 
-          <section className="bg-white rounded-xl shadow-lg p-8 border-2 border-red-200">
-            <div className="flex items-center mb-6">
-              <Mail className="w-6 h-6 text-red-600 mr-3" />
-              <h2 className="text-2xl font-bold text-gray-900">Kontakti</h2>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-6">
-              <div>
-                <h3 className="font-semibold text-gray-800 mb-3">
-                  Për çdo pyetje ose shqetësim:
-                </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center text-gray-700">
-                    <Mail className="w-4 h-4 mr-2" />
-                    <span className="text-sm">info@e-studenti.com</span>
-                  </div>
-                  <div className="flex items-center text-gray-700">
-                    <MessageSquare className="w-4 h-4 mr-2" />
-                    <span className="text-sm">@estudenti.up</span>
-                  </div>
-                </div>
+          <SectionCard icon={Mail} title="Kontakti">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+              <a
+                href="mailto:info@e-studenti.com"
+                className="inline-flex items-center gap-2 text-lg font-bold text-red-600 hover:underline"
+              >
+                <Mail className="w-5 h-5" />
+                info@e-studenti.com
+              </a>
+              <span className="hidden sm:inline text-gray-300">|</span>
+              <div className="flex items-center gap-2 text-gray-700">
+                <MessageSquare className="w-5 h-5 text-red-500" />
+                <span className="font-medium">@estudenti.up</span>
               </div>
             </div>
-          </section>
+            <div className="mt-6">
+              <Link
+                href="/kontakto"
+                className="inline-flex items-center gap-2 font-bold text-white bg-red-600 px-6 py-3 rounded-xl hover:bg-red-700 transition-colors"
+              >
+                Faqja e kontaktit
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
+          </SectionCard>
         </div>
 
-        <div className="text-center mt-12 py-8 border-t border-gray-200">
-          <p className="text-gray-600 italic">
-            Faleminderit që përdorni E-Studenti! Së bashku po ndërtojmë një
-            komunitet më transparent dhe të hapur për arsimin.
-          </p>
-        </div>
+        <p className="text-center mt-12 text-gray-600 italic max-w-2xl mx-auto text-base">
+          Faleminderit që përdorni E-Studenti — së bashku për një komunitet më të
+          hapur.
+        </p>
       </div>
     </div>
   );

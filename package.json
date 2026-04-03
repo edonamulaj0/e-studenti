@@ -7,12 +7,14 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
+		"sync-erasmus": "node scripts/sync-erasmus.mjs",
 		"sync": "node sync-materials.js && git add app/data/materials.json && git commit -m \"Update materials from R2\" && git push"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.850.0",
 		"@aws-sdk/s3-request-presigner": "^3.850.0",
 		"dotenv": "^17.2.0",
+		"framer-motion": "^12.38.0",
 		"jszip": "^3.10.1",
 		"lucide-react": "^0.263.1",
 		"next": "^14.2.30",
@@ -23,6 +25,7 @@
 		"autoprefixer": "^10.0.1",
 		"eslint": "^8",
 		"eslint-config-next": "14.0.3",
+		"playwright": "^1.59.1",
 		"postcss": "^8",
 		"tailwindcss": "^3.3.0"
 	}

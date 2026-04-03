@@ -1,0 +1,52 @@
+name: Sync Erasmus calls
+
+on:
+  schedule:
+    # Every 2 days at 06:00 UTC
+    - cron: "0 6 */2 * *"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Optional Cloudflare cookies
+        env:
+          ERASMUS_COOKIES: ${{ secrets.ERASMUS_COOKIES }}
+        run: |
+          if [ -n "$ERASMUS_COOKIES" ]; then
+            printf '%s' "$ERASMUS_COOKIES" > erasmus-cookies.json
+          fi
+
+      - name: Run Erasmus sync
+        env:
+          ERASMUS_COOKIES_FILE: ${{ github.workspace }}/erasmus-cookies.json
+        run: npm run sync-erasmus
+
+      - name: Commit updated data
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add app/data/erasmus-calls.json
+          if git diff --staged --quiet; then
+            echo "No changes to commit (scrape may have been blocked by Cloudflare)."
+          else
+            git commit -m "chore: sync Erasmus calls from uni-pr.edu"
+            git push
+          fi

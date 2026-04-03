@@ -1,5 +1,5 @@
 "use client";
-import { BookOpen, Users, ExternalLink } from "lucide-react";
+import { BookOpen, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 export default function Faculties() {
@@ -16,7 +16,6 @@ export default function Faculties() {
         "Punë Sociale",
         "Antropologji",
       ],
-      students: "XX",
       website: "http://filozofiku.uni-pr.edu/",
       color: "indigo",
     },
@@ -24,7 +23,6 @@ export default function Faculties() {
       name: "Fakulteti i Shkencave Matematike Natyrore",
       acronym: "FSHMN",
       departments: ["Matematikë", "Matematikë", "Kimi", "Biologji", "Gjeografi"],
-      students: "XX",
       website: "http://fshmn.uni-pr.edu/",
       color: "red",
     },
@@ -41,7 +39,6 @@ export default function Faculties() {
         "Gjuhë dhe Letërsi Turke",
         "Gazetari",
       ],
-      students: "XX",
       website: "http://filologjia.uni-pr.edu/",
       color: "green",
     },
@@ -49,7 +46,6 @@ export default function Faculties() {
       name: "Fakulteti Juridik",
       acronym: "LAW",
       departments: ["Juridik i Përgjithshëm"],
-      students: "XX",
       website: "http://juridiku.uni-pr.edu/",
       color: "red",
     },
@@ -64,7 +60,6 @@ export default function Faculties() {
         "Kontabilitet",
         "Ekonomi e aplikuar dhe menaxhment",
       ],
-      students: "XX",
       website: "http://ekonomiku.uni-pr.edu/",
       color: "indigo",
     },
@@ -77,7 +72,6 @@ export default function Faculties() {
         "Gjeodezi",
         "Inxhinieri e Ambientit",
       ],
-      students: "XX",
       website: "http://fin.uni-pr.edu/",
       color: "red",
     },
@@ -90,7 +84,6 @@ export default function Faculties() {
         "Teknologji e Informimit dhe e Komunikimit",
         "Elektroenergjetikë",
       ],
-      students: "XX",
       website: "https://fiek.uni-pr.edu",
       color: "green",
     },
@@ -104,7 +97,6 @@ export default function Faculties() {
         "Fizioterapi",
         "Infermieri",
       ],
-      students: "XX",
       website: "http://mjekesia.uni-pr.edu/",
       color: "indigo",
     },
@@ -112,7 +104,6 @@ export default function Faculties() {
       name: "Fakulteti i Arteve",
       acronym: "ART",
       departments: ["Artet e Bukura", "Artet Dramatike", "Artet Muzikore"],
-      students: "XX",
       website: "http://arte.uni-pr.edu/",
       color: "red",
     },
@@ -126,7 +117,6 @@ export default function Faculties() {
         "Mjekësi Veterinare",
         "Teknologji Ushqimore me Bioteknologji",
       ],
-      students: "XX",
       website: "http://fbv.uni-pr.edu/",
       color: "green",
     },
@@ -134,7 +124,6 @@ export default function Faculties() {
       name: "Fakulteti i Edukimit Fizik dhe i Sportit",
       acronym: "FEFS",
       departments: ["Edukim Fizik dhe Sport"],
-      students: "XX",
       website: "http://fefs.uni-pr.edu/",
       color: "indigo",
     },
@@ -146,7 +135,6 @@ export default function Faculties() {
         "Edukimi Fillor",
         "Pedagogji e Përgjithshme",
       ],
-      students: "XX",
       website: "http://edukimi.uni-pr.edu/",
       color: "green",
     },
@@ -154,7 +142,6 @@ export default function Faculties() {
       name: "Fakulteti i Arkitekturës",
       acronym: "FA",
       departments: ["Arkitekturë"],
-      students: "XX",
       website: "http://fa.uni-pr.edu/",
       color: "red",
     },
@@ -168,7 +155,6 @@ export default function Faculties() {
         "Komunikacion dhe transport",
         "Mekatronikë",
       ],
-      students: "XX",
       website: "http://fim.uni-pr.edu/",
       color: "red",
     },
@@ -176,96 +162,100 @@ export default function Faculties() {
 
   const getColorClasses = (color) => {
     const colors = {
-      red: "border-red-200 hover:border-red-400 bg-red-50",
-      red: "border-red-200 hover:border-red-400 bg-red-50",
-      green: "border-green-200 hover:border-green-400 bg-green-50",
-      purple: "border-purple-200 hover:border-purple-400 bg-purple-50",
-      indigo: "border-indigo-200 hover:border-indigo-400 bg-indigo-50",
-      yellow: "border-yellow-200 hover:border-yellow-400 bg-yellow-50",
+      red: "border-red-200 hover:border-red-400 bg-red-50/60",
+      green: "border-emerald-200 hover:border-emerald-400 bg-emerald-50/50",
+      purple: "border-purple-200 hover:border-purple-400 bg-purple-50/50",
+      indigo: "border-indigo-200 hover:border-indigo-400 bg-indigo-50/50",
+      yellow: "border-amber-200 hover:border-amber-400 bg-amber-50/50",
     };
     return colors[color] || colors.red;
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-gray-900 mb-4">Fakultetet</h1>
-          <p className="text-xl text-gray-600">
-            Eksploroni të gjitha fakultetet e Universitetit të Prishtinës
+    <div className="pt-24 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100 pb-20">
+      <div className="container mx-auto px-4 max-w-6xl py-10 md:py-12">
+        <header className="text-center mb-12 md:mb-14 max-w-3xl mx-auto">
+          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4 tracking-tight">
+            Fakultetet
+          </h1>
+          <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+            Eksploroni fakultetet e Universitetit të Prishtinës — departamente,
+            lidhje zyrtare dhe materiale.
           </p>
-        </div>
+        </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
           {faculties.map((faculty, index) => (
-            <div
+            <article
               key={index}
-              className={`bg-white rounded-xl shadow-lg p-6 border-2 transition-all duration-300 ${getColorClasses(
+              className={`flex flex-col h-full bg-white rounded-2xl shadow-lg hover:shadow-xl p-6 md:p-7 border-2 transition-all duration-300 hover:-translate-y-0.5 ${getColorClasses(
                 faculty.color
               )}`}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-bold text-gray-900">
+              <div className="flex flex-1 flex-col min-h-0">
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <span className="text-2xl font-black text-red-600 tracking-tight">
                   {faculty.acronym}
-                </h3>
+                </span>
                 <a
                   href={faculty.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-red-600 hover:text-red-800 transition-colors"
+                  className="shrink-0 p-2 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
+                  aria-label={`Faqja e ${faculty.acronym}`}
                 >
-                  <ExternalLink className="w-5 h-5" />
+                  <ExternalLink className="w-6 h-6" />
                 </a>
               </div>
 
-              <h4 className="text-lg font-semibold text-gray-800 mb-4">
+              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-5 leading-snug">
                 {faculty.name}
-              </h4>
+              </h2>
 
-              <div className="space-y-3 mb-6">
-                <div className="flex items-center">
-                  <BookOpen className="w-5 h-5 text-gray-500 mr-2" />
-                  <span className="text-sm text-gray-600">
-                    {faculty.departments.length} Departamente
-                  </span>
-                </div>
-                <div className="flex items-center">
-                  <Users className="w-5 h-5 text-gray-500 mr-2" />
-                  <span className="text-sm text-gray-600">
-                    {faculty.students} Studentë
+              <div className="space-y-3 mb-5 text-base text-gray-600">
+                <div className="flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-red-500 shrink-0" />
+                  <span className="font-medium">
+                    {faculty.departments.length} departamente
                   </span>
                 </div>
               </div>
 
-              <div className="space-y-2 mb-6">
-                <h5 className="font-semibold text-gray-700">Departamentet:</h5>
-                <ul className="text-sm text-gray-600 space-y-1">
+              <div className="mb-6">
+                <h3 className="font-bold text-gray-800 mb-2 text-sm uppercase tracking-wide text-red-800/80">
+                  Departamentet
+                </h3>
+                <ul className="text-sm md:text-base text-gray-600 space-y-1.5">
                   {faculty.departments.slice(0, 3).map((dept, idx) => (
-                    <li key={idx}>• {dept}</li>
+                    <li key={idx} className="flex gap-2">
+                      <span className="text-red-500">•</span>
+                      <span>{dept}</span>
+                    </li>
                   ))}
                   {faculty.departments.length > 3 && (
-                    <li className="text-gray-500">
-                      • Dhe {faculty.departments.length - 3} më shumë...
+                    <li className="text-gray-500 pl-4">
+                      +{faculty.departments.length - 3} të tjerë…
                     </li>
                   )}
                 </ul>
               </div>
+              </div>
 
-              <div className="flex space-x-2">
+              <div className="mt-auto pt-5 flex flex-col sm:flex-row gap-3 shrink-0 border-t border-gray-100/80">
                 <Link
                   href={`/fakultetet/${faculty.acronym.toLowerCase()}`}
-                  className="flex-1 bg-red-600 text-white text-center py-2 px-4 rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
+                  className="flex-1 text-center bg-red-600 text-white py-3 px-4 rounded-xl hover:bg-red-700 transition-colors text-base font-bold shadow-md shadow-red-600/20"
                 >
                   Shiko detajet
                 </Link>
                 <Link
                   href={`/materialet?faculty=${faculty.acronym.toLowerCase()}`}
-                  className="flex-1 bg-gray-600 text-white text-center py-2 px-4 rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+                  className="flex-1 text-center bg-gray-800 text-white py-3 px-4 rounded-xl hover:bg-gray-900 transition-colors text-base font-bold"
                 >
                   Materialet
                 </Link>
               </div>
-            </div>
+            </article>
           ))}
         </div>
       </div>
