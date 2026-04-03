@@ -16,6 +16,9 @@ cloudflare-worker/
 .env.local
 .env.production
 
+# Local Playwright cookies for uni-pr.edu (Cloudflare)
+erasmus-cookies.json
+
 # Build files
 *.log
 .DS_Store

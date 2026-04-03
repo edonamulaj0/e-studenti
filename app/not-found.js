@@ -1,4 +1,5 @@
 "use client";
+
 import { Home, RefreshCw, AlertTriangle } from "lucide-react";
 import { useState } from "react";
 
@@ -14,7 +15,12 @@ export default function NotFound() {
 
   return (
     <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100 flex items-center justify-center">
-      <div className="container mx-auto px-4 pb-8 safe-area-bottom">
+      <div
+        className="container mx-auto px-4"
+        style={{
+          paddingBottom: "max(2rem, env(safe-area-inset-bottom, 0px))",
+        }}
+      >
         <div className="max-w-2xl mx-auto text-center">
           <div className="mb-8">
             <h1 className="text-9xl font-bold text-red-600 mb-4 animate-pulse">
@@ -44,6 +50,7 @@ export default function NotFound() {
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-8">
             <button
+              type="button"
               onClick={() => window.history.back()}
               className="flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
             >
@@ -52,6 +59,7 @@ export default function NotFound() {
             </button>
 
             <button
+              type="button"
               onClick={handleRefresh}
               disabled={isLoading}
               className="flex items-center justify-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:opacity-50"
@@ -64,18 +72,6 @@ export default function NotFound() {
           </div>
         </div>
       </div>
-
-      <style jsx>{`
-        .safe-area-bottom {
-          padding-bottom: max(2rem, env(safe-area-inset-bottom));
-        }
-
-        @supports (padding: max(0px)) {
-          .safe-area-bottom {
-            padding-bottom: max(2rem, env(safe-area-inset-bottom));
-          }
-        }
-      `}</style>
     </div>
   );
 }
