@@ -285,12 +285,86 @@ function materialMatches(material, { faculty, type, q }) {
     .some((value) => String(value).toLowerCase().includes(needle));
 }
 
+function materialSort(a, b) {
+  if (a.created_at || b.created_at) {
+    return String(b.created_at || "").localeCompare(String(a.created_at || ""));
+  }
+  return String(a.title).localeCompare(String(b.title), "sq");
+}
+
 function publicUrlToKey(url) {
   try {
     return decodeURIComponent(new URL(url).pathname.replace(/^\//, ""));
   } catch {
     return "";
   }
+}
+
+function materialDedupeKey(material) {
+  const key =
+    material.file_key ||
+    material.fileKey ||
+    publicUrlToKey(material.r2_url || material.r2Url);
+  if (!key) return "";
+  return String(key).trim().toLowerCase();
+}
+
+function mergePublicMaterials(dbMaterials, r2Materials) {
+  const seenFiles = new Set();
+  const usedIds = new Set();
+  const merged = [];
+
+  for (const [source, materials] of [
+    ["db", dbMaterials],
+    ["r2", r2Materials],
+  ]) {
+    for (const material of materials) {
+      const dedupeKey = materialDedupeKey(material);
+      if (dedupeKey) {
+        if (seenFiles.has(dedupeKey)) continue;
+        seenFiles.add(dedupeKey);
+      }
+
+      const id = material.id || material.file_key || material.r2_url || `${source}-${merged.length}`;
+      const idKey = String(id);
+      const publicMaterial = usedIds.has(idKey)
+        ? { ...material, id: `${source}:${idKey}` }
+        : material;
+      usedIds.add(String(publicMaterial.id));
+      merged.push(publicMaterial);
+    }
+  }
+
+  return merged;
+}
+
+function paginatedMaterialsResponse(allMaterials, { faculty, type, q, page, limit }) {
+  const offset = (page - 1) * limit;
+  const baseFiltered = allMaterials.filter((material) =>
+    materialMatches(material, { faculty, q })
+  );
+  const typeCounts = {};
+  for (const material of baseFiltered) {
+    const key = material.type || "Të pa klasifikuara";
+    typeCounts[key] = (typeCounts[key] || 0) + 1;
+  }
+  const filtered = baseFiltered
+    .filter((material) => materialMatches(material, { type }))
+    .sort(materialSort);
+  const materials = filtered.slice(offset, offset + limit);
+
+  return jsonResponse({
+    materials,
+    entries: materials.map(materialToLegacyEntry),
+    typeCounts,
+    pagination: {
+      page,
+      limit,
+      total: filtered.length,
+      totalPages: Math.ceil(filtered.length / limit),
+      hasNextPage: offset + materials.length < filtered.length,
+    },
+  });
 }
 
 function base64UrlEncode(value) {
@@ -779,6 +853,21 @@ async function handleMe(request, env) {
   });
 }
 
+async function loadD1Materials(env) {
+  if (!env.DB) return [];
+  try {
+    const result = await env.DB.prepare(
+      `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
+       FROM materials m JOIN users u ON m.user_id = u.id
+       WHERE LOWER(COALESCE(m.file_type, '')) != 'rar'`
+    ).all();
+    return result.results || [];
+  } catch (error) {
+    console.error("Unable to load D1 materials for public catalog", error);
+    return [];
+  }
+}
+
 async function handleMaterials(request, url, env) {
   const faculty = url.searchParams.get("faculty");
   const type = url.searchParams.get("type");
@@ -790,35 +879,16 @@ async function handleMaterials(request, url, env) {
   const offset = (page - 1) * limit;
 
   if (env.METADATA_BUCKET && userFilter !== "me") {
-    const allMaterials = await loadR2Materials(env);
-    const baseFiltered = allMaterials.filter((material) =>
-      materialMatches(material, { faculty, q })
-    );
-    const typeCounts = {};
-    for (const material of baseFiltered) {
-      const key = material.type || "Të pa klasifikuara";
-      typeCounts[key] = (typeCounts[key] || 0) + 1;
-    }
-    const filtered = baseFiltered
-      .filter((material) => materialMatches(material, { type }))
-      .sort((a, b) => {
-        if (a.created_at || b.created_at) {
-          return String(b.created_at || "").localeCompare(String(a.created_at || ""));
-        }
-        return String(a.title).localeCompare(String(b.title), "sq");
-      });
-    const materials = filtered.slice(offset, offset + limit);
-    return jsonResponse({
-      materials,
-      entries: materials.map(materialToLegacyEntry),
-      typeCounts,
-      pagination: {
-        page,
-        limit,
-        total: filtered.length,
-        totalPages: Math.ceil(filtered.length / limit),
-        hasNextPage: offset + materials.length < filtered.length,
-      },
+    const [dbMaterials, r2Materials] = await Promise.all([
+      loadD1Materials(env),
+      loadR2Materials(env),
+    ]);
+    return paginatedMaterialsResponse(mergePublicMaterials(dbMaterials, r2Materials), {
+      faculty,
+      type,
+      q,
+      page,
+      limit,
     });
   }
 
@@ -953,7 +1023,11 @@ function materialToLegacyEntry(material) {
 
 async function handleContributors(env) {
   if (env.METADATA_BUCKET) {
-    const materials = await loadR2Materials(env);
+    const [dbMaterials, r2Materials] = await Promise.all([
+      loadD1Materials(env),
+      loadR2Materials(env),
+    ]);
+    const materials = mergePublicMaterials(dbMaterials, r2Materials);
     const contributors = new Map();
     for (const material of materials) {
       const name = String(material.uploader_name || "").trim();
