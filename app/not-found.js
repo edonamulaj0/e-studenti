@@ -14,7 +14,7 @@ export default function NotFound() {
   };
 
   return (
-    <div className="pt-20 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100 flex items-center justify-center">
+    <div className="pt-16 min-h-screen bg-srh-paper flex items-center justify-center">
       <div
         className="container mx-auto px-4"
         style={{
@@ -23,26 +23,26 @@ export default function NotFound() {
       >
         <div className="max-w-2xl mx-auto text-center">
           <div className="mb-8">
-            <h1 className="text-9xl font-bold text-red-600 mb-4 animate-pulse">
+            <h1 className="font-playfair text-9xl font-bold text-srh-crimson mb-4 animate-pulse">
               404
             </h1>
             <div className="flex justify-center mb-6">
-              <AlertTriangle className="w-16 h-16 text-red-500" />
+              <AlertTriangle className="w-16 h-16 text-srh-crimson" />
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-xl p-8 mb-8">
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
+          <div className="bg-white rounded-2xl border border-srh-cream shadow-sm p-8 mb-8">
+            <h2 className="font-playfair text-3xl font-bold text-srh-navy mb-4">
               Faqja nuk u gjet!
             </h2>
-            <p className="text-gray-600 text-lg mb-6">
+            <p className="text-srh-navy/70 text-lg mb-6">
               Faqja që po kërkoni nuk ekziston ose po punojmë në të për ta
               përmirësuar.
             </p>
 
-            <div className="flex items-center justify-center space-x-2 mb-6 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
-              <RefreshCw className="w-5 h-5 text-yellow-600" />
-              <span className="text-yellow-700 font-medium">
+            <div className="flex items-center justify-center space-x-2 mb-6 p-4 bg-srh-cream/50 rounded-lg border border-srh-cream">
+              <RefreshCw className="w-5 h-5 text-srh-sage" />
+              <span className="text-srh-navy font-medium">
                 Po punojmë në përmirësime...
               </span>
             </div>
@@ -52,7 +52,7 @@ export default function NotFound() {
             <button
               type="button"
               onClick={() => window.history.back()}
-              className="flex items-center justify-center px-6 py-3 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors font-medium"
+              className="flex items-center justify-center px-6 py-3 bg-srh-crimson text-white rounded-lg hover:bg-[#5e1621] transition-colors font-medium"
             >
               <Home className="w-5 h-5 mr-2" />
               Kthehu mbrapa
@@ -62,7 +62,7 @@ export default function NotFound() {
               type="button"
               onClick={handleRefresh}
               disabled={isLoading}
-              className="flex items-center justify-center px-6 py-3 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium disabled:opacity-50"
+              className="flex items-center justify-center px-6 py-3 bg-srh-navy text-white rounded-lg hover:bg-srh-crimson transition-colors font-medium disabled:opacity-50"
             >
               <RefreshCw
                 className={`w-5 h-5 mr-2 ${isLoading ? "animate-spin" : ""}`}

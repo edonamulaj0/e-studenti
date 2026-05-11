@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import Link from "next/link";
+import { useCallback, useState, useMemo, useEffect } from "react";
 import {
   FileText,
   Download,
@@ -9,54 +10,119 @@ import {
   Search,
   Archive,
   Layers,
+  Flag,
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
 import ArchiveModal from "../components/ArchiveModal";
+import { WORKER_URL } from "../lib/worker-url";
+
+const PAGE_SIZE = 24;
 
 function typeSectionId(type) {
   return `mat-section-${encodeURIComponent(type)}`;
 }
 
-export default function MaterialsClient({ initialMaterials }) {
+function displayTeacher(material) {
+  const t = material.teacher;
+  if (t == null) return "—";
+  const s = String(t).trim();
+  if (!s || s === "//") return "—";
+  return s;
+}
+
+function normalizeMaterial(material) {
+  return {
+    id: material.id,
+    title: material.title,
+    faculty: material.faculty,
+    department: material.department || "//",
+    type: material.type,
+    subject: material.subject,
+    teacher: material.teacher || "//",
+    r2Url: material.r2Url || material.r2_url,
+    fileType: material.fileType || material.file_type,
+    fileSize: material.fileSize || material.file_size,
+    submittedBy:
+      material.submittedBy ||
+      (material.uploader_name ? { name: material.uploader_name } : undefined),
+  };
+}
+
+export default function MaterialsClient() {
+  const [materials, setMaterials] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [hasLoaded, setHasLoaded] = useState(false);
+  const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFaculty, setSelectedFaculty] = useState("");
   const [selectedType, setSelectedType] = useState("");
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({
+    page: 1,
+    limit: PAGE_SIZE,
+    total: 0,
+    totalPages: 1,
+    hasNextPage: false,
+  });
+  const [availableTypeCounts, setAvailableTypeCounts] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
   const [activeSection, setActiveSection] = useState(null);
 
-  const typeOptions = useMemo(() => {
-    const set = new Set(initialMaterials.map((m) => m.type).filter(Boolean));
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "sq"));
-  }, [initialMaterials]);
+  const loadMaterials = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const params = new URLSearchParams({
+        action: "materials",
+        page: String(page),
+        limit: String(PAGE_SIZE),
+      });
+      if (searchTerm.trim()) params.set("q", searchTerm.trim());
+      if (selectedFaculty) params.set("faculty", selectedFaculty);
+      if (selectedType) params.set("type", selectedType);
 
-  const { filteredMaterials, typeCounts } = useMemo(() => {
-    const q = searchTerm.toLowerCase();
-    const matchSF = (material) => {
-      const matchesSearch =
-        material.title.toLowerCase().includes(q) ||
-        material.subject.toLowerCase().includes(q) ||
-        material.teacher.toLowerCase().includes(q);
-      const matchesFaculty =
-        selectedFaculty === "" || material.faculty === selectedFaculty;
-      return matchesSearch && matchesFaculty;
-    };
-
-    const counts = {};
-    for (const m of initialMaterials) {
-      if (!matchSF(m)) continue;
-      const t = m.type || "Të pa klasifikuara";
-      counts[t] = (counts[t] || 0) + 1;
+      const res = await fetch(`${WORKER_URL}/?${params.toString()}`);
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Fetch failed");
+      setMaterials((data.materials || data.entries || []).map(normalizeMaterial));
+      setAvailableTypeCounts(data.typeCounts || {});
+      setPagination(
+        data.pagination || {
+          page,
+          limit: PAGE_SIZE,
+          total: 0,
+          totalPages: 1,
+          hasNextPage: false,
+        }
+      );
+    } catch {
+      setError("Nuk mund të ngarkohen materialet. Provoni përsëri.");
+    } finally {
+      setLoading(false);
+      setHasLoaded(true);
     }
+  }, [page, searchTerm, selectedFaculty, selectedType]);
 
-    const filtered = initialMaterials.filter(
-      (material) =>
-        matchSF(material) &&
-        (selectedType === "" || material.type === selectedType)
-    );
+  useEffect(() => {
+    const timeout = window.setTimeout(loadMaterials, 250);
+    return () => window.clearTimeout(timeout);
+  }, [loadMaterials]);
 
-    return { filteredMaterials: filtered, typeCounts: counts };
-  }, [initialMaterials, searchTerm, selectedFaculty, selectedType]);
+  useEffect(() => {
+    setPage(1);
+  }, [searchTerm, selectedFaculty, selectedType]);
+
+  const typeOptions = useMemo(() => {
+    const fromServer = Object.keys(availableTypeCounts);
+    if (fromServer.length > 0) {
+      return fromServer.sort((a, b) => a.localeCompare(b, "sq"));
+    }
+    const set = new Set(materials.map((m) => m.type).filter(Boolean));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "sq"));
+  }, [availableTypeCounts, materials]);
+
+  const filteredMaterials = materials;
+  const typeCounts = availableTypeCounts;
 
   const groupedByType = useMemo(() => {
     const map = new Map();
@@ -111,11 +177,32 @@ export default function MaterialsClient({ initialMaterials }) {
     setSearchTerm("");
     setSelectedFaculty("");
     setSelectedType("");
+    setPage(1);
   };
+
+  const totalPages = Math.max(1, Number(pagination.totalPages || 1));
+  const currentPage = Math.min(Math.max(1, Number(pagination.page || page)), totalPages);
+
+  const goToPage = (nextPage) => {
+    const clamped = Math.min(Math.max(1, nextPage), totalPages);
+    if (clamped === currentPage) return;
+    setPage(clamped);
+    window.setTimeout(() => {
+      document
+        .getElementById("material-results")
+        ?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 80);
+  };
+
+  const pageNumbers = useMemo(() => {
+    const start = Math.max(1, currentPage - 2);
+    const end = Math.min(totalPages, start + 4);
+    return Array.from({ length: end - start + 1 }, (_, index) => start + index);
+  }, [currentPage, totalPages]);
 
   const isArchiveFile = (fileType) => {
     return (
-      fileType?.toLowerCase() === "zip" || fileType?.toLowerCase() === "rar"
+      fileType?.toLowerCase() === "zip"
     );
   };
 
@@ -128,43 +215,71 @@ export default function MaterialsClient({ initialMaterials }) {
   };
 
   const renderCard = (material) => (
-    <motion.div
+    <div
       key={material.id}
-      layout
-      initial={false}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.98 }}
-      transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-      className="bg-white rounded-2xl shadow-lg p-7 md:p-8 hover:shadow-2xl border-2 border-transparent hover:border-red-100 flex flex-col transition-all duration-300 hover:-translate-y-0.5"
+      className="surface-card group flex h-full flex-col p-6 hover:-translate-y-1 hover:border-burgundy-600/30 hover:shadow-md md:p-7"
     >
-      <div className="flex items-start justify-between mb-5 gap-4">
+      <div className="mb-5 flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
-          <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-3 leading-snug">
+          <h3
+            className={`text-xl font-semibold leading-snug text-navy-900 transition-colors group-hover:text-burgundy-600 ${
+              material.submittedBy?.name ? "mb-2" : "mb-3"
+            }`}
+          >
             {material.title}
           </h3>
-          <div className="flex flex-wrap items-center gap-2 text-base text-gray-600">
-            <span className="bg-red-100 text-red-900 px-3 py-1 rounded-full font-semibold">
+          {material.submittedBy?.name && (
+            <div className="mb-3">
+              <span className="inline-flex rounded-full border border-success-green/15 bg-success-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-success-green">
+                Dërguar nga: {material.submittedBy.name}
+              </span>
+            </div>
+          )}
+          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
+            <span className="rounded-full bg-navy-100 px-3 py-1 font-semibold text-navy-800">
               {material.faculty}
             </span>
-            <span className="text-gray-500">{material.department}</span>
+            <span>{material.department}</span>
           </div>
         </div>
-        <FileText className="w-10 h-10 text-red-600 shrink-0" />
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-burgundy-50 text-burgundy-600">
+          <FileText className="h-6 w-6" />
+        </span>
       </div>
 
-      <div className="space-y-3 mb-6 flex-1 text-lg">
-        <div className="flex justify-between gap-4">
-          <span className="text-gray-600">Lënda:</span>
-          <span className="font-semibold text-right">{material.subject}</span>
+      <div className="mb-6 grid gap-3 text-sm">
+        <div className="rounded-2xl border border-gray-200 bg-navy-100/40 p-4">
+          <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+            Lënda
+          </span>
+          <p className="mt-1 font-semibold text-navy-900">{material.subject}</p>
         </div>
-        <div className="flex justify-between gap-4">
-          <span className="text-gray-600">Lloji:</span>
-          <span className="font-semibold text-right">{material.type}</span>
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl border border-gray-200 bg-white p-4">
+            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+              Lloji
+            </span>
+            <p className="mt-1 font-semibold text-navy-900">{material.type}</p>
+          </div>
+          <div className="rounded-2xl border border-gray-200 bg-white p-4">
+            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+              Autor/e
+            </span>
+            <p className="mt-1 font-semibold text-navy-900">
+              {displayTeacher(material)}
+            </p>
+          </div>
         </div>
-        <div className="flex justify-between gap-4">
-          <span className="text-gray-600">Autor/e:</span>
-          <span className="font-semibold text-right">{material.teacher}</span>
-        </div>
+      </div>
+
+      <div className="mb-4 mt-auto">
+        <Link
+          href={`/informacione?subject=${encodeURIComponent("Raportoj material")}#kontakt`}
+          className="flex items-center gap-1.5 text-sm font-semibold text-gray-400 underline decoration-dotted underline-offset-4 transition-colors hover:text-burgundy-600"
+        >
+          <Flag className="w-4 h-4" />
+          Raporto
+        </Link>
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mt-auto">
@@ -174,7 +289,7 @@ export default function MaterialsClient({ initialMaterials }) {
               <button
                 type="button"
                 onClick={(e) => handleViewClick(material, e)}
-                className="flex-1 min-h-[52px] text-lg font-bold bg-transparent border-2 border-red-600 text-red-600 py-3 px-4 rounded-xl hover:bg-red-50 transition-all flex items-center justify-center gap-2"
+                className="btn-outline flex-1 text-base"
               >
                 <Archive className="w-5 h-5" />
                 Shiko përmbajtjen
@@ -184,7 +299,7 @@ export default function MaterialsClient({ initialMaterials }) {
                 href={material.r2Url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex-1 min-h-[52px] text-lg font-bold bg-red-600 text-white py-3 px-4 rounded-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 shadow-lg shadow-red-600/25"
+                className="btn-primary flex-1 text-base"
               >
                 <Eye className="w-5 h-5" />
                 Shiko
@@ -199,7 +314,7 @@ export default function MaterialsClient({ initialMaterials }) {
                 "." +
                 (material.fileType || "pdf")
               }
-              className="flex-1 min-h-[52px] text-lg font-bold bg-gray-700 text-white py-3 px-4 rounded-xl hover:bg-gray-800 transition-all flex items-center justify-center gap-2"
+              className="btn-secondary flex-1 text-base"
             >
               <Download className="w-5 h-5" />
               Shkarko
@@ -207,49 +322,118 @@ export default function MaterialsClient({ initialMaterials }) {
           </>
         )}
       </div>
-    </motion.div>
+    </div>
   );
 
-  return (
-    <div className="pt-24 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100 pb-20">
-      <div className="container mx-auto px-4 py-12 max-w-7xl">
-        <motion.div
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          className="text-center mb-14"
-        >
-          <h1 className="text-5xl md:text-6xl font-extrabold text-gray-900 mb-5 tracking-tight">
+  if (loading && !hasLoaded) {
+    return (
+      <div className="page-shell">
+        <div className="section-shell">
+          <div className="mb-10 max-w-3xl">
+            <p className="page-kicker mb-4">Biblioteka</p>
+            <h1 className="page-title mb-4">
+              Materialet
+            </h1>
+            <p className="page-subtitle">
+              Duke ngarkuar materialet...
+            </p>
+          </div>
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+            {[0, 1, 2].map((item) => (
+              <div
+                key={item}
+                className="h-64 animate-pulse rounded-3xl bg-gray-200/70"
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (error && !hasLoaded) {
+    return (
+      <div className="page-shell">
+        <div className="surface-card mx-auto max-w-2xl p-10 text-center">
+          <FileText className="mx-auto mb-5 h-16 w-16 text-burgundy-600" />
+          <h1 className="mb-4 font-display text-4xl font-bold text-navy-900">
             Materialet
           </h1>
-          <p className="text-xl md:text-2xl text-gray-600 max-w-2xl mx-auto">
-            Gjeni shënime, afate dhe projekte — filtroni sipas fakultetit dhe
-            seksionit (llojit).
-          </p>
-        </motion.div>
+          <p className="mb-6 text-gray-600">{error}</p>
+          <button
+            type="button"
+            onClick={loadMaterials}
+            className="btn-primary"
+          >
+            Provo përsëri
+          </button>
+        </div>
+      </div>
+    );
+  }
 
-        <motion.div
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.06 }}
+  return (
+    <div className="page-shell">
+      <div className="section-shell">
+        <header className="viewport-panel mb-10 flex items-center">
+          <div className="grid w-full gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
+            <div>
+              <p className="page-kicker mb-4">Biblioteka</p>
+              <h1 className="page-title mb-4">
+            Materialet
+              </h1>
+              <p className="page-subtitle max-w-2xl text-lg md:text-xl">
+                Gjeni shënime, afate dhe projekte — filtroni sipas fakultetit dhe
+                seksionit, pastaj hapni ose shkarkoni materialet.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3 text-sm font-semibold text-gray-600">
+                <span className="rounded-full bg-white px-4 py-2 shadow-sm">
+                  {pagination.total} materiale
+                </span>
+                <span className="rounded-full bg-burgundy-50 px-4 py-2 text-burgundy-600">
+                  {typeOptions.length} seksione
+                </span>
+                <span className="rounded-full bg-navy-100 px-4 py-2 text-navy-800">
+                  Faqja {currentPage} / {totalPages}
+                </span>
+              </div>
+            </div>
+            <div className="surface-card hidden p-6 lg:block">
+              <div className="mb-5 flex items-center justify-between">
+                <span className="rounded-full bg-navy-100 px-3 py-1 text-sm font-semibold text-navy-800">
+                  Kërkim i shpejtë
+                </span>
+                <Layers className="h-5 w-5 text-burgundy-600" />
+              </div>
+              <p className="text-sm leading-relaxed text-gray-600">
+                Përdorni filtrat për të ngushtuar materialet sipas fakultetit,
+                llojit dhe fjalëve kyçe. Rezultatet grupohen automatikisht sipas
+                seksionit për skanim më të lehtë.
+              </p>
+            </div>
+          </div>
+        </header>
+
+        <div
           id="material-filters"
-          className="bg-white rounded-2xl shadow-xl p-6 md:p-8 mb-10 border border-gray-100"
+          className="surface-card sticky top-24 z-20 mb-12 p-4 md:p-5"
         >
-          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5 mb-8">
+          <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
             <div className="relative md:col-span-2 xl:col-span-1">
-              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-6 h-6" />
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
                 placeholder="Kërko titull, lëndë, autor…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full min-h-[52px] pl-12 pr-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-500/20 focus:border-red-500 transition-all"
+                className="input-srh pl-12"
               />
             </div>
 
             <select
               value={selectedFaculty}
               onChange={(e) => setSelectedFaculty(e.target.value)}
-              className="min-h-[52px] px-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-500/20 focus:border-red-500"
+              className="input-srh"
             >
               <option value="">Të gjitha fakultetet</option>
               <option value="ART">Artet</option>
@@ -271,7 +455,7 @@ export default function MaterialsClient({ initialMaterials }) {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="min-h-[52px] px-4 text-lg border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-500/20 focus:border-red-500"
+              className="input-srh"
             >
               <option value="">Të gjitha seksionet (llojet)</option>
               {typeOptions.map((t) => (
@@ -284,25 +468,25 @@ export default function MaterialsClient({ initialMaterials }) {
             <button
               type="button"
               onClick={resetFilters}
-              className="min-h-[52px] bg-red-600 text-white px-4 rounded-xl hover:bg-red-700 transition-all flex items-center justify-center gap-2 text-lg font-bold shadow-lg shadow-red-600/25 hover:scale-[1.02] active:scale-[0.98]"
+              className="btn-primary w-full"
             >
               <Filter className="w-5 h-5" />
               Pastro filtrat
             </button>
           </div>
 
-          <div className="flex flex-wrap items-center gap-2 mb-2">
-            <span className="text-base font-bold text-gray-700 flex items-center gap-2 mr-2">
-              <Layers className="w-5 h-5 text-red-600" />
+          <div className="mb-1 flex flex-wrap items-center gap-2">
+            <span className="mr-2 flex items-center gap-2 text-sm font-semibold text-navy-900">
+              <Layers className="w-5 h-5 text-success-green" />
               Seksione (lloji):
             </span>
             <button
               type="button"
               onClick={() => setSelectedType("")}
-              className={`px-4 py-2.5 rounded-xl text-base font-bold transition-all ${
+              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
                 selectedType === ""
-                  ? "bg-red-600 text-white shadow-md scale-105"
-                  : "bg-gray-100 text-gray-800 hover:bg-red-50 hover:text-red-700"
+                  ? "scale-105 bg-burgundy-600 text-white shadow-sm"
+                  : "border border-gray-200 bg-white text-navy-900 hover:border-burgundy-600 hover:text-burgundy-600"
               }`}
             >
               Të gjitha
@@ -324,10 +508,10 @@ export default function MaterialsClient({ initialMaterials }) {
                         });
                     }, 80);
                   }}
-                  className={`px-4 py-2.5 rounded-xl text-base font-bold transition-all ${
+                  className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
                     selectedType === t
-                      ? "bg-red-600 text-white shadow-md"
-                      : "bg-gray-100 text-gray-800 hover:bg-red-50"
+                      ? "bg-burgundy-600 text-white shadow-sm"
+                      : "border border-gray-200 bg-white text-navy-900 hover:border-burgundy-600 hover:text-burgundy-600"
                   }`}
                 >
                   {t}{" "}
@@ -338,62 +522,110 @@ export default function MaterialsClient({ initialMaterials }) {
               );
             })}
           </div>
-        </motion.div>
+        </div>
 
         <div id="material-results" className="scroll-mt-28">
-          <AnimatePresence mode="wait">
-            {filteredMaterials.length === 0 ? (
-              <motion.div
-                key="empty"
-                initial={false}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                className="text-center py-24"
-              >
-                <FileText className="w-20 h-20 text-gray-300 mx-auto mb-6" />
-                <h3 className="text-2xl font-bold text-gray-600 mb-2">
+          {loading && hasLoaded && (
+            <div className="mb-6 rounded-2xl border border-gray-200 bg-white/80 p-4 text-sm font-semibold text-gray-600 shadow-sm">
+              Duke përditësuar rezultatet...
+            </div>
+          )}
+          {error && hasLoaded && (
+            <div className="mb-6 rounded-2xl border border-burgundy-600/20 bg-burgundy-50 p-4 text-sm font-semibold text-burgundy-600">
+              {error}
+            </div>
+          )}
+          {filteredMaterials.length === 0 ? (
+              <div className="surface-card mx-auto max-w-xl p-10 text-center">
+                <FileText className="mx-auto mb-6 h-16 w-16 text-gray-400" />
+                <h3 className="mb-2 text-2xl font-semibold text-navy-900">
                   Nuk ka të dhëna
                 </h3>
-                <p className="text-lg text-gray-500">
+                <p className="text-gray-600">
                   Provoni të ndryshoni kriteret e kërkimit.
                 </p>
-              </motion.div>
+              </div>
             ) : showGrouped ? (
-              <div key="grouped" className="space-y-16">
+              <div key="grouped" className="space-y-16 md:space-y-20">
                 {groupedByType.keys.map((type) => (
                   <section
                     key={type}
                     id={typeSectionId(type)}
-                    className="min-h-[55vh] scroll-mt-28 pt-4"
+                    className="viewport-section-start scroll-mt-28 px-0 py-0"
                   >
-                    <div className="flex items-end justify-between gap-4 mb-8 border-b-4 border-red-200 pb-4">
-                      <h2 className="text-3xl md:text-4xl font-extrabold text-gray-900">
-                        {type}
-                      </h2>
-                      <span className="text-lg font-bold text-red-600 shrink-0">
+                    <div className="mb-8 flex flex-col gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
+                      <div>
+                        <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-gray-400">
+                          Seksioni
+                        </p>
+                        <h2 className="font-display text-3xl font-bold text-navy-900 md:text-4xl">
+                          {type}
+                        </h2>
+                      </div>
+                      <span className="shrink-0 rounded-full bg-burgundy-50 px-4 py-2 text-sm font-semibold text-burgundy-600">
                         {groupedByType.map.get(type).length}{" "}
                         {groupedByType.map.get(type).length === 1
                           ? "material"
                           : "materiale"}
                       </span>
                     </div>
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
                       {groupedByType.map.get(type).map((m) => renderCard(m))}
                     </div>
                   </section>
                 ))}
               </div>
             ) : (
-              <motion.div
-                key="flat"
-                initial={false}
-                animate={{ opacity: 1 }}
-                className="grid grid-cols-1 lg:grid-cols-2 gap-8"
-              >
+              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
                 {filteredMaterials.map((m) => renderCard(m))}
-              </motion.div>
+              </div>
             )}
-          </AnimatePresence>
+          {pagination.total > 0 && (
+            <nav
+              className="mt-10 flex flex-col items-center justify-between gap-4 rounded-3xl border border-gray-200 bg-white/80 p-4 shadow-sm backdrop-blur sm:flex-row"
+              aria-label="Faqosja e materialeve"
+            >
+              <p className="text-sm font-semibold text-gray-600">
+                Shfaqen {(currentPage - 1) * PAGE_SIZE + 1}-
+                {Math.min(currentPage * PAGE_SIZE, pagination.total)} nga{" "}
+                {pagination.total} materiale
+              </p>
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => goToPage(currentPage - 1)}
+                  disabled={currentPage <= 1 || loading}
+                  className="btn-outline min-h-[42px] px-4 py-2 disabled:opacity-40"
+                >
+                  Më parë
+                </button>
+                {pageNumbers.map((item) => (
+                  <button
+                    key={item}
+                    type="button"
+                    onClick={() => goToPage(item)}
+                    disabled={loading}
+                    className={`min-h-[42px] min-w-[42px] rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
+                      item === currentPage
+                        ? "bg-burgundy-600 text-white shadow-sm"
+                        : "border border-gray-200 bg-white text-navy-900 hover:border-burgundy-600 hover:text-burgundy-600"
+                    }`}
+                    aria-current={item === currentPage ? "page" : undefined}
+                  >
+                    {item}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => goToPage(currentPage + 1)}
+                  disabled={currentPage >= totalPages || loading}
+                  className="btn-outline min-h-[42px] px-4 py-2 disabled:opacity-40"
+                >
+                  Tjetër
+                </button>
+              </div>
+            </nav>
+          )}
         </div>
       </div>
 

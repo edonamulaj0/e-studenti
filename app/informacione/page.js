@@ -1,179 +1,236 @@
-import Link from "next/link";
+"use client";
+
+import { useEffect, useState } from "react";
 import {
   Shield,
-  Lock,
   Users,
   Code,
   Mail,
   Github,
   MessageSquare,
   ArrowRight,
+  Send,
 } from "lucide-react";
+import { WORKER_URL } from "../lib/worker-url";
 
-function SectionCard({ icon: Icon, title, children, border = "red" }) {
-  const borderCls =
-    border === "gray"
-      ? "border-gray-200"
-      : "border-red-100 hover:border-red-200";
+const SUBJECTS = ["Raportoj material", "Problem teknik", "Bashkëpunim", "Tjetër"];
+
+function SectionCard({ id, icon: Icon, title, children }) {
   return (
     <section
-      className={`bg-white rounded-2xl shadow-lg p-7 md:p-9 border-2 ${borderCls} transition-colors`}
+      id={id}
+      className="surface-card scroll-mt-28 grid gap-6 p-6 md:grid-cols-[4.5rem_1fr] md:p-8"
     >
-      <div className="flex items-center gap-3 mb-6">
-        <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-red-50 text-red-600">
-          <Icon className="w-6 h-6" aria-hidden />
+      <div className="flex md:items-stretch">
+        <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-burgundy-50 text-burgundy-600 md:h-full md:min-h-20 md:w-full">
+          <Icon className="h-7 w-7 md:h-9 md:w-9" aria-hidden />
         </span>
-        <h2 className="text-xl md:text-2xl font-extrabold text-gray-900">
+      </div>
+      <div>
+        <h2 className="mb-6 font-display text-2xl font-semibold text-navy-900">
           {title}
         </h2>
+        {children}
       </div>
-      {children}
     </section>
   );
 }
 
 export default function InformacionePage() {
-  const contributors = [
-    {
-      name: "Edona Mulaj",
-      faculty: "Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike",
-    },
-    { name: "Leart Lama", faculty: "-" },
-    { name: "Jeta Mulaj", faculty: "Fakulteti i Mjekësisë" },
-    {
-      name: "Eriona Ahmeti",
-      faculty: "Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike",
-    },
-    { name: "Florian Hajredini", faculty: "Fakulteti i Ndërtimtarisë" },
-    { name: "Blendi Memaj", faculty: "Fakulteti i Mjekësisë" },
-  ];
+  const [contributors, setContributors] = useState([]);
+  const [loadingContributors, setLoadingContributors] = useState(true);
+  const [senderName, setSenderName] = useState("");
+  const [subject, setSubject] = useState(SUBJECTS[0]);
+  const [message, setMessage] = useState("");
+  const [contactStatus, setContactStatus] = useState("idle");
+  const [contactError, setContactError] = useState("");
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadContributors() {
+      try {
+        const res = await fetch(`${WORKER_URL}/?action=contributors`);
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Fetch failed");
+        if (active) {
+          setContributors(Array.isArray(data.contributors) ? data.contributors : []);
+        }
+      } catch {
+        if (active) setContributors([]);
+      } finally {
+        if (active) setLoadingContributors(false);
+      }
+    }
+
+    loadContributors();
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestedSubject = params.get("subject");
+    if (requestedSubject && SUBJECTS.includes(requestedSubject)) {
+      setSubject(requestedSubject);
+    }
+  }, []);
+
+  const submitContact = async (event) => {
+    event.preventDefault();
+    setContactStatus("sending");
+    setContactError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=contact`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ senderName, subject, message }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Dërgimi dështoi.");
+      setContactStatus("success");
+      setSenderName("");
+      setSubject(SUBJECTS[0]);
+      setMessage("");
+    } catch (err) {
+      setContactStatus("error");
+      setContactError(err.message || "Dërgimi dështoi.");
+    }
+  };
 
   return (
-    <div className="pt-24 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100 pb-20">
-      <div className="container mx-auto px-4 py-10 md:py-12">
-        <header className="text-center mb-12 max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4 tracking-tight">
-            Informacione
+    <div className="page-shell">
+      <div className="section-shell">
+        <header className="mb-12 max-w-3xl">
+          <p className="page-kicker mb-5">Rreth platformës</p>
+          <h1 className="page-title mb-5">
+            Rreth nesh
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
-            Transparencë, privatësi dhe respekt për të drejtat e autorëve.
+          <p className="page-subtitle max-w-3xl text-lg md:text-xl">
+            E-Studenti është ndërtuar për t'i dhënë studentëve qasje më të
+            lehtë në materiale, me transparencë, privatësi dhe respekt për
+            autorët.
           </p>
         </header>
 
-        <div className="max-w-3xl mx-auto space-y-8 md:space-y-10">
-          <SectionCard icon={Shield} title="Misioni dhe transparenca">
-            <div className="text-base md:text-lg text-gray-700 space-y-4 leading-relaxed">
+        <div className="grid gap-8 lg:grid-cols-[16rem_1fr] lg:items-start">
+          <aside className="hidden rounded-3xl border border-gray-200 bg-white/80 p-4 shadow-sm backdrop-blur lg:sticky lg:top-28 lg:block">
+            {[
+              ["misioni", "Misioni"],
+              ["privatesia", "Privatësia"],
+              ["autoret", "Autorët"],
+              ["kontribuesit", "Kontribuesit"],
+              ["kodi", "Kodi"],
+              ["kontakt", "Kontakti"],
+            ].map(([href, label]) => (
+              <a
+                key={href}
+                href={`#${href}`}
+                className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-burgundy-50 hover:text-burgundy-600"
+              >
+                {label}
+              </a>
+            ))}
+          </aside>
+
+          <div className="space-y-8 md:space-y-10">
+          <SectionCard id="misioni" icon={Shield} title="Misioni dhe transparenca">
+            <div className="space-y-4 text-base leading-relaxed text-gray-600 md:text-lg">
               <p>
                 E-Studenti është një platformë e hapur që synon të ndihmojë
                 studentët në qasjen në burime edukative, me transparencë dhe
                 respekt për autorët.
               </p>
-              <div className="bg-red-50 rounded-xl p-5 border border-red-100">
-                <h3 className="font-bold text-gray-900 mb-3">Parimet</h3>
-                <ul className="space-y-2.5">
-                  <li className="flex gap-2">
-                    <span className="text-red-600 font-bold">•</span>
-                    <span>
-                      <strong>Transparent</strong> — kodi publik në GitHub
-                    </span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-red-600 font-bold">•</span>
-                    <span>
-                      <strong>Pa mbledhje të dhënash personale</strong> për
-                      shfletim
-                    </span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-red-600 font-bold">•</span>
-                    <span>
-                      <strong>Autorët</strong> — heqje e përmbajtjes pas kërkesës
-                    </span>
-                  </li>
-                  <li className="flex gap-2">
-                    <span className="text-red-600 font-bold">•</span>
-                    <span>
-                      <strong>Falas</strong> për studentët
-                    </span>
-                  </li>
-                </ul>
+              <div className="grid gap-4 md:grid-cols-2">
+                {[
+                  ["Transparent", "Kodi publik në GitHub"],
+                  ["Privat", "Pa mbledhje të dhënash për shfletim"],
+                  ["Respekt për autorët", "Heqje e përmbajtjes pas kërkesës"],
+                  ["Falas", "I hapur për studentët"],
+                ].map(([title, text]) => (
+                  <div key={title} className="rounded-2xl border border-gray-200 bg-navy-100/50 p-5">
+                    <h3 className="font-semibold text-navy-900">{title}</h3>
+                    <p className="mt-2 text-sm text-gray-600">{text}</p>
+                  </div>
+                ))}
               </div>
             </div>
           </SectionCard>
 
-          <SectionCard icon={Shield} title="Politika e privatësisë">
-            <div className="bg-red-50 rounded-xl p-6 border border-red-100 mb-6">
-              <h3 className="font-bold text-gray-900 mb-4 text-lg">
+          <SectionCard id="privatesia" icon={Shield} title="Politika e privatësisë">
+            <div className="mb-6 rounded-2xl border border-gray-200 bg-navy-100/50 p-6">
+              <h3 className="mb-4 text-lg font-semibold text-navy-900">
                 Ne nuk mbledhim të dhëna personale për përdorimin e faqes
               </h3>
-              <ul className="space-y-3 text-gray-700">
+              <ul className="space-y-3 text-gray-600">
                 {[
                   "Asnjë cookie ose gjurmues për llogari",
                   "Nuk kërkohet llogari për të parë materialet",
                   "Nuk ruhen të dhëna personale nga ne për shfletim",
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-3">
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-red-500" />
+                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-burgundy-600" />
                     <span>{t}</span>
                   </li>
                 ))}
               </ul>
             </div>
-            <div className="bg-gray-50 rounded-xl p-6 border border-gray-100">
-              <h3 className="font-bold text-gray-900 mb-4 text-lg">
+            <div className="rounded-2xl border border-gray-200 bg-white p-6">
+              <h3 className="mb-4 text-lg font-semibold text-navy-900">
                 Statistika anonime (p.sh. përmes hostit / analitikës)
               </h3>
-              <ul className="space-y-3 text-gray-700">
+              <ul className="space-y-3 text-gray-600">
                 {[
                   "Numri i vizitave në nivel të përgjithshëm",
                   "Rajoni gjeografik në nivel vendi (jo vendndodhje e saktë)",
                   "Lloji i shfletuesit për përmirësim të faqes",
                 ].map((t) => (
                   <li key={t} className="flex items-start gap-3">
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-indigo-400" />
+                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-success-green" />
                     <span>{t}</span>
                   </li>
                 ))}
               </ul>
-              <p className="mt-4 text-gray-600 text-sm italic leading-relaxed">
+              <p className="mt-4 text-sm italic leading-relaxed text-gray-600">
                 Faqja është statike; nuk ruajmë profil përdoruesi në platformë.
               </p>
             </div>
           </SectionCard>
 
-          <SectionCard icon={Code} title="Të drejtat e autorit">
-            <p className="text-gray-700 mb-6 text-base md:text-lg leading-relaxed">
+          <SectionCard id="autoret" icon={Code} title="Të drejtat e autorit">
+            <p className="mb-6 text-base leading-relaxed text-gray-600 md:text-lg">
               Respektojmë të drejtat e autorëve dhe krijuesve të përmbajtjes.
             </p>
             <div className="grid md:grid-cols-2 gap-5">
-              <div className="bg-red-50 rounded-xl p-5 border border-red-100">
-                <h3 className="font-bold text-gray-900 mb-3">Për autorët</h3>
-                <ul className="space-y-2 text-gray-700 text-sm md:text-base">
+              <div className="rounded-2xl border border-gray-200 bg-navy-100/50 p-5">
+                <h3 className="mb-3 font-semibold text-navy-900">Për autorët</h3>
+                <ul className="space-y-2 text-sm text-gray-600 md:text-base">
                   <li>• Kërkesë për heqje — përgjigje sa më shpejt</li>
                   <li>• Heqje pa pyetje të panevojshme</li>
                   <li>• Respekt për kërkesat ligjore</li>
                 </ul>
               </div>
-              <div className="bg-gray-50 rounded-xl p-5 border border-gray-100">
-                <h3 className="font-bold text-gray-900 mb-3">Kontakt heqjeje</h3>
+              <div className="rounded-2xl border border-gray-200 bg-white p-5">
+                <h3 className="mb-3 font-semibold text-navy-900">Kontakt heqjeje</h3>
                 <div className="space-y-3 text-sm md:text-base">
                   <a
-                    href="mailto:info@e-studenti.com"
-                    className="flex items-center gap-2 text-red-600 font-semibold hover:underline"
+                    href="#kontakt"
+                    className="flex items-center gap-2 font-semibold text-burgundy-600 hover:underline"
                   >
                     <Mail className="w-4 h-4" />
-                    info@e-studenti.com
+                    Formulari i kontaktit
                   </a>
                   <a
-                    href="https://github.com/edonamulaj0/e-studenti"
+                    href="https://github.com/edonaamulaj/e-studenti"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-2 text-gray-800 font-semibold hover:text-red-600"
+                    className="flex items-center gap-2 font-semibold text-navy-900 hover:text-burgundy-600"
                   >
                     <Github className="w-4 h-4" />
                     GitHub
                   </a>
-                  <div className="flex items-center gap-2 text-gray-700">
+                  <div className="flex items-center gap-2 text-gray-600">
                     <MessageSquare className="w-4 h-4" />
                     @estudenti.up
                   </div>
@@ -182,51 +239,77 @@ export default function InformacionePage() {
             </div>
           </SectionCard>
 
-          <SectionCard icon={Users} title="Kontribuesit">
-            <p className="text-gray-600 mb-6 italic text-base">
+          <SectionCard id="kontribuesit" icon={Users} title="Kontribuesit">
+            <p className="mb-6 text-base italic text-gray-600">
               Faleminderit studentëve dhe profesorëve që kanë ndarë burime.
             </p>
-            <div className="grid sm:grid-cols-2 gap-4">
-              {contributors.map((c, index) => (
-                <div
-                  key={index}
-                  className="bg-red-50/80 rounded-xl p-4 border border-red-100"
-                >
-                  <p className="font-bold text-gray-900">{c.name}</p>
-                  <p className="text-sm text-gray-600 mt-1">{c.faculty}</p>
-                </div>
-              ))}
-            </div>
+            {loadingContributors && (
+              <div className="grid sm:grid-cols-3 gap-4">
+                {[0, 1, 2].map((item) => (
+                  <div
+                    key={item}
+                    className="h-24 animate-pulse rounded-2xl bg-gray-200"
+                  />
+                ))}
+              </div>
+            )}
+            {!loadingContributors && contributors.length === 0 && (
+              <p className="rounded-2xl border border-gray-200 bg-navy-100/50 p-4 text-gray-600">
+                Kontribuesit do të shfaqen këtu pasi materiali i parë të ngarkohet.
+              </p>
+            )}
+            {!loadingContributors && contributors.length > 0 && (
+              <div className="grid sm:grid-cols-2 gap-4">
+                {contributors.map((c, index) => (
+                  <div
+                    key={`${c.name}-${c.surname}-${index}`}
+                    className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4"
+                  >
+                    <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-burgundy-50 text-sm font-bold text-burgundy-600">
+                      {c.name?.[0]}{c.surname?.[0]}
+                    </span>
+                    <div>
+                      <p className="font-semibold text-navy-900">
+                        {c.name} {c.surname}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-600">
+                        {c.faculty || "Fakulteti"} · {c.material_count} materiale
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
           </SectionCard>
 
-          <SectionCard icon={Code} title="Kodi i hapur">
+          <SectionCard id="kodi" icon={Code} title="Kodi i hapur">
             <div className="space-y-5">
-              <div className="bg-red-50 rounded-xl p-5 border border-red-100">
-                <h3 className="font-bold text-gray-900 mb-2">Transparencë</h3>
-                <ul className="space-y-2 text-gray-700 text-sm md:text-base">
+              <div className="rounded-2xl border border-gray-200 bg-navy-100/50 p-5">
+                <h3 className="mb-2 font-semibold text-navy-900">Transparencë</h3>
+                <ul className="space-y-2 text-sm text-gray-600 md:text-base">
                   <li>• Struktura dhe funksionimi të verifikueshëm nga kodi</li>
                   <li>• Pa funksionalitet të fshehur</li>
                 </ul>
               </div>
               <a
-                href="https://github.com/edonamulaj0/e-studenti"
+                href="https://github.com/edonaamulaj/e-studenti"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center justify-between gap-4 p-5 rounded-xl bg-gray-900 text-white hover:bg-gray-800 transition-colors group"
+                className="group flex items-center justify-between gap-4 rounded-2xl bg-navy-900 p-5 text-white transition-all hover:-translate-y-0.5 hover:bg-burgundy-600 hover:shadow-md"
               >
                 <div>
                   <p className="font-bold text-lg">GitHub</p>
-                  <p className="text-sm text-gray-300">Shiko kodin</p>
+                  <p className="text-sm text-white/60">Shiko kodin</p>
                 </div>
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
               </a>
             </div>
           </SectionCard>
 
-          <SectionCard icon={Shield} title="Vërejtje dhe kufizime" border="gray">
-            <div className="grid md:grid-cols-2 gap-6 text-sm md:text-base text-gray-700">
+          <SectionCard id="kufizime" icon={Shield} title="Vërejtje dhe kufizime">
+            <div className="grid gap-6 text-sm text-gray-600 md:grid-cols-2 md:text-base">
               <div>
-                <h3 className="font-bold text-gray-900 mb-2">Përgjegjësia</h3>
+                <h3 className="mb-2 font-semibold text-navy-900">Përgjegjësia</h3>
                 <ul className="space-y-2">
                   <li>• Vetëm për qëllime edukative</li>
                   <li>• Verifikoni saktësinë me burimet zyrtare</li>
@@ -234,7 +317,7 @@ export default function InformacionePage() {
                 </ul>
               </div>
               <div>
-                <h3 className="font-bold text-gray-900 mb-2">Përdorimi</h3>
+                <h3 className="mb-2 font-semibold text-navy-900">Përdorimi</h3>
                 <ul className="space-y-2">
                   <li>• Respektoni ligjet dhe autorët</li>
                   <li>• Përdorni në mënyrë etike</li>
@@ -243,34 +326,86 @@ export default function InformacionePage() {
             </div>
           </SectionCard>
 
-          <SectionCard icon={Mail} title="Kontakti">
-            <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-              <a
-                href="mailto:info@e-studenti.com"
-                className="inline-flex items-center gap-2 text-lg font-bold text-red-600 hover:underline"
-              >
-                <Mail className="w-5 h-5" />
-                info@e-studenti.com
-              </a>
-              <span className="hidden sm:inline text-gray-300">|</span>
-              <div className="flex items-center gap-2 text-gray-700">
-                <MessageSquare className="w-5 h-5 text-red-500" />
+          <SectionCard id="kontakt" icon={Mail} title="Kontakti">
+            <div>
+              <div className="mb-6 flex items-center gap-2 text-gray-600">
+                <MessageSquare className="w-5 h-5 text-success-green" />
                 <span className="font-medium">@estudenti.up</span>
               </div>
-            </div>
-            <div className="mt-6">
-              <Link
-                href="/kontakto"
-                className="inline-flex items-center gap-2 font-bold text-white bg-red-600 px-6 py-3 rounded-xl hover:bg-red-700 transition-colors"
-              >
-                Faqja e kontaktit
-                <ArrowRight className="w-4 h-4" />
-              </Link>
+
+              <form onSubmit={submitContact} className="space-y-5">
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-semibold text-navy-900">
+                    Emri juaj
+                  </span>
+                  <input
+                    required
+                    value={senderName}
+                    onChange={(e) => setSenderName(e.target.value)}
+                    className="input-srh"
+                  />
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-semibold text-navy-900">
+                    Subjekti
+                  </span>
+                  <select
+                    required
+                    value={subject}
+                    onChange={(e) => setSubject(e.target.value)}
+                    className="input-srh"
+                  >
+                    {SUBJECTS.map((item) => (
+                      <option key={item}>{item}</option>
+                    ))}
+                  </select>
+                </label>
+
+                <label className="block">
+                  <span className="mb-1.5 block text-sm font-semibold text-navy-900">
+                    Mesazhi
+                  </span>
+                  <textarea
+                    required
+                    minLength={10}
+                    maxLength={2000}
+                    rows={7}
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value.slice(0, 2000))}
+                    className="input-srh min-h-[160px] resize-y py-3"
+                  />
+                  <span className="mt-1 block text-right text-xs text-gray-400">
+                    {message.length}/2000
+                  </span>
+                </label>
+
+                {contactStatus === "success" && (
+                  <p className="rounded-2xl border border-success-green/20 bg-success-green/10 p-4 font-semibold text-success-green">
+                    Mesazhi juaj u dërgua. Faleminderit!
+                  </p>
+                )}
+                {contactError && (
+                  <p className="rounded-2xl border border-burgundy-600/20 bg-burgundy-50 p-4 font-semibold text-burgundy-600">
+                    {contactError}
+                  </p>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={contactStatus === "sending"}
+                  className="btn-primary w-full text-base"
+                >
+                  <Send className="h-5 w-5" />
+                  {contactStatus === "sending" ? "Duke dërguar..." : "Dërgo mesazhin"}
+                </button>
+              </form>
             </div>
           </SectionCard>
+          </div>
         </div>
 
-        <p className="text-center mt-12 text-gray-600 italic max-w-2xl mx-auto text-base">
+        <p className="mx-auto mt-12 max-w-2xl text-center text-base italic text-gray-600">
           Faleminderit që përdorni E-Studenti — së bashku për një komunitet më të
           hapur.
         </p>

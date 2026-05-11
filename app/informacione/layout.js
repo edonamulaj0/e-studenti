@@ -1,7 +1,7 @@
 export const metadata = {
-  title: "Informacione",
+  title: "Rreth nesh",
   description:
-    "Transparencë, privatësi dhe informacion rreth platformës E-Studenti.",
+    "Transparencë, privatësi, kontakt dhe informacion rreth platformës Student Resource Hub.",
 };
 
 export default function InformacioneLayout({ children }) {
