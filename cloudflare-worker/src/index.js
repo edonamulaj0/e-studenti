@@ -973,7 +973,13 @@ async function handleContributors(env) {
       if (!current.faculty && material.faculty) current.faculty = material.faculty;
       contributors.set(name, current);
     }
-    return jsonResponse({ contributors: Array.from(contributors.values()) });
+    return jsonResponse({
+      contributors: Array.from(contributors.values()).sort((a, b) => {
+        const countDiff = Number(b.material_count || 0) - Number(a.material_count || 0);
+        if (countDiff !== 0) return countDiff;
+        return String(a.name || "").localeCompare(String(b.name || ""), "sq");
+      }),
+    });
   }
 
   if (!env.DB) {
@@ -986,7 +992,7 @@ async function handleContributors(env) {
      FROM users u
      JOIN materials m ON m.user_id = u.id
      GROUP BY u.id
-     ORDER BY u.created_at ASC`
+     ORDER BY material_count DESC, u.name ASC, u.surname ASC`
   ).all();
   return jsonResponse({ contributors: result.results || [] });
 }
