@@ -1,95 +1,75 @@
 # E-Studenti
 
-A transparent and open-source student resource hub built with Next.js, designed to help students access educational materials and resources with complete transparency and respect for authors' rights.
+**E-Studenti**, a community-built resource site for students of the University of Prishtina. The frontend is a Next.js 14 static export on Cloudflare Pages; all dynamic features run through the Cloudflare Worker in `cloudflare-worker/`.
 
 ## Features
 
-- **Transparent & Open Source**: All code is publicly available for review and contribution
-- **No Data Collection**: Complete privacy - we don't collect or store any user data
-- **Author Rights Respected**: Full copyright protection with immediate takedown upon author request
-- **Static & Fast**: Built with Next.js and deployed on Cloudflare Pages for optimal performance
-- **Mobile Responsive**: Accessible on all devices
+- **Passwordless accounts**: users register, verify email codes, and receive JWTs for authenticated actions.
+- **User-managed uploads**: authenticated users upload materials and edit their own metadata from the web.
+- **Live D1 catalog**: materials are queried from Cloudflare D1 instead of a static `materials.json` file.
+- **R2 file storage**: validated files are stored in Cloudflare R2 and served from the media domain.
+- **Private contact form**: messages are sent to the owner through Resend without exposing any email address in the form.
+- **Auto contributors**: contributors are generated from D1 based on uploaded materials.
+- **Security hardening**: short-lived JWTs, hashed verification codes, D1-backed rate limiting, restricted CORS, CSP headers, and ZIP upload limits.
 
 ## Tech Stack
 
-- **Framework**: Next.js
+- **Frontend**: Next.js 14 static export
 - **Styling**: Tailwind CSS
-- **Icons**: Lucide React
-- **Deployment**: Cloudflare Pages
-- **Version Control**: Git & GitHub
+- **Storage**: Cloudflare R2
+- **Database**: Cloudflare D1 (`srh-db`)
+- **Worker email**: Resend API
+- **ZIP scanning**: `fflate`
 
+## Worker Setup
 
-## Contributing
+From `cloudflare-worker/`:
 
-We welcome contributions! This project is built on transparency and community collaboration.
+```bash
+wrangler d1 create srh-db
+wrangler d1 execute srh-db --file=schema.sql
+wrangler d1 execute srh-db --file=seed.sql
+wrangler secret put JWT_SECRET
+wrangler secret put RESEND_API_KEY
+wrangler secret put ADMIN_EMAIL
+npm run deploy
+```
 
-### How to Contribute
+`JWT_SECRET` should be a random 64-character string. `ADMIN_EMAIL` is only used by the Worker as the private recipient for contact-form messages and is never sent to the frontend. Configure `ALLOWED_ORIGINS`, `JWT_ISSUER`, and `JWT_AUDIENCE` if your production domain differs from the defaults.
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add some amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+## Resend Setup
 
-### Guidelines
-
-- Maintain the project's transparency principles
-- Respect author copyrights and takedown requests
-- Follow existing code style and conventions
-- Write clear commit messages
-- Test your changes before submitting
+1. Create an account at [resend.com](https://resend.com).
+2. Add and verify a sending domain, or use `onboarding@resend.dev` for development.
+3. Create an API key.
+4. Run `wrangler secret put RESEND_API_KEY`.
 
 ## Project Structure
 
-```
+```text
 e-studenti/
-├── app/                    # Next.js app directory
-│   ├── components/         # Reusable components
-│   ├── pages/             # Page components
-│   └── layout.js          # Root layout
-├── public/                # Static assets
-│   └── favicon.ico        # Site favicon
-├── styles/                # CSS styles
-├── package.json           # Dependencies
-└── README.md              # This file
+├── app/                         # Next.js static export app
+│   ├── llogaria/                # Auth, upload, and user material pages
+│   ├── materialet/              # Live D1-backed materials page
+│   └── components/              # Shared UI
+├── cloudflare-worker/
+│   ├── src/index.js             # Worker API
+│   ├── schema.sql               # D1 schema
+│   ├── seed.sql                 # One-time legacy material seed
+│   └── wrangler.toml            # Worker config
+└── README.md
 ```
 
-## Privacy & Transparency
+## Security Notes
 
-- **No Data Storage**: All resources are publicly available, no user accounts needed
-- **Open Source**: Full transparency with publicly available source code
-- **Author Rights**: Immediate response to takedown requests from content authors
+- Never commit `.env`, `.dev.vars`, `.wrangler`, `.next`, Cloudflare tokens, Resend keys, or JWT secrets.
+- Use the placeholder values in `.env.example` and `cloudflare-worker/.env.example` as templates only.
+- Rotate any Cloudflare API token that was ever present in a local `.env` before publishing.
+- See `SECURITY.md` and `docs/DEPLOYMENT.md` before opening the repository publicly.
 
-## License
+## Notes
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-### What this means:
-- You can use, modify, and distribute this code
-- You can use it for commercial purposes
-- You must include the original copyright notice
-- You must credit the original author (Edona Mulaj)
-
-## Author
-
-**Edona Mulaj** - [@edonamulaj0](https://github.com/edonamulaj0)
-
-## Acknowledgments
-
-- Thanks to all students who inspired this project
-- Built with love for the educational community
-- Special thanks to authors and students who contribute educational resources
-
-## Contact & Support
-
-- **Issues**: Please use GitHub Issues for bug reports and feature requests
-- **Takedown Requests**: Contact immediately for any content removal requests
-- **General Questions**: Open a discussion in the repository
-
-## Live Demo
-
-Visit the live site: [e-studenti.com](https://e-studenti.com/)
-
----
-
-**Note**: This project prioritizes transparency, privacy, and respect for intellectual property. If you're an author and want any content removed, please contact us immediately and we'll handle it promptly.
+- Keep `output: "export"` in `next.config.js`.
+- Do not add Next.js route handlers or server-only frontend features.
+- All dynamic requests go to `https://r2-catalog-manager.edonaamulaj.workers.dev`.
+- Auth tokens are short-lived JWTs stored in `localStorage` by client-only code after login or verification. A future backend-compatible auth flow should move tokens to `HttpOnly` cookies with refresh token rotation.

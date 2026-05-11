@@ -2,6 +2,13 @@
 import { BookOpen, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
+const accents = [
+  "from-info-blue/10 to-white",
+  "from-burgundy-50 to-white",
+  "from-success-green/10 to-white",
+  "from-warning-amber/10 to-white",
+];
+
 export default function Faculties() {
   const faculties = [
     {
@@ -160,100 +167,96 @@ export default function Faculties() {
     },
   ];
 
-  const getColorClasses = (color) => {
-    const colors = {
-      red: "border-red-200 hover:border-red-400 bg-red-50/60",
-      green: "border-emerald-200 hover:border-emerald-400 bg-emerald-50/50",
-      purple: "border-purple-200 hover:border-purple-400 bg-purple-50/50",
-      indigo: "border-indigo-200 hover:border-indigo-400 bg-indigo-50/50",
-      yellow: "border-amber-200 hover:border-amber-400 bg-amber-50/50",
-    };
-    return colors[color] || colors.red;
-  };
-
   return (
-    <div className="pt-24 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100 pb-20">
-      <div className="container mx-auto px-4 max-w-6xl py-10 md:py-12">
-        <header className="text-center mb-12 md:mb-14 max-w-3xl mx-auto">
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 mb-4 tracking-tight">
+    <div className="page-shell">
+      <div className="section-shell">
+        <div className="mb-8 flex items-center gap-2 text-sm font-semibold text-gray-400">
+          <Link href="/" className="hover:text-burgundy-600">
+            Ballina
+          </Link>
+          <span>/</span>
+          <span className="text-navy-800">Fakultetet</span>
+        </div>
+
+        <header className="mb-12 max-w-3xl">
+          <p className="page-kicker mb-4">Universiteti i Prishtinës</p>
+          <h1 className="page-title mb-4">
             Fakultetet
           </h1>
-          <p className="text-lg md:text-xl text-gray-600 leading-relaxed">
+          <p className="page-subtitle max-w-2xl">
             Eksploroni fakultetet e Universitetit të Prishtinës — departamente,
             lidhje zyrtare dhe materiale.
           </p>
         </header>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6 md:gap-8">
+        <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
           {faculties.map((faculty, index) => (
             <article
               key={index}
-              className={`flex flex-col h-full bg-white rounded-2xl shadow-lg hover:shadow-xl p-6 md:p-7 border-2 transition-all duration-300 hover:-translate-y-0.5 ${getColorClasses(
-                faculty.color
-              )}`}
+              className={`group relative flex min-h-[23rem] flex-col overflow-hidden rounded-3xl border border-gray-200 bg-gradient-to-br ${accents[index % accents.length]} p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy-600/30 hover:shadow-md`}
             >
+              <Link
+                href={`/fakultetet/${faculty.acronym.toLowerCase()}`}
+                className="absolute inset-0 z-0"
+                aria-label={`Eksploro ${faculty.name}`}
+              />
               <div className="flex flex-1 flex-col min-h-0">
-              <div className="flex items-start justify-between gap-3 mb-4">
-                <span className="text-2xl font-black text-red-600 tracking-tight">
+              <div className="relative z-10 mb-6 flex items-start justify-between gap-3">
+                <span className="rounded-full bg-white px-4 py-2 text-sm font-bold tracking-wide text-burgundy-600 shadow-sm">
                   {faculty.acronym}
                 </span>
                 <a
                   href={faculty.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 p-2 rounded-xl text-red-600 hover:bg-red-50 transition-colors"
+                  className="relative z-20 shrink-0 rounded-xl bg-white/70 p-2 text-burgundy-600 transition-colors hover:bg-white"
                   aria-label={`Faqja e ${faculty.acronym}`}
                 >
                   <ExternalLink className="w-6 h-6" />
                 </a>
               </div>
 
-              <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-5 leading-snug">
+              <h2 className="relative z-10 mb-5 text-xl font-semibold leading-snug text-navy-900">
                 {faculty.name}
               </h2>
 
-              <div className="space-y-3 mb-5 text-base text-gray-600">
-                <div className="flex items-center gap-2">
-                  <BookOpen className="w-5 h-5 text-red-500 shrink-0" />
-                  <span className="font-medium">
+              <div className="relative z-10 mb-5 text-base text-gray-600">
+                <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5">
+                  <BookOpen className="w-5 h-5 text-success-green shrink-0" />
+                  <span className="font-semibold">
                     {faculty.departments.length} departamente
                   </span>
                 </div>
               </div>
 
-              <div className="mb-6">
-                <h3 className="font-bold text-gray-800 mb-2 text-sm uppercase tracking-wide text-red-800/80">
+              <div className="relative z-10 mb-6">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
                   Departamentet
                 </h3>
-                <ul className="text-sm md:text-base text-gray-600 space-y-1.5">
+                <ul className="space-y-2 text-sm text-gray-600">
                   {faculty.departments.slice(0, 3).map((dept, idx) => (
                     <li key={idx} className="flex gap-2">
-                      <span className="text-red-500">•</span>
+                      <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-burgundy-600" />
                       <span>{dept}</span>
                     </li>
                   ))}
                   {faculty.departments.length > 3 && (
-                    <li className="text-gray-500 pl-4">
-                      +{faculty.departments.length - 3} të tjerë…
+                    <li className="font-semibold text-burgundy-600">
+                      +{faculty.departments.length - 3} më shumë
                     </li>
                   )}
                 </ul>
               </div>
               </div>
 
-              <div className="mt-auto pt-5 flex flex-col sm:flex-row gap-3 shrink-0 border-t border-gray-100/80">
-                <Link
-                  href={`/fakultetet/${faculty.acronym.toLowerCase()}`}
-                  className="flex-1 text-center bg-red-600 text-white py-3 px-4 rounded-xl hover:bg-red-700 transition-colors text-base font-bold shadow-md shadow-red-600/20"
-                >
-                  Shiko detajet
-                </Link>
-                <Link
-                  href={`/materialet?faculty=${faculty.acronym.toLowerCase()}`}
-                  className="flex-1 text-center bg-gray-800 text-white py-3 px-4 rounded-xl hover:bg-gray-900 transition-colors text-base font-bold"
-                >
-                  Materialet
-                </Link>
+              <div className="relative z-10 mt-auto flex items-center justify-between border-t border-gray-200/70 pt-5">
+                <span className="text-sm font-semibold text-gray-400">
+                  {faculty.departments.length} programe
+                </span>
+                <span className="btn-primary min-h-[42px] px-4 py-2 group-hover:bg-burgundy-500">
+                  Eksploro
+                  <ExternalLink className="h-4 w-4" />
+                </span>
               </div>
             </article>
           ))}

@@ -1,12 +1,12 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   ExternalLink,
   Search,
   Globe,
-  ArrowUpRight,
+  CalendarDays,
+  MapPin,
 } from "lucide-react";
 
 function formatDate(iso) {
@@ -38,109 +38,157 @@ function isListingOnlyUrl(href) {
   }
 }
 
+const countryMatchers = [
+  { label: "Gjermani", flag: "🇩🇪", terms: ["germany", "gjermani", "deutschland"] },
+  { label: "Itali", flag: "🇮🇹", terms: ["italy", "itali", "italia"] },
+  { label: "Turqi", flag: "🇹🇷", terms: ["turkey", "turqi", "turkiye", "türkiye"] },
+  { label: "Poloni", flag: "🇵🇱", terms: ["poland", "poloni", "polska"] },
+  { label: "Slloveni", flag: "🇸🇮", terms: ["slovenia", "slloveni"] },
+  { label: "Spanjë", flag: "🇪🇸", terms: ["spain", "spanjë", "espana", "españa"] },
+  { label: "Francë", flag: "🇫🇷", terms: ["france", "francë"] },
+  { label: "Portugali", flag: "🇵🇹", terms: ["portugal", "portugali"] },
+  { label: "Çeki", flag: "🇨🇿", terms: ["czech", "çek", "ceki", "çeki"] },
+  { label: "Kroaci", flag: "🇭🇷", terms: ["croatia", "kroaci"] },
+];
+
+function getCountry(item) {
+  const title = item.title.toLowerCase();
+  return countryMatchers.find((country) =>
+    country.terms.some((term) => title.includes(term))
+  ) || { label: "Tjetër", flag: "🇪🇺", terms: [] };
+}
+
+function getMonth(iso) {
+  if (!iso) return "";
+  return iso.slice(0, 7);
+}
+
 export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
   const [q, setQ] = useState("");
+  const [country, setCountry] = useState("");
+  const [month, setMonth] = useState("");
+
+  const countryOptions = useMemo(() => {
+    const set = new Set(calls.map((item) => getCountry(item).label));
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "sq"));
+  }, [calls]);
+
+  const monthOptions = useMemo(() => {
+    const set = new Set(calls.map((item) => getMonth(item.date)).filter(Boolean));
+    return Array.from(set).sort().reverse();
+  }, [calls]);
 
   const filtered = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return calls;
-    return calls.filter((c) => c.title.toLowerCase().includes(s));
-  }, [calls, q]);
+    const items = calls.filter((c) => {
+      const itemCountry = getCountry(c).label;
+      const matchesSearch = !s || c.title.toLowerCase().includes(s);
+      const matchesCountry = !country || itemCountry === country;
+      const matchesMonth = !month || getMonth(c.date) === month;
+      return matchesSearch && matchesCountry && matchesMonth;
+    });
+    return items.sort((a, b) => b.date.localeCompare(a.date));
+  }, [calls, q, country, month]);
 
   return (
-    <div className="pt-24 min-h-screen bg-gradient-to-br from-red-50 to-indigo-100 pb-20">
-      <div className="container mx-auto px-4 max-w-4xl py-10 md:py-12">
-        <motion.header
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.45, ease: [0.22, 1, 0.36, 1] }}
-          className="text-center mb-12 md:mb-14 max-w-3xl mx-auto"
-        >
-
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-extrabold text-gray-900 tracking-tight mb-4">
-            Erasmus+
-          </h1>
-          <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-5 py-2 text-sm font-semibold text-red-700 shadow-md border border-red-100 mb-6">
+    <div className="page-shell">
+      <div className="section-shell">
+        <header className="mb-10 max-w-3xl">
+          <p className="page-kicker mb-4">
             <Globe className="w-4 h-4" aria-hidden />
             Burim zyrtar: Universiteti i Prishtinës
-          </div>
-          <p className="text-lg md:text-xl text-gray-600 leading-relaxed mb-8">
+          </p>
+          <h1 className="page-title mb-4">
+            Erasmus+
+          </h1>
+          <p className="page-subtitle mb-5 max-w-2xl">
             Njoftime nga faqja e mundësive të UP që përmbajnë &quot;Erasmus&quot;.
           </p>
-          <p className="text-sm text-gray-500 flex flex-col items-center gap-2 max-w-xl mx-auto">
-            <span className="flex flex-wrap items-center justify-center gap-2">
-              Të dhënat e eksportuara:{" "}
-              <time dateTime={generatedAt}>{formatGeneratedAt(generatedAt)}</time>
-            </span>
+          <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-400">
+            Të dhënat e eksportuara:{" "}
+            <time dateTime={generatedAt}>{formatGeneratedAt(generatedAt)}</time>
           </p>
-        </motion.header>
+        </header>
 
-        <motion.div
-          initial={false}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.08, duration: 0.4 }}
-          className="relative mb-10"
-        >
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 w-6 h-6 text-gray-400" />
-          <input
-            type="search"
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Kërko në tituj…"
-            className="w-full pl-14 pr-5 py-4 text-lg rounded-2xl border-2 border-gray-200 bg-white shadow-lg focus:border-red-500 focus:ring-4 focus:ring-red-500/15 outline-none transition-all"
-          />
-        </motion.div>
+        <div className="surface-card mb-10 p-4 md:p-5">
+          <div className="grid gap-3 md:grid-cols-[1.4fr_0.8fr_0.8fr]">
+            <label className="relative">
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <input
+                type="search"
+                value={q}
+                onChange={(e) => setQ(e.target.value)}
+                placeholder="Kërko universitet, vend, program..."
+                className="input-srh pl-12"
+              />
+            </label>
+            <select value={country} onChange={(e) => setCountry(e.target.value)} className="input-srh">
+              <option value="">Të gjitha vendet</option>
+              {countryOptions.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+            <select value={month} onChange={(e) => setMonth(e.target.value)} className="input-srh">
+              <option value="">Të gjitha</option>
+              {monthOptions.map((item) => (
+                <option key={item} value={item}>{item}</option>
+              ))}
+            </select>
+          </div>
+        </div>
 
-        <ul className="space-y-4">
-          <AnimatePresence mode="popLayout">
-            {filtered.map((item, i) => (
-              <motion.li
-                key={`${item.title}-${item.date}-${item.url}`}
-                layout
-                initial={false}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, scale: 0.98 }}
-                transition={{
-                  duration: 0.35,
-                  delay: Math.min(i * 0.02, 0.24),
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-              >
-                <article className="group rounded-2xl bg-white border-2 border-transparent hover:border-red-200 shadow-md hover:shadow-xl p-6 md:p-8 transition-all duration-300">
-                  <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div className="flex-1 min-w-0">
-                      <time
-                        className="text-base font-bold text-red-600 tabular-nums"
-                        dateTime={item.date}
-                      >
-                        {formatDate(item.date)}
-                      </time>
-                      <h2 className="mt-2 text-xl md:text-2xl font-bold text-gray-900 leading-snug group-hover:text-red-800 transition-colors">
-                        {item.title}
-                      </h2>
-                    </div>
-                    <a
-                      href={item.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center justify-center gap-2 rounded-xl bg-red-600 text-white px-6 py-3.5 text-lg font-semibold hover:bg-red-700 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-red-600/25 transition-all shrink-0 w-full md:w-auto"
-                    >
-                      {isListingOnlyUrl(item.url)
-                        ? "Hap listën te UP"
-                        : "Hap thirrjen"}
-                      <ExternalLink className="w-5 h-5" />
-                    </a>
+        <ul className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {filtered.map((item) => {
+            const destination = getCountry(item);
+            return (
+            <li key={`${item.title}-${item.date}-${item.url}`}>
+              <article className="group flex h-full min-h-[18rem] flex-col rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy-600/30 hover:shadow-md">
+                <div className="mb-6 flex items-start justify-between gap-4">
+                  <div className="rounded-2xl bg-navy-100 px-4 py-3 text-navy-900">
+                    <CalendarDays className="mb-2 h-5 w-5 text-burgundy-600" />
+                    <time className="block text-2xl font-bold tabular-nums" dateTime={item.date}>
+                      {formatDate(item.date)}
+                    </time>
                   </div>
-                </article>
-              </motion.li>
-            ))}
-          </AnimatePresence>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-burgundy-50 px-3 py-1.5 text-sm font-semibold text-burgundy-600">
+                    <MapPin className="h-4 w-4" />
+                    {destination.flag} {destination.label}
+                  </span>
+                </div>
+                <div className="flex h-full flex-col gap-5">
+                  <div className="flex-1 min-w-0">
+                    <h2 className="text-xl font-semibold leading-snug text-navy-900 transition-colors group-hover:text-burgundy-600">
+                      {item.title}
+                    </h2>
+                    <p className="mt-3 text-sm leading-relaxed text-gray-600">
+                      Hapni njoftimin zyrtar për detajet e programit, afatet dhe
+                      dokumentet e nevojshme.
+                    </p>
+                  </div>
+                  <a
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-primary self-start"
+                  >
+                    {isListingOnlyUrl(item.url) ? "Hap listën te UP" : "Hap thirrjen"}
+                    <ExternalLink className="w-4 h-4" />
+                  </a>
+                </div>
+              </article>
+            </li>
+            );
+          })}
         </ul>
 
         {filtered.length === 0 && (
-          <p className="text-center text-xl text-gray-500 py-16">
-            Nuk u gjet asgjë për &quot;{q}&quot;.
-          </p>
+          <div className="surface-card mx-auto max-w-xl p-10 text-center">
+            <Globe className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+            <h2 className="text-2xl font-semibold text-navy-900">Nuk u gjet asgjë</h2>
+            <p className="mt-2 text-gray-600">
+              Provoni të ndryshoni kërkimin, vendin ose muajin.
+            </p>
+          </div>
         )}
       </div>
     </div>

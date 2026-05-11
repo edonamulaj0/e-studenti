@@ -1,30 +1,95 @@
 "use client";
-import { Mail } from "lucide-react";
+import Link from "next/link";
+
+const sections = [
+  {
+    title: "Platforma",
+    links: [
+      { href: "/", label: "Ballina" },
+      { href: "/fakultetet", label: "Fakultetet" },
+      { href: "/materialet", label: "Materialet" },
+      { href: "/erasmus", label: "Erasmus+" },
+      { href: "/informacione", label: "Rreth nesh" },
+    ],
+  },
+  {
+    title: "Llogaria",
+    links: [
+      { href: "/llogaria/regjistrohu", label: "Regjistrohu" },
+      { href: "/llogaria/hyr", label: "Hyr" },
+      { href: "/llogaria/ngarko", label: "Ngarko material" },
+      { href: "/llogaria/materiale-e-mia", label: "Materialet e mia" },
+    ],
+  },
+];
 
 export default function Footer() {
   return (
-    <footer className="bg-gray-950 text-white py-10 border-t-4 border-red-600">
-      <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 md:gap-4">
-          <p className="text-base md:text-lg text-gray-400 text-center md:text-left">
-            © {new Date().getFullYear()} E-Studenti. Të gjitha të drejtat janë të
-            rezervuara.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center gap-4 sm:gap-8 text-base text-gray-300">
-            <div className="flex items-center gap-2">
-              <Mail className="w-5 h-5 text-red-400 shrink-0" />
-              <span>info@e-studenti.com</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="text-gray-400">Made by</span>
+    <footer className="relative overflow-hidden border-t border-white/10 bg-navy-900 text-white">
+      <img
+        src="/uplogo.svg"
+        alt=""
+        aria-hidden="true"
+        className="pointer-events-none absolute -bottom-24 -right-16 h-64 w-64 opacity-10 mix-blend-screen md:-bottom-36 md:-right-24 md:h-96 md:w-96"
+      />
+      <div className="relative z-10 mx-auto max-w-7xl px-6 py-10 md:px-12">
+        <div className="grid gap-8 md:grid-cols-[auto_1fr_auto] md:items-start">
+          <Link
+            href="/"
+            className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/8 p-2"
+            aria-label="E-Studenti"
+          >
+            <img
+              src="/logo.svg"
+              alt=""
+              aria-hidden="true"
+              className="h-full w-auto shrink-0 object-contain"
+            />
+          </Link>
+
+          <div className="max-w-sm">
+            <Link href="/" className="font-display text-3xl font-bold tracking-tight">
+              E-Studenti
+            </Link>
+            <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/60">
+              Platformë komunitare për materiale studimore dhe burime të dobishme
+              për studentët e UP-së.
+            </p>
+            <p className="mt-5 text-xs font-medium text-white/40">
+              © 2026 E-Studenti.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-3">
+            {sections.map((section) => (
+              <div key={section.title} className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-widest text-white/35">
+                  {section.title}
+                </p>
+                {section.links.map((link) => (
+                  <Link
+                    key={link.href}
+                    href={link.href}
+                    className="block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white"
+                  >
+                    {link.label}
+                  </Link>
+                ))}
+              </div>
+            ))}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold uppercase tracking-widest text-white/35">
+                Komuniteti
+              </p>
               <a
-                href="https://cyphera.tech"
+                href="https://github.com/edonaamulaj/e-studenti"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-gray-200 hover:text-white transition-colors"
+                className="block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white"
               >
-                Cyphera.
+                GitHub
               </a>
+              <span className="block text-white/50">Maintained by the community</span>
             </div>
           </div>
         </div>

@@ -7,8 +7,7 @@
 		"build": "next build",
 		"start": "next start",
 		"lint": "next lint",
-		"sync-erasmus": "node scripts/sync-erasmus.mjs",
-		"sync": "node sync-materials.js && git add app/data/materials.json && git commit -m \"Update materials from R2\" && git push"
+		"sync-erasmus": "node scripts/sync-erasmus.mjs"
 	},
 	"dependencies": {
 		"@aws-sdk/client-s3": "^3.850.0",

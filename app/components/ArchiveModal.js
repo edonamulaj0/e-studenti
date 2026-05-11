@@ -10,6 +10,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import JSZip from "jszip";
+import { WORKER_URL } from "../lib/worker-url";
 
 export default function ArchiveModal({ isOpen, onClose, material }) {
   const [files, setFiles] = useState([]);
@@ -60,7 +61,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
       console.log("Duke ngarkuar ZIP nga:", material.r2Url);
 
       // Use Cloudflare Worker proxy to avoid CORS issues
-      const proxyUrl = `https://r2-catalog-manager.edonaamulaj.workers.dev/?action=proxy&url=${encodeURIComponent(
+      const proxyUrl = `${WORKER_URL}/?action=proxy&url=${encodeURIComponent(
         material.r2Url
       )}`;
 
@@ -145,31 +146,31 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
     const isFolder = fileName.includes("/") && !fileName.split("/").pop();
 
     if (isFolder) {
-      return <Folder className="w-5 h-5 text-yellow-600" />;
+    return <Folder className="w-5 h-5 text-srh-sage" />;
     }
-    return <FileText className="w-5 h-5 text-blue-600" />;
+    return <FileText className="w-5 h-5 text-srh-crimson" />;
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-3xl w-full max-h-[80vh] flex flex-col">
+      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] flex flex-col border border-srh-cream">
         {/* Header */}
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
+        <div className="flex items-center justify-between p-6 border-b border-srh-cream">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">
+            <h2 className="font-playfair text-2xl font-bold text-srh-navy">
               {material?.title}
             </h2>
-            <p className="text-sm text-gray-600 mt-1">
+            <p className="text-sm text-srh-navy/60 mt-1">
               Përmbajtja e arkivit ({material?.fileType?.toUpperCase()})
             </p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+            className="p-2 hover:bg-srh-blush/20 rounded-lg transition-colors"
           >
-            <X className="w-6 h-6 text-gray-600" />
+            <X className="w-6 h-6 text-srh-navy/70" />
           </button>
         </div>
 
@@ -177,15 +178,15 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
         <div className="flex-1 overflow-y-auto p-6">
           {loading && (
             <div className="flex flex-col items-center justify-center py-12">
-              <Loader2 className="w-12 h-12 text-red-600 animate-spin mb-4" />
-              <p className="text-gray-600">Duke ngarkuar përmbajtjen...</p>
+              <Loader2 className="w-12 h-12 text-srh-crimson animate-spin mb-4" />
+              <p className="text-srh-navy/70">Duke ngarkuar përmbajtjen...</p>
             </div>
           )}
 
           {error && (
             <div className="flex flex-col items-center justify-center py-12">
-              <AlertCircle className="w-12 h-12 text-red-600 mb-4" />
-              <p className="text-gray-600 text-center">{error}</p>
+              <AlertCircle className="w-12 h-12 text-srh-crimson mb-4" />
+              <p className="text-srh-navy/70 text-center">{error}</p>
             </div>
           )}
 
@@ -196,19 +197,19 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
                   key={index}
                   className={`flex items-center justify-between p-3 rounded-lg ${
                     file.isRarNotice
-                      ? "bg-yellow-50 border border-yellow-200"
-                      : "bg-gray-50 hover:bg-gray-100"
+                      ? "bg-srh-cream/50 border border-srh-cream"
+                      : "bg-srh-paper hover:bg-srh-blush/20"
                   } transition-colors`}
                 >
                   <div className="flex items-center space-x-3 flex-1 min-w-0">
                     {file.isRarNotice ? (
                       <>
-                        <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0" />
+                        <AlertCircle className="w-5 h-5 text-srh-sage flex-shrink-0" />
                         <div>
-                          <p className="font-medium text-gray-900">
+                          <p className="font-medium text-srh-navy">
                             {file.name}
                           </p>
-                          <p className="text-sm text-gray-600">
+                          <p className="text-sm text-srh-navy/70">
                             {file.message}
                           </p>
                         </div>
@@ -217,11 +218,11 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
                       <>
                         {getFileIcon(file.name)}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 truncate">
+                          <p className="text-sm font-medium text-srh-navy truncate">
                             {file.name}
                           </p>
                           {file.size > 0 && (
-                            <p className="text-xs text-gray-500">
+                            <p className="text-xs text-srh-navy/60">
                               {formatFileSize(file.size)}
                             </p>
                           )}
@@ -232,7 +233,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
                   {!file.isRarNotice && zipObject && (
                     <button
                       onClick={() => downloadFile(file)}
-                      className="ml-3 p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors flex-shrink-0"
+                      className="ml-3 p-2 text-srh-crimson hover:bg-srh-blush/20 rounded-lg transition-colors flex-shrink-0"
                       title="Shkarko skedarin"
                     >
                       <Download className="w-4 h-4" />
@@ -245,8 +246,8 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
 
           {!loading && !error && files.length === 0 && (
             <div className="flex flex-col items-center justify-center py-12">
-              <FileText className="w-12 h-12 text-gray-400 mb-4" />
-              <p className="text-gray-600">
+              <FileText className="w-12 h-12 text-srh-cream mb-4" />
+              <p className="text-srh-navy/70">
                 Arkivi është bosh ose nuk mund të lexohet.
               </p>
             </div>
@@ -254,21 +255,21 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
         </div>
 
         {/* Footer */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50 rounded-b-xl">
+        <div className="p-6 border-t border-srh-cream bg-srh-paper rounded-b-2xl">
           <div className="flex space-x-3">
             <a
               href={material?.r2Url}
               target="_blank"
               rel="noopener noreferrer"
               download
-              className="flex-1 bg-red-600 text-white py-3 px-4 rounded-lg hover:bg-red-700 transition-colors font-medium flex items-center justify-center"
+              className="flex-1 bg-srh-crimson text-white py-3 px-4 rounded-lg hover:bg-[#5e1621] transition-colors font-medium flex items-center justify-center"
             >
               <Download className="w-5 h-5 mr-2" />
               Shkarko arkivin
             </a>
             <button
               onClick={onClose}
-              className="px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors font-medium"
+              className="px-6 py-3 border border-srh-navy text-srh-navy rounded-lg hover:bg-srh-navy hover:text-white transition-colors font-medium"
             >
               Mbyll
             </button>

@@ -2,15 +2,40 @@ name = "r2-catalog-manager"
 main = "src/index.js"
 compatibility_date = "2024-01-01"
 
+# Before deploying the worker, make sure these existing R2 buckets exist:
+# - e-studenti-materials
+# - materials-metadata
+# - department-materials
+# wrangler secret put JWT_SECRET
+# wrangler secret put RESEND_API_KEY
+# wrangler secret put ADMIN_EMAIL
+# Optional if your domain differs from defaults:
+# wrangler secret put JWT_ISSUER
+# wrangler secret put JWT_AUDIENCE
+# wrangler secret put ALLOWED_ORIGINS
+# npm run deploy (from cloudflare-worker/)
+#
+# Resend setup:
+# 1. Go to resend.com, create free account
+# 2. Add and verify your sending domain (or use onboarding@resend.dev for dev)
+# 3. Create API key, run: wrangler secret put RESEND_API_KEY
+
 # R2 Bucket Binding
 [[r2_buckets]]
 binding = "MY_BUCKET"
-bucket_name = "e-studenti-materials"  # Replace with your actual R2 bucket name
+bucket_name = "e-studenti-materials"
+
+[[r2_buckets]]
+binding = "METADATA_BUCKET"
+bucket_name = "materials-metadata"
+
+[[r2_buckets]]
+binding = "DEPARTMENT_BUCKET"
+bucket_name = "department-materials"
 
 # Environment variables
 [vars]
-ADMIN_USERNAME = "admin-dona"
-# IMPORTANT: Set ADMIN_PASSWORD as a secret using: wrangler secret put ADMIN_PASSWORD
+ENVIRONMENT = "production"
 
 # CORS settings for the worker
 [env.production]
