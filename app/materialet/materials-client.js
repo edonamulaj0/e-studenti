@@ -12,6 +12,7 @@ import {
   Flag,
 } from "lucide-react";
 import ArchiveModal from "../components/ArchiveModal";
+import { FACULTIES, getFacultyName } from "../lib/material-options";
 import { WORKER_URL } from "../lib/worker-url";
 
 const PAGE_SIZE = 24;
@@ -207,6 +208,7 @@ export default function MaterialsClient() {
 
   const renderCard = (material) => {
     const tone = typeTone(material.type);
+    const facultyName = getFacultyName(material.faculty);
     return (
     <div
       key={material.id}
@@ -221,7 +223,7 @@ export default function MaterialsClient() {
           </h3>
           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
             <span className="rounded-full bg-navy-100 px-3 py-1 font-semibold text-navy-800">
-              {material.faculty}
+              {facultyName}
             </span>
             <span className={`rounded-full px-3 py-1 text-sm font-semibold ${tone.chip}`}>
               {material.type}
@@ -406,20 +408,11 @@ export default function MaterialsClient() {
               className="input-srh hidden min-h-[44px] text-sm md:block"
             >
               <option value="">Të gjitha fakultetet</option>
-              <option value="ART">Artet</option>
-              <option value="ECON">Ekonomiku</option>
-              <option value="EDU">Edukimi</option>
-              <option value="FA">Arkitektura</option>
-              <option value="FBV">FBV</option>
-              <option value="FEFS">FEFS</option>
-              <option value="FFL">Filologjiku</option>
-              <option value="FFZ">Filozofiku</option>
-              <option value="FIEK">FIEK</option>
-              <option value="FIM">FIM</option>
-              <option value="FIN">FIN</option>
-              <option value="FSHMN">FSHMN</option>
-              <option value="LAW">Juridiku</option>
-              <option value="MED">Mjekësia</option>
+              {FACULTIES.map((faculty) => (
+                <option key={faculty.code} value={faculty.code}>
+                  {faculty.name}
+                </option>
+              ))}
             </select>
 
             <select

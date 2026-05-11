@@ -117,7 +117,9 @@ export default function EditMaterialClient({ id }) {
                 >
                   <option value="">Zgjidhni</option>
                   {FACULTIES.map((faculty) => (
-                    <option key={faculty}>{faculty}</option>
+                    <option key={faculty.code} value={faculty.code}>
+                      {faculty.name}
+                    </option>
                   ))}
                 </select>
               </Field>
