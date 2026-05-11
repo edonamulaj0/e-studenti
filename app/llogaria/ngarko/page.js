@@ -102,7 +102,7 @@ export default function NgarkoPage() {
             <div className="rounded-xl border border-srh-cream bg-srh-cream/60 p-4 text-sm text-srh-navy/75">
               <p>Lejohen: PDF, Word (doc/docx), PowerPoint (ppt/pptx), Excel (xls/xlsx), ZIP</p>
               <p>Madhësia maksimale: 50MB</p>
-              <p>Skedarët skanehen automatikisht para ngarkimit.</p>
+              <p>Skedarët skanohen automatikisht para ngarkimit.</p>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
