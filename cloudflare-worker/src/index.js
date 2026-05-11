@@ -395,7 +395,7 @@ async function getUserFromRequest(request, env) {
   return user || null;
 }
 
-async function sendEmail(to, subject, html, env) {
+async function sendEmail(to, subject, html, env, from = env.RESEND_FROM || DEFAULT_RESEND_FROM) {
   if (!env.RESEND_API_KEY) return false;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
@@ -404,7 +404,7 @@ async function sendEmail(to, subject, html, env) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: env.RESEND_FROM || DEFAULT_RESEND_FROM,
+      from,
       to,
       subject,
       html,
@@ -702,7 +702,8 @@ async function handleRegister(request, env) {
     email,
     "Kodi i verifikimit — E-Studenti",
     codeEmailHtml(code),
-    env
+    env,
+    env.RESEND_VERIFY_FROM || env.RESEND_FROM || DEFAULT_RESEND_FROM
   );
   if (!sent) return jsonResponse({ error: "Emaili nuk mund të dërgohej." }, 502);
 
@@ -765,7 +766,8 @@ async function handleLogin(request, env) {
     email,
     "Kodi i hyrjes — E-Studenti",
     codeEmailHtml(code),
-    env
+    env,
+    env.RESEND_VERIFY_FROM || env.RESEND_FROM || DEFAULT_RESEND_FROM
   );
   if (!sent) return jsonResponse({ error: "Emaili nuk mund të dërgohej." }, 502);
 
@@ -1135,7 +1137,13 @@ async function handleContact(request, env) {
       <hr>
       <small>Dërguar përmes formularit të kontaktit të E-Studenti. Për përgjigje direkte, përdorni Instagram: @estudenti.hub.</small>
     `;
-    sent = await sendEmail(env.ADMIN_EMAIL, `[E-Studenti] ${subject}`, html, env);
+    sent = await sendEmail(
+      env.ADMIN_EMAIL,
+      `[E-Studenti] ${subject}`,
+      html,
+      env,
+      env.RESEND_CONTACT_FROM || env.RESEND_FROM || DEFAULT_RESEND_FROM
+    );
   }
 
   if (!saved && !sent) {

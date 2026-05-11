@@ -19,7 +19,9 @@ compatibility_date = "2024-01-01"
 # 1. Go to resend.com, create free account
 # 2. Add and verify your sending domain (or use onboarding@resend.dev for dev)
 # 3. Create API key, run: wrangler secret put RESEND_API_KEY
-# 4. Optional custom sender: wrangler secret put RESEND_FROM
+# 4. Optional custom senders:
+#    wrangler secret put RESEND_VERIFY_FROM
+#    wrangler secret put RESEND_CONTACT_FROM
 
 # R2 Bucket Binding
 [[r2_buckets]]
