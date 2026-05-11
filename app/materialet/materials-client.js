@@ -9,7 +9,6 @@ import {
   Filter,
   Search,
   Archive,
-  Layers,
   Flag,
 } from "lucide-react";
 import ArchiveModal from "../components/ArchiveModal";
@@ -357,42 +356,25 @@ export default function MaterialsClient() {
   return (
     <div className="page-shell">
       <div className="section-shell">
-        <header className="viewport-panel mb-10 flex items-center">
-          <div className="grid w-full gap-8 lg:grid-cols-[0.95fr_1.05fr] lg:items-center">
-            <div>
-              <p className="page-kicker mb-4">Biblioteka</p>
-              <h1 className="page-title mb-4">
+        <header className="mb-10 max-w-3xl">
+          <p className="page-kicker mb-4">Biblioteka</p>
+          <h1 className="page-title mb-4">
             Materialet
-              </h1>
-              <p className="page-subtitle max-w-2xl text-lg md:text-xl">
-                Gjeni shënime, afate dhe projekte — filtroni sipas fakultetit dhe
-                llojit, pastaj hapni ose shkarkoni materialet.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3 text-sm font-semibold text-gray-600">
-                <span className="rounded-full bg-white px-4 py-2 shadow-sm">
-                  {pagination.total} materiale
-                </span>
-                <span className="rounded-full bg-burgundy-50 px-4 py-2 text-burgundy-600">
-                  {typeOptions.length} lloje
-                </span>
-                <span className="rounded-full bg-navy-100 px-4 py-2 text-navy-800">
-                  Faqja {currentPage} / {totalPages}
-                </span>
-              </div>
-            </div>
-            <div className="surface-card hidden p-6 lg:block">
-              <div className="mb-5 flex items-center justify-between">
-                <span className="rounded-full bg-navy-100 px-3 py-1 text-sm font-semibold text-navy-800">
-                  Kërkim i shpejtë
-                </span>
-                <Layers className="h-5 w-5 text-burgundy-600" />
-              </div>
-              <p className="text-sm leading-relaxed text-gray-600">
-                Përdorni filtrat për të ngushtuar materialet sipas fakultetit,
-                llojit dhe fjalëve kyçe. Kartat ruajnë të njëjtën rrjedhë vizuale
-                si faqet e tjera dhe dallohen me ngjyra sipas llojit.
-              </p>
-            </div>
+          </h1>
+          <p className="page-subtitle mb-5 max-w-2xl">
+            Gjeni shënime, afate dhe projekte — filtroni sipas fakultetit dhe
+            llojit, pastaj hapni ose shkarkoni materialet.
+          </p>
+          <div className="flex flex-wrap gap-3 text-sm font-semibold text-gray-600">
+            <span className="rounded-full bg-white px-4 py-2 shadow-sm">
+              {pagination.total} materiale
+            </span>
+            <span className="rounded-full bg-burgundy-50 px-4 py-2 text-burgundy-600">
+              {typeOptions.length} lloje
+            </span>
+            <span className="rounded-full bg-navy-100 px-4 py-2 text-navy-800">
+              Faqja {currentPage} / {totalPages}
+            </span>
           </div>
         </header>
 
