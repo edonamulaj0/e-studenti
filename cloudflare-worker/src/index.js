@@ -1,7 +1,7 @@
 import { unzipSync } from "fflate";
 
 const MEDIA_BASE = "https://media.e-studenti.com";
-const RESEND_FROM = "Student Resource Hub <onboarding@resend.dev>";
+const DEFAULT_RESEND_FROM = "E-Studenti <onboarding@resend.dev>";
 const DEFAULT_ALLOWED_ORIGINS = [
   "https://e-studenti.com",
   "https://www.e-studenti.com",
@@ -172,6 +172,16 @@ function titleFromKey(key) {
   return filename || "Material";
 }
 
+function normalizeUploaderName(name) {
+  const value = String(name || "").trim();
+  if (!value) return "";
+  const lower = value.toLowerCase();
+  if (["sistema", "sistema e", "sistemi", "sistemi e"].includes(lower)) {
+    return "Databaza";
+  }
+  return value;
+}
+
 async function listAllR2Objects(bucket) {
   const objects = [];
   let cursor;
@@ -207,13 +217,14 @@ function normalizeR2Material(record, fallbackKey, index = 0) {
     record.downloadUrl ||
     record.url ||
     (fileKey ? keyToPublicUrl(fileKey) : "");
-  const uploaderName =
+  const uploaderName = normalizeUploaderName(
     record.uploader_name ||
     record.uploaderName ||
     record.submittedBy?.name ||
     record.contributor ||
     record.author ||
-    "";
+    ""
+  );
   return {
     id: record.id || fileKey || `r2-${index}`,
     title: record.title || record.name || titleFromKey(fileKey),
@@ -385,6 +396,7 @@ async function getUserFromRequest(request, env) {
 }
 
 async function sendEmail(to, subject, html, env) {
+  if (!env.RESEND_API_KEY) return false;
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -392,22 +404,30 @@ async function sendEmail(to, subject, html, env) {
       "Content-Type": "application/json",
     },
     body: JSON.stringify({
-      from: RESEND_FROM,
+      from: env.RESEND_FROM || DEFAULT_RESEND_FROM,
       to,
       subject,
       html,
     }),
   });
+  if (!res.ok) {
+    console.error("Resend email failed", await res.text().catch(() => ""));
+  }
   return res.ok;
 }
 
 function codeEmailHtml(code) {
   return `
-    <div style="font-family:Inter,Arial,sans-serif;color:#14233D;line-height:1.6">
-      <h1 style="font-family:Georgia,serif;color:#14233D">Student Resource Hub</h1>
-      <p>Kodi juaj i verifikimit është:</p>
-      <p><strong style="font-size:32px;letter-spacing:8px;color:#7B1E2B">${escapeHtml(code)}</strong></p>
-      <p>Ky kod skadon në 15 minuta.</p>
+    <div style="margin:0;background:#fdfbf7;padding:32px 16px;font-family:Inter,Arial,sans-serif;color:#1a2332;line-height:1.6">
+      <div style="margin:0 auto;max-width:520px;border-radius:24px;background:#ffffff;padding:32px;border:1px solid #e2e8f0">
+        <p style="margin:0 0 12px;text-transform:uppercase;letter-spacing:0.14em;font-size:12px;font-weight:700;color:#8B3A3A">E-Studenti</p>
+        <h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;color:#1a2332">Kodi juaj i verifikimit</h1>
+        <p style="margin:0 0 20px;color:#4a5568">Përdoreni këtë kod për të përfunduar hyrjen ose regjistrimin në E-Studenti.</p>
+        <p style="margin:0 0 20px;border-radius:18px;background:#fef5f5;padding:18px;text-align:center">
+          <strong style="font-size:34px;letter-spacing:8px;color:#8B3A3A">${escapeHtml(code)}</strong>
+        </p>
+        <p style="margin:0;color:#4a5568">Ky kod skadon në 15 minuta. Nëse nuk e kërkuat ju këtë kod, mund ta injoroni këtë email.</p>
+      </div>
     </div>
   `;
 }
@@ -440,6 +460,18 @@ async function ensureRateLimitTable(env) {
       key TEXT PRIMARY KEY,
       count INTEGER NOT NULL,
       reset_at INTEGER NOT NULL
+    )`
+  ).run();
+}
+
+async function ensureContactMessagesTable(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS contact_messages (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      sender_name TEXT NOT NULL,
+      subject TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_at TEXT DEFAULT (datetime('now'))
     )`
   ).run();
 }
@@ -668,7 +700,7 @@ async function handleRegister(request, env) {
   const code = await upsertVerificationCode(email, env);
   const sent = await sendEmail(
     email,
-    "Kodi i verifikimit — Student Resource Hub",
+    "Kodi i verifikimit — E-Studenti",
     codeEmailHtml(code),
     env
   );
@@ -731,7 +763,7 @@ async function handleLogin(request, env) {
   const code = await upsertVerificationCode(email, env);
   const sent = await sendEmail(
     email,
-    "Kodi i hyrjes — Student Resource Hub",
+    "Kodi i hyrjes — E-Studenti",
     codeEmailHtml(code),
     env
   );
@@ -759,8 +791,7 @@ async function handleMaterials(request, url, env) {
   const limit = Math.min(100, Math.max(1, requestedLimit));
   const offset = (page - 1) * limit;
 
-  if (!env.DB) {
-    if (userFilter === "me") return jsonResponse({ error: "Unauthorized" }, 401);
+  if (env.METADATA_BUCKET && userFilter !== "me") {
     const allMaterials = await loadR2Materials(env);
     const baseFiltered = allMaterials.filter((material) =>
       materialMatches(material, { faculty, q })
@@ -793,6 +824,22 @@ async function handleMaterials(request, url, env) {
     });
   }
 
+  if (!env.DB) {
+    if (userFilter === "me") return jsonResponse({ error: "Unauthorized" }, 401);
+    return jsonResponse({
+      materials: [],
+      entries: [],
+      typeCounts: {},
+      pagination: {
+        page,
+        limit,
+        total: 0,
+        totalPages: 1,
+        hasNextPage: false,
+      },
+    });
+  }
+
   const baseParams = [];
   const baseWhere = ["LOWER(COALESCE(m.file_type, '')) != 'rar'"];
 
@@ -802,7 +849,7 @@ async function handleMaterials(request, url, env) {
   }
   if (q) {
     baseWhere.push(
-      "(m.title LIKE ? OR m.subject LIKE ? OR m.teacher LIKE ? OR u.name LIKE ? OR u.surname LIKE ?)"
+      "(m.title LIKE ? OR m.subject LIKE ? OR m.teacher LIKE ? OR u.name LIKE ? OR COALESCE(u.surname, '') LIKE ?)"
     );
     baseParams.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
   }
@@ -846,7 +893,7 @@ async function handleMaterials(request, url, env) {
   }
 
   const statement = env.DB.prepare(
-    `SELECT m.*, u.name || ' ' || u.surname as uploader_name
+    `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
      FROM materials m JOIN users u ON m.user_id = u.id
      WHERE ${where.join(" AND ")}
      ORDER BY m.created_at DESC
@@ -876,7 +923,7 @@ async function handleMaterial(request, url, env) {
   const id = Number(url.searchParams.get("id"));
   if (!Number.isFinite(id)) return jsonResponse({ error: "ID i pavlefshëm." }, 400);
   const material = await env.DB.prepare(
-    `SELECT m.*, u.name || ' ' || u.surname as uploader_name
+    `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
      FROM materials m JOIN users u ON m.user_id = u.id
      WHERE m.id=?`
   )
@@ -900,12 +947,14 @@ function materialToLegacyEntry(material) {
     r2Url: material.r2_url,
     fileType: material.file_type,
     fileSize: material.file_size,
-    submittedBy: material.uploader_name ? { name: material.uploader_name } : undefined,
+    submittedBy: material.uploader_name
+      ? { name: normalizeUploaderName(material.uploader_name) }
+      : undefined,
   };
 }
 
 async function handleContributors(env) {
-  if (!env.DB) {
+  if (env.METADATA_BUCKET) {
     const materials = await loadR2Materials(env);
     const contributors = new Map();
     for (const material of materials) {
@@ -923,6 +972,10 @@ async function handleContributors(env) {
       contributors.set(name, current);
     }
     return jsonResponse({ contributors: Array.from(contributors.values()) });
+  }
+
+  if (!env.DB) {
+    return jsonResponse({ contributors: [] });
   }
 
   const result = await env.DB.prepare(
@@ -1048,21 +1101,55 @@ async function handleContact(request, env) {
     );
   }
 
-  const html = `
-    <p><strong>Dërgues:</strong> ${escapeHtml(senderName)}</p>
-    <p><strong>Mesazhi:</strong></p>
-    <p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>
-    <hr>
-    <small>Dërguar përmes formularit të kontaktit të Student Resource Hub</small>
-  `;
-  const sent = await sendEmail(
-    env.ADMIN_EMAIL,
-    `[Student Resource Hub] ${subject}`,
-    html,
-    env
-  );
-  if (!sent) return jsonResponse({ error: "Mesazhi nuk mund të dërgohej." }, 502);
-  return jsonResponse({ success: true, message: "Mesazhi u dërgua me sukses." });
+  let saved = false;
+  if (env.DB) {
+    try {
+      await env.DB.prepare(
+        "INSERT INTO contact_messages (sender_name, subject, message) VALUES (?,?,?)"
+      )
+        .bind(senderName, subject, message)
+        .run();
+      saved = true;
+    } catch (error) {
+      if (String(error.message || error).includes("no such table")) {
+        await ensureContactMessagesTable(env);
+        await env.DB.prepare(
+          "INSERT INTO contact_messages (sender_name, subject, message) VALUES (?,?,?)"
+        )
+          .bind(senderName, subject, message)
+          .run();
+        saved = true;
+      } else {
+        throw error;
+      }
+    }
+  }
+
+  let sent = false;
+  if (env.ADMIN_EMAIL) {
+    const html = `
+      <p><strong>Dërgues:</strong> ${escapeHtml(senderName)}</p>
+      <p><strong>Subjekti:</strong> ${escapeHtml(subject)}</p>
+      <p><strong>Mesazhi:</strong></p>
+      <p>${escapeHtml(message).replace(/\n/g, "<br>")}</p>
+      <hr>
+      <small>Dërguar përmes formularit të kontaktit të E-Studenti. Për përgjigje direkte, përdorni Instagram: @estudenti.hub.</small>
+    `;
+    sent = await sendEmail(env.ADMIN_EMAIL, `[E-Studenti] ${subject}`, html, env);
+  }
+
+  if (!saved && !sent) {
+    return jsonResponse(
+      { error: "Mesazhi nuk mund të ruhej. Ju lutemi shkruani në Instagram: @estudenti.hub." },
+      503
+    );
+  }
+
+  return jsonResponse({
+    success: true,
+    message:
+      "Mesazhi u pranua. Për përgjigje direkte, shkruani në Instagram: @estudenti.hub.",
+  });
 }
 
 async function handleGenerate(request, env) {
@@ -1103,6 +1190,16 @@ export default {
 
     const url = new URL(request.url);
     const action = url.searchParams.get("action") || "materials";
+    const accountActions = [
+      "register",
+      "verify",
+      "login",
+      "me",
+      "material",
+      "upload",
+      "generate",
+      "edit",
+    ];
     const publicActions = [
       "materials",
       "contributors",
@@ -1114,14 +1211,18 @@ export default {
       "get",
     ];
 
-    if (!publicActions.includes(action)) {
-      const user = await getUserFromRequest(request, env);
-      if (!user) {
-        return withCors(jsonResponse({ error: "Unauthorized" }, 401), request, env);
-      }
-    }
-
     try {
+      if (accountActions.includes(action) && !env.DB) {
+        return withCors(databaseUnavailableResponse(), request, env);
+      }
+
+      if (!publicActions.includes(action)) {
+        const user = await getUserFromRequest(request, env);
+        if (!user) {
+          return withCors(jsonResponse({ error: "Unauthorized" }, 401), request, env);
+        }
+      }
+
       let response;
       switch (action) {
         case "materials":

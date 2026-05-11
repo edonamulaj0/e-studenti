@@ -27,25 +27,25 @@ function displayTeacher(material) {
 const TYPE_TONES = [
   {
     match: "ligjerata",
-    card: "hover:border-info-blue/35",
+    card: "border-info-blue/35 hover:border-info-blue/60",
     icon: "bg-info-blue/10 text-info-blue",
     chip: "bg-info-blue/10 text-info-blue",
   },
   {
     match: "afat",
-    card: "hover:border-warning-amber/45",
+    card: "border-warning-amber/45 hover:border-warning-amber/70",
     icon: "bg-warning-amber/10 text-warning-amber",
     chip: "bg-warning-amber/10 text-warning-amber",
   },
   {
     match: "projekt",
-    card: "hover:border-success-green/35",
+    card: "border-success-green/35 hover:border-success-green/60",
     icon: "bg-success-green/10 text-success-green",
     chip: "bg-success-green/10 text-success-green",
   },
   {
     match: "lib",
-    card: "hover:border-burgundy-600/30",
+    card: "border-burgundy-600/30 hover:border-burgundy-600/55",
     icon: "bg-burgundy-50 text-burgundy-600",
     chip: "bg-burgundy-50 text-burgundy-600",
   },
@@ -55,14 +55,27 @@ function typeTone(type) {
   const value = String(type || "").toLowerCase();
   return (
     TYPE_TONES.find((tone) => value.includes(tone.match)) || {
-      card: "hover:border-navy-700/25",
+      card: "border-navy-700/25 hover:border-navy-700/45",
       icon: "bg-navy-100 text-navy-700",
       chip: "bg-navy-100 text-navy-700",
     }
   );
 }
 
+function displaySubmitter(name) {
+  const value = String(name || "").trim();
+  if (!value) return "";
+  if (["sistema", "sistema e", "sistemi", "sistemi e"].includes(value.toLowerCase())) {
+    return "Databaza";
+  }
+  return value;
+}
+
 function normalizeMaterial(material) {
+  const submittedName =
+    material.submittedBy?.name ||
+    material.uploader_name ||
+    "";
   return {
     id: material.id,
     title: material.title,
@@ -74,9 +87,9 @@ function normalizeMaterial(material) {
     r2Url: material.r2Url || material.r2_url,
     fileType: material.fileType || material.file_type,
     fileSize: material.fileSize || material.file_size,
-    submittedBy:
-      material.submittedBy ||
-      (material.uploader_name ? { name: material.uploader_name } : undefined),
+    submittedBy: submittedName
+      ? { name: displaySubmitter(submittedName) }
+      : undefined,
   };
 }
 
@@ -214,6 +227,9 @@ export default function MaterialsClient() {
             <span className="rounded-full bg-navy-100 px-3 py-1 font-semibold text-navy-800">
               {material.faculty}
             </span>
+            <span className={`rounded-full px-3 py-1 text-sm font-semibold ${tone.chip}`}>
+              {material.type}
+            </span>
             <span>{material.department}</span>
           </div>
         </div>
@@ -229,13 +245,7 @@ export default function MaterialsClient() {
           </span>
           <p className="mt-1 font-semibold text-navy-900">{material.subject}</p>
         </div>
-        <div className="grid grid-cols-2 gap-3">
-          <div className={`rounded-2xl p-4 ${tone.chip}`}>
-            <span className="text-xs font-semibold uppercase tracking-widest opacity-70">
-              Lloji
-            </span>
-            <p className="mt-1 font-semibold">{material.type}</p>
-          </div>
+        <div>
           <div className="rounded-2xl bg-white p-4">
             <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
               Autor/e
@@ -397,7 +407,7 @@ export default function MaterialsClient() {
             <select
               value={selectedFaculty}
               onChange={(e) => setSelectedFaculty(e.target.value)}
-              className="input-srh min-h-[44px] text-sm"
+              className="input-srh hidden min-h-[44px] text-sm md:block"
             >
               <option value="">Të gjitha fakultetet</option>
               <option value="ART">Artet</option>
@@ -419,7 +429,7 @@ export default function MaterialsClient() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="input-srh min-h-[44px] text-sm"
+              className="input-srh hidden min-h-[44px] text-sm md:block"
             >
               <option value="">Të gjitha llojet</option>
               {typeOptions.map((t) => (
@@ -432,7 +442,7 @@ export default function MaterialsClient() {
             <button
               type="button"
               onClick={resetFilters}
-              className="btn-primary min-h-[44px] w-full py-2 text-sm"
+              className="btn-primary hidden min-h-[44px] w-full py-2 text-sm md:inline-flex"
             >
               <Filter className="w-5 h-5" />
               Pastro filtrat

@@ -96,17 +96,17 @@ export default function HomeClient() {
 
       <section className="viewport-section-start">
         <div className="mx-auto max-w-7xl">
-          <motion.div {...fadeUp} className="mb-10 max-w-2xl">
+          <motion.div {...fadeUp} className="mx-auto mb-10 max-w-2xl text-center">
             <p className="page-kicker mb-4">Pse ekziston</p>
             <h2 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl">
               Pse E-Studenti?
             </h2>
-            <p className="page-subtitle mt-3">
+            <p className="page-subtitle mx-auto mt-3 max-w-xl">
               I hapur, i lexueshëm dhe i përditësuar nga komuniteti.
             </p>
           </motion.div>
 
-          <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-4">
             {[
               {
                 icon: Shield,
@@ -139,7 +139,7 @@ export default function HomeClient() {
                 {...fadeUp}
                 transition={{ ...fadeUp.transition, delay: 0.05 + i * 0.05 }}
                 whileHover={{ y: -6, scale: 1.02, transition: { duration: 0.2 } }}
-                className={`surface-card p-6 md:p-7 ${
+                className={`surface-card flex h-full flex-col p-6 md:p-7 ${
                   item.cta
                     ? "border-burgundy-600/20 bg-burgundy-50"
                     : "hover:border-burgundy-600/30"
@@ -157,7 +157,7 @@ export default function HomeClient() {
                 {item.cta && (
                   <Link
                     href="/llogaria/ngarko"
-                    className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-burgundy-600"
+                    className="mt-auto inline-flex pt-5 items-center gap-2 text-sm font-semibold text-burgundy-600"
                   >
                     Dërgo tani
                     <ArrowRight className="h-4 w-4" />

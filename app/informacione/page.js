@@ -222,7 +222,7 @@ export default function InformacionePage() {
                     Formulari i kontaktit
                   </a>
                   <a
-                    href="https://github.com/edonaamulaj/e-studenti"
+                    href="https://github.com/edonamulaj0/e-studenti"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-2 font-semibold text-navy-900 hover:text-burgundy-600"
@@ -230,10 +230,15 @@ export default function InformacionePage() {
                     <Github className="w-4 h-4" />
                     GitHub
                   </a>
-                  <div className="flex items-center gap-2 text-gray-600">
+                  <a
+                    href="https://www.instagram.com/estudenti.hub"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-2 font-semibold text-burgundy-600 hover:underline"
+                  >
                     <MessageSquare className="w-4 h-4" />
-                    @estudenti.up
-                  </div>
+                    @estudenti.hub
+                  </a>
                 </div>
               </div>
             </div>
@@ -292,7 +297,7 @@ export default function InformacionePage() {
                 </ul>
               </div>
               <a
-                href="https://github.com/edonaamulaj/e-studenti"
+                href="https://github.com/edonamulaj0/e-studenti"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center justify-between gap-4 rounded-2xl bg-navy-900 p-5 text-white transition-all hover:-translate-y-0.5 hover:bg-burgundy-600 hover:shadow-md"
@@ -328,9 +333,20 @@ export default function InformacionePage() {
 
           <SectionCard id="kontakt" icon={Mail} title="Kontakti">
             <div>
-              <div className="mb-6 flex items-center gap-2 text-gray-600">
-                <MessageSquare className="w-5 h-5 text-success-green" />
-                <span className="font-medium">@estudenti.up</span>
+              <div className="mb-6 rounded-2xl bg-burgundy-50 p-5 text-gray-600">
+                <a
+                  href="https://www.instagram.com/estudenti.hub"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mb-2 flex items-center gap-2 font-semibold text-burgundy-600 hover:underline"
+                >
+                  <MessageSquare className="w-5 h-5" />
+                  @estudenti.hub
+                </a>
+                <p className="text-sm leading-relaxed">
+                  Formulari më poshtë mund të përdoret për raporte ose njoftime,
+                  por për përgjigje direkte ju lutemi shkruani në Instagram.
+                </p>
               </div>
 
               <form onSubmit={submitContact} className="space-y-5">
@@ -382,7 +398,7 @@ export default function InformacionePage() {
 
                 {contactStatus === "success" && (
                   <p className="rounded-2xl border border-success-green/20 bg-success-green/10 p-4 font-semibold text-success-green">
-                    Mesazhi juaj u dërgua. Faleminderit!
+                    Mesazhi juaj u pranua. Për përgjigje direkte, na shkruani në Instagram: @estudenti.hub.
                   </p>
                 )}
                 {contactError && (
