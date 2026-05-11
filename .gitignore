@@ -2,12 +2,16 @@ node_modules
 
 # Next.js
 .next
+.next/
 out
+out/
 
 # Cloudflare
 .wrangler
+.wrangler/
 .dev.vars
-cloudflare-worker/
+cloudflare-worker/.dev.vars
+cloudflare-worker/.wrangler/
 
 # Sensitive files
 **/admin-credentials.txt
@@ -15,6 +19,11 @@ cloudflare-worker/
 .env
 .env.local
 .env.production
+.env.*
+!.env.example
+cloudflare-worker/.env
+cloudflare-worker/.env.*
+!cloudflare-worker/.env.example
 
 # Local Playwright cookies for uni-pr.edu (Cloudflare)
 erasmus-cookies.json
