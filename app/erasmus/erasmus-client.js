@@ -110,7 +110,7 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
           </p>
         </header>
 
-        <div className="surface-card mb-10 p-4 md:p-5">
+        <div className="mb-10">
           <div className="grid gap-3 md:grid-cols-[1.4fr_0.8fr_0.8fr]">
             <label className="relative">
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />

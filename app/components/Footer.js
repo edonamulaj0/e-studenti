@@ -36,7 +36,7 @@ export default function Footer() {
         <div className="grid gap-8 md:grid-cols-[auto_1fr_auto] md:items-start">
           <Link
             href="/"
-            className="flex h-16 w-16 items-center justify-center rounded-2xl bg-white/8 p-2"
+            className="flex h-28 w-28 items-center justify-center rounded-3xl bg-white/8 p-3 md:h-32 md:w-32"
             aria-label="E-Studenti"
           >
             <img
@@ -77,10 +77,28 @@ export default function Footer() {
                 ))}
               </div>
             ))}
-            <div className="space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-widest text-white/35">
-                Komuniteti
-              </p>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-widest text-white/35">
+                  Ligjore
+                </p>
+                <Link
+                  href="/privatesia"
+                  className="block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white"
+                >
+                  Politika e privatësisë
+                </Link>
+                <Link
+                  href="/kushtet"
+                  className="block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white"
+                >
+                  Kushtet e shërbimit
+                </Link>
+              </div>
+              <div className="space-y-2">
+                <p className="text-xs font-semibold uppercase tracking-widest text-white/35">
+                  Komuniteti
+                </p>
               <a
                 href="https://github.com/edonamulaj0/e-studenti"
                 target="_blank"
@@ -90,6 +108,7 @@ export default function Footer() {
                 GitHub
               </a>
               <span className="block text-white/50">E mirëmbajtur nga komuniteti.</span>
+              </div>
             </div>
           </div>
         </div>

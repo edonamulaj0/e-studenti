@@ -174,11 +174,6 @@ function titleFromKey(key) {
 
 function normalizeUploaderName(name) {
   const value = String(name || "").trim();
-  if (!value) return "";
-  const lower = value.toLowerCase();
-  if (["sistema", "sistema e", "sistemi", "sistemi e"].includes(lower)) {
-    return "Databaza";
-  }
   return value;
 }
 
@@ -225,7 +220,7 @@ function normalizeR2Material(record, fallbackKey, index = 0) {
     record.author ||
     ""
   );
-  return {
+  const material = {
     id: record.id || fileKey || `r2-${index}`,
     title: record.title || record.name || titleFromKey(fileKey),
     faculty: String(record.faculty || record.facultyCode || "//").toUpperCase(),
@@ -241,6 +236,7 @@ function normalizeR2Material(record, fallbackKey, index = 0) {
     created_at: record.created_at || record.createdAt || record.uploadedAt || "",
     updated_at: record.updated_at || record.updatedAt || "",
   };
+  return material;
 }
 
 function isPublicMaterial(material) {

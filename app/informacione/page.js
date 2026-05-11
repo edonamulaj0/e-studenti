@@ -99,6 +99,13 @@ export default function InformacionePage() {
     }
   };
 
+  const visibleContributors = [
+    ...contributors.filter(
+      (c) => `${c.name || ""} ${c.surname || ""}`.trim() !== "Leart Lama"
+    ),
+    { name: "Leart", surname: "Lama", webNote: "Kontriboi ne web" },
+  ];
+
   return (
     <div className="page-shell">
       <div className="section-shell">
@@ -155,46 +162,6 @@ export default function InformacionePage() {
                   </div>
                 ))}
               </div>
-            </div>
-          </SectionCard>
-
-          <SectionCard id="privatesia" icon={Shield} title="Politika e privatësisë">
-            <div className="mb-6 rounded-2xl border border-gray-200 bg-navy-100/50 p-6">
-              <h3 className="mb-4 text-lg font-semibold text-navy-900">
-                Ne nuk mbledhim të dhëna personale për përdorimin e faqes
-              </h3>
-              <ul className="space-y-3 text-gray-600">
-                {[
-                  "Asnjë cookie ose gjurmues për llogari",
-                  "Nuk kërkohet llogari për të parë materialet",
-                  "Nuk ruhen të dhëna personale nga ne për shfletim",
-                ].map((t) => (
-                  <li key={t} className="flex items-start gap-3">
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-burgundy-600" />
-                    <span>{t}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="rounded-2xl border border-gray-200 bg-white p-6">
-              <h3 className="mb-4 text-lg font-semibold text-navy-900">
-                Statistika anonime (p.sh. përmes hostit / analitikës)
-              </h3>
-              <ul className="space-y-3 text-gray-600">
-                {[
-                  "Numri i vizitave në nivel të përgjithshëm",
-                  "Rajoni gjeografik në nivel vendi (jo vendndodhje e saktë)",
-                  "Lloji i shfletuesit për përmirësim të faqes",
-                ].map((t) => (
-                  <li key={t} className="flex items-start gap-3">
-                    <span className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-success-green" />
-                    <span>{t}</span>
-                  </li>
-                ))}
-              </ul>
-              <p className="mt-4 text-sm italic leading-relaxed text-gray-600">
-                Faqja është statike; nuk ruajmë profil përdoruesi në platformë.
-              </p>
             </div>
           </SectionCard>
 
@@ -258,14 +225,14 @@ export default function InformacionePage() {
                 ))}
               </div>
             )}
-            {!loadingContributors && contributors.length === 0 && (
+            {!loadingContributors && visibleContributors.length === 0 && (
               <p className="rounded-2xl border border-gray-200 bg-navy-100/50 p-4 text-gray-600">
                 Kontribuesit do të shfaqen këtu pasi materiali i parë të ngarkohet.
               </p>
             )}
-            {!loadingContributors && contributors.length > 0 && (
+            {!loadingContributors && visibleContributors.length > 0 && (
               <div className="grid sm:grid-cols-2 gap-4">
-                {contributors.map((c, index) => (
+                {visibleContributors.map((c, index) => (
                   <div
                     key={`${c.name}-${c.surname}-${index}`}
                     className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4"
@@ -277,9 +244,13 @@ export default function InformacionePage() {
                       <p className="font-semibold text-navy-900">
                         {c.name} {c.surname}
                       </p>
-                      <p className="mt-1 text-sm text-gray-600">
-                        {c.faculty || "Fakulteti"} · {c.material_count} materiale
-                      </p>
+                      {c.webNote ? (
+                        <p className="mt-1 text-sm text-gray-600">{c.webNote}</p>
+                      ) : (
+                        <p className="mt-1 text-sm text-gray-600">
+                          {c.faculty || "Fakulteti"} · {c.material_count} materiale
+                        </p>
+                      )}
                     </div>
                   </div>
                 ))}
