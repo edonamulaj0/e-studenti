@@ -108,6 +108,16 @@ function jsonResponse(data, status = 200) {
   });
 }
 
+function databaseUnavailableResponse() {
+  return jsonResponse(
+    {
+      error:
+        "Llogaritë nuk janë aktive për momentin. Materialet publike mund të shfletohen pa hyrje.",
+    },
+    503
+  );
+}
+
 function escapeHtml(value) {
   return String(value || "")
     .replace(/&/g, "&amp;")
@@ -222,6 +232,12 @@ function normalizeR2Material(record, fallbackKey, index = 0) {
   };
 }
 
+function isPublicMaterial(material) {
+  return String(material.file_type || material.fileType || "")
+    .toLowerCase()
+    .trim() !== "rar";
+}
+
 async function loadR2Materials(env) {
   if (!env.METADATA_BUCKET) return [];
   const objects = await listAllR2Objects(env.METADATA_BUCKET);
@@ -235,7 +251,8 @@ async function loadR2Materials(env) {
       const parsed = await body.json();
       extractMetadataRecords(parsed).forEach((record, index) => {
         if (record && typeof record === "object") {
-          materials.push(normalizeR2Material(record, object.key, materials.length + index));
+          const material = normalizeR2Material(record, object.key, materials.length + index);
+          if (isPublicMaterial(material)) materials.push(material);
         }
       });
     } catch {
@@ -438,7 +455,7 @@ function rateLimitIdentity(request) {
 
 async function checkRateLimit(request, action, env) {
   const config = RATE_LIMITS[action];
-  if (!config) return null;
+  if (!config || !env.DB) return null;
 
   const now = Math.floor(Date.now() / 1000);
   const key = `${action}:${rateLimitIdentity(request)}`;
@@ -617,6 +634,7 @@ async function upsertVerificationCode(email, env) {
 }
 
 async function handleRegister(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
   const limited = await checkRateLimit(request, "register", env);
   if (limited) return limited;
 
@@ -660,6 +678,7 @@ async function handleRegister(request, env) {
 }
 
 async function handleVerify(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
   const limited = await checkRateLimit(request, "verify", env);
   if (limited) return limited;
 
@@ -694,6 +713,7 @@ async function handleVerify(request, env) {
 }
 
 async function handleLogin(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
   const limited = await checkRateLimit(request, "login", env);
   if (limited) return limited;
 
@@ -721,6 +741,7 @@ async function handleLogin(request, env) {
 }
 
 async function handleMe(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
   if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
   return jsonResponse({
@@ -773,7 +794,7 @@ async function handleMaterials(request, url, env) {
   }
 
   const baseParams = [];
-  const baseWhere = ["1=1"];
+  const baseWhere = ["LOWER(COALESCE(m.file_type, '')) != 'rar'"];
 
   if (faculty) {
     baseWhere.push("m.faculty = ?");
@@ -849,6 +870,7 @@ async function handleMaterials(request, url, env) {
 }
 
 async function handleMaterial(request, url, env) {
+  if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
   if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
   const id = Number(url.searchParams.get("id"));
@@ -915,6 +937,7 @@ async function handleContributors(env) {
 }
 
 async function handleUpload(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
   const limited = await checkRateLimit(request, "upload", env);
   if (limited) return limited;
 
@@ -973,6 +996,7 @@ async function handleUpload(request, env) {
 }
 
 async function handleEdit(request, url, env) {
+  if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
   if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
   const id = Number(url.searchParams.get("id"));

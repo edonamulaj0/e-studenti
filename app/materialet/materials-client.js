@@ -17,16 +17,50 @@ import { WORKER_URL } from "../lib/worker-url";
 
 const PAGE_SIZE = 24;
 
-function typeSectionId(type) {
-  return `mat-section-${encodeURIComponent(type)}`;
-}
-
 function displayTeacher(material) {
   const t = material.teacher;
   if (t == null) return "—";
   const s = String(t).trim();
   if (!s || s === "//") return "—";
   return s;
+}
+
+const TYPE_TONES = [
+  {
+    match: "ligjerata",
+    card: "hover:border-info-blue/35",
+    icon: "bg-info-blue/10 text-info-blue",
+    chip: "bg-info-blue/10 text-info-blue",
+  },
+  {
+    match: "afat",
+    card: "hover:border-warning-amber/45",
+    icon: "bg-warning-amber/10 text-warning-amber",
+    chip: "bg-warning-amber/10 text-warning-amber",
+  },
+  {
+    match: "projekt",
+    card: "hover:border-success-green/35",
+    icon: "bg-success-green/10 text-success-green",
+    chip: "bg-success-green/10 text-success-green",
+  },
+  {
+    match: "lib",
+    card: "hover:border-burgundy-600/30",
+    icon: "bg-burgundy-50 text-burgundy-600",
+    chip: "bg-burgundy-50 text-burgundy-600",
+  },
+];
+
+function typeTone(type) {
+  const value = String(type || "").toLowerCase();
+  return (
+    TYPE_TONES.find((tone) => value.includes(tone.match)) || {
+      card: "hover:border-navy-700/25",
+      icon: "bg-navy-100 text-navy-700",
+      chip: "bg-navy-100 text-navy-700",
+    }
+  );
 }
 
 function normalizeMaterial(material) {
@@ -66,7 +100,6 @@ export default function MaterialsClient() {
   const [availableTypeCounts, setAvailableTypeCounts] = useState({});
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
-  const [activeSection, setActiveSection] = useState(null);
 
   const loadMaterials = useCallback(async () => {
     setLoading(true);
@@ -122,56 +155,6 @@ export default function MaterialsClient() {
   }, [availableTypeCounts, materials]);
 
   const filteredMaterials = materials;
-  const typeCounts = availableTypeCounts;
-
-  const groupedByType = useMemo(() => {
-    const map = new Map();
-    for (const m of filteredMaterials) {
-      const t = m.type || "Të pa klasifikuara";
-      if (!map.has(t)) map.set(t, []);
-      map.get(t).push(m);
-    }
-    const keys = Array.from(map.keys()).sort((a, b) =>
-      a.localeCompare(b, "sq")
-    );
-    return { map, keys };
-  }, [filteredMaterials]);
-
-  const showGrouped = selectedType === "";
-
-  useEffect(() => {
-    if (!showGrouped || groupedByType.keys.length === 0) {
-      setActiveSection(null);
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        const visible = entries
-          .filter((e) => e.isIntersecting && e.intersectionRatio > 0.2)
-          .sort((a, b) => b.intersectionRatio - a.intersectionRatio);
-        if (visible[0]?.target?.id) {
-          const id = visible[0].target.id.replace(/^mat-section-/, "");
-          setActiveSection(decodeURIComponent(id));
-        }
-      },
-      { rootMargin: "-35% 0px -40% 0px", threshold: [0.15, 0.35, 0.5] }
-    );
-
-    groupedByType.keys.forEach((type) => {
-      const el = document.getElementById(typeSectionId(type));
-      if (el) observer.observe(el);
-    });
-
-    return () => observer.disconnect();
-  }, [showGrouped, groupedByType.keys]);
-
-  const scrollToSection = (type) => {
-    const id = typeSectionId(type);
-    document
-      .getElementById(id)
-      ?.scrollIntoView({ behavior: "smooth", block: "start" });
-  };
 
   const resetFilters = () => {
     setSearchTerm("");
@@ -214,27 +197,20 @@ export default function MaterialsClient() {
     }
   };
 
-  const renderCard = (material) => (
+  const renderCard = (material) => {
+    const tone = typeTone(material.type);
+    return (
     <div
       key={material.id}
-      className="surface-card group flex h-full flex-col p-6 hover:-translate-y-1 hover:border-burgundy-600/30 hover:shadow-md md:p-7"
+      className={`surface-card group flex h-full flex-col p-5 hover:-translate-y-1 hover:shadow-md md:p-6 ${tone.card}`}
     >
       <div className="mb-5 flex items-start justify-between gap-4">
         <div className="flex-1 min-w-0">
           <h3
-            className={`text-xl font-semibold leading-snug text-navy-900 transition-colors group-hover:text-burgundy-600 ${
-              material.submittedBy?.name ? "mb-2" : "mb-3"
-            }`}
+            className="mb-3 text-xl font-semibold leading-snug text-navy-900 transition-colors group-hover:text-burgundy-600"
           >
             {material.title}
           </h3>
-          {material.submittedBy?.name && (
-            <div className="mb-3">
-              <span className="inline-flex rounded-full border border-success-green/15 bg-success-green/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-success-green">
-                Dërguar nga: {material.submittedBy.name}
-              </span>
-            </div>
-          )}
           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
             <span className="rounded-full bg-navy-100 px-3 py-1 font-semibold text-navy-800">
               {material.faculty}
@@ -242,26 +218,26 @@ export default function MaterialsClient() {
             <span>{material.department}</span>
           </div>
         </div>
-        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-burgundy-50 text-burgundy-600">
+        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tone.icon}`}>
           <FileText className="h-6 w-6" />
         </span>
       </div>
 
       <div className="mb-6 grid gap-3 text-sm">
-        <div className="rounded-2xl border border-gray-200 bg-navy-100/40 p-4">
+        <div className="rounded-2xl bg-navy-100/40 p-4">
           <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
             Lënda
           </span>
           <p className="mt-1 font-semibold text-navy-900">{material.subject}</p>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-gray-200 bg-white p-4">
-            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          <div className={`rounded-2xl p-4 ${tone.chip}`}>
+            <span className="text-xs font-semibold uppercase tracking-widest opacity-70">
               Lloji
             </span>
-            <p className="mt-1 font-semibold text-navy-900">{material.type}</p>
+            <p className="mt-1 font-semibold">{material.type}</p>
           </div>
-          <div className="rounded-2xl border border-gray-200 bg-white p-4">
+          <div className="rounded-2xl bg-white p-4">
             <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
               Autor/e
             </span>
@@ -272,7 +248,7 @@ export default function MaterialsClient() {
         </div>
       </div>
 
-      <div className="mb-4 mt-auto">
+      <div className="mb-4 mt-auto flex items-center justify-between gap-3">
         <Link
           href={`/informacione?subject=${encodeURIComponent("Raportoj material")}#kontakt`}
           className="flex items-center gap-1.5 text-sm font-semibold text-gray-400 underline decoration-dotted underline-offset-4 transition-colors hover:text-burgundy-600"
@@ -280,6 +256,11 @@ export default function MaterialsClient() {
           <Flag className="w-4 h-4" />
           Raporto
         </Link>
+        {material.submittedBy?.name && (
+          <span className="truncate text-right text-sm text-gray-400">
+            Dërguar nga: {material.submittedBy.name}
+          </span>
+        )}
       </div>
 
       <div className="flex flex-col sm:flex-row gap-3 mt-auto">
@@ -292,7 +273,7 @@ export default function MaterialsClient() {
                 className="btn-outline flex-1 text-base"
               >
                 <Archive className="w-5 h-5" />
-                Shiko përmbajtjen
+                Permbajtja
               </button>
             ) : (
               <a
@@ -323,7 +304,8 @@ export default function MaterialsClient() {
         )}
       </div>
     </div>
-  );
+    );
+  };
 
   if (loading && !hasLoaded) {
     return (
@@ -384,14 +366,14 @@ export default function MaterialsClient() {
               </h1>
               <p className="page-subtitle max-w-2xl text-lg md:text-xl">
                 Gjeni shënime, afate dhe projekte — filtroni sipas fakultetit dhe
-                seksionit, pastaj hapni ose shkarkoni materialet.
+                llojit, pastaj hapni ose shkarkoni materialet.
               </p>
               <div className="mt-6 flex flex-wrap gap-3 text-sm font-semibold text-gray-600">
                 <span className="rounded-full bg-white px-4 py-2 shadow-sm">
                   {pagination.total} materiale
                 </span>
                 <span className="rounded-full bg-burgundy-50 px-4 py-2 text-burgundy-600">
-                  {typeOptions.length} seksione
+                  {typeOptions.length} lloje
                 </span>
                 <span className="rounded-full bg-navy-100 px-4 py-2 text-navy-800">
                   Faqja {currentPage} / {totalPages}
@@ -407,8 +389,8 @@ export default function MaterialsClient() {
               </div>
               <p className="text-sm leading-relaxed text-gray-600">
                 Përdorni filtrat për të ngushtuar materialet sipas fakultetit,
-                llojit dhe fjalëve kyçe. Rezultatet grupohen automatikisht sipas
-                seksionit për skanim më të lehtë.
+                llojit dhe fjalëve kyçe. Kartat ruajnë të njëjtën rrjedhë vizuale
+                si faqet e tjera dhe dallohen me ngjyra sipas llojit.
               </p>
             </div>
           </div>
@@ -416,9 +398,9 @@ export default function MaterialsClient() {
 
         <div
           id="material-filters"
-          className="surface-card sticky top-24 z-20 mb-12 p-4 md:p-5"
+          className="sticky top-24 z-20 mb-8 bg-cream-50/90 py-3 backdrop-blur"
         >
-          <div className="mb-5 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
             <div className="relative md:col-span-2 xl:col-span-1">
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
@@ -426,14 +408,14 @@ export default function MaterialsClient() {
                 placeholder="Kërko titull, lëndë, autor…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="input-srh pl-12"
+                className="input-srh min-h-[44px] pl-12 text-sm"
               />
             </div>
 
             <select
               value={selectedFaculty}
               onChange={(e) => setSelectedFaculty(e.target.value)}
-              className="input-srh"
+              className="input-srh min-h-[44px] text-sm"
             >
               <option value="">Të gjitha fakultetet</option>
               <option value="ART">Artet</option>
@@ -455,9 +437,9 @@ export default function MaterialsClient() {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="input-srh"
+              className="input-srh min-h-[44px] text-sm"
             >
-              <option value="">Të gjitha seksionet (llojet)</option>
+              <option value="">Të gjitha llojet</option>
               {typeOptions.map((t) => (
                 <option key={t} value={t}>
                   {t}
@@ -468,60 +450,13 @@ export default function MaterialsClient() {
             <button
               type="button"
               onClick={resetFilters}
-              className="btn-primary w-full"
+              className="btn-primary min-h-[44px] w-full py-2 text-sm"
             >
               <Filter className="w-5 h-5" />
               Pastro filtrat
             </button>
           </div>
 
-          <div className="mb-1 flex flex-wrap items-center gap-2">
-            <span className="mr-2 flex items-center gap-2 text-sm font-semibold text-navy-900">
-              <Layers className="w-5 h-5 text-success-green" />
-              Seksione (lloji):
-            </span>
-            <button
-              type="button"
-              onClick={() => setSelectedType("")}
-              className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
-                selectedType === ""
-                  ? "scale-105 bg-burgundy-600 text-white shadow-sm"
-                  : "border border-gray-200 bg-white text-navy-900 hover:border-burgundy-600 hover:text-burgundy-600"
-              }`}
-            >
-              Të gjitha
-            </button>
-            {typeOptions.map((t) => {
-              const displayCount = typeCounts[t] ?? 0;
-              return (
-                <button
-                  key={t}
-                  type="button"
-                  onClick={() => {
-                    setSelectedType(t);
-                    setTimeout(() => {
-                      document
-                        .getElementById("material-results")
-                        ?.scrollIntoView({
-                          behavior: "smooth",
-                          block: "start",
-                        });
-                    }, 80);
-                  }}
-                  className={`rounded-xl px-4 py-2.5 text-sm font-semibold transition-all ${
-                    selectedType === t
-                      ? "bg-burgundy-600 text-white shadow-sm"
-                      : "border border-gray-200 bg-white text-navy-900 hover:border-burgundy-600 hover:text-burgundy-600"
-                  }`}
-                >
-                  {t}{" "}
-                  <span className="opacity-80 font-semibold">
-                    ({displayCount})
-                  </span>
-                </button>
-              );
-            })}
-          </div>
         </div>
 
         <div id="material-results" className="scroll-mt-28">
@@ -536,53 +471,23 @@ export default function MaterialsClient() {
             </div>
           )}
           {filteredMaterials.length === 0 ? (
-              <div className="surface-card mx-auto max-w-xl p-10 text-center">
-                <FileText className="mx-auto mb-6 h-16 w-16 text-gray-400" />
-                <h3 className="mb-2 text-2xl font-semibold text-navy-900">
-                  Nuk ka të dhëna
-                </h3>
-                <p className="text-gray-600">
-                  Provoni të ndryshoni kriteret e kërkimit.
-                </p>
-              </div>
-            ) : showGrouped ? (
-              <div key="grouped" className="space-y-16 md:space-y-20">
-                {groupedByType.keys.map((type) => (
-                  <section
-                    key={type}
-                    id={typeSectionId(type)}
-                    className="viewport-section-start scroll-mt-28 px-0 py-0"
-                  >
-                    <div className="mb-8 flex flex-col gap-4 border-b border-gray-200 pb-5 sm:flex-row sm:items-end sm:justify-between">
-                      <div>
-                        <p className="mb-2 text-sm font-semibold uppercase tracking-widest text-gray-400">
-                          Seksioni
-                        </p>
-                        <h2 className="font-display text-3xl font-bold text-navy-900 md:text-4xl">
-                          {type}
-                        </h2>
-                      </div>
-                      <span className="shrink-0 rounded-full bg-burgundy-50 px-4 py-2 text-sm font-semibold text-burgundy-600">
-                        {groupedByType.map.get(type).length}{" "}
-                        {groupedByType.map.get(type).length === 1
-                          ? "material"
-                          : "materiale"}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
-                      {groupedByType.map.get(type).map((m) => renderCard(m))}
-                    </div>
-                  </section>
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
-                {filteredMaterials.map((m) => renderCard(m))}
-              </div>
-            )}
+            <div className="surface-card mx-auto max-w-xl p-10 text-center">
+              <FileText className="mx-auto mb-6 h-16 w-16 text-gray-400" />
+              <h3 className="mb-2 text-2xl font-semibold text-navy-900">
+                Nuk ka të dhëna
+              </h3>
+              <p className="text-gray-600">
+                Provoni të ndryshoni kriteret e kërkimit.
+              </p>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
+              {filteredMaterials.map((m) => renderCard(m))}
+            </div>
+          )}
           {pagination.total > 0 && (
             <nav
-              className="mt-10 flex flex-col items-center justify-between gap-4 rounded-3xl border border-gray-200 bg-white/80 p-4 shadow-sm backdrop-blur sm:flex-row"
+              className="mt-10 flex flex-col items-center justify-between gap-4 sm:flex-row"
               aria-label="Faqosja e materialeve"
             >
               <p className="text-sm font-semibold text-gray-600">
