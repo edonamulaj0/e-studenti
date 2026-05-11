@@ -82,14 +82,14 @@ export default function Footer() {
                 Komuniteti
               </p>
               <a
-                href="https://github.com/edonaamulaj/e-studenti"
+                href="https://github.com/edonamulaj0/e-studenti"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white"
               >
                 GitHub
               </a>
-              <span className="block text-white/50">Maintained by the community</span>
+              <span className="block text-white/50">E mirëmbajtur nga komuniteti.</span>
             </div>
           </div>
         </div>

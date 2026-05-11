@@ -39,9 +39,10 @@ module.exports = {
         },
       },
       fontFamily: {
-        display: ["var(--font-display)", "var(--font-inter)", "sans-serif"],
-        playfair: ["var(--font-display)", "var(--font-inter)", "sans-serif"],
-        inter: ["var(--font-inter)", "sans-serif"],
+        display: ["var(--font-display)", "Georgia", "serif"],
+        playfair: ["var(--font-display)", "Georgia", "serif"],
+        montserrat: ["var(--font-sans)", "sans-serif"],
+        inter: ["var(--font-sans)", "sans-serif"],
       },
       boxShadow: {
         sm: "var(--shadow-sm)",

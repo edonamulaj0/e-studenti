@@ -1,7 +1,7 @@
 CREATE TABLE IF NOT EXISTS users (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   name TEXT NOT NULL,
-  surname TEXT NOT NULL,
+  surname TEXT,
   email TEXT NOT NULL UNIQUE,
   email_verified INTEGER DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now'))
@@ -17,6 +17,14 @@ CREATE TABLE IF NOT EXISTS rate_limits (
   key TEXT PRIMARY KEY,
   count INTEGER NOT NULL,
   reset_at INTEGER NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS contact_messages (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  sender_name TEXT NOT NULL,
+  subject TEXT NOT NULL,
+  message TEXT NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE TABLE IF NOT EXISTS materials (

@@ -8,7 +8,7 @@ compatibility_date = "2024-01-01"
 # - department-materials
 # wrangler secret put JWT_SECRET
 # wrangler secret put RESEND_API_KEY
-# wrangler secret put ADMIN_EMAIL
+# Optional: wrangler secret put ADMIN_EMAIL (copies contact-form messages to an admin inbox)
 # Optional if your domain differs from defaults:
 # wrangler secret put JWT_ISSUER
 # wrangler secret put JWT_AUDIENCE
@@ -19,6 +19,7 @@ compatibility_date = "2024-01-01"
 # 1. Go to resend.com, create free account
 # 2. Add and verify your sending domain (or use onboarding@resend.dev for dev)
 # 3. Create API key, run: wrangler secret put RESEND_API_KEY
+# 4. Optional custom sender: wrangler secret put RESEND_FROM
 
 # R2 Bucket Binding
 [[r2_buckets]]
@@ -32,6 +33,11 @@ bucket_name = "materials-metadata"
 [[r2_buckets]]
 binding = "DEPARTMENT_BUCKET"
 bucket_name = "department-materials"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "e-studenti-auth"
+database_id = "3d406171-fabe-44be-8e9c-d68e15ffaa39"
 
 # Environment variables
 [vars]

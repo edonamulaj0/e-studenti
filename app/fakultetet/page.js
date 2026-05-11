@@ -197,11 +197,11 @@ export default function Faculties() {
             >
               <Link
                 href={`/fakultetet/${faculty.acronym.toLowerCase()}`}
-                className="absolute inset-0 z-0"
+                className="absolute inset-0 z-10"
                 aria-label={`Eksploro ${faculty.name}`}
               />
-              <div className="flex flex-1 flex-col min-h-0">
-              <div className="relative z-10 mb-6 flex items-start justify-between gap-3">
+              <div className="pointer-events-none relative z-20 flex min-h-0 flex-1 flex-col">
+              <div className="mb-6 flex items-start justify-between gap-3">
                 <span className="rounded-full bg-white px-4 py-2 text-sm font-bold tracking-wide text-burgundy-600 shadow-sm">
                   {faculty.acronym}
                 </span>
@@ -209,18 +209,18 @@ export default function Faculties() {
                   href={faculty.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="relative z-20 shrink-0 rounded-xl bg-white/70 p-2 text-burgundy-600 transition-colors hover:bg-white"
+                  className="pointer-events-auto relative z-30 shrink-0 rounded-xl bg-white/70 p-2 text-burgundy-600 transition-colors hover:bg-white"
                   aria-label={`Faqja e ${faculty.acronym}`}
                 >
                   <ExternalLink className="w-6 h-6" />
                 </a>
               </div>
 
-              <h2 className="relative z-10 mb-5 text-xl font-semibold leading-snug text-navy-900">
+              <h2 className="mb-5 text-xl font-semibold leading-snug text-navy-900">
                 {faculty.name}
               </h2>
 
-              <div className="relative z-10 mb-5 text-base text-gray-600">
+              <div className="mb-5 text-base text-gray-600">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5">
                   <BookOpen className="w-5 h-5 text-success-green shrink-0" />
                   <span className="font-semibold">
@@ -229,7 +229,7 @@ export default function Faculties() {
                 </div>
               </div>
 
-              <div className="relative z-10 mb-6">
+              <div className="mb-6">
                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
                   Departamentet
                 </h3>
@@ -249,7 +249,7 @@ export default function Faculties() {
               </div>
               </div>
 
-              <div className="relative z-10 mt-auto flex items-center justify-between border-t border-gray-200/70 pt-5">
+              <div className="pointer-events-none relative z-20 mt-auto flex items-center justify-between border-t border-gray-200/70 pt-5">
                 <span className="text-sm font-semibold text-gray-400">
                   {faculty.departments.length} programe
                 </span>

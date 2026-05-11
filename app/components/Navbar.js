@@ -101,7 +101,7 @@ export default function Navbar() {
                 E-Studenti
               </span>
               <span className="hidden md:block text-[10px] font-semibold tracking-widest text-gray-400">
-                NGA KOMUNITETI. PER CDO STUDENT.
+                NGA KOMUNITET, PËR ÇDO STUDENT.
               </span>
             </span>
           </Link>
