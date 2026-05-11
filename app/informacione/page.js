@@ -103,7 +103,7 @@ export default function InformacionePage() {
     ...contributors.filter(
       (c) => `${c.name || ""} ${c.surname || ""}`.trim() !== "Leart Lama"
     ),
-    { name: "Leart", surname: "Lama", webNote: "Kontriboi ne web" },
+    { name: "Leart", surname: "Lama", webNote: "Kontriboi në web" },
   ];
 
   return (
