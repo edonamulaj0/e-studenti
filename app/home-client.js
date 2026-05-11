@@ -85,12 +85,6 @@ export default function HomeClient() {
               </div>
             </div>
           </motion.div>
-
-          <div className="absolute bottom-6 left-1/2 hidden -translate-x-1/2 text-gray-400 md:block">
-            <span className="block h-10 w-6 rounded-full border border-gray-400/50 p-1">
-              <span className="mx-auto block h-2 w-1 rounded-full bg-gray-400 animate-bounce" />
-            </span>
-          </div>
         </div>
       </section>
 
