@@ -64,10 +64,6 @@ function typeTone(type) {
 
 function displaySubmitter(name) {
   const value = String(name || "").trim();
-  if (!value) return "";
-  if (["sistema", "sistema e", "sistemi", "sistemi e"].includes(value.toLowerCase())) {
-    return "Databaza";
-  }
   return value;
 }
 
@@ -390,7 +386,7 @@ export default function MaterialsClient() {
 
         <div
           id="material-filters"
-          className="sticky top-24 z-20 mb-8 bg-cream-50/90 py-3 backdrop-blur"
+          className="sticky top-24 z-20 mb-8 py-3 backdrop-blur"
         >
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
             <div className="relative md:col-span-2 xl:col-span-1">

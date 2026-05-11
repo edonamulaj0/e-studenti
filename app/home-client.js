@@ -94,9 +94,9 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <section className="viewport-section-start">
+      <section className="px-6 py-12 md:px-12 md:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl">
-          <motion.div {...fadeUp} className="mx-auto mb-10 max-w-2xl text-center">
+          <motion.div {...fadeUp} className="mx-auto mb-8 max-w-2xl text-center">
             <p className="page-kicker mb-4">Pse ekziston</p>
             <h2 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl">
               Pse E-Studenti?
@@ -139,14 +139,14 @@ export default function HomeClient() {
                 {...fadeUp}
                 transition={{ ...fadeUp.transition, delay: 0.05 + i * 0.05 }}
                 whileHover={{ y: -6, scale: 1.02, transition: { duration: 0.2 } }}
-                className={`surface-card flex h-full flex-col p-6 md:p-7 ${
+                className={`surface-card flex h-full flex-col p-5 md:p-6 ${
                   item.cta
                     ? "border-burgundy-600/20 bg-burgundy-50"
                     : "hover:border-burgundy-600/30"
                 }`}
               >
-                <span className={`mb-5 flex h-14 w-14 items-center justify-center rounded-2xl ${item.tone}`}>
-                  <item.icon className="h-7 w-7" />
+                <span className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${item.tone}`}>
+                  <item.icon className="h-6 w-6" />
                 </span>
                 <h3 className="text-xl font-semibold text-navy-800">
                   {item.title}

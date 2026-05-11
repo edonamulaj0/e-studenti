@@ -83,8 +83,8 @@ export default function Navbar() {
           : "border-transparent bg-cream-50/70 backdrop-blur-md"
       }`}
     >
-      <div className="mx-auto max-w-7xl px-6 md:px-12">
-        <div className="relative flex justify-between items-center h-[4.25rem] md:h-20">
+      <div className="px-6 md:px-12">
+        <div className="relative mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between md:h-20">
           <Link
             href="/"
             className="flex items-center gap-3 leading-tight text-navy-900 transition-colors"
@@ -101,7 +101,7 @@ export default function Navbar() {
                 E-Studenti
               </span>
               <span className="hidden md:block text-[10px] font-semibold tracking-widest text-gray-400">
-                NGA KOMUNITET, PËR ÇDO STUDENT.
+                NGA KOMUNITETI, PËR ÇDO STUDENT.
               </span>
             </span>
           </Link>

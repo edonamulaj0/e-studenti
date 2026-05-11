@@ -5,8 +5,7 @@
 	"main": "src/index.js",
 	"scripts": {
 		"deploy": "wrangler deploy",
-		"dev": "wrangler dev",
-		"fix-current-contributors": "wrangler d1 execute e-studenti-auth --remote --file=./fix-current-contributors.sql"
+		"dev": "wrangler dev"
 	},
 	"dependencies": {
 		"fflate": "^0.8.1"
