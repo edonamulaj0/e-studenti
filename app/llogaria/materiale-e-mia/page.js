@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { FileText, LogOut, Plus } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import { authHeaders, getToken, getUser, logout } from "../../lib/auth";
+import { getFacultyName } from "../../lib/material-options";
 
 function normalizeMaterial(material) {
   return {
@@ -124,7 +125,7 @@ export default function MaterialeEMiaPage() {
                 <FileText className="mb-4 h-9 w-9 text-srh-crimson" />
                 <h2 className="text-xl font-bold text-srh-navy">{material.title}</h2>
                 <p className="mt-2 text-sm text-srh-navy/60">
-                  {material.faculty} · {material.subject} · {material.type}
+                  {getFacultyName(material.faculty)} · {material.subject} · {material.type}
                 </p>
                 <div className="mt-5 flex gap-3">
                   <Link
