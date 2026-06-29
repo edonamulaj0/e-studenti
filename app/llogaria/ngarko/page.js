@@ -23,6 +23,9 @@ export default function NgarkoPage() {
   const [form, setForm] = useState(initialForm);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
+  const [titleTooltip, setTitleTooltip] = useState(false);
+
+  const isPranues = form.type === "Provime Pranuese";
 
   useEffect(() => {
     if (!getToken()) router.push("/llogaria/hyr");
@@ -43,7 +46,11 @@ export default function NgarkoPage() {
     try {
       const fd = new FormData();
       for (const [key, value] of Object.entries(form)) {
-        if (value) fd.append(key, value);
+        if (isPranues && ["department", "subject", "teacher"].includes(key)) {
+          fd.append(key, "//");
+        } else if (value) {
+          fd.append(key, value);
+        }
       }
       const res = await fetch(`${WORKER_URL}/?action=upload`, {
         method: "POST",
@@ -106,14 +113,48 @@ export default function NgarkoPage() {
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
-              <Field label="Titulli i materialit" required>
+              {/* Title — always visible; tooltip shown for Provime Pranuese */}
+              <label className="block">
+                <span className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-srh-navy">
+                  Titulli i materialit
+                  <span className="text-srh-crimson"> *</span>
+                  {isPranues && (
+                    <span className="relative">
+                      <button
+                        type="button"
+                        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-srh-navy/15 text-[10px] font-bold text-srh-navy/60 hover:bg-srh-navy/25 focus:outline-none"
+                        onMouseEnter={() => setTitleTooltip(true)}
+                        onMouseLeave={() => setTitleTooltip(false)}
+                        onFocus={() => setTitleTooltip(true)}
+                        onBlur={() => setTitleTooltip(false)}
+                        onClick={() => setTitleTooltip((v) => !v)}
+                        aria-label="Ndihmë"
+                      >
+                        ?
+                      </button>
+                      {titleTooltip && (
+                        <span
+                          role="tooltip"
+                          className="absolute left-0 top-6 z-30 w-80 rounded-xl border border-srh-cream bg-white p-3 text-xs font-normal leading-relaxed text-srh-navy/75 shadow-lg"
+                        >
+                          Shkruaj emrin e departamentit dhe llojin e materialit.
+                          Shembuj: &quot;Stomatologji - Provimi pranues 2024&quot;,
+                          &quot;Matematikë - Libër përgatitor&quot;,
+                          &quot;Informatikë - Teste të vjetra&quot;
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </span>
                 <input
                   required
                   value={form.title}
                   onChange={(e) => setField("title", e.target.value)}
                   className="input-srh"
                 />
-              </Field>
+              </label>
+
+              {/* Faculty — always visible */}
               <Field label="Fakulteti" required>
                 <select
                   required
@@ -121,7 +162,9 @@ export default function NgarkoPage() {
                   onChange={(e) => setField("faculty", e.target.value)}
                   className="input-srh"
                 >
-                  <option value="">Zgjidhni</option>
+                  <option value="">
+                    {isPranues ? "Zgjidh fakultetin" : "Zgjidhni"}
+                  </option>
                   {FACULTIES.map((faculty) => (
                     <option key={faculty.code} value={faculty.code}>
                       {faculty.name}
@@ -129,30 +172,43 @@ export default function NgarkoPage() {
                   ))}
                 </select>
               </Field>
-              <Field label="Departamenti">
-                <input
-                  value={form.department}
-                  onChange={(e) => setField("department", e.target.value)}
-                  placeholder="//"
-                  className="input-srh"
-                />
-              </Field>
-              <Field label="Lënda" required>
-                <input
-                  required
-                  value={form.subject}
-                  onChange={(e) => setField("subject", e.target.value)}
-                  className="input-srh"
-                />
-              </Field>
-              <Field label="Profesori">
-                <input
-                  value={form.teacher}
-                  onChange={(e) => setField("teacher", e.target.value)}
-                  placeholder="//"
-                  className="input-srh"
-                />
-              </Field>
+
+              {/* Department — hidden for Provime Pranuese */}
+              {!isPranues && (
+                <Field label="Departamenti">
+                  <input
+                    value={form.department}
+                    onChange={(e) => setField("department", e.target.value)}
+                    placeholder="//"
+                    className="input-srh"
+                  />
+                </Field>
+              )}
+
+              {/* Subject — hidden for Provime Pranuese */}
+              {!isPranues && (
+                <Field label="Lënda" required>
+                  <input
+                    required
+                    value={form.subject}
+                    onChange={(e) => setField("subject", e.target.value)}
+                    className="input-srh"
+                  />
+                </Field>
+              )}
+
+              {/* Teacher — hidden for Provime Pranuese */}
+              {!isPranues && (
+                <Field label="Profesori">
+                  <input
+                    value={form.teacher}
+                    onChange={(e) => setField("teacher", e.target.value)}
+                    placeholder="//"
+                    className="input-srh"
+                  />
+                </Field>
+              )}
+
               <Field label="Lloji i materialit" required>
                 <select
                   required
