@@ -24,4 +24,4 @@ export function getFacultyName(value) {
   return FACULTY_NAMES_BY_CODE[code] || value || "";
 }
 
-export const MATERIAL_TYPES = ["Ligjerata", "Afat", "Projekt", "Libër", "Të tjera"];
+export const MATERIAL_TYPES = ["Provime Pranuese", "Ligjerata", "Afat", "Projekt", "Libër", "Të tjera"];

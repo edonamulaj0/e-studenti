@@ -21,6 +21,9 @@ export default function EditMaterialClient({ id }) {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [titleTooltip, setTitleTooltip] = useState(false);
+
+  const isPranues = form.type === "Provime Pranuese";
 
   useEffect(() => {
     if (!getToken()) {
@@ -62,13 +65,20 @@ export default function EditMaterialClient({ id }) {
 
   const submit = async (event) => {
     event.preventDefault();
+    const isCurrentlyPranues = form.type === "Provime Pranuese";
     setSaving(true);
     setError("");
     try {
+      const payload = { ...form };
+      if (isCurrentlyPranues) {
+        payload.department = "//";
+        payload.subject = "//";
+        payload.teacher = "//";
+      }
       const res = await fetch(`${WORKER_URL}/?action=edit&id=${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json", ...authHeaders() },
-        body: JSON.stringify(form),
+        body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Ruajtja dështoi.");
@@ -100,14 +110,48 @@ export default function EditMaterialClient({ id }) {
             className="space-y-5 rounded-2xl border border-srh-cream bg-white p-6 md:p-8 shadow-sm"
           >
             <div className="grid gap-5 md:grid-cols-2">
-              <Field label="Titulli" required>
+              {/* Title — always visible; tooltip shown for Provime Pranuese */}
+              <label className="block">
+                <span className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-srh-navy">
+                  Titulli
+                  <span className="text-srh-crimson"> *</span>
+                  {isPranues && (
+                    <span className="relative">
+                      <button
+                        type="button"
+                        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-srh-navy/15 text-[10px] font-bold text-srh-navy/60 hover:bg-srh-navy/25 focus:outline-none"
+                        onMouseEnter={() => setTitleTooltip(true)}
+                        onMouseLeave={() => setTitleTooltip(false)}
+                        onFocus={() => setTitleTooltip(true)}
+                        onBlur={() => setTitleTooltip(false)}
+                        onClick={() => setTitleTooltip((v) => !v)}
+                        aria-label="Ndihmë"
+                      >
+                        ?
+                      </button>
+                      {titleTooltip && (
+                        <span
+                          role="tooltip"
+                          className="absolute left-0 top-6 z-30 w-80 rounded-xl border border-srh-cream bg-white p-3 text-xs font-normal leading-relaxed text-srh-navy/75 shadow-lg"
+                        >
+                          Shkruaj emrin e departamentit dhe llojin e materialit.
+                          Shembuj: &quot;Stomatologji - Provimi pranues 2024&quot;,
+                          &quot;Matematikë - Libër përgatitor&quot;,
+                          &quot;Informatikë - Teste të vjetra&quot;
+                        </span>
+                      )}
+                    </span>
+                  )}
+                </span>
                 <input
                   required
                   value={form.title}
                   onChange={(e) => setField("title", e.target.value)}
                   className="input-srh"
                 />
-              </Field>
+              </label>
+
+              {/* Faculty — always visible */}
               <Field label="Fakulteti" required>
                 <select
                   required
@@ -123,30 +167,43 @@ export default function EditMaterialClient({ id }) {
                   ))}
                 </select>
               </Field>
-              <Field label="Departamenti">
-                <input
-                  value={form.department}
-                  onChange={(e) => setField("department", e.target.value)}
-                  placeholder="//"
-                  className="input-srh"
-                />
-              </Field>
-              <Field label="Lënda" required>
-                <input
-                  required
-                  value={form.subject}
-                  onChange={(e) => setField("subject", e.target.value)}
-                  className="input-srh"
-                />
-              </Field>
-              <Field label="Profesori">
-                <input
-                  value={form.teacher}
-                  onChange={(e) => setField("teacher", e.target.value)}
-                  placeholder="//"
-                  className="input-srh"
-                />
-              </Field>
+
+              {/* Department — hidden for Provime Pranuese */}
+              {!isPranues && (
+                <Field label="Departamenti">
+                  <input
+                    value={form.department}
+                    onChange={(e) => setField("department", e.target.value)}
+                    placeholder="//"
+                    className="input-srh"
+                  />
+                </Field>
+              )}
+
+              {/* Subject — hidden for Provime Pranuese */}
+              {!isPranues && (
+                <Field label="Lënda" required>
+                  <input
+                    required
+                    value={form.subject}
+                    onChange={(e) => setField("subject", e.target.value)}
+                    className="input-srh"
+                  />
+                </Field>
+              )}
+
+              {/* Teacher — hidden for Provime Pranuese */}
+              {!isPranues && (
+                <Field label="Profesori">
+                  <input
+                    value={form.teacher}
+                    onChange={(e) => setField("teacher", e.target.value)}
+                    placeholder="//"
+                    className="input-srh"
+                  />
+                </Field>
+              )}
+
               <Field label="Lloji" required>
                 <select
                   required

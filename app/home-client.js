@@ -8,6 +8,7 @@ import {
   Users,
   ArrowRight,
   Upload,
+  GraduationCap,
 } from "lucide-react";
 
 const fadeUp = {
@@ -100,7 +101,7 @@ export default function HomeClient() {
             </p>
           </motion.div>
 
-          <div className="grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-4">
+          <div className="grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
             {[
               {
                 icon: Shield,
@@ -121,10 +122,21 @@ export default function HomeClient() {
                 tone: "bg-warning-amber/10 text-warning-amber",
               },
               {
+                icon: GraduationCap,
+                title: "Për Aplikantët",
+                text: "Materiale nga studentët e mëparshëm për t'ju ndihmuar të përgatiteni.",
+                cta: true,
+                ctaHref: "/per-aplikantet",
+                ctaLabel: "Shiko materialet",
+                tone: "bg-warning-amber/10 text-warning-amber",
+              },
+              {
                 icon: Upload,
                 title: "Dërgo Materialin Tënd",
                 text: "Shto materiale direkt nga platforma — kontributi yt ndihmon studentët e tjerë.",
                 cta: true,
+                ctaHref: "/llogaria/ngarko",
+                ctaLabel: "Dërgo tani",
                 tone: "bg-burgundy-600/10 text-burgundy-600",
               },
             ].map((item, i) => (
@@ -150,10 +162,10 @@ export default function HomeClient() {
                 </p>
                 {item.cta && (
                   <Link
-                    href="/llogaria/ngarko"
+                    href={item.ctaHref}
                     className="mt-auto inline-flex pt-5 items-center gap-2 text-sm font-semibold text-burgundy-600"
                   >
-                    Dërgo tani
+                    {item.ctaLabel}
                     <ArrowRight className="h-4 w-4" />
                   </Link>
                 )}

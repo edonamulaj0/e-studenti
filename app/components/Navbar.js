@@ -6,6 +6,7 @@ import { Menu, X } from "lucide-react";
 
 const navItems = [
   { href: "/fakultetet", label: "Fakultetet" },
+  { href: "/per-aplikantet", label: "Për Aplikantët" },
   { href: "/materialet", label: "Materialet" },
   { href: "/erasmus", label: "Erasmus" },
   { href: "/informacione", label: "Rreth nesh" },
