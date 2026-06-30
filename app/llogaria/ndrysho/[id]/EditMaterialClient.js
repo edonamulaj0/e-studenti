@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { WORKER_URL } from "../../../lib/worker-url";
-import { authHeaders, getToken } from "../../../lib/auth";
+import { fetchCurrentUser } from "../../../lib/auth";
 import { FACULTIES, MATERIAL_TYPES } from "../../../lib/material-options";
 
 const emptyForm = {
@@ -26,17 +26,17 @@ export default function EditMaterialClient({ id }) {
   const isPranues = form.type === "Provime Pranuese";
 
   useEffect(() => {
-    if (!getToken()) {
-      router.push("/llogaria/hyr");
-      return;
-    }
-
     async function loadMaterial() {
+      const currentUser = await fetchCurrentUser();
+      if (!currentUser) {
+        router.push("/llogaria/hyr");
+        return;
+      }
       setLoading(true);
       setError("");
       try {
         const res = await fetch(`${WORKER_URL}/?action=material&id=${id}`, {
-          headers: authHeaders(),
+          credentials: "include",
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok) throw new Error(data.error || "Materiali nuk u gjet.");
@@ -77,7 +77,8 @@ export default function EditMaterialClient({ id }) {
       }
       const res = await fetch(`${WORKER_URL}/?action=edit&id=${id}`, {
         method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = await res.json().catch(() => ({}));

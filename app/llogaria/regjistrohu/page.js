@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, KeyRound, Mail, User, Users } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
-import { saveAuth } from "../../lib/auth";
+import { setUser } from "../../lib/auth";
+import { isDisposableEmail, DISPOSABLE_EMAIL_ERROR } from "../../lib/disposable-email-domains";
 
 export default function RegjistrohuPage() {
   const router = useRouter();
@@ -25,6 +26,11 @@ export default function RegjistrohuPage() {
     setLoading(true);
     setError("");
     setMessage("");
+    if (isDisposableEmail(form.email.trim())) {
+      setError(DISPOSABLE_EMAIL_ERROR);
+      setLoading(false);
+      return;
+    }
     try {
       const res = await fetch(`${WORKER_URL}/?action=register`, {
         method: "POST",
@@ -54,6 +60,7 @@ export default function RegjistrohuPage() {
       const res = await fetch(`${WORKER_URL}/?action=verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           email: form.email.trim().toLowerCase(),
           code: code.trim(),
@@ -61,7 +68,7 @@ export default function RegjistrohuPage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Verifikimi dështoi.");
-      saveAuth(data.token, data.user);
+      setUser(data.user);
       router.push("/llogaria/materiale-e-mia");
     } catch (err) {
       setError(err.message || "Verifikimi dështoi.");

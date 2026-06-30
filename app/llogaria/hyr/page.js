@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { KeyRound, Mail, Users } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
-import { saveAuth } from "../../lib/auth";
+import { setUser } from "../../lib/auth";
 
 export default function HyrPage() {
   const router = useRouter();
@@ -46,11 +46,12 @@ export default function HyrPage() {
       const res = await fetch(`${WORKER_URL}/?action=verify`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ email: email.trim().toLowerCase(), code }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Verifikimi dështoi.");
-      saveAuth(data.token, data.user);
+      setUser(data.user);
       router.push("/llogaria/materiale-e-mia");
     } catch (err) {
       setError(err.message || "Verifikimi dështoi.");

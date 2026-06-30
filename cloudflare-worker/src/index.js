@@ -53,6 +53,81 @@ const MAGIC_BYTES = {
   ole2: [0xd0, 0xcf, 0x11, 0xe0],
 };
 
+const ALWAYS_ALLOWED_EMAIL_DOMAINS = [
+  "gmail.com",
+  "outlook.com",
+  "hotmail.com",
+  "live.com",
+  "protonmail.com",
+  "proton.me",
+  "uni-pr.edu",
+];
+
+const DISPOSABLE_EMAIL_DOMAINS = [
+  "mailinator.com",
+  "10minutemail.com",
+  "10minutemail.net",
+  "guerrillamail.com",
+  "guerrillamail.net",
+  "guerrillamail.org",
+  "guerrillamail.biz",
+  "tempmail.com",
+  "temp-mail.org",
+  "temp-mail.io",
+  "yopmail.com",
+  "yopmail.fr",
+  "throwawaymail.com",
+  "trashmail.com",
+  "trashmail.net",
+  "getnada.com",
+  "maildrop.cc",
+  "dispostable.com",
+  "fakeinbox.com",
+  "mintemail.com",
+  "mohmal.com",
+  "moakt.com",
+  "emailondeck.com",
+  "sharklasers.com",
+  "spam4.me",
+  "mailnesia.com",
+  "mailcatch.com",
+  "mytemp.email",
+  "tempinbox.com",
+  "burnermail.io",
+  "33mail.com",
+  "anonaddy.com",
+  "simplelogin.io",
+  "discard.email",
+  "tempr.email",
+  "fakemail.net",
+  "mailsac.com",
+  "inboxkitten.com",
+  "tempmailo.com",
+  "emailfake.com",
+  "crazymailing.com",
+  "tempmail.ninja",
+  "mail-temp.com",
+  "1secmail.com",
+  "1secmail.net",
+  "1secmail.org",
+  "luxusmail.org",
+  "rootfest.net",
+  "mailbox52.ml",
+  "spambox.us",
+  "tempmail2.com",
+  "throwam.com",
+  "kleemail.com",
+  "deadaddress.com",
+];
+
+function isDisposableEmail(email) {
+  const domain = String(email || "").toLowerCase().split("@")[1];
+  if (!domain) return true;
+  if (ALWAYS_ALLOWED_EMAIL_DOMAINS.includes(domain)) return false;
+  if (DISPOSABLE_EMAIL_DOMAINS.includes(domain)) return true;
+  return false;
+}
+
 function getAllowedOrigins(env) {
   const configured = String(env.ALLOWED_ORIGINS || "")
     .split(",")
@@ -74,7 +149,7 @@ function isAllowedOrigin(request, env) {
 function corsHeaders(request, env) {
   const headers = {
     "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
-    "Access-Control-Allow-Headers": "Content-Type, Authorization",
+    "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Credentials": "true",
     "Access-Control-Max-Age": "86400",
     Vary: "Origin",
@@ -400,7 +475,7 @@ async function signJWT(payload, env) {
     iss: getJwtIssuer(env),
     aud: getJwtAudience(env),
     iat: now,
-    exp: now + 15 * 60,
+    exp: now + 30 * 24 * 60 * 60,
   };
   const header = base64UrlEncodeJson({ alg: "HS256", typ: "JWT" });
   const body = base64UrlEncodeJson(claims);
@@ -452,9 +527,10 @@ async function verifyJWT(token, env) {
 }
 
 async function getUserFromRequest(request, env) {
-  const auth = request.headers.get("Authorization") || "";
-  if (!auth.startsWith("Bearer ")) return null;
-  const payload = await verifyJWT(auth.slice(7), env);
+  const cookieHeader = request.headers.get("Cookie") || "";
+  const match = cookieHeader.match(/(?:^|;\s*)srh_token=([^;]+)/);
+  if (!match) return null;
+  const payload = await verifyJWT(match[1], env);
   if (!payload) return null;
   const userId = payload.sub || payload.userId;
   const user = await env.DB.prepare(
@@ -749,6 +825,16 @@ async function handleRegister(request, env) {
     return jsonResponse({ error: "Plotësoni emrin, mbiemrin dhe emailin e vlefshëm." }, 400);
   }
 
+  if (isDisposableEmail(email)) {
+    return jsonResponse(
+      {
+        error:
+          "Nuk mund të krijoni llogari me email të përkohshëm. Ju lutem përdorni Gmail, Outlook, ProtonMail ose email-in tuaj universitar (@uni-pr.edu).",
+      },
+      400
+    );
+  }
+
   const existing = await env.DB.prepare("SELECT * FROM users WHERE email = ?")
     .bind(email)
     .first();
@@ -808,11 +894,19 @@ async function handleVerify(request, env) {
   const user = await env.DB.prepare("SELECT * FROM users WHERE email=?").bind(email).first();
   const token = await signJWT({ sub: user.id, email: user.email }, env);
 
-  return jsonResponse({
-    success: true,
-    token,
-    user: { id: user.id, name: user.name, surname: user.surname, email: user.email },
-  });
+  return new Response(
+    JSON.stringify({
+      success: true,
+      user: { id: user.id, name: user.name, surname: user.surname, email: user.email },
+    }),
+    {
+      status: 200,
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+        "Set-Cookie": `srh_token=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${30 * 24 * 60 * 60}`,
+      },
+    }
+  );
 }
 
 async function handleLogin(request, env) {
@@ -850,6 +944,16 @@ async function handleMe(request, env) {
   if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
   return jsonResponse({
     user: { id: user.id, name: user.name, surname: user.surname, email: user.email },
+  });
+}
+
+function handleLogout() {
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Set-Cookie": "srh_token=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0",
+    },
   });
 }
 
@@ -1030,6 +1134,7 @@ async function handleContributors(env) {
     const materials = mergePublicMaterials(dbMaterials, r2Materials);
     const contributors = new Map();
     for (const material of materials) {
+      if (material.is_anonymous) continue;
       const name = String(material.uploader_name || "").trim();
       if (!name) continue;
       const current = contributors.get(name) || {
@@ -1061,7 +1166,9 @@ async function handleContributors(env) {
             MIN(m.faculty) as faculty
      FROM users u
      JOIN materials m ON m.user_id = u.id
+     WHERE COALESCE(m.is_anonymous, 0) = 0
      GROUP BY u.id
+     HAVING COUNT(m.id) > 0
      ORDER BY material_count DESC, u.name ASC, u.surname ASC`
   ).all();
   return jsonResponse({ contributors: result.results || [] });
@@ -1082,6 +1189,7 @@ async function handleUpload(request, env) {
   const subject = String(form.get("subject") || "").trim();
   const teacher = String(form.get("teacher") || "").trim() || "//";
   const type = String(form.get("type") || "").trim();
+  const isAnonymous = form.get("is_anonymous") === "1" ? 1 : 0;
   const file = form.get("file");
 
   if (!title || !faculty || !subject || !type || !file || typeof file === "string") {
@@ -1102,10 +1210,10 @@ async function handleUpload(request, env) {
   const r2Url = keyToPublicUrl(fileKey);
   const insert = await env.DB.prepare(
     `INSERT INTO materials
-      (user_id, title, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?)`
+      (user_id, title, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
   )
-    .bind(user.id, title, faculty, department, subject, teacher, type, fileKey, ext, file.size, r2Url)
+    .bind(user.id, title, faculty, department, subject, teacher, type, fileKey, ext, file.size, r2Url, isAnonymous)
     .run();
 
   return jsonResponse({
@@ -1293,6 +1401,7 @@ export default {
       "login",
       "contact",
       "get",
+      "logout",
     ];
 
     try {
@@ -1345,6 +1454,9 @@ export default {
           break;
         case "me":
           response = await handleMe(request, env);
+          break;
+        case "logout":
+          response = handleLogout();
           break;
         default:
           response = jsonResponse({ error: "Invalid action" }, 400);

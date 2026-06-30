@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, Upload } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
-import { authHeaders, getToken } from "../../lib/auth";
+import { fetchCurrentUser } from "../../lib/auth";
 import { FACULTIES, MATERIAL_TYPES } from "../../lib/material-options";
 
 const initialForm = {
@@ -18,9 +18,11 @@ const initialForm = {
   file: null,
 };
 
+
 export default function NgarkoPage() {
   const router = useRouter();
   const [form, setForm] = useState(initialForm);
+  const [isAnonymous, setIsAnonymous] = useState(false);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
   const [titleTooltip, setTitleTooltip] = useState(false);
@@ -28,7 +30,9 @@ export default function NgarkoPage() {
   const isPranues = form.type === "Provime Pranuese";
 
   useEffect(() => {
-    if (!getToken()) router.push("/llogaria/hyr");
+    fetchCurrentUser().then((user) => {
+      if (!user) router.push("/llogaria/hyr");
+    });
   }, [router]);
 
   const setField = (field, value) => {
@@ -37,10 +41,6 @@ export default function NgarkoPage() {
 
   const submit = async (event) => {
     event.preventDefault();
-    if (!getToken()) {
-      router.push("/llogaria/hyr");
-      return;
-    }
     setStatus("uploading");
     setError("");
     try {
@@ -52,15 +52,17 @@ export default function NgarkoPage() {
           fd.append(key, value);
         }
       }
+      fd.append("is_anonymous", isAnonymous ? "1" : "0");
       const res = await fetch(`${WORKER_URL}/?action=upload`, {
         method: "POST",
-        headers: authHeaders(),
+        credentials: "include",
         body: fd,
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
       setStatus("success");
       setForm(initialForm);
+      setIsAnonymous(false);
     } catch (err) {
       setStatus("error");
       setError(err.message || "Ngarkimi dështoi.");
@@ -260,6 +262,20 @@ export default function NgarkoPage() {
                 {error}
               </p>
             )}
+            <div className="rounded-xl border border-srh-cream bg-srh-cream/40 p-4">
+              <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-srh-navy">
+                <input
+                  type="checkbox"
+                  checked={isAnonymous}
+                  onChange={(e) => setIsAnonymous(e.target.checked)}
+                  className="h-4 w-4 accent-srh-crimson"
+                />
+                Publiko si anonim
+              </label>
+              <p className="mt-1.5 pl-7 text-xs text-srh-navy/60">
+                Emri juaj nuk do të shfaqet publikisht, por mbetet i dukshëm për moderatorët në rast raportimi.
+              </p>
+            </div>
             <button
               type="submit"
               disabled={status === "uploading"}
