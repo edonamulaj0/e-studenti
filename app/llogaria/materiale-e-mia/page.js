@@ -11,6 +11,7 @@ import { getFacultyName } from "../../lib/material-options";
 function normalizeMaterial(material) {
   return {
     id: material.id,
+    userId: material.user_id,
     title: material.title,
     faculty: material.faculty,
     subject: material.subject,
@@ -34,20 +35,28 @@ export default function MaterialeEMiaPage() {
         return;
       }
       setUser(currentUser);
-      loadMaterials();
+      loadMaterials(currentUser);
     });
   }, [router]);
 
-  const loadMaterials = async () => {
+  const loadMaterials = async (currentUser) => {
     setLoading(true);
     setError("");
     try {
       const res = await fetch(`${WORKER_URL}/?action=materials&user=me`, {
         credentials: "include",
       });
+      if (res.status === 401) {
+        router.push("/llogaria/hyr");
+        return;
+      }
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
-      setMaterials((data.materials || []).map(normalizeMaterial));
+      const all = (data.materials || []).map(normalizeMaterial);
+      const mine = currentUser
+        ? all.filter((m) => String(m.userId) === String(currentUser.id))
+        : all;
+      setMaterials(mine);
     } catch (err) {
       setError(err.message || "Ngarkimi dështoi.");
     } finally {
