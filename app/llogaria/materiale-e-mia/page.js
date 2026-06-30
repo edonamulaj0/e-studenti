@@ -1,9 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { FileText, LogOut, Plus } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { FileText, LogOut, Plus, PackageCheck } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser, logout } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
@@ -21,8 +21,10 @@ function normalizeMaterial(material) {
   };
 }
 
-export default function MaterialeEMiaPage() {
+function MaterialeEMiaPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const linkedCount = Number(searchParams.get("linked") || "0");
   const [user, setUser] = useState(null);
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -100,6 +102,16 @@ export default function MaterialeEMiaPage() {
           </div>
         </header>
 
+        {linkedCount > 0 && (
+          <div className="mb-6 flex items-start gap-3 rounded-2xl border border-success-green/30 bg-success-green/10 p-4">
+            <PackageCheck className="mt-0.5 h-5 w-5 shrink-0 text-success-green" />
+            <p className="text-sm font-semibold text-success-green">
+              Kemi gjetur {linkedCount} {linkedCount === 1 ? "material" : "materiale"} që keni ndarë më parë —{" "}
+              tani {linkedCount === 1 ? "është" : "janë"} në llogarinë tuaj.
+            </p>
+          </div>
+        )}
+
         {loading && (
           <div className="grid gap-5 md:grid-cols-3">
             {[0, 1, 2].map((item) => (
@@ -162,5 +174,13 @@ export default function MaterialeEMiaPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <MaterialeEMiaPage />
+    </Suspense>
   );
 }

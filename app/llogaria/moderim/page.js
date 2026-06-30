@@ -383,16 +383,24 @@ function ModerimPage() {
                           {m.subject && m.subject !== "//" ? ` · ${m.subject}` : ""}
                         </p>
                         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-400">
-                          <span>
-                            {`${m.uploader_name || ""} ${m.uploader_surname || ""}`.trim() ||
-                              m.uploader_email ||
-                              "Pa emër"}
-                          </span>
-                          {m.uploader_email && (
-                            <span className="text-gray-300">·</span>
-                          )}
-                          {m.uploader_email && (
-                            <span>{m.uploader_email}</span>
+                          {m.pending_owner_email ? (
+                            <span className="inline-flex items-center gap-1 rounded-md bg-warning-amber/15 px-2 py-0.5 font-semibold text-warning-amber">
+                              Në pritje — {m.pending_owner_email}
+                            </span>
+                          ) : (
+                            <>
+                              <span>
+                                {`${m.uploader_name || ""} ${m.uploader_surname || ""}`.trim() ||
+                                  m.uploader_email ||
+                                  "Pa emër"}
+                              </span>
+                              {m.uploader_email && (
+                                <span className="text-gray-300">·</span>
+                              )}
+                              {m.uploader_email && (
+                                <span>{m.uploader_email}</span>
+                              )}
+                            </>
                           )}
                           <span className="text-gray-300">·</span>
                           <span>{formatDate(m.created_at)}</span>
