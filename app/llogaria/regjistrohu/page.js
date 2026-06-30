@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { CheckCircle2, KeyRound, Mail, User, Users } from "lucide-react";
@@ -16,6 +16,13 @@ export default function RegjistrohuPage() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    if (cooldown <= 0) return;
+    const timer = setInterval(() => setCooldown((c) => (c > 1 ? c - 1 : 0)), 1000);
+    return () => clearInterval(timer);
+  }, [cooldown]);
 
   const update = (field, value) => {
     setForm((current) => ({ ...current, [field]: value }));
@@ -42,7 +49,13 @@ export default function RegjistrohuPage() {
         }),
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 429 && data.retryAfter) {
+        setCooldown(data.retryAfter);
+        setError(data.error || "Prisni pak para se të dërgoni kodin përsëri.");
+        return;
+      }
       if (!res.ok) throw new Error(data.error || "Dërgimi dështoi.");
+      setCooldown(60);
       setStep("verify");
       setMessage(data.message || "Kodi u dërgua në emailin tuaj.");
     } catch (err) {
@@ -171,10 +184,10 @@ export default function RegjistrohuPage() {
               <Status error={error} message={message} />
               <button
                 type="submit"
-                disabled={loading}
+                disabled={loading || cooldown > 0}
                 className="btn-primary w-full text-base"
               >
-                {loading ? "Duke dërguar..." : "Dërgo kodin"}
+                {loading ? "Duke dërguar..." : cooldown > 0 ? `Dërgo kodin (${cooldown}s)` : "Dërgo kodin"}
               </button>
               <p className="text-center text-sm text-gray-600">
                 Keni llogari?{" "}
@@ -212,10 +225,12 @@ export default function RegjistrohuPage() {
               <button
                 type="button"
                 onClick={sendCode}
-                disabled={loading}
+                disabled={loading || cooldown > 0}
                 className="w-full font-semibold text-burgundy-600 hover:underline disabled:opacity-60"
               >
-                Nuk e morët kodin? Dërgoni përsëri
+                {cooldown > 0
+                  ? `Dërgoni përsëri (${cooldown}s)`
+                  : "Nuk e morët kodin? Dërgoni përsëri"}
               </button>
             </form>
           )}

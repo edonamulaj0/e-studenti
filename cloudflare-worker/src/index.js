@@ -13,12 +13,16 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const MAX_DECOMPRESSED_SIZE = 100 * 1024 * 1024;
 const MAX_ZIP_FILES = 500;
 const MAX_INDIVIDUAL_ZIP_FILE = 10 * 1024 * 1024;
+const CODE_TTL_SECONDS = 15 * 60;   // must stay in sync with upsertVerificationCode
+const CODE_COOLDOWN_SECONDS = 60;   // minimum gap between successive sends to the same email
+
 const RATE_LIMITS = {
   register: { requests: 5, window: 3600 },
   login: { requests: 10, window: 900 },
   verify: { requests: 5, window: 900 },
   contact: { requests: 3, window: 3600 },
   upload: { requests: 10, window: 3600 },
+  report: { requests: 10, window: 3600 },
 };
 const ALLOWED_EXTENSIONS = [
   "pdf",
@@ -622,6 +626,25 @@ async function ensureContactMessagesTable(env) {
   ).run();
 }
 
+async function ensureReportsTable(env) {
+  await env.DB.prepare(
+    `CREATE TABLE IF NOT EXISTS reports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      material_id INTEGER NOT NULL,
+      reporter_id INTEGER,
+      reason TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      created_at TEXT DEFAULT (datetime('now'))
+    )`
+  ).run();
+  await env.DB.prepare(
+    "CREATE INDEX IF NOT EXISTS idx_reports_material ON reports(material_id)"
+  ).run();
+  await env.DB.prepare(
+    "CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status)"
+  ).run();
+}
+
 function rateLimitIdentity(request) {
   const forwardedFor = request.headers.get("X-Forwarded-For") || "";
   return (
@@ -799,10 +822,23 @@ async function validateFile(file, ext) {
   return { ok: true };
 }
 
+async function checkCodeCooldown(email, env) {
+  const row = await env.DB.prepare(
+    "SELECT expires_at FROM verification_codes WHERE email = ?"
+  )
+    .bind(email)
+    .first();
+  if (!row) return null;
+  const expiresAt = new Date(row.expires_at).getTime() / 1000;
+  const sentAt = expiresAt - CODE_TTL_SECONDS;
+  const retryAfter = Math.ceil(sentAt + CODE_COOLDOWN_SECONDS - Date.now() / 1000);
+  return retryAfter > 0 ? retryAfter : null;
+}
+
 async function upsertVerificationCode(email, env) {
   const code = verificationCode();
   const hashedCode = await hashVerificationCode(email, code, env);
-  const expiresAt = new Date(Date.now() + 15 * 60 * 1000).toISOString();
+  const expiresAt = new Date(Date.now() + CODE_TTL_SECONDS * 1000).toISOString();
   await env.DB.prepare(
     "INSERT OR REPLACE INTO verification_codes (email, code, expires_at) VALUES (?,?,?)"
   )
@@ -852,6 +888,14 @@ async function handleRegister(request, env) {
   )
     .bind(name, surname, email)
     .run();
+
+  const cooldown = await checkCodeCooldown(email, env);
+  if (cooldown !== null) {
+    return jsonResponse(
+      { error: `Ju lutemi prisni ${cooldown}s para se të dërgoni kodin përsëri.`, retryAfter: cooldown },
+      429
+    );
+  }
 
   const code = await upsertVerificationCode(email, env);
   const sent = await sendEmail(
@@ -925,6 +969,14 @@ async function handleLogin(request, env) {
     .first();
   if (!user) return jsonResponse({ error: "Email-i nuk është i regjistruar." }, 400);
 
+  const cooldown = await checkCodeCooldown(email, env);
+  if (cooldown !== null) {
+    return jsonResponse(
+      { error: `Ju lutemi prisni ${cooldown}s para se të dërgoni kodin përsëri.`, retryAfter: cooldown },
+      429
+    );
+  }
+
   const code = await upsertVerificationCode(email, env);
   const sent = await sendEmail(
     email,
@@ -943,8 +995,125 @@ async function handleMe(request, env) {
   const user = await getUserFromRequest(request, env);
   if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
   return jsonResponse({
-    user: { id: user.id, name: user.name, surname: user.surname, email: user.email },
+    user: {
+      id: user.id,
+      name: user.name,
+      surname: user.surname,
+      email: user.email,
+      is_moderator: Boolean(user.is_moderator),
+    },
   });
+}
+
+async function handleReport(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const limited = await checkRateLimit(request, "report", env);
+  if (limited) return limited;
+
+  const body = await request.json().catch(() => ({}));
+  const materialId = Number(body.material_id);
+  const reason = String(body.reason || "").trim();
+
+  if (!Number.isFinite(materialId) || materialId <= 0) {
+    return jsonResponse({ error: "ID i materialit nuk është i vlefshëm." }, 400);
+  }
+  if (!reason) {
+    return jsonResponse({ error: "Arsyeja e raportimit kërkohet." }, 400);
+  }
+  if (reason.length > 500) {
+    return jsonResponse({ error: "Arsyeja është shumë e gjatë." }, 400);
+  }
+
+  const material = await env.DB.prepare(
+    "SELECT id FROM materials WHERE id = ?"
+  )
+    .bind(materialId)
+    .first();
+  if (!material) {
+    return jsonResponse({ error: "Materiali nuk ekziston." }, 404);
+  }
+
+  const reporter = await getUserFromRequest(request, env);
+  const reporterId = reporter ? reporter.id : null;
+
+  try {
+    await env.DB.prepare(
+      "INSERT INTO reports (material_id, reporter_id, reason) VALUES (?, ?, ?)"
+    )
+      .bind(materialId, reporterId, reason)
+      .run();
+  } catch (error) {
+    if (String(error.message || error).includes("no such table")) {
+      await ensureReportsTable(env);
+      await env.DB.prepare(
+        "INSERT INTO reports (material_id, reporter_id, reason) VALUES (?, ?, ?)"
+      )
+        .bind(materialId, reporterId, reason)
+        .run();
+    } else {
+      throw error;
+    }
+  }
+
+  return jsonResponse({ success: true });
+}
+
+async function handleReports(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !user.is_moderator) {
+    return jsonResponse({ error: "Unauthorized" }, 401);
+  }
+
+  const result = await env.DB.prepare(
+    `SELECT
+       r.id, r.reason, r.status, r.created_at,
+       m.id    AS material_id,
+       m.title AS material_title,
+       m.faculty AS material_faculty,
+       m.subject AS material_subject,
+       m.r2_url  AS material_url,
+       m.file_type AS material_file_type,
+       u.name    AS reporter_name,
+       u.surname AS reporter_surname,
+       u.email   AS reporter_email
+     FROM reports r
+     JOIN materials m ON r.material_id = m.id
+     LEFT JOIN users u ON r.reporter_id = u.id
+     WHERE r.status = 'pending'
+     ORDER BY r.created_at DESC`
+  ).all();
+
+  return jsonResponse({ reports: result.results || [] });
+}
+
+async function handleResolveReport(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !user.is_moderator) {
+    return jsonResponse({ error: "Unauthorized" }, 401);
+  }
+
+  const body = await request.json().catch(() => ({}));
+  const reportId = Number(body.report_id);
+  const action = String(body.action || "");
+
+  if (!Number.isFinite(reportId) || reportId <= 0) {
+    return jsonResponse({ error: "ID i raportit nuk është i vlefshëm." }, 400);
+  }
+  if (!["resolve", "dismiss"].includes(action)) {
+    return jsonResponse({ error: "Veprimi nuk është i vlefshëm." }, 400);
+  }
+
+  const status = action === "resolve" ? "resolved" : "dismissed";
+  const result = await env.DB.prepare("UPDATE reports SET status = ? WHERE id = ? AND status = 'pending'")
+    .bind(status, reportId)
+    .run();
+
+  if (!result.meta.changes) {
+    return jsonResponse({ error: "Raporti nuk u gjet ose është trajtuar tashmë." }, 404);
+  }
+  return jsonResponse({ success: true });
 }
 
 function handleLogout() {
@@ -1391,6 +1560,8 @@ export default {
       "upload",
       "generate",
       "edit",
+      "reports",
+      "resolve-report",
     ];
     const publicActions = [
       "materials",
@@ -1402,6 +1573,7 @@ export default {
       "contact",
       "get",
       "logout",
+      "report",
     ];
 
     try {
@@ -1457,6 +1629,15 @@ export default {
           break;
         case "logout":
           response = handleLogout();
+          break;
+        case "report":
+          response = await handleReport(request, env);
+          break;
+        case "reports":
+          response = await handleReports(request, env);
+          break;
+        case "resolve-report":
+          response = await handleResolveReport(request, env);
           break;
         default:
           response = jsonResponse({ error: "Invalid action" }, 400);
