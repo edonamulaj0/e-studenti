@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { WORKER_URL } from "../../../lib/worker-url";
 import { fetchCurrentUser } from "../../../lib/auth";
 import { FACULTIES, MATERIAL_TYPES } from "../../../lib/material-options";
@@ -17,6 +17,8 @@ const emptyForm = {
 
 export default function EditMaterialClient({ id }) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const returnTo = searchParams.get("from") === "moderim" ? "/llogaria/moderim?tab=materialet" : "/llogaria/materiale-e-mia";
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -83,7 +85,7 @@ export default function EditMaterialClient({ id }) {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Ruajtja dështoi.");
-      router.push("/llogaria/materiale-e-mia");
+      router.push(returnTo);
     } catch (err) {
       setError(err.message || "Ruajtja dështoi.");
     } finally {
