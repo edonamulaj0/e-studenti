@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FileText, LogOut, Plus } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
-import { authHeaders, getToken, getUser, logout } from "../../lib/auth";
+import { fetchCurrentUser, logout } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
 
 function normalizeMaterial(material) {
@@ -28,12 +28,14 @@ export default function MaterialeEMiaPage() {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!getToken()) {
-      router.push("/llogaria/hyr");
-      return;
-    }
-    setUser(getUser());
-    loadMaterials();
+    fetchCurrentUser().then((currentUser) => {
+      if (!currentUser) {
+        router.push("/llogaria/hyr");
+        return;
+      }
+      setUser(currentUser);
+      loadMaterials();
+    });
   }, [router]);
 
   const loadMaterials = async () => {
@@ -41,7 +43,7 @@ export default function MaterialeEMiaPage() {
     setError("");
     try {
       const res = await fetch(`${WORKER_URL}/?action=materials&user=me`, {
-        headers: authHeaders(),
+        credentials: "include",
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");

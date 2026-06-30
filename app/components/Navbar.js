@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
+import { fetchCurrentUser } from "../lib/auth";
 
 const navItems = [
   { href: "/fakultetet", label: "Fakultetet" },
@@ -22,13 +23,11 @@ export default function Navbar() {
 
   useEffect(() => {
     const syncAuth = () => {
-      setIsLoggedIn(!!localStorage.getItem("srh_token"));
+      fetchCurrentUser().then((user) => setIsLoggedIn(!!user));
     };
     syncAuth();
-    window.addEventListener("storage", syncAuth);
     window.addEventListener("srh-auth-change", syncAuth);
     return () => {
-      window.removeEventListener("storage", syncAuth);
       window.removeEventListener("srh-auth-change", syncAuth);
     };
   }, []);

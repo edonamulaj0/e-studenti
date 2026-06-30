@@ -40,6 +40,7 @@ CREATE TABLE IF NOT EXISTS materials (
   file_type TEXT NOT NULL,
   file_size INTEGER,
   r2_url TEXT NOT NULL,
+  is_anonymous INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );

@@ -59,10 +59,12 @@ function displayDepartment(dep) {
 }
 
 export function normalizeMaterial(material) {
-  const submittedName =
+  const isAnonymous = Boolean(material.is_anonymous);
+  const rawName =
     material.submittedBy?.name ||
     material.uploader_name ||
     "";
+  const displayName = isAnonymous ? "Anonim" : rawName;
   return {
     id: material.id,
     title: material.title,
@@ -74,7 +76,8 @@ export function normalizeMaterial(material) {
     r2Url: material.r2Url || material.r2_url,
     fileType: material.fileType || material.file_type,
     fileSize: material.fileSize || material.file_size,
-    submittedBy: submittedName ? { name: submittedName } : undefined,
+    is_anonymous: isAnonymous,
+    submittedBy: displayName ? { name: displayName } : undefined,
   };
 }
 

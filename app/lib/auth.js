@@ -1,30 +1,60 @@
-export function getToken() {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("srh_token");
-}
+import { WORKER_URL } from "./worker-url";
+
+let _user = null;
+let _fetchPromise = null;
 
 export function getUser() {
-  if (typeof window === "undefined") return null;
-  try {
-    return JSON.parse(localStorage.getItem("srh_user"));
-  } catch {
-    return null;
+  return _user;
+}
+
+export function setUser(user) {
+  _user = user;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new Event("srh-auth-change"));
   }
 }
 
-export function logout() {
-  localStorage.removeItem("srh_token");
-  localStorage.removeItem("srh_user");
-  window.dispatchEvent(new Event("srh-auth-change"));
+/**
+ * Fetches the current session from the Worker via the httpOnly cookie.
+ * Concurrent calls share the same in-flight request to avoid duplicate
+ * network round-trips (e.g. Navbar + protected page mounting simultaneously).
+ */
+export async function fetchCurrentUser() {
+  if (typeof window === "undefined") return null;
+  if (_user !== null) return _user;
+  if (_fetchPromise) return _fetchPromise;
+  _fetchPromise = (async () => {
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=me`, {
+        credentials: "include",
+      });
+      if (!res.ok) {
+        _user = null;
+        return null;
+      }
+      const data = await res.json();
+      _user = data.user || null;
+      return _user;
+    } catch {
+      _user = null;
+      return null;
+    } finally {
+      _fetchPromise = null;
+    }
+  })();
+  return _fetchPromise;
 }
 
-export function authHeaders() {
-  const token = getToken();
-  return token ? { Authorization: `Bearer ${token}` } : {};
-}
-
-export function saveAuth(token, user) {
-  localStorage.setItem("srh_token", token);
-  localStorage.setItem("srh_user", JSON.stringify(user));
+export async function logout() {
+  if (typeof window === "undefined") return;
+  try {
+    await fetch(`${WORKER_URL}/?action=logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+  } catch {
+    // ignore network errors on logout
+  }
+  _user = null;
   window.dispatchEvent(new Event("srh-auth-change"));
 }
