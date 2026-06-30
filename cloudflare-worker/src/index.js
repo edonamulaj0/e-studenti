@@ -1453,7 +1453,7 @@ async function handleModeratorMaterials(request, url, env) {
     env.DB.prepare("SELECT COUNT(*) AS total FROM materials").first(),
     env.DB.prepare(
       `SELECT m.id, m.title, m.faculty, m.subject, m.type, m.file_type,
-              m.r2_url, m.created_at, m.is_anonymous,
+              m.r2_url, m.created_at,
               u.name AS uploader_name, u.surname AS uploader_surname,
               u.email AS uploader_email
        FROM materials m

@@ -384,16 +384,14 @@ function ModerimPage() {
                         </p>
                         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-400">
                           <span>
-                            {m.is_anonymous
-                              ? "Anonim"
-                              : `${m.uploader_name || ""} ${m.uploader_surname || ""}`.trim() ||
-                                m.uploader_email ||
-                                "Pa emër"}
+                            {`${m.uploader_name || ""} ${m.uploader_surname || ""}`.trim() ||
+                              m.uploader_email ||
+                              "Pa emër"}
                           </span>
-                          {!m.is_anonymous && m.uploader_email && (
+                          {m.uploader_email && (
                             <span className="text-gray-300">·</span>
                           )}
-                          {!m.is_anonymous && m.uploader_email && (
+                          {m.uploader_email && (
                             <span>{m.uploader_email}</span>
                           )}
                           <span className="text-gray-300">·</span>
