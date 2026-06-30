@@ -65,7 +65,11 @@ export default function HyrPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Verifikimi dështoi.");
       setUser(data.user);
-      router.push("/llogaria/materiale-e-mia");
+      const linked = data.linked_materials_count || 0;
+      router.push(linked > 0
+        ? `/llogaria/materiale-e-mia?linked=${linked}`
+        : "/llogaria/materiale-e-mia"
+      );
     } catch (err) {
       setError(err.message || "Verifikimi dështoi.");
     } finally {

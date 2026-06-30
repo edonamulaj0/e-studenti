@@ -132,6 +132,24 @@ function isDisposableEmail(email) {
   return false;
 }
 
+async function hasMxRecord(domain) {
+  try {
+    const res = await fetch(
+      `https://cloudflare-dns.com/dns-query?name=${encodeURIComponent(domain)}&type=MX`,
+      {
+        headers: { Accept: "application/dns-json" },
+        cf: { cacheTtl: 300, cacheEverything: true },
+      }
+    );
+    if (!res.ok) return true; // fail open on HTTP errors
+    const data = await res.json();
+    if (data.Status === 3) return false; // NXDOMAIN — domain does not exist
+    return Array.isArray(data.Answer) && data.Answer.some((r) => r.type === 15);
+  } catch {
+    return true; // fail open on network errors
+  }
+}
+
 function getAllowedOrigins(env) {
   const configured = String(env.ALLOWED_ORIGINS || "")
     .split(",")
@@ -871,6 +889,23 @@ async function handleRegister(request, env) {
     );
   }
 
+  // For domains not on the always-allowed list, verify they actually have MX records.
+  // This blocks invented/nonexistent domains (e.g. jkgsjdg@gjksd.com) that slip past
+  // the static blocklist.
+  const emailDomain = email.split("@")[1];
+  if (!ALWAYS_ALLOWED_EMAIL_DOMAINS.includes(emailDomain)) {
+    const mxOk = await hasMxRecord(emailDomain);
+    if (!mxOk) {
+      return jsonResponse(
+        {
+          error:
+            "Domeni i emailit nuk pranon mesazhe. Ju lutem përdorni një adresë email të vlefshme.",
+        },
+        400
+      );
+    }
+  }
+
   const existing = await env.DB.prepare("SELECT * FROM users WHERE email = ?")
     .bind(email)
     .first();
@@ -936,11 +971,29 @@ async function handleVerify(request, env) {
   await env.DB.prepare("DELETE FROM verification_codes WHERE email=?").bind(email).run();
   await env.DB.prepare("UPDATE users SET email_verified=1 WHERE email=?").bind(email).run();
   const user = await env.DB.prepare("SELECT * FROM users WHERE email=?").bind(email).first();
+
+  // Claim any legacy materials whose pending_owner_email matches this user.
+  // Runs on every verification but is a no-op for the vast majority (0 rows matched).
+  let linkedMaterialsCount = 0;
+  try {
+    const linkResult = await env.DB.prepare(
+      `UPDATE materials
+       SET user_id = ?, pending_owner_email = NULL
+       WHERE LOWER(pending_owner_email) = LOWER(?) AND user_id IS NULL`
+    )
+      .bind(user.id, email)
+      .run();
+    linkedMaterialsCount = linkResult.meta?.changes || 0;
+  } catch {
+    // pending_owner_email column may not exist yet — non-fatal
+  }
+
   const token = await signJWT({ sub: user.id, email: user.email }, env);
 
   return new Response(
     JSON.stringify({
       success: true,
+      linked_materials_count: linkedMaterialsCount,
       user: { id: user.id, name: user.name, surname: user.surname, email: user.email },
     }),
     {
@@ -1453,7 +1506,7 @@ async function handleModeratorMaterials(request, url, env) {
     env.DB.prepare("SELECT COUNT(*) AS total FROM materials").first(),
     env.DB.prepare(
       `SELECT m.id, m.title, m.faculty, m.subject, m.type, m.file_type,
-              m.r2_url, m.created_at,
+              m.r2_url, m.created_at, m.pending_owner_email,
               u.name AS uploader_name, u.surname AS uploader_surname,
               u.email AS uploader_email
        FROM materials m
