@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import EditMaterialClient from "./EditMaterialClient";
 
 export const dynamicParams = false;
@@ -7,5 +8,9 @@ export async function generateStaticParams() {
 }
 
 export default function NdryshoMaterialPage({ params }) {
-  return <EditMaterialClient id={params.id} />;
+  return (
+    <Suspense fallback={null}>
+      <EditMaterialClient id={params.id} />
+    </Suspense>
+  );
 }
