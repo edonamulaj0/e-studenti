@@ -903,7 +903,7 @@ async function handleVerify(request, env) {
       status: 200,
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Set-Cookie": `srh_token=${token}; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=${30 * 24 * 60 * 60}`,
+        "Set-Cookie": `srh_token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${30 * 24 * 60 * 60}`,
       },
     }
   );
@@ -952,7 +952,7 @@ function handleLogout() {
     status: 200,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Set-Cookie": "srh_token=; HttpOnly; Secure; SameSite=Strict; Path=/; Max-Age=0",
+      "Set-Cookie": "srh_token=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0",
     },
   });
 }
