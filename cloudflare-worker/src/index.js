@@ -1413,7 +1413,7 @@ async function handleEdit(request, url, env) {
   const material = await env.DB.prepare("SELECT * FROM materials WHERE id=?")
     .bind(id)
     .first();
-  if (!material || Number(material.user_id) !== Number(user.id)) {
+  if (!material || (Number(material.user_id) !== Number(user.id) && !user.is_moderator)) {
     return jsonResponse({ error: "Nuk keni leje." }, 403);
   }
 
@@ -1432,10 +1432,75 @@ async function handleEdit(request, url, env) {
   await env.DB.prepare(
     `UPDATE materials
      SET title=?, faculty=?, department=?, subject=?, teacher=?, type=?, updated_at=datetime('now')
-     WHERE id=? AND user_id=?`
+     WHERE id=?`
   )
-    .bind(title, faculty, department, subject, teacher, type, id, user.id)
+    .bind(title, faculty, department, subject, teacher, type, id)
     .run();
+
+  return jsonResponse({ success: true });
+}
+
+async function handleModeratorMaterials(request, url, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !user.is_moderator) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const page = Math.max(1, Number(url.searchParams.get("page") || "1"));
+  const LIMIT = 50;
+  const offset = (page - 1) * LIMIT;
+
+  const [countRow, result] = await Promise.all([
+    env.DB.prepare("SELECT COUNT(*) AS total FROM materials").first(),
+    env.DB.prepare(
+      `SELECT m.id, m.title, m.faculty, m.subject, m.type, m.file_type,
+              m.r2_url, m.created_at, m.is_anonymous,
+              u.name AS uploader_name, u.surname AS uploader_surname,
+              u.email AS uploader_email
+       FROM materials m
+       LEFT JOIN users u ON m.user_id = u.id
+       ORDER BY m.created_at DESC
+       LIMIT ? OFFSET ?`
+    )
+      .bind(LIMIT, offset)
+      .all(),
+  ]);
+
+  return jsonResponse({
+    materials: result.results || [],
+    total: Number(countRow?.total || 0),
+    page,
+    limit: LIMIT,
+  });
+}
+
+async function handleDeleteMaterial(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body.id);
+  if (!Number.isFinite(id) || id <= 0) return jsonResponse({ error: "ID i pavlefshëm." }, 400);
+
+  const material = await env.DB.prepare("SELECT * FROM materials WHERE id = ?").bind(id).first();
+  if (!material) return jsonResponse({ error: "Materiali nuk u gjet." }, 404);
+
+  if (Number(material.user_id) !== Number(user.id) && !user.is_moderator) {
+    return jsonResponse({ error: "Nuk keni leje." }, 403);
+  }
+
+  if (env.MY_BUCKET) {
+    const key = material.file_key || publicUrlToKey(material.r2_url);
+    if (key) await env.MY_BUCKET.delete(key).catch(() => {});
+  }
+
+  try {
+    await env.DB.prepare("DELETE FROM reports WHERE material_id = ?").bind(id).run();
+  } catch {
+    // reports table may not exist yet — non-fatal
+  }
+
+  await env.DB.prepare("DELETE FROM materials WHERE id = ?").bind(id).run();
 
   return jsonResponse({ success: true });
 }
@@ -1562,6 +1627,8 @@ export default {
       "edit",
       "reports",
       "resolve-report",
+      "moderator-materials",
+      "delete-material",
     ];
     const publicActions = [
       "materials",
@@ -1638,6 +1705,12 @@ export default {
           break;
         case "resolve-report":
           response = await handleResolveReport(request, env);
+          break;
+        case "moderator-materials":
+          response = await handleModeratorMaterials(request, url, env);
+          break;
+        case "delete-material":
+          response = await handleDeleteMaterial(request, env);
           break;
         default:
           response = jsonResponse({ error: "Invalid action" }, 400);
