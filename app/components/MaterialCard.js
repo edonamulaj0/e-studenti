@@ -2,9 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { FileText, Download, Eye, Archive, Flag } from "lucide-react";
+import { FileText, Download, Eye, Archive } from "lucide-react";
 import { getFacultyName } from "../lib/material-options";
 import ArchiveModal from "./ArchiveModal";
+import ReportButton from "./ReportButton";
 
 const TYPE_TONES = [
   {
@@ -131,13 +132,7 @@ export default function MaterialCard({ material }) {
         </div>
 
         <div className="mb-4 mt-auto flex items-center justify-between gap-3">
-          <Link
-            href={`/informacione?subject=${encodeURIComponent("Raportoj material")}#kontakt`}
-            className="flex items-center gap-1.5 text-sm font-semibold text-gray-400 underline decoration-dotted underline-offset-4 transition-colors hover:text-burgundy-600"
-          >
-            <Flag className="w-4 h-4" />
-            Raporto
-          </Link>
+          <ReportButton materialId={material.id} materialTitle={material.title} materialUrl={material.r2Url} />
           {material.submittedBy?.name && (
             <span className="truncate text-right text-sm text-gray-400">
               Dërguar nga: {material.submittedBy.name}

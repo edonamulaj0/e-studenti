@@ -18,12 +18,16 @@ const mobileNavItems = [{ href: "/", label: "Ballina" }, ...navItems];
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isModerator, setIsModerator] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
 
   useEffect(() => {
     const syncAuth = () => {
-      fetchCurrentUser().then((user) => setIsLoggedIn(!!user));
+      fetchCurrentUser().then((user) => {
+        setIsLoggedIn(!!user);
+        setIsModerator(Boolean(user?.is_moderator));
+      });
     };
     syncAuth();
     window.addEventListener("srh-auth-change", syncAuth);
@@ -127,6 +131,14 @@ export default function Navbar() {
                 Ngarko ↑
               </Link>
             )}
+            {isModerator && (
+              <Link
+                href="/llogaria/moderim"
+                className="btn-outline min-h-[44px] px-4 py-2 border-warning-amber/60 text-warning-amber hover:bg-warning-amber/10"
+              >
+                Moderim
+              </Link>
+            )}
           </div>
 
           {/* mobile menu hamburger */}
@@ -173,6 +185,15 @@ export default function Navbar() {
                 onClick={handleLinkClick}
               >
                 Ngarko ↑
+              </Link>
+            )}
+            {isModerator && (
+              <Link
+                href="/llogaria/moderim"
+                className="btn-outline w-full border-warning-amber/60 text-warning-amber hover:bg-warning-amber/10"
+                onClick={handleLinkClick}
+              >
+                Moderim
               </Link>
             )}
             </div>
