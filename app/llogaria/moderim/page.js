@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import {
@@ -32,7 +32,7 @@ function formatDate(dateStr) {
   });
 }
 
-export default function ModerimPage() {
+function ModerimPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState(searchParams.get("tab") === "materialet" ? "materialet" : "raportet");
@@ -490,5 +490,13 @@ export default function ModerimPage() {
         )}
       </div>
     </div>
+  );
+}
+
+export default function Page() {
+  return (
+    <Suspense fallback={null}>
+      <ModerimPage />
+    </Suspense>
   );
 }
