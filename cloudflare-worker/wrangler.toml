@@ -40,6 +40,7 @@ bucket_name = "department-materials"
 binding = "DB"
 database_name = "e-studenti-auth"
 database_id = "3d406171-fabe-44be-8e9c-d68e15ffaa39"
+migrations_dir = "./migrations"
 
 # Environment variables
 [vars]
