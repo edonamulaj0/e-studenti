@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import JSZip from "jszip";
 import { WORKER_URL } from "../lib/worker-url";
+import ModalOverlay from "./ModalOverlay";
 
 export default function ArchiveModal({ isOpen, onClose, material }) {
   const [files, setFiles] = useState([]);
@@ -154,8 +155,13 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full max-h-[80vh] flex flex-col border border-srh-cream">
+    <ModalOverlay open={isOpen} onClose={onClose}>
+      <div
+        className="flex max-h-[80vh] w-full max-w-3xl flex-col rounded-2xl border border-srh-cream bg-white shadow-2xl"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+      >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-srh-cream">
           <div>
@@ -276,6 +282,6 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
           </div>
         </div>
       </div>
-    </div>
+    </ModalOverlay>
   );
 }
