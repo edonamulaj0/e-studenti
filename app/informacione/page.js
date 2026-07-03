@@ -12,8 +12,10 @@ import {
   Send,
 } from "lucide-react";
 import { WORKER_URL } from "../lib/worker-url";
+import { FAQ_TEASER } from "../lib/faq-content";
+import Link from "next/link";
 
-const SUBJECTS = ["Raportoj material", "Problem teknik", "Bashkëpunim", "Tjetër"];
+const SUBJECTS = ["Raportoj material", "Kërkesë heqjeje", "Problem teknik", "Bashkëpunim", "Tjetër"];
 
 function SectionCard({ id, icon: Icon, title, children }) {
   return (
@@ -115,10 +117,25 @@ export default function InformacionePage() {
             Rreth nesh
           </h1>
           <p className="page-subtitle max-w-3xl text-lg md:text-xl">
-            E-Studenti është ndërtuar për t'i dhënë studentëve qasje më të
-            lehtë në materiale, me transparencë, privatësi dhe respekt për
-            autorët.
+            E-Studenti është një iniciativë komunitare e ndërtuar nga studentë —
+            jo platformë zyrtare e Universitetit të Prishtinës.
           </p>
+          <div className="mt-6 rounded-2xl border border-burgundy-600/20 bg-burgundy-50/60 p-5 text-sm leading-relaxed text-navy-900">
+            <strong>Jo zyrtare:</strong> Nuk jemi të autorizuar, të miratuar ose të
+            mbështetur nga UP-ja. Materialet janë kontribute vullnetare të
+            komunitetit.
+          </div>
+          <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
+            <Link href="/pyetje-te-shpeshta" className="text-burgundy-600 hover:underline">
+              Pyetje të shpeshta →
+            </Link>
+            <Link href="/privatesia" className="text-burgundy-600 hover:underline">
+              Privatësia
+            </Link>
+            <Link href="/kushtet" className="text-burgundy-600 hover:underline">
+              Kushtet
+            </Link>
+          </div>
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[16rem_1fr] lg:items-start">
@@ -145,16 +162,21 @@ export default function InformacionePage() {
           <SectionCard id="misioni" icon={Shield} title="Misioni dhe transparenca">
             <div className="space-y-4 text-base leading-relaxed text-gray-600 md:text-lg">
               <p>
-                E-Studenti është një platformë e hapur që synon të ndihmojë
-                studentët në qasjen në burime edukative, me transparencë dhe
-                respekt për autorët.
+                Synojmë t'i ndihmojmë studentët të gjejnë materiale studimore,
+                lidhje burimesh dhe informacion fakulteti — me transparencë,
+                respekt për autorët dhe pa monetizim.
+              </p>
+              <p>
+                Aktualisht platforma është plotësisht falas: pa reklama, pa
+                abonime dhe pa shitje të dhënave. Nëse kjo ndryshon, do ta
+                shpallim qartë këtu dhe në politikat tona.
               </p>
               <div className="grid gap-4 md:grid-cols-2">
                 {[
+                  ["Jo zyrtare", "Komunitet studentor, jo UP"],
                   ["Transparent", "Kodi publik në GitHub"],
-                  ["Privat", "Pa mbledhje të dhënash për shfletim"],
-                  ["Respekt për autorët", "Heqje e përmbajtjes pas kërkesës"],
-                  ["Falas", "I hapur për studentët"],
+                  ["Privat", "Anonimitet real në kërkim/API publike"],
+                  ["Falas", "Pa monetizim aktualisht"],
                 ].map(([title, text]) => (
                   <div key={title} className="rounded-2xl border border-gray-200 bg-navy-100/50 p-5">
                     <h3 className="font-semibold text-navy-900">{title}</h3>
@@ -391,6 +413,34 @@ export default function InformacionePage() {
           </SectionCard>
           </div>
         </div>
+
+        <section className="mx-auto mt-16 max-w-3xl">
+          <div className="surface-card p-6 md:p-8">
+            <h2 className="mb-2 font-display text-2xl font-semibold text-navy-900">
+              Pyetje të shpeshta
+            </h2>
+            <p className="mb-6 text-gray-600">
+              Përgjigje të shpejta për pyetjet më të zakonshme rreth platformës.
+            </p>
+            <div className="space-y-4">
+              {FAQ_TEASER.map((item) => (
+                <div key={item.question}>
+                  <h3 className="font-semibold text-navy-900">{item.question}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-gray-600">
+                    {item.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/pyetje-te-shpeshta"
+              className="mt-6 inline-flex items-center gap-2 font-semibold text-burgundy-600 hover:text-burgundy-700"
+            >
+              Shiko të gjitha pyetjet
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </section>
 
         <p className="mx-auto mt-12 max-w-2xl text-center text-base italic text-gray-600">
           Faleminderit që përdorni E-Studenti — së bashku për një komunitet më të

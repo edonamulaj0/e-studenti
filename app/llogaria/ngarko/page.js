@@ -7,6 +7,7 @@ import { CheckCircle2, Upload } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
 import { FACULTIES, MATERIAL_TYPES } from "../../lib/material-options";
+import { STUDY_LEVELS } from "../../lib/study-levels";
 
 const initialForm = {
   title: "",
@@ -15,6 +16,7 @@ const initialForm = {
   subject: "",
   teacher: "",
   type: "",
+  study_level: "bachelor",
   file: null,
 };
 
@@ -221,6 +223,21 @@ export default function NgarkoPage() {
                   <option value="">Zgjidhni</option>
                   {MATERIAL_TYPES.map((type) => (
                     <option key={type}>{type}</option>
+                  ))}
+                </select>
+              </Field>
+
+              <Field label="Niveli i studimit" required>
+                <select
+                  required
+                  value={form.study_level}
+                  onChange={(e) => setField("study_level", e.target.value)}
+                  className="input-srh"
+                >
+                  {STUDY_LEVELS.map((level) => (
+                    <option key={level.value} value={level.value}>
+                      {level.label}
+                    </option>
                   ))}
                 </select>
               </Field>

@@ -16,10 +16,12 @@ import {
   ChevronRight,
   ShieldAlert,
   Layers,
+  Link2,
 } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
+import { getResourceCategoryLabel } from "../../lib/resource-options";
 
 function formatDate(dateStr) {
   if (!dateStr) return "—";
@@ -35,7 +37,12 @@ function formatDate(dateStr) {
 function ModerimPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [tab, setTab] = useState(searchParams.get("tab") === "materialet" ? "materialet" : "raportet");
+  const [tab, setTab] = useState(() => {
+    const t = searchParams.get("tab");
+    if (t === "materialet") return "materialet";
+    if (t === "burime") return "burime";
+    return "raportet";
+  });
   const [ready, setReady] = useState(false);
   const [globalError, setGlobalError] = useState("");
 
@@ -53,6 +60,12 @@ function ModerimPage() {
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
+  // ── Resource links ─────────────────────────────────────────────────────
+  const [resourceLinks, setResourceLinks] = useState([]);
+  const [resourceLinksLoading, setResourceLinksLoading] = useState(false);
+  const [moderatingLinkId, setModeratingLinkId] = useState(null);
+  const [rejectReasons, setRejectReasons] = useState({});
+
   const LIMIT = 50;
   const totalPages = Math.max(1, Math.ceil(materialsTotal / LIMIT));
 
@@ -64,6 +77,53 @@ function ModerimPage() {
       setReady(true);
     });
   }, [router]);
+
+  const loadResourceLinks = useCallback(async () => {
+    setResourceLinksLoading(true);
+    setGlobalError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=moderator-resource-links&status=pending`, {
+        credentials: "include",
+      });
+      if (res.status === 401) { router.push("/llogaria/hyr"); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
+      setResourceLinks(data.links || []);
+    } catch (err) {
+      setGlobalError(err.message || "Ngarkimi dështoi.");
+    } finally {
+      setResourceLinksLoading(false);
+    }
+  }, [router]);
+
+  const moderateResourceLink = async (id, decision) => {
+    setModeratingLinkId(id);
+    setGlobalError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=moderate-resource-link`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id,
+          decision,
+          rejection_reason: rejectReasons[id] || "",
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Veprimi dështoi.");
+      setResourceLinks((current) => current.filter((link) => link.id !== id));
+      setRejectReasons((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+    } catch (err) {
+      setGlobalError(err.message || "Veprimi dështoi.");
+    } finally {
+      setModeratingLinkId(null);
+    }
+  };
 
   // ── Load reports when tab is active ───────────────────────────────────
   const loadReports = useCallback(async () => {
@@ -106,6 +166,7 @@ function ModerimPage() {
     if (!ready) return;
     if (tab === "raportet") loadReports();
     if (tab === "materialet") { setSearch(""); loadMaterials(page); }
+    if (tab === "burime") loadResourceLinks();
   }, [ready, tab]);
 
   useEffect(() => {
@@ -208,6 +269,15 @@ function ModerimPage() {
             {materialsTotal > 0 && (
               <span className="rounded-full bg-navy-100 px-1.5 py-0.5 text-xs font-bold text-navy-700">
                 {materialsTotal}
+              </span>
+            )}
+          </button>
+          <button type="button" onClick={() => setTab("burime")} className={tabCls("burime")}>
+            <Link2 className="h-4 w-4" />
+            Burime
+            {resourceLinks.length > 0 && tab !== "burime" && (
+              <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-amber">
+                {resourceLinks.length}
               </span>
             )}
           </button>
@@ -490,6 +560,130 @@ function ModerimPage() {
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── RESOURCE LINKS TAB ──────────────────────────────────────── */}
+        {tab === "burime" && (
+          <>
+            {resourceLinksLoading ? (
+              <div className="grid gap-4">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-40 animate-pulse rounded-2xl bg-white" />
+                ))}
+              </div>
+            ) : resourceLinks.length === 0 ? (
+              <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+                <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-green" />
+                <h2 className="text-xl font-bold text-navy-900">Asnjë lidhje në pritje</h2>
+                <p className="mt-2 text-gray-500">Të gjitha dërgesat janë trajtuar.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {resourceLinks.map((link) => {
+                  const flags = link.safety_flags || {};
+                  const safeBrowsing = flags.safe_browsing || {};
+                  const hasThreats = (safeBrowsing.matches || []).length > 0;
+                  return (
+                    <article
+                      key={link.id}
+                      className={`rounded-2xl border bg-white p-6 shadow-sm ${
+                        hasThreats ? "border-burgundy-600/40" : "border-gray-200"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-2 flex flex-wrap items-center gap-2">
+                            <h3 className="text-lg font-bold text-navy-900">{link.title}</h3>
+                            <span className="rounded-full bg-navy-100 px-2.5 py-0.5 text-xs font-semibold text-navy-800">
+                              {getResourceCategoryLabel(link.category)}
+                            </span>
+                          </div>
+                          <p className="mb-3 text-sm text-gray-600">{link.description}</p>
+                          <div className="mb-3 space-y-1 text-sm">
+                            <p>
+                              <span className="font-semibold text-navy-900">Origjinal:</span>{" "}
+                              <a href={link.url} target="_blank" rel="noopener noreferrer" className="break-all text-burgundy-600 hover:underline">
+                                {link.url}
+                              </a>
+                            </p>
+                            <p>
+                              <span className="font-semibold text-navy-900">Destinacion:</span>{" "}
+                              <a href={link.resolved_url} target="_blank" rel="noopener noreferrer" className="break-all text-burgundy-600 hover:underline">
+                                {link.resolved_url}
+                              </a>
+                            </p>
+                            <p className="font-mono text-xs text-gray-500">
+                              Domeni: {link.resolved_domain}
+                              {link.was_shortened ? " · URL e shkurtuar" : ""}
+                            </p>
+                          </div>
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            {flags.was_shortened && (
+                              <span className="rounded-full bg-warning-amber/15 px-2.5 py-1 font-semibold text-warning-amber">
+                                URL e shkurtuar
+                              </span>
+                            )}
+                            {hasThreats && (
+                              <span className="rounded-full bg-burgundy-50 px-2.5 py-1 font-semibold text-burgundy-600">
+                                Safe Browsing: {safeBrowsing.matches.map((m) => m.threatType).join(", ")}
+                              </span>
+                            )}
+                            {safeBrowsing.checked && !hasThreats && (
+                              <span className="rounded-full bg-success-green/10 px-2.5 py-1 font-semibold text-success-green">
+                                Safe Browsing: pa alarme
+                              </span>
+                            )}
+                          </div>
+                          <p className="mt-3 text-xs text-gray-500">
+                            {getFacultyName(link.faculty)}
+                            {link.subject && link.subject !== "//" ? ` · ${link.subject}` : ""}
+                            {" · "}
+                            {link.submitter_name}
+                            {link.submitter_email ? ` (${link.submitter_email})` : ""}
+                            {link.is_anonymous ? " · anonim publikisht" : ""}
+                            {" · "}
+                            {formatDate(link.created_at)}
+                          </p>
+                          <input
+                            type="text"
+                            placeholder="Arsye refuzimi (nëse refuzoni)"
+                            value={rejectReasons[link.id] || ""}
+                            onChange={(e) =>
+                              setRejectReasons((current) => ({
+                                ...current,
+                                [link.id]: e.target.value,
+                              }))
+                            }
+                            className="input-srh mt-3 text-sm"
+                          />
+                        </div>
+                        <div className="flex shrink-0 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => moderateResourceLink(link.id, "approve")}
+                            disabled={moderatingLinkId === link.id}
+                            className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-success-green px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50"
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            Aprovo
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => moderateResourceLink(link.id, "reject")}
+                            disabled={moderatingLinkId === link.id}
+                            className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border-2 border-burgundy-600/40 px-4 py-2.5 text-sm font-bold text-burgundy-600 hover:bg-burgundy-600 hover:text-white disabled:opacity-50"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            Refuzo
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </>

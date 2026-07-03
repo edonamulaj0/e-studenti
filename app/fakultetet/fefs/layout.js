@@ -1,6 +1,6 @@
-export const metadata = {
-  title: "Fakulteti i Edukimit Fizik dhe i Sportit",
-};
+import { getFacultyMetadata } from "../../lib/faculty-seo";
+
+export const metadata = getFacultyMetadata("fefs");
 
 export default function Layout({ children }) {
   return children;

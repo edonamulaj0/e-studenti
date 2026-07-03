@@ -1,4 +1,19 @@
 import { unzipSync } from "fflate";
+import {
+  buildPublicSearchClause,
+  materialMatchesPublic,
+  materialToPublicLegacyEntry,
+  sanitizeMaterialForPublic,
+} from "./material-privacy.js";
+import { assignMaterialSlugs, findMaterialBySlug } from "./material-slug.js";
+import {
+  RESOURCE_CATEGORIES,
+  buildResourceSearchClause,
+  checkSafeBrowsing,
+  parseSafetyFlags,
+  resolveResourceUrl,
+  sanitizeResourceLinkForPublic,
+} from "./resource-links.js";
 
 const MEDIA_BASE = "https://media.e-studenti.com";
 const DEFAULT_RESEND_FROM = "E-Studenti <onboarding@resend.dev>";
@@ -23,6 +38,7 @@ const RATE_LIMITS = {
   contact: { requests: 3, window: 3600 },
   upload: { requests: 10, window: 3600 },
   report: { requests: 10, window: 3600 },
+  resource_link: { requests: 5, window: 3600 },
 };
 const ALLOWED_EXTENSIONS = [
   "pdf",
@@ -366,20 +382,8 @@ async function loadR2Materials(env) {
   return materials;
 }
 
-function materialMatches(material, { faculty, type, q }) {
-  if (faculty && material.faculty !== faculty.toUpperCase()) return false;
-  if (type && material.type !== type) return false;
-  if (!q) return true;
-  const needle = q.toLowerCase();
-  return [
-    material.title,
-    material.subject,
-    material.teacher,
-    material.department,
-    material.uploader_name,
-  ]
-    .filter(Boolean)
-    .some((value) => String(value).toLowerCase().includes(needle));
+function materialMatches(material, filters) {
+  return materialMatchesPublic(material, filters);
 }
 
 function materialSort(a, b) {
@@ -435,10 +439,10 @@ function mergePublicMaterials(dbMaterials, r2Materials) {
   return merged;
 }
 
-function paginatedMaterialsResponse(allMaterials, { faculty, type, q, page, limit }) {
+function paginatedMaterialsResponse(allMaterials, { faculty, type, q, studyLevel, page, limit }) {
   const offset = (page - 1) * limit;
   const baseFiltered = allMaterials.filter((material) =>
-    materialMatches(material, { faculty, q })
+    materialMatches(material, { faculty, q, studyLevel })
   );
   const typeCounts = {};
   for (const material of baseFiltered) {
@@ -448,18 +452,21 @@ function paginatedMaterialsResponse(allMaterials, { faculty, type, q, page, limi
   const filtered = baseFiltered
     .filter((material) => materialMatches(material, { type }))
     .sort(materialSort);
-  const materials = filtered.slice(offset, offset + limit);
+  const pageSlice = filtered.slice(offset, offset + limit);
+  const materials = pageSlice.map((material) => sanitizeMaterialForPublic(material));
 
   return jsonResponse({
     materials,
-    entries: materials.map(materialToLegacyEntry),
+    entries: pageSlice.map((material) =>
+      materialToPublicLegacyEntry(material, normalizeUploaderName)
+    ),
     typeCounts,
     pagination: {
       page,
       limit,
       total: filtered.length,
       totalPages: Math.ceil(filtered.length / limit),
-      hasNextPage: offset + materials.length < filtered.length,
+      hasNextPage: offset + pageSlice.length < filtered.length,
     },
   });
 }
@@ -1198,6 +1205,7 @@ async function handleMaterials(request, url, env) {
   const faculty = url.searchParams.get("faculty");
   const type = url.searchParams.get("type");
   const q = url.searchParams.get("q") || url.searchParams.get("search");
+  const studyLevel = url.searchParams.get("niveli") || url.searchParams.get("study_level");
   const userFilter = url.searchParams.get("user");
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
   const requestedLimit = Number(url.searchParams.get("limit")) || 50;
@@ -1213,6 +1221,7 @@ async function handleMaterials(request, url, env) {
       faculty,
       type,
       q,
+      studyLevel,
       page,
       limit,
     });
@@ -1242,10 +1251,13 @@ async function handleMaterials(request, url, env) {
     baseParams.push(faculty.toUpperCase());
   }
   if (q) {
-    baseWhere.push(
-      "(m.title LIKE ? OR m.subject LIKE ? OR m.teacher LIKE ? OR u.name LIKE ? OR COALESCE(u.surname, '') LIKE ?)"
-    );
-    baseParams.push(`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`);
+    const search = buildPublicSearchClause(q);
+    baseWhere.push(search.clause);
+    baseParams.push(...search.params);
+  }
+  if (studyLevel && ["bachelor", "master", "phd"].includes(studyLevel)) {
+    baseWhere.push("COALESCE(m.study_level, 'bachelor') = ?");
+    baseParams.push(studyLevel);
   }
   if (userFilter === "me") {
     const user = await getUserFromRequest(request, env);
@@ -1295,17 +1307,25 @@ async function handleMaterials(request, url, env) {
   );
   const result = await statement.bind(...params, limit, offset).all();
 
-  const materials = result.results || [];
+  const rawMaterials = result.results || [];
+  const isOwnerView = userFilter === "me";
+  const materials = isOwnerView
+    ? rawMaterials
+    : rawMaterials.map((material) => sanitizeMaterialForPublic(material));
   return jsonResponse({
     materials,
-    entries: materials.map(materialToLegacyEntry),
+    entries: rawMaterials.map((material) =>
+      isOwnerView
+        ? materialToLegacyEntry(material)
+        : materialToPublicLegacyEntry(material, normalizeUploaderName)
+    ),
     typeCounts,
     pagination: {
       page,
       limit,
       total,
       totalPages: Math.ceil(total / limit),
-      hasNextPage: offset + materials.length < total,
+      hasNextPage: offset + rawMaterials.length < total,
     },
   });
 }
@@ -1329,22 +1349,34 @@ async function handleMaterial(request, url, env) {
   return jsonResponse({ material });
 }
 
+async function handlePublicMaterial(url, env) {
+  const slug = String(url.searchParams.get("slug") || "").trim();
+  if (!slug) return jsonResponse({ error: "Slug mungon." }, 400);
+
+  let materials = [];
+  if (env.METADATA_BUCKET) {
+    const [dbMaterials, r2Materials] = await Promise.all([
+      loadD1Materials(env),
+      loadR2Materials(env),
+    ]);
+    materials = mergePublicMaterials(dbMaterials, r2Materials);
+  } else if (env.DB) {
+    materials = await loadD1Materials(env);
+  }
+
+  const match = findMaterialBySlug(materials, slug);
+  if (!match) return jsonResponse({ error: "Materiali nuk u gjet." }, 404);
+
+  const material = sanitizeMaterialForPublic(match);
+  material.slug = slug;
+  return jsonResponse({
+    material,
+    entry: materialToPublicLegacyEntry(match, normalizeUploaderName),
+  });
+}
+
 function materialToLegacyEntry(material) {
-  return {
-    id: material.id,
-    title: material.title,
-    faculty: material.faculty,
-    department: material.department || "//",
-    type: material.type,
-    subject: material.subject,
-    teacher: material.teacher || "//",
-    r2Url: material.r2_url,
-    fileType: material.file_type,
-    fileSize: material.file_size,
-    submittedBy: material.uploader_name
-      ? { name: normalizeUploaderName(material.uploader_name) }
-      : undefined,
-  };
+  return materialToPublicLegacyEntry(material, normalizeUploaderName);
 }
 
 async function handleContributors(env) {
@@ -1412,6 +1444,10 @@ async function handleUpload(request, env) {
   const teacher = String(form.get("teacher") || "").trim() || "//";
   const type = String(form.get("type") || "").trim();
   const isAnonymous = form.get("is_anonymous") === "1" ? 1 : 0;
+  const studyLevelRaw = String(form.get("study_level") || "bachelor").trim().toLowerCase();
+  const studyLevel = ["bachelor", "master", "phd"].includes(studyLevelRaw)
+    ? studyLevelRaw
+    : "bachelor";
   const file = form.get("file");
 
   if (!title || !faculty || !subject || !type || !file || typeof file === "string") {
@@ -1432,10 +1468,10 @@ async function handleUpload(request, env) {
   const r2Url = keyToPublicUrl(fileKey);
   const insert = await env.DB.prepare(
     `INSERT INTO materials
-      (user_id, title, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
+      (user_id, title, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`
   )
-    .bind(user.id, title, faculty, department, subject, teacher, type, fileKey, ext, file.size, r2Url, isAnonymous)
+    .bind(user.id, title, faculty, department, subject, teacher, type, fileKey, ext, file.size, r2Url, isAnonymous, studyLevel)
     .run();
 
   return jsonResponse({
@@ -1477,6 +1513,12 @@ async function handleEdit(request, url, env) {
   const subject = String(body.subject || "").trim();
   const teacher = String(body.teacher || "").trim() || "//";
   const type = String(body.type || "").trim();
+  const studyLevelRaw = String(body.study_level || material.study_level || "bachelor")
+    .trim()
+    .toLowerCase();
+  const studyLevel = ["bachelor", "master", "phd"].includes(studyLevelRaw)
+    ? studyLevelRaw
+    : "bachelor";
 
   if (!title || !faculty || !subject || !type) {
     return jsonResponse({ error: "Plotësoni të gjitha fushat e detyrueshme." }, 400);
@@ -1484,10 +1526,10 @@ async function handleEdit(request, url, env) {
 
   await env.DB.prepare(
     `UPDATE materials
-     SET title=?, faculty=?, department=?, subject=?, teacher=?, type=?, updated_at=datetime('now')
+     SET title=?, faculty=?, department=?, subject=?, teacher=?, type=?, study_level=?, updated_at=datetime('now')
      WHERE id=?`
   )
-    .bind(title, faculty, department, subject, teacher, type, id)
+    .bind(title, faculty, department, subject, teacher, type, studyLevel, id)
     .run();
 
   return jsonResponse({ success: true });
@@ -1506,7 +1548,8 @@ async function handleModeratorMaterials(request, url, env) {
     env.DB.prepare("SELECT COUNT(*) AS total FROM materials").first(),
     env.DB.prepare(
       `SELECT m.id, m.title, m.faculty, m.subject, m.type, m.file_type,
-              m.r2_url, m.created_at, m.pending_owner_email,
+              m.r2_url, m.created_at, m.is_anonymous, m.study_level,
+              m.pending_owner_email,
               u.name AS uploader_name, u.surname AS uploader_surname,
               u.email AS uploader_email
        FROM materials m
@@ -1631,6 +1674,218 @@ async function handleContact(request, env) {
   });
 }
 
+async function handleResourceLinks(request, url, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+
+  const faculty = url.searchParams.get("faculty");
+  const category = url.searchParams.get("category");
+  const q = url.searchParams.get("q") || url.searchParams.get("search");
+  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+  const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit")) || 50));
+  const offset = (page - 1) * limit;
+
+  const where = ["r.status = 'approved'"];
+  const params = [];
+
+  if (faculty) {
+    where.push("r.faculty = ?");
+    params.push(faculty.toUpperCase());
+  }
+  if (category && RESOURCE_CATEGORIES.includes(category)) {
+    where.push("r.category = ?");
+    params.push(category);
+  }
+  if (q) {
+    const search = buildResourceSearchClause(q);
+    where.push(search.clause);
+    params.push(...search.params);
+  }
+
+  const countRow = await env.DB.prepare(
+    `SELECT COUNT(*) AS total
+     FROM resource_links r
+     JOIN users u ON r.user_id = u.id
+     WHERE ${where.join(" AND ")}`
+  )
+    .bind(...params)
+    .first();
+
+  const result = await env.DB.prepare(
+    `SELECT r.id, r.url, r.resolved_url, r.resolved_domain, r.was_shortened,
+            r.title, r.description, r.category, r.faculty, r.subject,
+            r.is_anonymous, r.created_at,
+            TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) AS submitter_name
+     FROM resource_links r
+     JOIN users u ON r.user_id = u.id
+     WHERE ${where.join(" AND ")}
+     ORDER BY r.created_at DESC
+     LIMIT ? OFFSET ?`
+  )
+    .bind(...params, limit, offset)
+    .all();
+
+  const links = (result.results || []).map((link) => sanitizeResourceLinkForPublic(link));
+  const total = Number(countRow?.total || 0);
+
+  return jsonResponse({
+    links,
+    pagination: {
+      page,
+      limit,
+      total,
+      totalPages: Math.ceil(total / limit) || 1,
+      hasNextPage: offset + links.length < total,
+    },
+  });
+}
+
+async function handleSubmitResourceLink(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const limited = await checkRateLimit(request, "resource_link", env);
+  if (limited) return limited;
+
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const body = await request.json().catch(() => ({}));
+  const title = String(body.title || "").trim();
+  const description = String(body.description || "").trim();
+  const category = String(body.category || "").trim();
+  const faculty = String(body.faculty || "").trim().toUpperCase();
+  const subject = String(body.subject || "").trim() || "//";
+  const isAnonymous = body.is_anonymous === true || body.is_anonymous === 1 ? 1 : 0;
+  const rawUrl = String(body.url || "").trim();
+
+  if (!title || !description || !faculty || !rawUrl) {
+    return jsonResponse({ error: "Plotësoni të gjitha fushat e detyrueshme." }, 400);
+  }
+  if (description.length < 10 || description.length > 1000) {
+    return jsonResponse({ error: "Përshkrimi duhet të jetë 10–1000 karaktere." }, 400);
+  }
+  if (!RESOURCE_CATEGORIES.includes(category)) {
+    return jsonResponse({ error: "Kategoria nuk është e vlefshme." }, 400);
+  }
+
+  const resolved = await resolveResourceUrl(rawUrl);
+  if (!resolved.ok) return jsonResponse({ error: resolved.error }, 400);
+
+  const safeBrowsing = await checkSafeBrowsing(resolved.resolved_url, env);
+  const safetyFlags = {
+    was_shortened: Boolean(resolved.was_shortened),
+    original_domain: extractDomainFromUrl(resolved.url),
+    resolved_domain: resolved.resolved_domain,
+    safe_browsing: safeBrowsing,
+  };
+
+  const insert = await env.DB.prepare(
+    `INSERT INTO resource_links
+      (user_id, url, resolved_url, resolved_domain, was_shortened, title, description,
+       category, faculty, subject, is_anonymous, status, safety_flags)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,'pending',?)`
+  )
+    .bind(
+      user.id,
+      resolved.url,
+      resolved.resolved_url,
+      resolved.resolved_domain,
+      resolved.was_shortened,
+      title,
+      description,
+      category,
+      faculty,
+      subject,
+      isAnonymous,
+      JSON.stringify(safetyFlags)
+    )
+    .run();
+
+  return jsonResponse({
+    success: true,
+    message:
+      "Lidhja u dërgua për moderim. Do të shfaqet publikisht vetëm pas aprovimit.",
+    id: insert.meta.last_row_id,
+  });
+}
+
+function extractDomainFromUrl(urlString) {
+  try {
+    return new URL(urlString).hostname.replace(/^www\./, "").toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+async function handleModeratorResourceLinks(request, url, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !user.is_moderator) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const status = url.searchParams.get("status") || "pending";
+  const allowed = ["pending", "approved", "rejected", "all"];
+  const filterStatus = allowed.includes(status) ? status : "pending";
+
+  const where = filterStatus === "all" ? "1=1" : "r.status = ?";
+  const params = filterStatus === "all" ? [] : [filterStatus];
+
+  const result = await env.DB.prepare(
+    `SELECT r.*,
+            TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) AS submitter_name,
+            u.email AS submitter_email
+     FROM resource_links r
+     JOIN users u ON r.user_id = u.id
+     WHERE ${where}
+     ORDER BY r.created_at DESC
+     LIMIT 100`
+  )
+    .bind(...params)
+    .all();
+
+  const links = (result.results || []).map((link) => ({
+    ...link,
+    safety_flags: parseSafetyFlags(link.safety_flags),
+  }));
+
+  return jsonResponse({ links });
+}
+
+async function handleModerateResourceLink(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !user.is_moderator) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body.id);
+  const decision = String(body.decision || "").trim();
+  const rejectionReason = String(body.rejection_reason || "").trim();
+
+  if (!Number.isFinite(id) || id <= 0) {
+    return jsonResponse({ error: "ID i pavlefshëm." }, 400);
+  }
+  if (!["approve", "reject"].includes(decision)) {
+    return jsonResponse({ error: "Vendimi nuk është i vlefshëm." }, 400);
+  }
+  if (decision === "reject" && rejectionReason.length < 5) {
+    return jsonResponse({ error: "Jepni një arsye refuzimi (min. 5 karaktere)." }, 400);
+  }
+
+  const link = await env.DB.prepare("SELECT * FROM resource_links WHERE id=?").bind(id).first();
+  if (!link) return jsonResponse({ error: "Lidhja nuk u gjet." }, 404);
+  if (link.status !== "pending") {
+    return jsonResponse({ error: "Kjo lidhje është trajtuar tashmë." }, 400);
+  }
+
+  const status = decision === "approve" ? "approved" : "rejected";
+  await env.DB.prepare(
+    `UPDATE resource_links
+     SET status=?, rejection_reason=?, moderator_id=?, reviewed_at=datetime('now')
+     WHERE id=?`
+  )
+    .bind(status, decision === "reject" ? rejectionReason : null, user.id, id)
+    .run();
+
+  return jsonResponse({ success: true, status });
+}
+
 async function handleGenerate(request, env) {
   return handleUpload(request, env);
 }
@@ -1682,9 +1937,14 @@ export default {
       "resolve-report",
       "moderator-materials",
       "delete-material",
+      "submit-resource-link",
+      "moderator-resource-links",
+      "moderate-resource-link",
     ];
     const publicActions = [
       "materials",
+      "material-public",
+      "resource-links",
       "contributors",
       "proxy",
       "register",
@@ -1713,6 +1973,9 @@ export default {
         case "materials":
         case "get":
           response = await handleMaterials(request, url, env);
+          break;
+        case "material-public":
+          response = await handlePublicMaterial(url, env);
           break;
         case "contributors":
           response = await handleContributors(env);
@@ -1764,6 +2027,18 @@ export default {
           break;
         case "delete-material":
           response = await handleDeleteMaterial(request, env);
+          break;
+        case "resource-links":
+          response = await handleResourceLinks(request, url, env);
+          break;
+        case "submit-resource-link":
+          response = await handleSubmitResourceLink(request, env);
+          break;
+        case "moderator-resource-links":
+          response = await handleModeratorResourceLinks(request, url, env);
+          break;
+        case "moderate-resource-link":
+          response = await handleModerateResourceLink(request, env);
           break;
         default:
           response = jsonResponse({ error: "Invalid action" }, 400);

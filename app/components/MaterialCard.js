@@ -1,9 +1,11 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
+import { useState } from "react";
 import { FileText, Download, Eye, Archive } from "lucide-react";
 import { getFacultyName } from "../lib/material-options";
+import { assignMaterialSlugs } from "../lib/material-slug";
+import { getStudyLevelLabel } from "../lib/study-levels";
 import ArchiveModal from "./ArchiveModal";
 import ReportButton from "./ReportButton";
 
@@ -74,6 +76,7 @@ export function normalizeMaterial(material) {
     type: material.type,
     subject: material.subject,
     teacher: material.teacher || "//",
+    study_level: material.study_level || "bachelor",
     r2Url: material.r2Url || material.r2_url,
     fileType: material.fileType || material.file_type,
     fileSize: material.fileSize || material.file_size,
@@ -82,10 +85,13 @@ export function normalizeMaterial(material) {
   };
 }
 
-export default function MaterialCard({ material }) {
+export default function MaterialCard({ material, allMaterials = [] }) {
   const [modalOpen, setModalOpen] = useState(false);
   const tone = typeTone(material.type);
   const facultyName = getFacultyName(material.faculty);
+  const slug =
+    material.slug ||
+    assignMaterialSlugs(allMaterials.length ? allMaterials : [material])[0]?.slug;
   const isArchive = material.fileType?.toLowerCase() === "zip";
   const department = displayDepartment(material.department);
 
@@ -97,7 +103,13 @@ export default function MaterialCard({ material }) {
         <div className="mb-5 flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <h3 className="mb-3 text-xl font-semibold leading-snug text-navy-900 transition-colors group-hover:text-burgundy-600">
-              {material.title}
+              {slug ? (
+                <Link href={`/materialet/${slug}`} className="hover:text-burgundy-600">
+                  {material.title}
+                </Link>
+              ) : (
+                material.title
+              )}
             </h3>
             <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
               <span className="rounded-full bg-navy-100 px-3 py-1 font-semibold text-navy-800">
@@ -105,6 +117,9 @@ export default function MaterialCard({ material }) {
               </span>
               <span className={`rounded-full px-3 py-1 text-sm font-semibold ${tone.chip}`}>
                 {material.type}
+              </span>
+              <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-navy-700 ring-1 ring-navy-100">
+                {getStudyLevelLabel(material.study_level)}
               </span>
               {department && <span>{department}</span>}
             </div>

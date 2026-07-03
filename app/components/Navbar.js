@@ -9,8 +9,10 @@ const navItems = [
   { href: "/fakultetet", label: "Fakultetet" },
   { href: "/per-aplikantet", label: "Për Aplikantët" },
   { href: "/materialet", label: "Materialet" },
+  { href: "/burime", label: "Burime" },
   { href: "/erasmus", label: "Erasmus" },
   { href: "/informacione", label: "Rreth nesh" },
+  { href: "/pyetje-te-shpeshta", label: "FAQ" },
 ];
 
 const mobileNavItems = [{ href: "/", label: "Ballina" }, ...navItems];

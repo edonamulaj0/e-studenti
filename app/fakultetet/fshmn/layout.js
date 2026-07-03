@@ -1,6 +1,6 @@
-export const metadata = {
-  title: "Fakulteti i Shkencave Matematikore dhe Natyrore",
-};
+import { getFacultyMetadata } from "../../lib/faculty-seo";
+
+export const metadata = getFacultyMetadata("fshmn");
 
 export default function Layout({ children }) {
   return children;
