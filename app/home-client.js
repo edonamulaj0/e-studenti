@@ -148,12 +148,12 @@ export default function HomeClient() {
         </div>
       </section>
 
-      <section className="border-t border-gray-200/80 bg-white px-6 py-12 md:px-12 md:py-14 lg:py-16">
+      <section className="px-6 py-12 md:px-12 md:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl">
           <motion.div {...fadeUp} className="mx-auto mb-8 max-w-2xl text-center">
             <p className="page-kicker mb-4">Eksploro</p>
             <h2 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl">
-              Çka ka E-Studenti
+              Çfarë ofron E-Studenti
             </h2>
             <p className="page-subtitle mx-auto mt-3 max-w-xl">
               Shkurtore drejt pjesëve kryesore të platformës.
