@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState, useMemo, useEffect } from "react";
+import Link from "next/link";
 import {
   FileText,
   Download,
@@ -12,6 +13,8 @@ import {
 import ArchiveModal from "../components/ArchiveModal";
 import ReportButton from "../components/ReportButton";
 import { FACULTIES, getFacultyName } from "../lib/material-options";
+import { assignMaterialSlugs } from "../lib/material-slug";
+import { STUDY_LEVELS, getStudyLevelLabel } from "../lib/study-levels";
 import { WORKER_URL } from "../lib/worker-url";
 
 const PAGE_SIZE = 24;
@@ -82,33 +85,59 @@ function normalizeMaterial(material) {
     type: material.type,
     subject: material.subject,
     teacher: material.teacher || "//",
+    study_level: material.study_level || "bachelor",
     r2Url: material.r2Url || material.r2_url,
     fileType: material.fileType || material.file_type,
     fileSize: material.fileSize || material.file_size,
     is_anonymous: isAnonymous,
     submittedBy: displayName ? { name: displayName } : undefined,
+    slug: material.slug,
   };
 }
 
-export default function MaterialsClient() {
-  const [materials, setMaterials] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [hasLoaded, setHasLoaded] = useState(false);
+export default function MaterialsClient({ initialData = null }) {
+  const [materials, setMaterials] = useState(() =>
+    (initialData?.materials || initialData?.entries || []).map(normalizeMaterial)
+  );
+  const [loading, setLoading] = useState(!initialData);
+  const [hasLoaded, setHasLoaded] = useState(Boolean(initialData));
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedFaculty, setSelectedFaculty] = useState("");
   const [selectedType, setSelectedType] = useState("");
-  const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState({
-    page: 1,
-    limit: PAGE_SIZE,
-    total: 0,
-    totalPages: 1,
-    hasNextPage: false,
-  });
-  const [availableTypeCounts, setAvailableTypeCounts] = useState({});
+  const [selectedStudyLevel, setSelectedStudyLevel] = useState("");
+  const [page, setPage] = useState(() => Number(initialData?.pagination?.page) || 1);
+  const [pagination, setPagination] = useState(
+    initialData?.pagination || {
+      page: 1,
+      limit: PAGE_SIZE,
+      total: 0,
+      totalPages: 1,
+      hasNextPage: false,
+    }
+  );
+  const [availableTypeCounts, setAvailableTypeCounts] = useState(
+    initialData?.typeCounts || {}
+  );
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const faculty = params.get("faculty") || "";
+    const type = params.get("type") || "";
+    const niveli = params.get("niveli") || "";
+    const q = params.get("q") || "";
+    setSelectedFaculty(faculty.toUpperCase());
+    setSelectedType(type);
+    setSelectedStudyLevel(niveli);
+    if (q) setSearchTerm(q);
+  }, []);
+
+  const materialsWithSlugs = useMemo(
+    () => assignMaterialSlugs(materials),
+    [materials]
+  );
 
   const loadMaterials = useCallback(async () => {
     setLoading(true);
@@ -122,6 +151,7 @@ export default function MaterialsClient() {
       if (searchTerm.trim()) params.set("q", searchTerm.trim());
       if (selectedFaculty) params.set("faculty", selectedFaculty);
       if (selectedType) params.set("type", selectedType);
+      if (selectedStudyLevel) params.set("niveli", selectedStudyLevel);
 
       const res = await fetch(`${WORKER_URL}/?${params.toString()}`);
       const data = await res.json().catch(() => ({}));
@@ -143,7 +173,7 @@ export default function MaterialsClient() {
       setLoading(false);
       setHasLoaded(true);
     }
-  }, [page, searchTerm, selectedFaculty, selectedType]);
+  }, [page, searchTerm, selectedFaculty, selectedType, selectedStudyLevel]);
 
   useEffect(() => {
     const timeout = window.setTimeout(loadMaterials, 250);
@@ -152,7 +182,7 @@ export default function MaterialsClient() {
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, selectedFaculty, selectedType]);
+  }, [searchTerm, selectedFaculty, selectedType, selectedStudyLevel]);
 
   const typeOptions = useMemo(() => {
     const fromServer = Object.keys(availableTypeCounts);
@@ -163,12 +193,13 @@ export default function MaterialsClient() {
     return Array.from(set).sort((a, b) => a.localeCompare(b, "sq"));
   }, [availableTypeCounts, materials]);
 
-  const filteredMaterials = materials;
+  const filteredMaterials = materialsWithSlugs;
 
   const resetFilters = () => {
     setSearchTerm("");
     setSelectedFaculty("");
     setSelectedType("");
+    setSelectedStudyLevel("");
     setPage(1);
   };
 
@@ -219,7 +250,9 @@ export default function MaterialsClient() {
           <h3
             className="mb-3 text-xl font-semibold leading-snug text-navy-900 transition-colors group-hover:text-burgundy-600"
           >
-            {material.title}
+            <Link href={`/materialet/${material.slug}`} className="hover:text-burgundy-600">
+              {material.title}
+            </Link>
           </h3>
           <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
             <span className="rounded-full bg-navy-100 px-3 py-1 font-semibold text-navy-800">
@@ -227,6 +260,9 @@ export default function MaterialsClient() {
             </span>
             <span className={`rounded-full px-3 py-1 text-sm font-semibold ${tone.chip}`}>
               {material.type}
+            </span>
+            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-navy-700 ring-1 ring-navy-100">
+              {getStudyLevelLabel(material.study_level)}
             </span>
             <span>{material.department}</span>
           </div>
@@ -309,29 +345,7 @@ export default function MaterialsClient() {
   };
 
   if (loading && !hasLoaded) {
-    return (
-      <div className="page-shell">
-        <div className="section-shell">
-          <div className="mb-10 max-w-3xl">
-            <p className="page-kicker mb-4">Biblioteka</p>
-            <h1 className="page-title mb-4">
-              Materialet
-            </h1>
-            <p className="page-subtitle">
-              Duke ngarkuar materialet...
-            </p>
-          </div>
-          <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
-            {[0, 1, 2].map((item) => (
-              <div
-                key={item}
-                className="h-64 animate-pulse rounded-3xl bg-gray-200/70"
-              />
-            ))}
-          </div>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   if (error && !hasLoaded) {
@@ -384,8 +398,8 @@ export default function MaterialsClient() {
           id="material-filters"
           className="sticky top-24 z-20 mb-8 py-3 backdrop-blur"
         >
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-4">
-            <div className="relative md:col-span-2 xl:col-span-1">
+          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
+            <div className="relative md:col-span-2 xl:col-span-2">
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
@@ -418,6 +432,19 @@ export default function MaterialsClient() {
               {typeOptions.map((t) => (
                 <option key={t} value={t}>
                   {t}
+                </option>
+              ))}
+            </select>
+
+            <select
+              value={selectedStudyLevel}
+              onChange={(e) => setSelectedStudyLevel(e.target.value)}
+              className="input-srh hidden min-h-[44px] text-sm md:block"
+            >
+              <option value="">Të gjitha nivelet</option>
+              {STUDY_LEVELS.map((level) => (
+                <option key={level.value} value={level.value}>
+                  {level.label}
                 </option>
               ))}
             </select>

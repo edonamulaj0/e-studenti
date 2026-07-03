@@ -1,6 +1,6 @@
-export const metadata = {
-  title: "Fakulteti i Filozofisë",
-};
+import { getFacultyMetadata } from "../../lib/faculty-seo";
+
+export const metadata = getFacultyMetadata("ffz");
 
 export default function Layout({ children }) {
   return children;

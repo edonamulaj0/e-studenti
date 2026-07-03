@@ -1,7 +1,10 @@
 export const metadata = {
   title: "Materialet",
   description:
-    "Materiale studimore, afate dhe burime të ndara nga komuniteti për studentët e UP.",
+    "Shfletoni materiale studimore, afate, ligjërata dhe projekte të ndara nga komuniteti i studentëve të Universitetit të Prishtinës.",
+  alternates: {
+    canonical: "https://e-studenti.com/materialet",
+  },
 };
 
 export default function MaterialetLayout({ children }) {

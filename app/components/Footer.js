@@ -8,8 +8,10 @@ const sections = [
       { href: "/", label: "Ballina" },
       { href: "/fakultetet", label: "Fakultetet" },
       { href: "/materialet", label: "Materialet" },
+      { href: "/burime", label: "Burime shtesë" },
       { href: "/erasmus", label: "Erasmus+" },
       { href: "/informacione", label: "Rreth nesh" },
+      { href: "/pyetje-te-shpeshta", label: "Pyetje të shpeshta" },
     ],
   },
   {

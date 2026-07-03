@@ -1,6 +1,6 @@
-export const metadata = {
-  title: "Fakulteti i Inxhinierisë Mekanike",
-};
+import { getFacultyMetadata } from "../../lib/faculty-seo";
+
+export const metadata = getFacultyMetadata("fim");
 
 export default function Layout({ children }) {
   return children;
