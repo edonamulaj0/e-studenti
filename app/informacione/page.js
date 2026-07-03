@@ -181,16 +181,17 @@ export default function InformacionePage() {
                 respekt për autorët dhe pa monetizim.
               </p>
               <p>
-                Aktualisht platforma është plotësisht falas: pa reklama, pa
-                abonime dhe pa shitje të dhënave. Nëse kjo ndryshon, do ta
-                shpallim qartë këtu dhe në politikat tona.
+                E-Studenti është ndërtuar me synim zero-fitimi — vetëm për të
+                ndihmuar studentët. Nuk do të ketë kurrë monetizim: pa reklama,
+                pa abonime të paguara dhe pa shitje të dhënave. Ky angazhim
+                është i përhershëm.
               </p>
               <div className="grid gap-4 md:grid-cols-2">
                 {[
                   ["Jo zyrtare", "Komunitet studentor, jo UP"],
                   ["Transparent", "Kodi publik në GitHub"],
                   ["Privat", "Anonimitet real në kërkim/API publike"],
-                  ["Falas", "Pa monetizim aktualisht"],
+                  ["Jofitimprurëse", "Pa monetizim — kurrë"],
                 ].map(([title, text]) => (
                   <div key={title} className="rounded-2xl border border-gray-200 bg-navy-100/50 p-5">
                     <h3 className="font-semibold text-navy-900">{title}</h3>

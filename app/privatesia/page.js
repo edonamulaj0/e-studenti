@@ -10,7 +10,7 @@ export const metadata = {
 const sections = [
   {
     title: "Kush jemi",
-    text: "E-Studenti është një platformë komunitare e ndërtuar nga studentë, jo një shërbim zyrtar i Universitetit të Prishtinës. Nuk kemi monetizim — pa reklama, pa abonime të paguara dhe pa shitje të të dhënave.",
+    text: "E-Studenti është një platformë komunitare e ndërtuar nga studentë — shërbim jozyrtar i Universitetit të Prishtinës dhe iniciativë jofitimprurëse.",
   },
   {
     title: "Çfarë mbledhim",
@@ -34,7 +34,7 @@ const sections = [
   },
   {
     title: "Pa monetizim / pa shitje të dhënash",
-    text: "Aktualisht nuk monetizojmë platformën dhe nuk shesim të dhëna personale te palë të treta. Nëse kjo ndryshon në të ardhmen, politika do të përditësohet para se ndonjë monetizim të hyjë në fuqi.",
+    text: "Monetizimi nuk do të ndodhë kurrë — as tani, as në të ardhmen. E-Studenti mbetet jofitimprurës dhe falas: nuk shesim të dhëna personale te palë të treta, nuk shfaqim reklama, nuk kërkojmë abonime dhe nuk e përdorim platformën për fitim financiar në asnjë formë. Ky angazhim është i përhershëm.",
   },
   {
     title: "Kontakt për privatësi",
