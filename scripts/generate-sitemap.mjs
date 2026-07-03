@@ -81,7 +81,7 @@ async function main() {
     "/per-aplikantet",
     "/erasmus",
     "/informacione",
-    "/pyetje-te-shpeshta",
+    "/rreth-nesh/pyetje-te-shpeshta",
     "/privatesia",
     "/kushtet",
   ];

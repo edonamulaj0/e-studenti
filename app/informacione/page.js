@@ -10,6 +10,7 @@ import {
   MessageSquare,
   ArrowRight,
   Send,
+  HelpCircle,
 } from "lucide-react";
 import { WORKER_URL } from "../lib/worker-url";
 import { FAQ_TEASER } from "../lib/faq-content";
@@ -126,9 +127,6 @@ export default function InformacionePage() {
             komunitetit.
           </div>
           <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
-            <Link href="/pyetje-te-shpeshta" className="text-burgundy-600 hover:underline">
-              Pyetje të shpeshta →
-            </Link>
             <Link href="/privatesia" className="text-burgundy-600 hover:underline">
               Privatësia
             </Link>
@@ -141,16 +139,32 @@ export default function InformacionePage() {
         <div className="grid gap-8 lg:grid-cols-[16rem_1fr] lg:items-start">
           <aside className="hidden rounded-3xl border border-gray-200 bg-white/80 p-4 shadow-sm backdrop-blur lg:sticky lg:top-28 lg:block">
             {[
-              ["misioni", "Misioni"],
-              ["privatesia", "Privatësia"],
-              ["autoret", "Autorët"],
-              ["kontribuesit", "Kontribuesit"],
-              ["kodi", "Kodi"],
-              ["kontakt", "Kontakti"],
+              ["#misioni", "Misioni"],
+              ["#privatesia", "Privatësia"],
+              ["#autoret", "Autorët"],
+              ["#kontribuesit", "Kontribuesit"],
             ].map(([href, label]) => (
               <a
                 key={href}
-                href={`#${href}`}
+                href={href}
+                className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-burgundy-50 hover:text-burgundy-600"
+              >
+                {label}
+              </a>
+            ))}
+            <Link
+              href="/rreth-nesh/pyetje-te-shpeshta"
+              className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-burgundy-50 hover:text-burgundy-600"
+            >
+              Pyetje të shpeshta
+            </Link>
+            {[
+              ["#kodi", "Kodi"],
+              ["#kontakt", "Kontakti"],
+            ].map(([href, label]) => (
+              <a
+                key={href}
+                href={href}
                 className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-burgundy-50 hover:text-burgundy-600"
               >
                 {label}
@@ -278,6 +292,32 @@ export default function InformacionePage() {
                 ))}
               </div>
             )}
+          </SectionCard>
+
+          <SectionCard id="faq" icon={HelpCircle} title="Pyetje të shpeshta">
+            <p className="mb-6 text-base leading-relaxed text-gray-600 md:text-lg">
+              Përgjigje të shpejta për pyetjet më të zakonshme rreth platformës.
+            </p>
+            <div className="space-y-4">
+              {FAQ_TEASER.map((item) => (
+                <div
+                  key={item.question}
+                  className="rounded-2xl border border-gray-200 bg-navy-100/50 p-5"
+                >
+                  <h3 className="font-semibold text-navy-900">{item.question}</h3>
+                  <p className="mt-2 text-sm leading-relaxed text-gray-600">
+                    {item.answer}
+                  </p>
+                </div>
+              ))}
+            </div>
+            <Link
+              href="/rreth-nesh/pyetje-te-shpeshta"
+              className="mt-6 inline-flex items-center gap-2 font-semibold text-burgundy-600 hover:text-burgundy-700"
+            >
+              Shiko të gjitha pyetjet
+              <ArrowRight className="h-4 w-4" />
+            </Link>
           </SectionCard>
 
           <SectionCard id="kodi" icon={Code} title="Kodi i hapur">
@@ -413,34 +453,6 @@ export default function InformacionePage() {
           </SectionCard>
           </div>
         </div>
-
-        <section className="mx-auto mt-16 max-w-3xl">
-          <div className="surface-card p-6 md:p-8">
-            <h2 className="mb-2 font-display text-2xl font-semibold text-navy-900">
-              Pyetje të shpeshta
-            </h2>
-            <p className="mb-6 text-gray-600">
-              Përgjigje të shpejta për pyetjet më të zakonshme rreth platformës.
-            </p>
-            <div className="space-y-4">
-              {FAQ_TEASER.map((item) => (
-                <div key={item.question}>
-                  <h3 className="font-semibold text-navy-900">{item.question}</h3>
-                  <p className="mt-1 text-sm leading-relaxed text-gray-600">
-                    {item.answer}
-                  </p>
-                </div>
-              ))}
-            </div>
-            <Link
-              href="/pyetje-te-shpeshta"
-              className="mt-6 inline-flex items-center gap-2 font-semibold text-burgundy-600 hover:text-burgundy-700"
-            >
-              Shiko të gjitha pyetjet
-              <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </section>
 
         <p className="mx-auto mt-12 max-w-2xl text-center text-base italic text-gray-600">
           Faleminderit që përdorni E-Studenti — së bashku për një komunitet më të

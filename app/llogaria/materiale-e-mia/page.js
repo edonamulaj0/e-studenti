@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FileText, LogOut, Plus, PackageCheck } from "lucide-react";
+import { FileText, LogOut, Plus, PackageCheck, ShieldAlert } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser, logout } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
@@ -84,6 +84,15 @@ function MaterialeEMiaPage() {
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
+            {user?.is_moderator && (
+              <Link
+                href="/llogaria/moderim"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-warning-amber/60 px-5 py-3 font-bold text-warning-amber hover:bg-warning-amber/10"
+              >
+                <ShieldAlert className="h-5 w-5" />
+                Moderim
+              </Link>
+            )}
             <Link
               href="/llogaria/ngarko"
               className="inline-flex items-center gap-2 rounded-xl bg-srh-crimson px-5 py-3 font-bold text-white hover:bg-[#5e1621]"
