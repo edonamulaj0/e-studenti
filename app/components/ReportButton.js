@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Flag, X, ExternalLink } from "lucide-react";
 import { WORKER_URL } from "../lib/worker-url";
+import ModalOverlay from "./ModalOverlay";
 
 const REASONS = [
   "Përmbajtje e papërshtatshme",
@@ -57,15 +58,13 @@ export default function ReportButton({ materialId, materialTitle, materialUrl })
         Raporto
       </button>
 
-      {open && (
+      <ModalOverlay open={open} onClose={close}>
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-navy-900/50 p-4 backdrop-blur-sm"
-          onClick={close}
+          className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+          onClick={(e) => e.stopPropagation()}
+          role="dialog"
+          aria-modal="true"
         >
-          <div
-            className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
-            onClick={(e) => e.stopPropagation()}
-          >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
@@ -152,8 +151,7 @@ export default function ReportButton({ materialId, materialTitle, materialUrl })
               </form>
             )}
           </div>
-        </div>
-      )}
+      </ModalOverlay>
     </>
   );
 }
