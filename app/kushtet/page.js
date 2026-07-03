@@ -13,8 +13,8 @@ const sections = [
     text: "E-Studenti është platformë komunitare, e ndërtuar nga studentë, pa lidhje zyrtare me Universitetin e Prishtinës. Materialet dhe lidhjet janë përmbajtje e gjeneruar nga përdoruesit — nuk i verifikojmë për saktësi akademike dhe nuk zëvendësojmë burime zyrtare të universitetit.",
   },
   {
-    title: "Pa monetizim",
-    text: "Aktualisht platforma nuk ka reklama, abonime të paguara apo shitje të dhënash. Nëse monetizimi prezantohet në të ardhmen, këto kushte do të përditësohen para hyrjes në fuqi.",
+    title: "Pa monetizim — angazhim i përhershëm",
+    text: "E-Studenti është ndërtuar me synim zero-fitimi, vetëm për të ndihmuar studentët. Nuk do të ketë kurrë monetizim — as tani, as në të ardhmen. Pa reklama, pa abonime të paguara, pa shitje të dhënash, pa modele \"freemium\" apo sponsorizime të paguara. Ky angazhim është pjesë e natyrës së platformës dhe nuk ndryshon.",
   },
   {
     title: "Pronësia e përmbajtjes",
