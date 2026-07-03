@@ -2046,7 +2046,11 @@ export default {
       return withCors(response, request, env);
     } catch (error) {
       console.error(error);
-      return withCors(jsonResponse({ error: String(error.message || error) }, 500), request, env);
+      return withCors(
+        jsonResponse({ error: "Ndodhi një gabim i brendshëm." }, 500),
+        request,
+        env
+      );
     }
   },
 };
