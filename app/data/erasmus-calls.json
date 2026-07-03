@@ -1,7 +1,73 @@
 {
-  "generatedAt": "2026-05-11T07:31:36.739Z",
+  "generatedAt": "2026-07-03T08:07:23.090Z",
   "sourceUrl": "https://uni-pr.edu/page.aspx?id=1,39",
   "calls": [
+    {
+      "title": "Hapet thirrja për bursë në programin Erasmus+ në Universitetin WSB , Poloni",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3928",
+      "date": "2026-06-17",
+      "slug": "20260617-874ea9bd"
+    },
+    {
+      "title": "Erasmus +, në Universitetin e Mariborit, Slloveni",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3914",
+      "date": "2026-06-05",
+      "slug": "20260605-4b432982"
+    },
+    {
+      "title": "ERASMUS+ NË EUROPIAN UNIVERSITY VIADRINA, FRANKFURT- GJERMANI",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3892",
+      "date": "2026-05-20",
+      "slug": "20260520-7b835e32"
+    },
+    {
+      "title": "Hapet thirrja për bursë në programin Erasmus+ në Universitetin e Mariborit, Slloveni",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3893",
+      "date": "2026-05-20",
+      "slug": "20260520-21d8e5fc"
+    },
+    {
+      "title": "ERASMUS+ NË UNIVERSITETIN PARIS NANTERRE, FRANCË",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3885",
+      "date": "2026-05-15",
+      "slug": "20260515-a3371a2e"
+    },
+    {
+      "title": "Erasmus+ në \" WARSAW UNIVERSITY OF LIFE SCIENCES – SGGW”, Poloni",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3884",
+      "date": "2026-05-15",
+      "slug": "20260515-8ec2e0c5"
+    },
+    {
+      "title": "Erasmus+ në Università di Trento në Itali",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3877",
+      "date": "2026-05-13",
+      "slug": "20260513-d75fa708"
+    },
+    {
+      "title": "Erasmus+ në \"Instituto Politecnico Do Porto”, Portugali",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3878",
+      "date": "2026-05-13",
+      "slug": "20260513-70f67082"
+    },
+    {
+      "title": "Erasmus+ në Universitetin e Messines, Itali",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3875",
+      "date": "2026-05-13",
+      "slug": "20260513-c8b916de"
+    },
+    {
+      "title": "Erasmus+ në Universitetin WSB , Poloni",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3876",
+      "date": "2026-05-13",
+      "slug": "20260513-c970c1a7"
+    },
+    {
+      "title": "Erasmus+ në “Universidad Del Atlantico Medio” - UNAM, Spanjë",
+      "url": "https://uni-pr.edu/page.aspx?id=1,39,3868",
+      "date": "2026-05-05",
+      "slug": "na-2c8c57f2"
+    },
     {
       "title": "Hapet thirrja për bursa në Programin Erasmus+ në Freie Universität Berlin, Gjermani",
       "url": "https://uni-pr.edu/page.aspx?id=1,39,3865",
@@ -107,126 +173,6 @@
       "url": "https://uni-pr.edu/page.aspx?id=1,39,3808",
       "date": "2026-03-17",
       "slug": "20260317-8613b78c"
-    },
-    {
-      "title": "Erasmus+ në “University of Konstanz”, Gjermani",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3807",
-      "date": "2026-03-17",
-      "slug": "20260317-0a85f719"
-    },
-    {
-      "title": "Erasmus+ në \"Radboud Summer School” të Holandë",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3806",
-      "date": "2026-03-17",
-      "slug": "20260317-89068114"
-    },
-    {
-      "title": "Erasmus+ në Bonn-Rhein-Sieg University of Applied Sciences, Gjermani",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3800",
-      "date": "2026-03-13",
-      "slug": "20260313-27a78bc4"
-    },
-    {
-      "title": "Hapet thirrja për mobilitet në programin Erasmus +, në Universitetin e Messines",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3801",
-      "date": "2026-03-13",
-      "slug": "20260313-c656bf58"
-    },
-    {
-      "title": "Erasmus+ në \"Hanze University of Applied Sciences”, Groningen, Holandë",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3802",
-      "date": "2026-03-13",
-      "slug": "20260313-c330adbf"
-    },
-    {
-      "title": "ERASMUS+ në Universitetin e Minhos (PEERS Consortium-Portugal)",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3799",
-      "date": "2026-03-13",
-      "slug": "20260313-fca47fe3"
-    },
-    {
-      "title": "Hapet thirrja për bursa në Programin Erasmus + në Universitetin e Helsinkit, Finlandë",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3796",
-      "date": "2026-03-12",
-      "slug": "20260312-82c0e693"
-    },
-    {
-      "title": "ERASMUS+ NË UNIVERSITETIN ERASMUS ROTERDAM, HOLANDË",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3795",
-      "date": "2026-03-12",
-      "slug": "20260312-006573b2"
-    },
-    {
-      "title": "Hapet thirrja për bursa në Programin Erasmus+ në Universitetin e Marburgut, Gjermani",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3794",
-      "date": "2026-03-12",
-      "slug": "20260312-193dfdb7"
-    },
-    {
-      "title": "Hapet thirrja për bursa në Programin Erasmus+ në Universitetin Saarlandes",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3793",
-      "date": "2026-03-12",
-      "slug": "20260312-2bdde521"
-    },
-    {
-      "title": "Hapet thirrja për bursa në programin Erasmus + në Sapienza University of Rome",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3779",
-      "date": "2026-02-27",
-      "slug": "20260227-4bf4343f"
-    },
-    {
-      "title": "Hapet thirrja për bursa në Programin Erasmus+ në Universitetin ESTP në Francë",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3778",
-      "date": "2026-02-27",
-      "slug": "20260227-fe8d97bc"
-    },
-    {
-      "title": "Hapet thirrja për mobilitet në programin Erasmus +, në Universitetin e Osjekut në Kroaci",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3771",
-      "date": "2026-02-24",
-      "slug": "20260224-7f58ccec"
-    },
-    {
-      "title": "Hapet thirrja për mobilitet në programin Erasmus +, në Universitetin e Paivias në Itali",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3770",
-      "date": "2026-02-24",
-      "slug": "20260224-528e5b8e"
-    },
-    {
-      "title": "Hapet thirrja për bursa në programin Erasmus+ në \"Instituto Politecnico Do Porto”, Portugali",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3769",
-      "date": "2026-02-24",
-      "slug": "20260224-46e0940a"
-    },
-    {
-      "title": "Hapet Thirrja për Bursa në Programin Erasmus+ në “University of Granada”, Spanjë",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3751",
-      "date": "2026-02-10",
-      "slug": "20260210-f436c68e"
-    },
-    {
-      "title": "Erasmus+ në Universitetin Saarland në Gjermani",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3747",
-      "date": "2026-02-06",
-      "slug": "20260131-119d84fc"
-    },
-    {
-      "title": "Erasmus+ në “Vilnius Gediminas Technical University “- (VILNIUS TECH), Lituania",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3745",
-      "date": "2026-02-05",
-      "slug": "20260205-8c03943c"
-    },
-    {
-      "title": "Erasmus+ në “Universidad Del Atlantico Medio” - UNAM, Spanjë",
-      "url": "https://uni-pr.edu/page.aspx?id=1,39,3868",
-      "date": "",
-      "slug": "na-2c8c57f2"
-    },
-    {
-      "title": "Erasmus+ në “Universidad Del Atlantico Medio” - UNAM, Spanjë",
-      "url": "https://uni-pr.edu/page.aspx?id=1,66,3868",
-      "date": "",
-      "slug": "na-2c8c57f2"
     }
   ]
 }
