@@ -6,7 +6,6 @@ import {
   FileText,
   Download,
   Eye,
-  Filter,
   Search,
   Archive,
 } from "lucide-react";
@@ -201,6 +200,11 @@ export default function MaterialsClient({ initialData = null }) {
     setSelectedType("");
     setSelectedStudyLevel("");
     setPage(1);
+  };
+
+  const runSearch = () => {
+    setPage(1);
+    loadMaterials();
   };
 
   const totalPages = Math.max(1, Number(pagination.totalPages || 1));
@@ -398,22 +402,23 @@ export default function MaterialsClient({ initialData = null }) {
           id="material-filters"
           className="sticky top-24 z-20 mb-8 py-3 backdrop-blur"
         >
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
-            <div className="relative md:col-span-2 xl:col-span-2">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+            <div className="relative w-full lg:max-w-[200px] lg:shrink-0">
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
               <input
                 type="text"
-                placeholder="Kërko titull, lëndë, autor…"
+                placeholder="Kërko…"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="input-srh min-h-[44px] pl-12 text-sm"
+                onKeyDown={(e) => e.key === "Enter" && runSearch()}
+                className="input-srh min-h-[44px] w-full pl-10 text-sm"
               />
             </div>
 
             <select
               value={selectedFaculty}
               onChange={(e) => setSelectedFaculty(e.target.value)}
-              className="input-srh hidden min-h-[44px] text-sm md:block"
+              className="input-srh hidden min-h-[44px] min-w-0 flex-1 text-sm md:block"
             >
               <option value="">Të gjitha fakultetet</option>
               {FACULTIES.map((faculty) => (
@@ -426,7 +431,7 @@ export default function MaterialsClient({ initialData = null }) {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="input-srh hidden min-h-[44px] text-sm md:block"
+              className="input-srh hidden min-h-[44px] min-w-0 flex-1 text-sm md:block"
             >
               <option value="">Të gjitha llojet</option>
               {typeOptions.map((t) => (
@@ -439,7 +444,7 @@ export default function MaterialsClient({ initialData = null }) {
             <select
               value={selectedStudyLevel}
               onChange={(e) => setSelectedStudyLevel(e.target.value)}
-              className="input-srh hidden min-h-[44px] text-sm md:block"
+              className="input-srh hidden min-h-[44px] min-w-0 flex-1 text-sm md:block"
             >
               <option value="">Të gjitha nivelet</option>
               {STUDY_LEVELS.map((level) => (
@@ -451,14 +456,13 @@ export default function MaterialsClient({ initialData = null }) {
 
             <button
               type="button"
-              onClick={resetFilters}
-              className="btn-primary hidden min-h-[44px] w-full py-2 text-sm md:inline-flex"
+              onClick={runSearch}
+              className="btn-primary hidden min-h-[44px] shrink-0 px-5 py-2 text-sm md:inline-flex"
             >
-              <Filter className="w-5 h-5" />
-              Pastro filtrat
+              <Search className="h-4 w-4" />
+              Kërko
             </button>
           </div>
-
         </div>
 
         <div id="material-results" className="scroll-mt-28">

@@ -7,8 +7,12 @@ import {
   Sparkles,
   Users,
   ArrowRight,
-  Upload,
   GraduationCap,
+  Building2,
+  BookOpen,
+  Link2,
+  HelpCircle,
+  Upload,
 } from "lucide-react";
 
 const fadeUp = {
@@ -121,35 +125,13 @@ export default function HomeClient() {
                 text: "Kërkesat për heqje të përmbajtjes trajtohen seriozisht.",
                 tone: "bg-warning-amber/10 text-warning-amber",
               },
-              {
-                icon: GraduationCap,
-                title: "Për Aplikantët",
-                text: "Materiale nga studentët e mëparshëm për t'ju ndihmuar të përgatiteni.",
-                cta: true,
-                ctaHref: "/per-aplikantet",
-                ctaLabel: "Shiko materialet",
-                tone: "bg-warning-amber/10 text-warning-amber",
-              },
-              {
-                icon: Upload,
-                title: "Dërgo Materialin Tënd",
-                text: "Shto materiale direkt nga platforma — kontributi yt ndihmon studentët e tjerë.",
-                cta: true,
-                ctaHref: "/llogaria/ngarko",
-                ctaLabel: "Dërgo tani",
-                tone: "bg-burgundy-600/10 text-burgundy-600",
-              },
             ].map((item, i) => (
               <motion.div
                 key={item.title}
                 {...fadeUp}
                 transition={{ ...fadeUp.transition, delay: 0.05 + i * 0.05 }}
                 whileHover={{ y: -6, scale: 1.02, transition: { duration: 0.2 } }}
-                className={`surface-card flex h-full flex-col p-5 md:p-6 ${
-                  item.cta
-                    ? "border-burgundy-600/20 bg-burgundy-50"
-                    : "hover:border-burgundy-600/30"
-                }`}
+                className={`surface-card flex h-full flex-col p-5 md:p-6 hover:border-burgundy-600/30`}
               >
                 <span className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${item.tone}`}>
                   <item.icon className="h-6 w-6" />
@@ -160,15 +142,91 @@ export default function HomeClient() {
                 <p className="mt-3 text-sm leading-relaxed text-gray-600">
                   {item.text}
                 </p>
-                {item.cta && (
-                  <Link
-                    href={item.ctaHref}
-                    className="mt-auto inline-flex pt-5 items-center gap-2 text-sm font-semibold text-burgundy-600"
-                  >
-                    {item.ctaLabel}
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-gray-200/80 bg-white px-6 py-12 md:px-12 md:py-14 lg:py-16">
+        <div className="mx-auto max-w-7xl">
+          <motion.div {...fadeUp} className="mx-auto mb-8 max-w-2xl text-center">
+            <p className="page-kicker mb-4">Eksploro</p>
+            <h2 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl">
+              Çka ka E-Studenti
+            </h2>
+            <p className="page-subtitle mx-auto mt-3 max-w-xl">
+              Shkurtore drejt pjesëve kryesore të platformës.
+            </p>
+          </motion.div>
+
+          <div className="grid items-stretch gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {[
+              {
+                icon: GraduationCap,
+                title: "Për Aplikantët",
+                text: "Materiale nga studentët e mëparshëm për t'ju ndihmuar të përgatiteni.",
+                href: "/per-aplikantet",
+                tone: "bg-warning-amber/10 text-warning-amber",
+              },
+              {
+                icon: Building2,
+                title: "Fakultetet",
+                text: "Informacion dhe materiale sipas fakultetit.",
+                href: "/fakultetet",
+                tone: "bg-info-blue/10 text-info-blue",
+              },
+              {
+                icon: BookOpen,
+                title: "Materialet",
+                text: "Katalog i plotë i shënimeve, afateve dhe projekteve.",
+                href: "/materialet",
+                tone: "bg-success-green/10 text-success-green",
+              },
+              {
+                icon: Link2,
+                title: "Burime",
+                text: "Lidhje të dobishme të verifikuara nga komuniteti.",
+                href: "/burime",
+                tone: "bg-navy-100 text-navy-800",
+              },
+              {
+                icon: HelpCircle,
+                title: "Rreth nesh & FAQ",
+                text: "Misioni, politikat dhe pyetjet e shpeshta.",
+                href: "/informacione",
+                tone: "bg-burgundy-600/10 text-burgundy-600",
+              },
+              {
+                icon: Upload,
+                title: "Dërgo materialin tënd",
+                text: "Kontribuo me shënime, afate ose burime për studentët e tjerë.",
+                href: "/llogaria/ngarko",
+                tone: "bg-burgundy-600/10 text-burgundy-600",
+              },
+            ].map((item, i) => (
+              <motion.div
+                key={item.title}
+                {...fadeUp}
+                transition={{ ...fadeUp.transition, delay: 0.05 + i * 0.05 }}
+                whileHover={{ y: -6, scale: 1.02, transition: { duration: 0.2 } }}
+              >
+                <Link
+                  href={item.href}
+                  className="surface-card flex h-full flex-col border-burgundy-600/10 p-5 transition-colors hover:border-burgundy-600/30 md:p-6"
+                >
+                  <span className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${item.tone}`}>
+                    <item.icon className="h-6 w-6" />
+                  </span>
+                  <h3 className="text-xl font-semibold text-navy-800">{item.title}</h3>
+                  <p className="mt-3 flex-1 text-sm leading-relaxed text-gray-600">
+                    {item.text}
+                  </p>
+                  <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-burgundy-600">
+                    Shiko
                     <ArrowRight className="h-4 w-4" />
-                  </Link>
-                )}
+                  </span>
+                </Link>
               </motion.div>
             ))}
           </div>
