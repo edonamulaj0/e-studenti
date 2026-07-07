@@ -44,7 +44,7 @@ database_id = "3d406171-fabe-44be-8e9c-d68e15ffaa39"
 migrations_dir = "./migrations"
 
 [triggers]
-crons = ["0 */6 * * *"]
+crons = ["0 * * * *"]
 
 # Environment variables
 [vars]
