@@ -10,6 +10,7 @@ const sections = [
       { href: "/materialet", label: "Materialet" },
       { href: "/erasmus", label: "Erasmus+" },
       { href: "/informacione", label: "Rreth nesh" },
+      { href: "/statistikat", label: "Statistikat" },
       { href: "/rreth-nesh/pyetje-te-shpeshta", label: "Pyetje të shpeshta" },
     ],
   },

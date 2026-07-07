@@ -15,6 +15,8 @@ import { FACULTIES, getFacultyName } from "../lib/material-options";
 import { assignMaterialSlugs } from "../lib/material-slug";
 import { STUDY_LEVELS, getStudyLevelLabel } from "../lib/study-levels";
 import { WORKER_URL } from "../lib/worker-url";
+import MaterialStatsBadge from "../components/MaterialStatsBadge";
+import TrackableDownloadLink from "../components/TrackableDownloadLink";
 
 const PAGE_SIZE = 24;
 
@@ -88,6 +90,8 @@ function normalizeMaterial(material) {
     r2Url: material.r2Url || material.r2_url,
     fileType: material.fileType || material.file_type,
     fileSize: material.fileSize || material.file_size,
+    view_count: Number(material.view_count || 0),
+    download_count: Number(material.download_count || 0),
     is_anonymous: isAnonymous,
     submittedBy: displayName ? { name: displayName } : undefined,
     slug: material.slug,
@@ -105,6 +109,7 @@ export default function MaterialsClient({ initialData = null }) {
   const [selectedFaculty, setSelectedFaculty] = useState("");
   const [selectedType, setSelectedType] = useState("");
   const [selectedStudyLevel, setSelectedStudyLevel] = useState("");
+  const [selectedSort, setSelectedSort] = useState("newest");
   const [page, setPage] = useState(() => Number(initialData?.pagination?.page) || 1);
   const [pagination, setPagination] = useState(
     initialData?.pagination || {
@@ -126,10 +131,12 @@ export default function MaterialsClient({ initialData = null }) {
     const faculty = params.get("faculty") || "";
     const type = params.get("type") || "";
     const niveli = params.get("niveli") || "";
+    const sort = params.get("sort") || "newest";
     const q = params.get("q") || "";
     setSelectedFaculty(faculty.toUpperCase());
     setSelectedType(type);
     setSelectedStudyLevel(niveli);
+    setSelectedSort(["views", "downloads"].includes(sort) ? sort : "newest");
     if (q) setSearchTerm(q);
   }, []);
 
@@ -151,6 +158,9 @@ export default function MaterialsClient({ initialData = null }) {
       if (selectedFaculty) params.set("faculty", selectedFaculty);
       if (selectedType) params.set("type", selectedType);
       if (selectedStudyLevel) params.set("niveli", selectedStudyLevel);
+      if (selectedSort === "views" || selectedSort === "downloads") {
+        params.set("sort", selectedSort);
+      }
 
       const res = await fetch(`${WORKER_URL}/?${params.toString()}`);
       const data = await res.json().catch(() => ({}));
@@ -172,7 +182,7 @@ export default function MaterialsClient({ initialData = null }) {
       setLoading(false);
       setHasLoaded(true);
     }
-  }, [page, searchTerm, selectedFaculty, selectedType, selectedStudyLevel]);
+  }, [page, searchTerm, selectedFaculty, selectedType, selectedStudyLevel, selectedSort]);
 
   useEffect(() => {
     const timeout = window.setTimeout(loadMaterials, 250);
@@ -181,7 +191,7 @@ export default function MaterialsClient({ initialData = null }) {
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, selectedFaculty, selectedType, selectedStudyLevel]);
+  }, [searchTerm, selectedFaculty, selectedType, selectedStudyLevel, selectedSort]);
 
   const typeOptions = useMemo(() => {
     const fromServer = Object.keys(availableTypeCounts);
@@ -199,6 +209,7 @@ export default function MaterialsClient({ initialData = null }) {
     setSelectedFaculty("");
     setSelectedType("");
     setSelectedStudyLevel("");
+    setSelectedSort("newest");
     setPage(1);
   };
 
@@ -296,7 +307,13 @@ export default function MaterialsClient({ initialData = null }) {
       </div>
 
       <div className="mb-4 mt-auto flex items-center justify-between gap-3">
-        <ReportButton materialId={material.id} materialTitle={material.title} materialUrl={material.r2Url} />
+        <div className="flex min-w-0 flex-1 flex-col gap-2">
+          <ReportButton materialId={material.id} materialTitle={material.title} materialUrl={material.r2Url} />
+          <MaterialStatsBadge
+            viewCount={material.view_count}
+            downloadCount={material.download_count}
+          />
+        </div>
         {material.submittedBy?.name && (
           <span className="truncate text-right text-sm text-gray-400">
             Dërguar nga: {material.submittedBy.name}
@@ -317,30 +334,31 @@ export default function MaterialsClient({ initialData = null }) {
                 Permbajtja
               </button>
             ) : (
-              <a
-                href={material.r2Url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary flex-1 text-base"
-              >
-                <Eye className="w-5 h-5" />
-                Shiko
-              </a>
-            )}
             <a
               href={material.r2Url}
               target="_blank"
               rel="noopener noreferrer"
-              download={
-                material.title.replace(/[^a-z0-9]/gi, "_") +
-                "." +
-                (material.fileType || "pdf")
-              }
-              className="btn-secondary flex-1 text-base"
+              className="btn-primary flex-1 text-base"
             >
-              <Download className="w-5 h-5" />
-              Shkarko
+              <Eye className="w-5 h-5" />
+              Shiko
             </a>
+          )}
+          <TrackableDownloadLink
+            materialId={material.id}
+            href={material.r2Url}
+            target="_blank"
+            rel="noopener noreferrer"
+            download={
+              material.title.replace(/[^a-z0-9]/gi, "_") +
+              "." +
+              (material.fileType || "pdf")
+            }
+            className="btn-secondary flex-1 text-base"
+          >
+            <Download className="w-5 h-5" />
+            Shkarko
+          </TrackableDownloadLink>
           </>
         )}
       </div>
@@ -452,6 +470,16 @@ export default function MaterialsClient({ initialData = null }) {
                   {level.label}
                 </option>
               ))}
+            </select>
+
+            <select
+              value={selectedSort}
+              onChange={(e) => setSelectedSort(e.target.value)}
+              className="input-srh hidden min-h-[44px] min-w-0 flex-1 text-sm md:block"
+            >
+              <option value="newest">Më të rejat</option>
+              <option value="views">Më të shikuarat</option>
+              <option value="downloads">Më të shkarkuarat</option>
             </select>
 
             <button

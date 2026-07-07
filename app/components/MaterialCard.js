@@ -8,6 +8,8 @@ import { assignMaterialSlugs } from "../lib/material-slug";
 import { getStudyLevelLabel } from "../lib/study-levels";
 import ArchiveModal from "./ArchiveModal";
 import ReportButton from "./ReportButton";
+import MaterialStatsBadge from "./MaterialStatsBadge";
+import TrackableDownloadLink from "./TrackableDownloadLink";
 
 const TYPE_TONES = [
   {
@@ -80,6 +82,8 @@ export function normalizeMaterial(material) {
     r2Url: material.r2Url || material.r2_url,
     fileType: material.fileType || material.file_type,
     fileSize: material.fileSize || material.file_size,
+    view_count: Number(material.view_count || 0),
+    download_count: Number(material.download_count || 0),
     is_anonymous: isAnonymous,
     submittedBy: displayName ? { name: displayName } : undefined,
   };
@@ -147,7 +151,13 @@ export default function MaterialCard({ material, allMaterials = [] }) {
         </div>
 
         <div className="mb-4 mt-auto flex items-center justify-between gap-3">
-          <ReportButton materialId={material.id} materialTitle={material.title} materialUrl={material.r2Url} />
+          <div className="flex min-w-0 flex-1 flex-col gap-2">
+            <ReportButton materialId={material.id} materialTitle={material.title} materialUrl={material.r2Url} />
+            <MaterialStatsBadge
+              viewCount={material.view_count}
+              downloadCount={material.download_count}
+            />
+          </div>
           {material.submittedBy?.name && (
             <span className="truncate text-right text-sm text-gray-400">
               Dërguar nga: {material.submittedBy.name}
@@ -168,30 +178,31 @@ export default function MaterialCard({ material, allMaterials = [] }) {
                   Permbajtja
                 </button>
               ) : (
-                <a
-                  href={material.r2Url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary flex-1 text-base"
-                >
-                  <Eye className="w-5 h-5" />
-                  Shiko
-                </a>
-              )}
               <a
                 href={material.r2Url}
                 target="_blank"
                 rel="noopener noreferrer"
-                download={
-                  material.title.replace(/[^a-z0-9]/gi, "_") +
-                  "." +
-                  (material.fileType || "pdf")
-                }
-                className="btn-secondary flex-1 text-base"
+                className="btn-primary flex-1 text-base"
               >
-                <Download className="w-5 h-5" />
-                Shkarko
+                <Eye className="w-5 h-5" />
+                Shiko
               </a>
+            )}
+            <TrackableDownloadLink
+              materialId={material.id}
+              href={material.r2Url}
+              target="_blank"
+              rel="noopener noreferrer"
+              download={
+                material.title.replace(/[^a-z0-9]/gi, "_") +
+                "." +
+                (material.fileType || "pdf")
+              }
+              className="btn-secondary flex-1 text-base"
+            >
+              <Download className="w-5 h-5" />
+              Shkarko
+            </TrackableDownloadLink>
             </>
           )}
         </div>

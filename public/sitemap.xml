@@ -36,6 +36,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://e-studenti.com/statistikat</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://e-studenti.com/rreth-nesh/pyetje-te-shpeshta</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

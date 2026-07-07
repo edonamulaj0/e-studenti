@@ -3,10 +3,11 @@
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FileText, LogOut, Plus, PackageCheck, ShieldAlert } from "lucide-react";
+import { FileText, LogOut, Plus, PackageCheck, ShieldAlert, Eye, Download } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser, logout } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
+import { formatStatCount } from "../../lib/track-material";
 
 function normalizeMaterial(material) {
   return {
@@ -17,6 +18,8 @@ function normalizeMaterial(material) {
     subject: material.subject,
     type: material.type,
     r2Url: material.r2Url || material.r2_url,
+    view_count: Number(material.view_count || 0),
+    download_count: Number(material.download_count || 0),
     createdAt: material.created_at,
   };
 }
@@ -159,6 +162,22 @@ function MaterialeEMiaPage() {
                 <p className="mt-2 text-sm text-srh-navy/60">
                   {getFacultyName(material.faculty)} · {material.subject} · {material.type}
                 </p>
+                {(material.view_count > 0 || material.download_count > 0) && (
+                  <p className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-srh-navy/55">
+                    {material.view_count > 0 && (
+                      <span className="inline-flex items-center gap-1">
+                        <Eye className="h-3.5 w-3.5" aria-hidden />
+                        {formatStatCount(material.view_count)} shikime
+                      </span>
+                    )}
+                    {material.download_count > 0 && (
+                      <span className="inline-flex items-center gap-1">
+                        <Download className="h-3.5 w-3.5" aria-hidden />
+                        {formatStatCount(material.download_count)} shkarkime
+                      </span>
+                    )}
+                  </p>
+                )}
                 <div className="mt-5 flex gap-3">
                   <Link
                     href={`/llogaria/ndrysho?id=${material.id}`}
