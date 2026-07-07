@@ -1,6 +1,7 @@
 import { assignMaterialSlugs } from "./material-slug.js";
 
-const TRACKING_SINCE_FALLBACK = "2026-07-07";
+export const TRACKING_SINCE_DATE = "2026-07-07";
+export const TRACKING_SINCE_LABEL = "7 KORRIK 2026";
 
 export const STATS_PERIODS = ["24h", "7d", "30d", "365d"];
 
@@ -28,7 +29,7 @@ function periodSinceSql(period) {
   }
 }
 
-function periodStartDate(period, now = Date.now()) {
+export function periodStartDate(period, now = Date.now()) {
   const offsets = {
     "24h": 24 * 60 * 60 * 1000,
     "7d": 7 * 24 * 60 * 60 * 1000,
@@ -38,11 +39,95 @@ function periodStartDate(period, now = Date.now()) {
   return new Date(now - (offsets[period] || offsets["7d"]));
 }
 
-export function isStatsPeriodAvailable(period, trackingSince, now = Date.now()) {
+export function periodHasPreTrackingGap(period, trackingSince, now = Date.now()) {
   if (!STATS_PERIODS.includes(period)) return false;
   const since = new Date(`${trackingSince}T00:00:00.000Z`);
   if (Number.isNaN(since.getTime())) return false;
-  return periodStartDate(period, now) >= since;
+  return periodStartDate(period, now) < since;
+}
+
+function trackingSinceMs(trackingSince) {
+  return Date.parse(`${trackingSince}T00:00:00.000Z`);
+}
+
+function isBucketBeforeTracking(bucket, period, trackingSince) {
+  const trackingMs = trackingSinceMs(trackingSince);
+  if (Number.isNaN(trackingMs)) return false;
+
+  if (period === "24h") {
+    const ms = Date.parse(`${String(bucket).replace(" ", "T")}:00:00.000Z`);
+    return !Number.isNaN(ms) && ms < trackingMs;
+  }
+  if (period === "365d") {
+    const ms = Date.parse(`${bucket}-01T00:00:00.000Z`);
+    return !Number.isNaN(ms) && ms < trackingMs;
+  }
+  const ms = Date.parse(`${bucket}T00:00:00.000Z`);
+  return !Number.isNaN(ms) && ms < trackingMs;
+}
+
+function generateTrendBuckets(period, now = new Date()) {
+  const buckets = [];
+  const end = new Date(now);
+
+  if (period === "24h") {
+    const start = new Date(end.getTime() - 24 * 60 * 60 * 1000);
+    start.setUTCMinutes(0, 0, 0);
+    for (let cursor = new Date(start); cursor <= end; cursor.setUTCHours(cursor.getUTCHours() + 1)) {
+      const y = cursor.getUTCFullYear();
+      const m = String(cursor.getUTCMonth() + 1).padStart(2, "0");
+      const d = String(cursor.getUTCDate()).padStart(2, "0");
+      const h = String(cursor.getUTCHours()).padStart(2, "0");
+      buckets.push(`${y}-${m}-${d} ${h}:00`);
+    }
+    return buckets;
+  }
+
+  if (period === "365d") {
+    const start = new Date(Date.UTC(end.getUTCFullYear(), end.getUTCMonth() - 11, 1));
+    for (
+      let cursor = new Date(start);
+      cursor <= end;
+      cursor = new Date(Date.UTC(cursor.getUTCFullYear(), cursor.getUTCMonth() + 1, 1))
+    ) {
+      buckets.push(
+        `${cursor.getUTCFullYear()}-${String(cursor.getUTCMonth() + 1).padStart(2, "0")}`
+      );
+    }
+    return buckets;
+  }
+
+  const days = period === "30d" ? 30 : 7;
+  const start = new Date(end);
+  start.setUTCDate(start.getUTCDate() - (days - 1));
+  start.setUTCHours(0, 0, 0, 0);
+  for (let cursor = new Date(start); cursor <= end; cursor.setUTCDate(cursor.getUTCDate() + 1)) {
+    buckets.push(cursor.toISOString().slice(0, 10));
+  }
+  return buckets;
+}
+
+function mergeTrendRows(period, rawRows, trackingSince, now = new Date()) {
+  const byBucket = new Map(
+    (rawRows || []).map((row) => [
+      row.bucket,
+      {
+        views: Number(row.views || 0),
+        downloads: Number(row.downloads || 0),
+      },
+    ])
+  );
+
+  return generateTrendBuckets(period, now).map((bucket) => {
+    const beforeTracking = isBucketBeforeTracking(bucket, period, trackingSince);
+    const values = beforeTracking ? { views: 0, downloads: 0 } : byBucket.get(bucket) || { views: 0, downloads: 0 };
+    return {
+      bucket,
+      views: values.views,
+      downloads: values.downloads,
+      before_tracking: beforeTracking,
+    };
+  });
 }
 
 export async function ensureSiteStatsTable(env) {
@@ -70,23 +155,22 @@ async function getTrackingSince(env) {
   } catch {
     // table may not exist yet during first migration
   }
-  return TRACKING_SINCE_FALLBACK;
+  return TRACKING_SINCE_DATE;
 }
 
 async function computePeriodStats(env, period, trackingSince, now = Date.now()) {
   const sinceSql = periodSinceSql(period);
-  const available = isStatsPeriodAvailable(period, trackingSince, now);
+  const trackingSql = `'${trackingSince}'`;
+  const hasPreTrackingGap = periodHasPreTrackingGap(period, trackingSince, now);
+  const periodStart = periodStartDate(period, now);
+  const trackingStartMs = trackingSinceMs(trackingSince);
+  const preTrackingRatio =
+    hasPreTrackingGap && trackingStartMs > periodStart.getTime()
+      ? (trackingStartMs - periodStart.getTime()) / (now - periodStart.getTime())
+      : 0;
 
-  if (!available) {
-    return {
-      period,
-      available: false,
-      label: STATS_PERIOD_LABELS[period],
-      message: "E pa disponueshme",
-    };
-  }
-
-  const eventSince = `e.created_at >= ${sinceSql}`;
+  const eventWindow = `e.created_at >= ${sinceSql} AND e.created_at >= ${trackingSql}`;
+  const materialWindow = `${RAR_FILTER} AND m.created_at >= ${sinceSql} AND m.created_at >= ${trackingSql}`;
 
   const [
     viewsRow,
@@ -102,26 +186,27 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
     env.DB.prepare(
       `SELECT COUNT(*) as count
        FROM material_stat_events e
-       WHERE e.event_type = 'view' AND ${eventSince}`
+       WHERE e.event_type = 'view' AND ${eventWindow}`
     ).first(),
     env.DB.prepare(
       `SELECT COUNT(*) as count
        FROM material_stat_events e
-       WHERE e.event_type = 'download' AND e.created_at >= ${sinceSql}`
+       WHERE e.event_type = 'download' AND ${eventWindow}`
     ).first(),
     env.DB.prepare(
       `SELECT COUNT(*) as count
        FROM materials m
-       WHERE ${RAR_FILTER} AND m.created_at >= ${sinceSql}`
+       WHERE ${materialWindow}`
     ).first(),
     env.DB.prepare(
-      `SELECT COUNT(*) as count FROM users WHERE email_verified = 1 AND created_at >= ${sinceSql}`
+      `SELECT COUNT(*) as count FROM users
+       WHERE email_verified = 1 AND created_at >= ${sinceSql} AND created_at >= ${trackingSql}`
     ).first(),
     env.DB.prepare(
       `SELECT COUNT(DISTINCT m.faculty) as count
        FROM material_stat_events e
        JOIN materials m ON m.id = e.material_id
-       WHERE ${RAR_FILTER} AND e.created_at >= ${sinceSql}`
+       WHERE ${RAR_FILTER} AND ${eventWindow}`
     ).first(),
     env.DB.prepare(
       `SELECT
@@ -134,7 +219,7 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
        JOIN users u ON u.id = m.user_id
        WHERE COALESCE(m.is_anonymous, 0) = 0
          AND ${RAR_FILTER}
-         AND e.created_at >= ${sinceSql}
+         AND ${eventWindow}
        GROUP BY u.id
        HAVING total_views > 0 OR total_downloads > 0
        ORDER BY total_views DESC, total_downloads DESC, material_count DESC, name ASC
@@ -146,7 +231,7 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
        JOIN materials m ON m.id = e.material_id
        WHERE e.event_type = 'view'
          AND ${RAR_FILTER}
-         AND e.created_at >= ${sinceSql}
+         AND ${eventWindow}
        GROUP BY m.id
        ORDER BY view_count DESC, m.created_at DESC
        LIMIT 10`
@@ -158,7 +243,7 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
        FROM material_stat_events e
        JOIN materials m ON m.id = e.material_id
        WHERE ${RAR_FILTER}
-         AND e.created_at >= ${sinceSql}
+         AND ${eventWindow}
        GROUP BY m.faculty
        ORDER BY total_views DESC, material_count DESC`
     ).all(),
@@ -204,6 +289,9 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
     period,
     available: true,
     label: STATS_PERIOD_LABELS[period],
+    has_pre_tracking_gap: hasPreTrackingGap,
+    pre_tracking_ratio: Math.min(1, Math.max(0, preTrackingRatio)),
+    pre_tracking_message: "Nuk ka të dhëna para kësaj kohe",
     headline: {
       total_materials: Number(uploadsRow?.count || 0),
       total_views: Number(viewsRow?.count || 0),
@@ -223,11 +311,7 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
       material_count: Number(row.material_count || 0),
       total_views: Number(row.total_views || 0),
     })),
-    trend: (trendRows.results || []).map((row) => ({
-      bucket: row.bucket,
-      views: Number(row.views || 0),
-      downloads: Number(row.downloads || 0),
-    })),
+    trend: mergeTrendRows(period, trendRows.results || [], trackingSince, new Date(now)),
   };
 }
 
@@ -244,6 +328,7 @@ export async function computeSiteStats(env) {
 
   return {
     tracking_since: trackingSince,
+    tracking_since_label: TRACKING_SINCE_LABEL,
     computed_at: computedAt,
     periods,
   };
@@ -275,6 +360,7 @@ export async function loadSiteStats(env, period = "7d") {
       cached = JSON.parse(row.payload);
       cached.computed_at = row.computed_at || cached.computed_at;
       cached.tracking_since = row.tracking_since || cached.tracking_since;
+      cached.tracking_since_label = cached.tracking_since_label || TRACKING_SINCE_LABEL;
     } catch {
       cached = null;
     }
@@ -283,15 +369,24 @@ export async function loadSiteStats(env, period = "7d") {
   if (!cached?.periods) {
     cached = await computeSiteStats(env);
     if (cached) await storeSiteStats(env, cached);
+  } else {
+    const staleCache = Object.values(cached.periods).some(
+      (entry) => entry?.available === false || !Array.isArray(entry?.trend)
+    );
+    if (staleCache) {
+      cached = await computeSiteStats(env);
+      if (cached) await storeSiteStats(env, cached);
+    }
   }
 
   const normalizedPeriod = STATS_PERIODS.includes(period) ? period : "7d";
   const periodStats =
     cached?.periods?.[normalizedPeriod] ||
-    (await computePeriodStats(env, normalizedPeriod, cached?.tracking_since || TRACKING_SINCE_FALLBACK));
+    (await computePeriodStats(env, normalizedPeriod, cached?.tracking_since || TRACKING_SINCE_DATE));
 
   return {
-    tracking_since: cached?.tracking_since,
+    tracking_since: cached?.tracking_since || TRACKING_SINCE_DATE,
+    tracking_since_label: cached?.tracking_since_label || TRACKING_SINCE_LABEL,
     computed_at: cached?.computed_at,
     period: normalizedPeriod,
     stats: periodStats,
