@@ -43,12 +43,31 @@ CREATE TABLE IF NOT EXISTS materials (
   r2_url TEXT NOT NULL,
   is_anonymous INTEGER NOT NULL DEFAULT 0,
   study_level TEXT NOT NULL DEFAULT 'bachelor',
+  view_count INTEGER NOT NULL DEFAULT 0,
+  download_count INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_materials_user ON materials(user_id);
 CREATE INDEX IF NOT EXISTS idx_materials_faculty ON materials(faculty);
+
+CREATE TABLE IF NOT EXISTS material_stat_events (
+  dedupe_key TEXT PRIMARY KEY,
+  event_type TEXT NOT NULL,
+  material_id INTEGER NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_material_stat_events_type_date
+  ON material_stat_events(event_type, created_at);
+
+CREATE TABLE IF NOT EXISTS site_stats (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  payload TEXT NOT NULL,
+  computed_at TEXT NOT NULL,
+  tracking_since TEXT NOT NULL
+);
 
 CREATE TABLE IF NOT EXISTS resource_links (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

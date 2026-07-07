@@ -9,6 +9,7 @@ compatibility_date = "2024-01-01"
 # wrangler secret put JWT_SECRET
 # wrangler secret put RESEND_API_KEY
 # Optional: wrangler secret put ADMIN_EMAIL (copies contact-form messages to an admin inbox)
+# Optional: wrangler secret put MODERATOR_EMAILS (comma-separated emails granted moderator access)
 # Optional if your domain differs from defaults:
 # wrangler secret put JWT_ISSUER
 # wrangler secret put JWT_AUDIENCE
@@ -41,6 +42,9 @@ binding = "DB"
 database_name = "e-studenti-auth"
 database_id = "3d406171-fabe-44be-8e9c-d68e15ffaa39"
 migrations_dir = "./migrations"
+
+[triggers]
+crons = ["0 */6 * * *"]
 
 # Environment variables
 [vars]

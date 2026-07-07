@@ -127,6 +127,9 @@ export default function InformacionePage() {
             komunitetit.
           </div>
           <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
+            <Link href="/statistikat" className="text-burgundy-600 hover:underline">
+              Statistikat
+            </Link>
             <Link href="/privatesia" className="text-burgundy-600 hover:underline">
               Privatësia
             </Link>
@@ -152,6 +155,12 @@ export default function InformacionePage() {
                 {label}
               </a>
             ))}
+            <Link
+              href="/statistikat"
+              className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-burgundy-50 hover:text-burgundy-600"
+            >
+              Statistikat
+            </Link>
             <Link
               href="/rreth-nesh/pyetje-te-shpeshta"
               className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-burgundy-50 hover:text-burgundy-600"

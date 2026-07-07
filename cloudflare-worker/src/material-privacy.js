@@ -46,6 +46,8 @@ export function materialToPublicLegacyEntry(material, normalizeUploaderName) {
     subject: material.subject,
     teacher: material.teacher || "//",
     study_level: material.study_level || "bachelor",
+    view_count: Number(material.view_count || 0),
+    download_count: Number(material.download_count || 0),
     r2Url: material.r2_url,
     fileType: material.file_type,
     fileSize: material.file_size,

@@ -37,6 +37,10 @@ const sections = [
     text: "Monetizimi nuk do të ndodhë kurrë — as tani, as në të ardhmen. E-Studenti mbetet jofitimprurës dhe falas: nuk shesim të dhëna personale te palë të treta, nuk shfaqim reklama, nuk kërkojmë abonime dhe nuk e përdorim platformën për fitim financiar në asnjë formë. Ky angazhim është i përhershëm.",
   },
   {
+    title: "Statistikat e përdorimit",
+    text: "Për të treguar performancën e platformës, shfaqim statistika publike agregate (shikime, shkarkime, kontribues më aktivë, aktivitet sipas fakultetit) në faqen /statistikat. Këto statistika janë gjithmonë të agreguara — nuk shfaqim kurrë se cili përdorues specifik ka shikuar apo shkarkuar një material të caktuar. Materialet e postuara në mënyrë anonime nuk shfaqin kurrë emrin real të kontribuesit, as në këtë faqe.",
+  },
+  {
     title: "Kontakt për privatësi",
     text: "Për pyetje, kërkesa aksesi ose fshirjeje të dhënash, përdorni formularin e kontaktit te /informacione#kontakt ose shkruani në Instagram: @estudenti.hub.",
   },

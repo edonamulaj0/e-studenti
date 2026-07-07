@@ -6,6 +6,8 @@ import {
   sanitizeMaterialForPublic,
 } from "./material-privacy.js";
 import { assignMaterialSlugs, findMaterialBySlug } from "./material-slug.js";
+import { trackMaterialEvent } from "./material-stats.js";
+import { syncModeratorFromEmail, userIsModerator } from "./moderators.js";
 import {
   RESOURCE_CATEGORIES,
   buildResourceSearchClause,
@@ -14,6 +16,7 @@ import {
   resolveResourceUrl,
   sanitizeResourceLinkForPublic,
 } from "./resource-links.js";
+import { loadSiteStats, refreshSiteStats } from "./site-stats.js";
 
 const MEDIA_BASE = "https://media.e-studenti.com";
 const DEFAULT_RESEND_FROM = "E-Studenti <onboarding@resend.dev>";
@@ -39,6 +42,8 @@ const RATE_LIMITS = {
   upload: { requests: 10, window: 3600 },
   report: { requests: 10, window: 3600 },
   resource_link: { requests: 5, window: 3600 },
+  track_view: { requests: 120, window: 3600 },
+  track_download: { requests: 120, window: 3600 },
 };
 const ALLOWED_EXTENSIONS = [
   "pdf",
@@ -393,6 +398,20 @@ function materialSort(a, b) {
   return String(a.title).localeCompare(String(b.title), "sq");
 }
 
+function materialSortBy(sort) {
+  if (sort === "views") {
+    return (a, b) =>
+      Number(b.view_count || 0) - Number(a.view_count || 0) ||
+      String(b.created_at || "").localeCompare(String(a.created_at || ""));
+  }
+  if (sort === "downloads") {
+    return (a, b) =>
+      Number(b.download_count || 0) - Number(a.download_count || 0) ||
+      String(b.created_at || "").localeCompare(String(a.created_at || ""));
+  }
+  return materialSort;
+}
+
 function publicUrlToKey(url) {
   try {
     return decodeURIComponent(new URL(url).pathname.replace(/^\//, ""));
@@ -439,7 +458,7 @@ function mergePublicMaterials(dbMaterials, r2Materials) {
   return merged;
 }
 
-function paginatedMaterialsResponse(allMaterials, { faculty, type, q, studyLevel, page, limit }) {
+function paginatedMaterialsResponse(allMaterials, { faculty, type, q, studyLevel, page, limit, sort }) {
   const offset = (page - 1) * limit;
   const baseFiltered = allMaterials.filter((material) =>
     materialMatches(material, { faculty, q, studyLevel })
@@ -451,7 +470,7 @@ function paginatedMaterialsResponse(allMaterials, { faculty, type, q, studyLevel
   }
   const filtered = baseFiltered
     .filter((material) => materialMatches(material, { type }))
-    .sort(materialSort);
+    .sort(materialSortBy(sort));
   const pageSlice = filtered.slice(offset, offset + limit);
   const materials = pageSlice.map((material) => sanitizeMaterialForPublic(material));
 
@@ -567,7 +586,10 @@ async function getUserFromRequest(request, env) {
   )
     .bind(userId)
     .first();
-  return user || null;
+  if (!user) return null;
+  await syncModeratorFromEmail(user, env);
+  user.is_moderator = userIsModerator(user, env) ? 1 : 0;
+  return user;
 }
 
 async function sendEmail(to, subject, html, env, from = env.RESEND_FROM || DEFAULT_RESEND_FROM) {
@@ -977,7 +999,9 @@ async function handleVerify(request, env) {
 
   await env.DB.prepare("DELETE FROM verification_codes WHERE email=?").bind(email).run();
   await env.DB.prepare("UPDATE users SET email_verified=1 WHERE email=?").bind(email).run();
-  const user = await env.DB.prepare("SELECT * FROM users WHERE email=?").bind(email).first();
+  let user = await env.DB.prepare("SELECT * FROM users WHERE email=?").bind(email).first();
+  user = await syncModeratorFromEmail(user, env);
+  user.is_moderator = userIsModerator(user, env) ? 1 : 0;
 
   // Claim any legacy materials whose pending_owner_email matches this user.
   // Runs on every verification but is a no-op for the vast majority (0 rows matched).
@@ -1001,7 +1025,13 @@ async function handleVerify(request, env) {
     JSON.stringify({
       success: true,
       linked_materials_count: linkedMaterialsCount,
-      user: { id: user.id, name: user.name, surname: user.surname, email: user.email },
+      user: {
+        id: user.id,
+        name: user.name,
+        surname: user.surname,
+        email: user.email,
+        is_moderator: Boolean(user.is_moderator),
+      },
     }),
     {
       status: 200,
@@ -1060,7 +1090,7 @@ async function handleMe(request, env) {
       name: user.name,
       surname: user.surname,
       email: user.email,
-      is_moderator: Boolean(user.is_moderator),
+      is_moderator: userIsModerator(user, env),
     },
   });
 }
@@ -1121,7 +1151,7 @@ async function handleReport(request, env) {
 async function handleReports(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !user.is_moderator) {
+  if (!user || !userIsModerator(user, env)) {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
@@ -1150,7 +1180,7 @@ async function handleReports(request, env) {
 async function handleResolveReport(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !user.is_moderator) {
+  if (!user || !userIsModerator(user, env)) {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
@@ -1207,6 +1237,8 @@ async function handleMaterials(request, url, env) {
   const q = url.searchParams.get("q") || url.searchParams.get("search");
   const studyLevel = url.searchParams.get("niveli") || url.searchParams.get("study_level");
   const userFilter = url.searchParams.get("user");
+  const sortParam = url.searchParams.get("sort") || "newest";
+  const sort = ["views", "downloads"].includes(sortParam) ? sortParam : "newest";
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
   const requestedLimit = Number(url.searchParams.get("limit")) || 50;
   const limit = Math.min(100, Math.max(1, requestedLimit));
@@ -1224,6 +1256,7 @@ async function handleMaterials(request, url, env) {
       studyLevel,
       page,
       limit,
+      sort,
     });
   }
 
@@ -1298,11 +1331,18 @@ async function handleMaterials(request, url, env) {
     typeCounts[row.type || "Të pa klasifikuara"] = Number(row.count || 0);
   }
 
+  const orderBy =
+    sort === "views"
+      ? "m.view_count DESC, m.created_at DESC"
+      : sort === "downloads"
+        ? "m.download_count DESC, m.created_at DESC"
+        : "m.created_at DESC";
+
   const statement = env.DB.prepare(
     `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
      FROM materials m JOIN users u ON m.user_id = u.id
      WHERE ${where.join(" AND ")}
-     ORDER BY m.created_at DESC
+     ORDER BY ${orderBy}
      LIMIT ? OFFSET ?`
   );
   const result = await statement.bind(...params, limit, offset).all();
@@ -1502,7 +1542,7 @@ async function handleEdit(request, url, env) {
   const material = await env.DB.prepare("SELECT * FROM materials WHERE id=?")
     .bind(id)
     .first();
-  if (!material || (Number(material.user_id) !== Number(user.id) && !user.is_moderator)) {
+  if (!material || (Number(material.user_id) !== Number(user.id) && !userIsModerator(user, env))) {
     return jsonResponse({ error: "Nuk keni leje." }, 403);
   }
 
@@ -1538,7 +1578,7 @@ async function handleEdit(request, url, env) {
 async function handleModeratorMaterials(request, url, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !user.is_moderator) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const page = Math.max(1, Number(url.searchParams.get("page") || "1"));
   const LIMIT = 50;
@@ -1581,7 +1621,7 @@ async function handleDeleteMaterial(request, env) {
   const material = await env.DB.prepare("SELECT * FROM materials WHERE id = ?").bind(id).first();
   if (!material) return jsonResponse({ error: "Materiali nuk u gjet." }, 404);
 
-  if (Number(material.user_id) !== Number(user.id) && !user.is_moderator) {
+  if (Number(material.user_id) !== Number(user.id) && !userIsModerator(user, env)) {
     return jsonResponse({ error: "Nuk keni leje." }, 403);
   }
 
@@ -1818,7 +1858,7 @@ function extractDomainFromUrl(urlString) {
 async function handleModeratorResourceLinks(request, url, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !user.is_moderator) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const status = url.searchParams.get("status") || "pending";
   const allowed = ["pending", "approved", "rejected", "all"];
@@ -1851,7 +1891,7 @@ async function handleModeratorResourceLinks(request, url, env) {
 async function handleModerateResourceLink(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !user.is_moderator) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const body = await request.json().catch(() => ({}));
   const id = Number(body.id);
@@ -1912,7 +1952,37 @@ async function handleProxy(url) {
   });
 }
 
+async function handleTrackView(request, env) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  if (!env.DB) return databaseUnavailableResponse();
+  const limited = await checkRateLimit(request, "track_view", env);
+  if (limited) return limited;
+  const result = await trackMaterialEvent(request, env, "view");
+  return jsonResponse(result);
+}
+
+async function handleTrackDownload(request, env) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  if (!env.DB) return databaseUnavailableResponse();
+  const limited = await checkRateLimit(request, "track_download", env);
+  if (limited) return limited;
+  const result = await trackMaterialEvent(request, env, "download");
+  return jsonResponse(result);
+}
+
+async function handleSiteStatistics(url, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const period = url.searchParams.get("period") || "7d";
+  const payload = await loadSiteStats(env, period);
+  return jsonResponse(payload);
+}
+
 export default {
+  async scheduled(_event, env, ctx) {
+    if (!env.DB) return;
+    ctx.waitUntil(refreshSiteStats(env));
+  },
+
   async fetch(request, env) {
     if (!isAllowedOrigin(request, env)) {
       return withCors(jsonResponse({ error: "Origin not allowed" }, 403), request, env);
@@ -1954,6 +2024,9 @@ export default {
       "get",
       "logout",
       "report",
+      "track-view",
+      "track-download",
+      "site-statistics",
     ];
 
     try {
@@ -2039,6 +2112,15 @@ export default {
           break;
         case "moderate-resource-link":
           response = await handleModerateResourceLink(request, env);
+          break;
+        case "track-view":
+          response = await handleTrackView(request, env);
+          break;
+        case "track-download":
+          response = await handleTrackDownload(request, env);
+          break;
+        case "site-statistics":
+          response = await handleSiteStatistics(url, env);
           break;
         default:
           response = jsonResponse({ error: "Invalid action" }, 400);

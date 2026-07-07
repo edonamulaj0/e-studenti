@@ -1,6 +1,9 @@
 import Link from "next/link";
-import { Download, Eye, FileText } from "lucide-react";
+import { Eye, FileText } from "lucide-react";
 import ReportButton from "../../components/ReportButton";
+import MaterialViewTracker from "../../components/MaterialViewTracker";
+import MaterialStatsBadge from "../../components/MaterialStatsBadge";
+import MaterialDownloadButton from "../../components/MaterialDownloadButton";
 import JsonLd, {
   breadcrumbJsonLd,
   materialJsonLd,
@@ -95,6 +98,7 @@ export default async function MaterialDetailPage({ params }) {
       />
 
       <div className="page-shell">
+        <MaterialViewTracker materialId={material.id} />
         <div className="section-shell max-w-4xl">
           <nav className="mb-6 text-sm text-gray-500">
             <Link href="/" className="hover:text-burgundy-600">
@@ -122,9 +126,14 @@ export default async function MaterialDetailPage({ params }) {
             </div>
 
             <h1 className="page-title mb-4">{material.title}</h1>
-            <p className="page-subtitle mb-8">
+            <p className="page-subtitle mb-4">
               {material.subject} · {facultyName}
             </p>
+            <MaterialStatsBadge
+              viewCount={material.view_count}
+              downloadCount={material.download_count}
+              className="mb-8"
+            />
 
             <dl className="mb-8 grid gap-4 sm:grid-cols-2">
               <div className="rounded-2xl bg-navy-100/40 p-4">
@@ -171,16 +180,15 @@ export default async function MaterialDetailPage({ params }) {
                     <Eye className="h-5 w-5" />
                     Shiko materialin
                   </a>
-                  <a
+                  <MaterialDownloadButton
+                    materialId={material.id}
                     href={material.r2_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    download
-                    className="btn-secondary flex-1"
-                  >
-                    <Download className="h-5 w-5" />
-                    Shkarko
-                  </a>
+                    fileName={
+                      material.title.replace(/[^a-z0-9]/gi, "_") +
+                      "." +
+                      (material.file_type || "pdf")
+                    }
+                  />
                 </>
               )}
             </div>

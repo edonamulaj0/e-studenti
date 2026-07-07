@@ -10,7 +10,7 @@ export const metadata = {
 const sections = [
   {
     title: "Natyra e platformës",
-    text: "E-Studenti është platformë komunitare, e ndërtuar nga studentë, pa lidhje zyrtare me Universitetin e Prishtinës. Materialet dhe lidhjet janë përmbajtje e gjeneruar nga përdoruesit — nuk i verifikojmë për saktësi akademike dhe nuk zëvendësojmë burime zyrtare të universitetit.",
+    text: "E-Studenti është platformë komunitare, e ndërtuar nga studentë, pa lidhje zyrtare me Universitetin e Prishtinës. Materialet dhe lidhjet janë përmbajtje e gjeneruar nga përdoruesit — nuk i verifikojmë për saktësi akademike dhe nuk zëvendësojmë burime zyrtare të universitetit. Numri i shikimeve dhe shkarkimeve për çdo material regjistrohet dhe mund të shfaqet publikisht në formë agregate, përfshirë renditje sipas popullaritetit.",
   },
   {
     title: "Pa monetizim — angazhim i përhershëm",
