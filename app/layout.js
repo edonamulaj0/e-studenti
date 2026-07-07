@@ -2,17 +2,26 @@ import "./globals.css";
 import { Montserrat, Playfair_Display } from "next/font/google";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import { WORKER_URL } from "./lib/worker-url";
+
+const workerOrigin = new URL(WORKER_URL).origin;
 
 const montserrat = Montserrat({
   subsets: ["latin"],
   weight: ["400", "500", "600", "700"],
   variable: "--font-montserrat",
+  display: "swap",
+  preload: true,
+  adjustFontFallback: true,
 });
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
   weight: ["600", "700", "800"],
   variable: "--font-playfair",
+  display: "swap",
+  preload: true,
+  adjustFontFallback: true,
 });
 
 export const metadata = {
@@ -34,6 +43,15 @@ export default function RootLayout({ children }) {
       lang="sq"
       className={`${montserrat.variable} ${playfair.variable} scroll-smooth`}
     >
+      <head>
+        <link rel="preconnect" href={workerOrigin} crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href={workerOrigin} />
+        <link
+          rel="preconnect"
+          href="https://media.e-studenti.com"
+          crossOrigin="anonymous"
+        />
+      </head>
       <body className="font-montserrat text-base antialiased">
         <Navbar />
         <main className="min-h-screen">{children}</main>

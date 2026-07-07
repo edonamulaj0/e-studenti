@@ -26,11 +26,9 @@ export default function HomeClient() {
   return (
     <div className="relative bg-cream-50">
       <section className="viewport-section relative isolate overflow-hidden bg-gradient-to-br from-cream-50 via-beige-100 to-white">
-        <img
-          src="/uplogo.svg"
-          alt=""
+        <div
           aria-hidden="true"
-          className="pointer-events-none absolute -right-28 top-10 h-80 w-80 opacity-10 mix-blend-multiply sm:h-[28rem] sm:w-[28rem] lg:right-4 lg:top-16 lg:h-[34rem] lg:w-[34rem]"
+          className="pointer-events-none absolute -right-28 top-10 h-80 w-80 bg-[url('/uplogo.svg')] bg-contain bg-center bg-no-repeat opacity-10 mix-blend-multiply sm:h-[28rem] sm:w-[28rem] lg:right-4 lg:top-16 lg:h-[34rem] lg:w-[34rem]"
         />
         <div className="pointer-events-none absolute left-0 top-20 h-64 w-64 rounded-full bg-burgundy-50 blur-3xl md:h-96 md:w-96" />
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
