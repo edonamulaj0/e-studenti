@@ -9,8 +9,10 @@ import {
   userIsModerator,
 } from "./moderators.js";
 import {
-  isStatsPeriodAvailable,
+  periodHasPreTrackingGap,
   STATS_PERIOD_LABELS,
+  TRACKING_SINCE_DATE,
+  TRACKING_SINCE_LABEL,
 } from "./site-stats.js";
 
 describe("moderators", () => {
@@ -66,14 +68,14 @@ describe("material-stats", () => {
 describe("site-stats periods", () => {
   const now = Date.parse("2026-07-14T12:00:00.000Z");
 
-  it("marks long periods unavailable before enough tracking history exists", () => {
-    expect(isStatsPeriodAvailable("7d", "2026-07-07", now)).toBe(true);
-    expect(isStatsPeriodAvailable("365d", "2026-07-07", now)).toBe(false);
-    expect(isStatsPeriodAvailable("24h", "2026-07-14", now)).toBe(false);
-    expect(isStatsPeriodAvailable("24h", "2026-07-13", now)).toBe(true);
+  it("detects when a period extends before tracking launch", () => {
+    expect(periodHasPreTrackingGap("7d", TRACKING_SINCE_DATE, now)).toBe(false);
+    expect(periodHasPreTrackingGap("365d", TRACKING_SINCE_DATE, now)).toBe(true);
+    expect(periodHasPreTrackingGap("24h", TRACKING_SINCE_DATE, now)).toBe(false);
   });
 
-  it("exposes Albanian labels for each period", () => {
+  it("exposes fixed Albanian launch label", () => {
+    expect(TRACKING_SINCE_LABEL).toBe("7 KORRIK 2026");
     expect(STATS_PERIOD_LABELS["7d"]).toBe("7 ditët e fundit");
   });
 });

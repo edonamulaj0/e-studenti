@@ -8,6 +8,7 @@ import {
   CartesianGrid,
   Line,
   LineChart,
+  ReferenceArea,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -24,6 +25,8 @@ import {
 import { WORKER_URL } from "../lib/worker-url";
 import { getFacultyName } from "../lib/material-options";
 import { formatStatCount } from "../lib/track-material";
+
+const TRACKING_SINCE_LABEL = "7 KORRIK 2026";
 
 const PERIOD_OPTIONS = [
   { value: "24h", label: "24 orët e fundit" },
@@ -46,7 +49,7 @@ function StatCard({ icon: Icon, label, value, tone = "navy" }) {
       </div>
       <p className="text-sm font-semibold uppercase tracking-widest text-gray-400">{label}</p>
       <p className="mt-2 font-display text-3xl font-bold text-navy-900">
-        {formatStatCount(value)}
+        {formatStatCount(value ?? 0)}
       </p>
     </div>
   );
@@ -72,27 +75,97 @@ function formatBucketLabel(bucket, period) {
   return bucket;
 }
 
-function formatTrackingDate(dateStr) {
-  if (!dateStr) return "";
-  const date = new Date(`${dateStr}T12:00:00`);
-  if (Number.isNaN(date.getTime())) return dateStr;
-  return date.toLocaleDateString("sq-AL", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+function TrendTooltip({ active, payload, label, preTrackingMessage }) {
+  if (!active || !payload?.length) return null;
+  const point = payload[0]?.payload;
+  if (point?.before_tracking) {
+    return (
+      <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-md">
+        <p className="font-semibold text-gray-500">{label}</p>
+        <p className="text-gray-500">{preTrackingMessage || "Nuk ka të dhëna para kësaj kohe"}</p>
+      </div>
+    );
+  }
+  return (
+    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-md">
+      <p className="mb-1 font-semibold text-navy-900">{label}</p>
+      {payload.map((entry) => (
+        <p key={entry.name} style={{ color: entry.color }}>
+          {entry.name}: {formatStatCount(entry.value)}
+        </p>
+      ))}
+    </div>
+  );
 }
 
-function UnavailablePanel({ message, periodLabel }) {
+function TrendChart({ data, period, periodLabel, hasPreTrackingGap, preTrackingMessage }) {
+  const firstTrackedIndex = data.findIndex((point) => !point.before_tracking);
+  const lastPreTrackingIndex = firstTrackedIndex > 0 ? firstTrackedIndex - 1 : -1;
+  const preTrackingStartLabel = lastPreTrackingIndex >= 0 ? data[0]?.label : null;
+  const preTrackingEndLabel = lastPreTrackingIndex >= 0 ? data[lastPreTrackingIndex]?.label : null;
+
   return (
-    <div className="surface-card flex min-h-[320px] flex-col items-center justify-center p-10 text-center">
-      <BarChart3 className="mb-4 h-12 w-12 text-gray-300" aria-hidden />
-      <p className="text-xl font-semibold text-navy-900">{message || "E pa disponueshme"}</p>
-      <p className="mt-3 max-w-md text-sm leading-relaxed text-gray-500">
-        Statistikat për <strong>{periodLabel}</strong> nuk janë ende të disponueshme — numërimi
-        filloi më vonë se sa kërkon ky interval.
-      </p>
-    </div>
+    <section className="surface-card p-6 md:p-7">
+      <h2 className="mb-5 text-2xl font-semibold text-navy-900">
+        Trendi ({periodLabel.toLowerCase()})
+      </h2>
+      {hasPreTrackingGap && (
+        <p className="mb-4 text-sm text-gray-500">
+          {preTrackingMessage || "Nuk ka të dhëna para kësaj kohe"}
+        </p>
+      )}
+      <div className="relative h-80 w-full">
+        {hasPreTrackingGap && lastPreTrackingIndex >= 0 && (
+          <div
+            className="pointer-events-none absolute inset-y-8 z-10 rounded-l-xl border-r border-dashed border-gray-300 bg-navy-100/55 backdrop-blur-[1px]"
+            style={{
+              left: 0,
+              width: `${((lastPreTrackingIndex + 1) / data.length) * 100}%`,
+            }}
+            aria-hidden
+          />
+        )}
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+            <CartesianGrid strokeDasharray="3 3" />
+            <XAxis dataKey="label" tick={{ fontSize: 12 }} />
+            <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+            {hasPreTrackingGap && preTrackingStartLabel && preTrackingEndLabel && (
+              <ReferenceArea
+                x1={preTrackingStartLabel}
+                x2={preTrackingEndLabel}
+                fill="#e2e8f0"
+                fillOpacity={0.45}
+                strokeOpacity={0}
+              />
+            )}
+            <Tooltip
+              content={
+                <TrendTooltip preTrackingMessage={preTrackingMessage} />
+              }
+            />
+            <Line
+              type="monotone"
+              dataKey="views"
+              name="Shikime"
+              stroke="#2563eb"
+              strokeWidth={2}
+              dot={false}
+              connectNulls
+            />
+            <Line
+              type="monotone"
+              dataKey="downloads"
+              name="Shkarkime"
+              stroke="#8B3A3A"
+              strokeWidth={2}
+              dot={false}
+              connectNulls
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </section>
   );
 }
 
@@ -127,6 +200,7 @@ export default function StatisticsClient() {
   const stats = payload?.stats;
   const periodLabel =
     PERIOD_OPTIONS.find((option) => option.value === period)?.label || period;
+  const trackingLabel = payload?.tracking_since_label || TRACKING_SINCE_LABEL;
 
   const facultyChartData = useMemo(
     () =>
@@ -142,21 +216,20 @@ export default function StatisticsClient() {
     () =>
       (stats?.trend || []).map((row) => ({
         label: formatBucketLabel(row.bucket, period),
-        views: row.views,
-        downloads: row.downloads,
+        bucket: row.bucket,
+        views: row.before_tracking ? 0 : row.views,
+        downloads: row.before_tracking ? 0 : row.downloads,
+        before_tracking: Boolean(row.before_tracking),
       })),
     [stats, period]
   );
-
-  const unavailable = stats?.available === false;
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <p className="rounded-2xl border border-navy-100 bg-navy-100/40 px-4 py-3 text-sm text-navy-800 lg:max-w-2xl">
-          Të dhënat që nga {formatTrackingDate(payload?.tracking_since)}. Numërimi i shikimeve
-          dhe shkarkimeve fillon me lançimin e kësaj veçorie — intervali i zgjedhur shfaqet vetëm
-          kur mbulon plotësisht këtë periudhë.
+          Të dhënat që nga {trackingLabel}. Numërimi i shikimeve dhe shkarkimeve fillon me
+          lançimin e kësaj veçorie.
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -192,11 +265,7 @@ export default function StatisticsClient() {
         </div>
       )}
 
-      {!loading && !error && unavailable && (
-        <UnavailablePanel message={stats?.message} periodLabel={periodLabel} />
-      )}
-
-      {!loading && !error && !unavailable && stats && (
+      {!loading && !error && stats && (
         <>
           <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-5">
             <StatCard icon={FileText} label="Ngarkime" value={stats.headline?.total_materials} tone="navy" />
@@ -284,7 +353,7 @@ export default function StatisticsClient() {
                   <BarChart data={facultyChartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} />
                     <XAxis dataKey="faculty" tick={{ fontSize: 12 }} interval={0} angle={-20} textAnchor="end" height={70} />
-                    <YAxis tick={{ fontSize: 12 }} />
+                    <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                     <Tooltip />
                     <Bar dataKey="views" name="Shikime" fill="#2563eb" radius={[6, 6, 0, 0]} />
                     <Bar dataKey="materials" name="Materiale" fill="#8B3A3A" radius={[6, 6, 0, 0]} />
@@ -295,21 +364,13 @@ export default function StatisticsClient() {
           </section>
 
           {trendChartData.length > 0 && (
-            <section className="surface-card p-6 md:p-7">
-              <h2 className="mb-5 text-2xl font-semibold text-navy-900">Trendi ({periodLabel.toLowerCase()})</h2>
-              <div className="h-80 w-full">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={trendChartData} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-                    <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} />
-                    <Tooltip />
-                    <Line type="monotone" dataKey="views" name="Shikime" stroke="#2563eb" strokeWidth={2} dot={false} />
-                    <Line type="monotone" dataKey="downloads" name="Shkarkime" stroke="#8B3A3A" strokeWidth={2} dot={false} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </section>
+            <TrendChart
+              data={trendChartData}
+              period={period}
+              periodLabel={periodLabel}
+              hasPreTrackingGap={Boolean(stats.has_pre_tracking_gap)}
+              preTrackingMessage={stats.pre_tracking_message}
+            />
           )}
 
           {payload?.computed_at && (
