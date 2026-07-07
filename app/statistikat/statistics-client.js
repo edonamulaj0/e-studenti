@@ -9,6 +9,7 @@ import {
   Line,
   LineChart,
   ReferenceArea,
+  ReferenceLine,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -103,6 +104,8 @@ function TrendChart({ data, period, periodLabel, hasPreTrackingGap, preTrackingM
   const lastPreTrackingIndex = firstTrackedIndex > 0 ? firstTrackedIndex - 1 : -1;
   const preTrackingStartLabel = lastPreTrackingIndex >= 0 ? data[0]?.label : null;
   const preTrackingEndLabel = lastPreTrackingIndex >= 0 ? data[lastPreTrackingIndex]?.label : null;
+  const trackingStartLabel =
+    firstTrackedIndex >= 0 ? data[firstTrackedIndex]?.label : null;
 
   return (
     <section className="surface-card p-6 md:p-7">
@@ -114,29 +117,28 @@ function TrendChart({ data, period, periodLabel, hasPreTrackingGap, preTrackingM
           {preTrackingMessage || "Nuk ka të dhëna para kësaj kohe"}
         </p>
       )}
-      <div className="relative h-80 w-full">
-        {hasPreTrackingGap && lastPreTrackingIndex >= 0 && (
-          <div
-            className="pointer-events-none absolute inset-y-8 z-10 rounded-l-xl border-r border-dashed border-gray-300 bg-navy-100/55 backdrop-blur-[1px]"
-            style={{
-              left: 0,
-              width: `${((lastPreTrackingIndex + 1) / data.length) * 100}%`,
-            }}
-            aria-hidden
-          />
-        )}
+      <div className="h-80 w-full">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
+          <LineChart data={data} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
             <CartesianGrid strokeDasharray="3 3" />
             <XAxis dataKey="label" tick={{ fontSize: 12 }} />
-            <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
+            <YAxis tick={{ fontSize: 12 }} allowDecimals={false} width={36} />
             {hasPreTrackingGap && preTrackingStartLabel && preTrackingEndLabel && (
               <ReferenceArea
                 x1={preTrackingStartLabel}
                 x2={preTrackingEndLabel}
-                fill="#e2e8f0"
-                fillOpacity={0.45}
+                fill="#cbd5e1"
+                fillOpacity={0.55}
                 strokeOpacity={0}
+                ifOverflow="visible"
+              />
+            )}
+            {hasPreTrackingGap && trackingStartLabel && (
+              <ReferenceLine
+                x={trackingStartLabel}
+                stroke="#94a3b8"
+                strokeDasharray="4 4"
+                strokeWidth={1.5}
               />
             )}
             <Tooltip

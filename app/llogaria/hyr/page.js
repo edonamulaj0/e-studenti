@@ -85,6 +85,11 @@ export default function HyrPage() {
             src="/uplogo.svg"
             alt=""
             aria-hidden="true"
+            width={446}
+            height={445}
+            loading="lazy"
+            fetchPriority="low"
+            decoding="async"
             className="absolute -bottom-20 -right-16 h-80 w-80 opacity-10"
           />
           <div className="relative z-10 flex h-full flex-col justify-between">

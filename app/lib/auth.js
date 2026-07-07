@@ -1,6 +1,7 @@
 import { WORKER_URL } from "./worker-url";
 
-let _user = null;
+/** undefined = not fetched yet; null = fetched, logged out; object = logged in */
+let _user = undefined;
 let _fetchPromise = null;
 
 export function getUser() {
@@ -21,7 +22,7 @@ export function setUser(user) {
  */
 export async function fetchCurrentUser() {
   if (typeof window === "undefined") return null;
-  if (_user !== null) return _user;
+  if (_user !== undefined) return _user;
   if (_fetchPromise) return _fetchPromise;
   _fetchPromise = (async () => {
     try {

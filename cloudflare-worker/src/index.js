@@ -1083,7 +1083,7 @@ async function handleLogin(request, env) {
 async function handleMe(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user) return jsonResponse({ user: null });
   return jsonResponse({
     user: {
       id: user.id,
@@ -2027,6 +2027,7 @@ export default {
       "track-view",
       "track-download",
       "site-statistics",
+      "me",
     ];
 
     try {

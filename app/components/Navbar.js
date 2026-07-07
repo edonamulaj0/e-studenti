@@ -96,6 +96,8 @@ export default function Navbar() {
               src="/logo-color.svg"
               alt=""
               aria-hidden="true"
+              width={8268}
+              height={11693}
               className="h-10 w-10 md:h-12 md:w-12 shrink-0"
             />
             <span>

@@ -11,7 +11,6 @@ const sections = [
       { href: "/erasmus", label: "Erasmus+" },
       { href: "/informacione", label: "Rreth nesh" },
       { href: "/statistikat", label: "Statistikat" },
-      { href: "/rreth-nesh/pyetje-te-shpeshta", label: "Pyetje të shpeshta" },
     ],
   },
   {
@@ -32,6 +31,11 @@ export default function Footer() {
         src="/uplogo.svg"
         alt=""
         aria-hidden="true"
+        width={446}
+        height={445}
+        loading="lazy"
+        fetchPriority="low"
+        decoding="async"
         className="pointer-events-none absolute -bottom-24 -right-16 h-64 w-64 opacity-10 mix-blend-screen md:-bottom-36 md:-right-24 md:h-96 md:w-96"
       />
       <div className="relative z-10 mx-auto max-w-7xl px-6 py-10 md:px-12">
@@ -45,6 +49,8 @@ export default function Footer() {
               src="/logo.svg"
               alt=""
               aria-hidden="true"
+              width={2480}
+              height={3508}
               className="h-full w-auto shrink-0 object-contain"
             />
           </Link>
@@ -57,7 +63,7 @@ export default function Footer() {
               Platformë komunitare për materiale studimore dhe burime të dobishme
               për studentët e UP-së.
             </p>
-            <p className="mt-5 text-xs font-medium text-white/40">
+            <p className="mt-5 text-xs font-medium text-white/70">
               © 2026 E-Studenti.
             </p>
           </div>
@@ -65,7 +71,7 @@ export default function Footer() {
           <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-3">
             {sections.map((section) => (
               <div key={section.title} className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-white/35">
+                <p className="text-xs font-semibold uppercase tracking-widest text-white/65">
                   {section.title}
                 </p>
                 {section.links.map((link) => (
@@ -81,7 +87,7 @@ export default function Footer() {
             ))}
             <div className="space-y-5">
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-white/35">
+                <p className="text-xs font-semibold uppercase tracking-widest text-white/65">
                   Ligjore
                 </p>
                 <Link
@@ -109,7 +115,7 @@ export default function Footer() {
               >
                 GitHub
               </a>
-              <span className="block text-white/50">E mirëmbajtur nga komuniteti.</span>
+              <span className="block text-white/65">E mirëmbajtur nga komuniteti.</span>
               </div>
             </div>
           </div>
