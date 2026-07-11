@@ -1,8 +1,10 @@
 const BOT_UA_PATTERN =
-  /bot|crawl|spider|slurp|mediapartners|googlebot|bingbot|yandex|duckduckbot|baiduspider|facebookexternalhit|twitterbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkshare|w3c_validator|whatsapp|telegrambot|applebot|semrush|ahref|petalbot|bytespider|gptbot|claudebot|anthropic-ai/i;
+  /bot|crawl|spider|slurp|mediapartners|googlebot|bingbot|yandex|duckduckbot|baiduspider|facebookexternalhit|twitterbot|linkedinbot|embedly|quora link preview|showyoubot|outbrain|pinterest|slackbot|vkshare|w3c_validator|whatsapp|telegrambot|applebot|semrush|ahref|petalbot|bytespider|gptbot|claudebot|anthropic-ai|curl/i;
 
 export function isBotUserAgent(userAgent) {
-  return BOT_UA_PATTERN.test(String(userAgent || ""));
+  const ua = String(userAgent || "").trim();
+  if (!ua) return true;
+  return BOT_UA_PATTERN.test(ua);
 }
 
 function utcDateKey(date = new Date()) {
@@ -74,16 +76,12 @@ export async function incrementMaterialCounter(env, materialId, column) {
   return Number(result.meta?.changes || 0) > 0;
 }
 
-export function rateLimitIdentity(request) {
-  const forwardedFor = request.headers.get("X-Forwarded-For") || "";
-  return (
-    request.headers.get("CF-Connecting-IP") ||
-    forwardedFor.split(",")[0]?.trim() ||
-    "unknown"
-  );
+/** Real client IP on Cloudflare — do not fall back to X-Forwarded-For for dedup. */
+export function visitorClientIp(request) {
+  return request.headers.get("CF-Connecting-IP")?.trim() || "unknown";
 }
 
-export async function trackMaterialEvent(request, env, eventType) {
+export async function trackMaterialEventById(request, env, eventType, materialId, sessionId = "") {
   if (!env.DB) return { ok: false, reason: "no_db" };
 
   const userAgent = request.headers.get("User-Agent") || "";
@@ -91,8 +89,6 @@ export async function trackMaterialEvent(request, env, eventType) {
     return { ok: false, reason: "bot" };
   }
 
-  const body = await request.json().catch(() => ({}));
-  const materialId = Number(body.material_id);
   if (!Number.isFinite(materialId) || materialId <= 0) {
     return { ok: false, reason: "invalid_id" };
   }
@@ -104,8 +100,7 @@ export async function trackMaterialEvent(request, env, eventType) {
     return { ok: false, reason: "not_found" };
   }
 
-  const sessionId = String(body.session_id || "").trim().slice(0, 64);
-  const ip = rateLimitIdentity(request);
+  const ip = visitorClientIp(request);
   const visitorHash = await hashVisitorIdentity(ip, sessionId, env.JWT_SECRET);
   const dedupeKey = buildDedupeKey(eventType, materialId, visitorHash);
   const inserted = await recordMaterialStatEvent(env, {
@@ -120,4 +115,11 @@ export async function trackMaterialEvent(request, env, eventType) {
   const column = eventType === "view" ? "view_count" : "download_count";
   await incrementMaterialCounter(env, materialId, column);
   return { ok: true, counted: true };
+}
+
+export async function trackMaterialEvent(request, env, eventType) {
+  const body = await request.json().catch(() => ({}));
+  const materialId = Number(body.material_id);
+  const sessionId = String(body.session_id || "").trim().slice(0, 64);
+  return trackMaterialEventById(request, env, eventType, materialId, sessionId);
 }

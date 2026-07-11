@@ -10,6 +10,7 @@ import ArchiveModal from "./ArchiveModal";
 import ReportButton from "./ReportButton";
 import MaterialStatsBadge from "./MaterialStatsBadge";
 import TrackableDownloadLink from "./TrackableDownloadLink";
+import { materialDownloadUrl } from "../lib/worker-url";
 
 const TYPE_TONES = [
   {
@@ -190,7 +191,7 @@ export default function MaterialCard({ material, allMaterials = [] }) {
             )}
             <TrackableDownloadLink
               materialId={material.id}
-              href={material.r2Url}
+              href={materialDownloadUrl(material.id)}
               target="_blank"
               rel="noopener noreferrer"
               download={
