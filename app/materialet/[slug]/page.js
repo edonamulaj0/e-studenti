@@ -4,6 +4,7 @@ import ReportButton from "../../components/ReportButton";
 import MaterialViewTracker from "../../components/MaterialViewTracker";
 import MaterialStatsBadge from "../../components/MaterialStatsBadge";
 import MaterialDownloadButton from "../../components/MaterialDownloadButton";
+import { materialDownloadUrl } from "../../lib/worker-url";
 import JsonLd, {
   breadcrumbJsonLd,
   materialJsonLd,
@@ -182,7 +183,7 @@ export default async function MaterialDetailPage({ params }) {
                   </a>
                   <MaterialDownloadButton
                     materialId={material.id}
-                    href={material.r2_url}
+                    href={materialDownloadUrl(material.id)}
                     fileName={
                       material.title.replace(/[^a-z0-9]/gi, "_") +
                       "." +

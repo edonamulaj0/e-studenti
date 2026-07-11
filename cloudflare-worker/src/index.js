@@ -6,7 +6,11 @@ import {
   sanitizeMaterialForPublic,
 } from "./material-privacy.js";
 import { assignMaterialSlugs, findMaterialBySlug } from "./material-slug.js";
-import { trackMaterialEvent } from "./material-stats.js";
+import {
+  trackMaterialEvent,
+  trackMaterialEventById,
+  visitorClientIp,
+} from "./material-stats.js";
 import { syncModeratorFromEmail, userIsModerator } from "./moderators.js";
 import {
   RESOURCE_CATEGORIES,
@@ -693,12 +697,7 @@ async function ensureReportsTable(env) {
 }
 
 function rateLimitIdentity(request) {
-  const forwardedFor = request.headers.get("X-Forwarded-For") || "";
-  return (
-    request.headers.get("CF-Connecting-IP") ||
-    forwardedFor.split(",")[0]?.trim() ||
-    "unknown"
-  );
+  return visitorClientIp(request);
 }
 
 async function checkRateLimit(request, action, env) {
@@ -1970,6 +1969,29 @@ async function handleTrackDownload(request, env) {
   return jsonResponse(result);
 }
 
+async function handleDownloadMaterial(request, url, env) {
+  if (request.method !== "GET") return jsonResponse({ error: "Method not allowed" }, 405);
+  if (!env.DB) return databaseUnavailableResponse();
+
+  const materialId = Number(url.searchParams.get("id"));
+  if (!Number.isFinite(materialId) || materialId <= 0) {
+    return jsonResponse({ error: "Invalid material id" }, 400);
+  }
+
+  const limited = await checkRateLimit(request, "track_download", env);
+  if (limited) return limited;
+
+  const material = await env.DB.prepare("SELECT id, r2_url FROM materials WHERE id = ?")
+    .bind(materialId)
+    .first();
+  if (!material?.r2_url) {
+    return jsonResponse({ error: "Material not found" }, 404);
+  }
+
+  await trackMaterialEventById(request, env, "download", materialId);
+  return Response.redirect(String(material.r2_url), 302);
+}
+
 async function handleSiteStatistics(url, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const period = url.searchParams.get("period") || "7d";
@@ -2026,6 +2048,7 @@ export default {
       "report",
       "track-view",
       "track-download",
+      "download-material",
       "site-statistics",
       "me",
     ];
@@ -2119,6 +2142,9 @@ export default {
           break;
         case "track-download":
           response = await handleTrackDownload(request, env);
+          break;
+        case "download-material":
+          response = await handleDownloadMaterial(request, url, env);
           break;
         case "site-statistics":
           response = await handleSiteStatistics(url, env);

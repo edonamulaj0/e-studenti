@@ -4,7 +4,8 @@
 	"private": true,
 	"scripts": {
 		"dev": "next dev",
-		"build": "node scripts/generate-sitemap.mjs && next build",
+		"build": "node scripts/generate-sitemap.mjs && next build && node scripts/scan-client-secrets.mjs",
+		"scan-secrets": "node scripts/scan-client-secrets.mjs",
 		"start": "next start",
 		"lint": "next lint",
 		"sync-erasmus": "node scripts/sync-erasmus.mjs"

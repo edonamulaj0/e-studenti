@@ -51,6 +51,8 @@ describe("moderators", () => {
 describe("material-stats", () => {
   it("detects common bot user agents", () => {
     expect(isBotUserAgent("Mozilla/5.0 (compatible; Googlebot/2.1)")).toBe(true);
+    expect(isBotUserAgent("curl/8.5.0")).toBe(true);
+    expect(isBotUserAgent("")).toBe(true);
     expect(
       isBotUserAgent(
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120.0.0.0 Safari/537.36"

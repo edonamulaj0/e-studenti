@@ -1,6 +1,6 @@
 "use client";
 
-import { trackMaterialDownload } from "../lib/track-material";
+import { materialDownloadUrl } from "../lib/worker-url";
 
 export default function TrackableDownloadLink({
   materialId,
@@ -11,17 +11,14 @@ export default function TrackableDownloadLink({
   onClick,
   ...rest
 }) {
-  const handleClick = (event) => {
-    if (materialId) trackMaterialDownload(materialId);
-    onClick?.(event);
-  };
+  const trackedHref = materialId ? materialDownloadUrl(materialId) : href;
 
   return (
     <a
-      href={href}
+      href={trackedHref}
       className={className}
       download={download}
-      onClick={handleClick}
+      onClick={onClick}
       {...rest}
     >
       {children}

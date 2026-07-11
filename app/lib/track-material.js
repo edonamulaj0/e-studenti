@@ -21,42 +21,40 @@ function getStatSessionId() {
 
 const trackedViews = new Set();
 
-export async function trackMaterialView(materialId) {
+function buildTrackPayload(materialId) {
+  return JSON.stringify({
+    material_id: materialId,
+    session_id: getStatSessionId(),
+  });
+}
+
+function postTrackBeacon(action, materialId) {
+  const url = `${WORKER_URL}/?action=${action}`;
+  const payload = buildTrackPayload(materialId);
+
+  if (typeof navigator !== "undefined" && typeof navigator.sendBeacon === "function") {
+    const sent = navigator.sendBeacon(
+      url,
+      new Blob([payload], { type: "application/json" })
+    );
+    if (sent) return true;
+  }
+
+  fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: payload,
+    keepalive: true,
+  }).catch(() => {});
+  return false;
+}
+
+export function trackMaterialView(materialId) {
   if (!materialId || typeof window === "undefined") return;
   const key = `view:${materialId}`;
   if (trackedViews.has(key)) return;
   trackedViews.add(key);
-
-  try {
-    await fetch(`${WORKER_URL}/?action=track-view`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        material_id: materialId,
-        session_id: getStatSessionId(),
-      }),
-    });
-  } catch {
-    trackedViews.delete(key);
-  }
-}
-
-export async function trackMaterialDownload(materialId) {
-  if (!materialId || typeof window === "undefined") return;
-  try {
-    await fetch(`${WORKER_URL}/?action=track-download`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({
-        material_id: materialId,
-        session_id: getStatSessionId(),
-      }),
-    });
-  } catch {
-    // non-blocking
-  }
+  postTrackBeacon("track-view", materialId);
 }
 
 export function formatStatCount(value) {

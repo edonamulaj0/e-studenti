@@ -14,7 +14,7 @@ import ReportButton from "../components/ReportButton";
 import { FACULTIES, getFacultyName } from "../lib/material-options";
 import { assignMaterialSlugs } from "../lib/material-slug";
 import { STUDY_LEVELS, getStudyLevelLabel } from "../lib/study-levels";
-import { WORKER_URL } from "../lib/worker-url";
+import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
 import MaterialStatsBadge from "../components/MaterialStatsBadge";
 import TrackableDownloadLink from "../components/TrackableDownloadLink";
 
@@ -346,7 +346,7 @@ export default function MaterialsClient({ initialData = null }) {
           )}
           <TrackableDownloadLink
             materialId={material.id}
-            href={material.r2Url}
+            href={materialDownloadUrl(material.id)}
             target="_blank"
             rel="noopener noreferrer"
             download={
