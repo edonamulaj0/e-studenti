@@ -126,6 +126,11 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://e-studenti.com/materialet/mekanika-teknike-2-afate-fim</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
     <loc>https://e-studenti.com/materialet/fizike-2-afate-fiek</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>

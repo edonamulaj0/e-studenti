@@ -24,13 +24,16 @@ secrets at runtime.
 that inbox. Without it, contact-form messages are stored in D1 and the public
 site tells users to use Instagram `@estudenti.hub` for replies.
 
-Public materials render from R2 and do not need D1:
+Public materials are listed from D1 with SQL pagination. File bytes live in R2
+(`e-studenti-materials` → `media.e-studenti.com`). The `materials-metadata`
+bucket is legacy-only (orphan rows not yet imported into D1) and is not scanned
+on every catalog request.
 
-- `e-studenti-materials` stores the files.
-- `materials-metadata` stores `materials.json` with file metadata.
+- `e-studenti-materials` stores the uploaded files.
+- `materials-metadata` is optional legacy metadata (orphans for slug lookup).
 - `department-materials` is reserved for programme data.
 
-Account registration, login, email code verification, and user-owned uploads do
+Account registration, login, email code verification, and user-owned uploads
 need a D1 database bound as `DB`. Create it once, apply only the schema, and do
 not run `seed.sql` on production:
 
@@ -71,19 +74,9 @@ Deploy the static export to Cloudflare Pages. The `public/_headers` file is used
 ## Production Verification
 
 ```bash
-curl -I https://your-domain.example
-curl -I "https://r2-catalog-manager.example.workers.dev?action=materials&limit=3"
-curl -I "https://r2-catalog-manager.example.workers.dev?action=contributors"
+curl -I https://e-studenti.com
+curl -I "https://api.e-studenti.com?action=materials&limit=3"
+curl -I "https://api.e-studenti.com?action=contributors"
 ```
 
-Check for:
-
-- `Content-Security-Policy`
-- `X-Content-Type-Options: nosniff`
-- `X-Frame-Options: DENY`
-- Restricted `Access-Control-Allow-Origin`
-- Materials and contributors return `200`, not `401`
-- Auth codes expire and cannot be reused
-- JWTs expire after 15 minutes
-- Register, login, verify, contact, and upload rate limits return `429` after repeated abuse
-- ZIP upload limits reject dangerous or oversized archives
+Confirm the site and Worker respond as expected, public catalog endpoints are reachable, and auth/upload flows work end to end after deploy.

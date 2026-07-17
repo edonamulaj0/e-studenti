@@ -51,6 +51,14 @@ export async function generateMetadata({ params }) {
     alternates: {
       canonical: `${SITE_URL}/materialet/${params.slug}`,
     },
+    openGraph: {
+      type: "article",
+      locale: "sq_AL",
+      url: `${SITE_URL}/materialet/${params.slug}`,
+      siteName: "E-Studenti",
+      title,
+      description: description.slice(0, 160),
+    },
   };
 }
 

@@ -1,7 +1,6 @@
-/** Public worker / API origin. */
+/** Public API origin (Cloudflare Worker on custom domain). */
 export const WORKER_URL =
-  process.env.NEXT_PUBLIC_WORKER_URL ||
-  "https://r2-catalog-manager.edonaamulaj.workers.dev";
+  process.env.NEXT_PUBLIC_WORKER_URL || "https://api.e-studenti.com";
 
 /** Server-side view redirect that increments view_count before opening the file. */
 export function materialViewUrl(materialId) {

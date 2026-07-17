@@ -1,11 +1,16 @@
-const WORKER_URL =
-  process.env.NEXT_PUBLIC_WORKER_URL ||
-  "https://r2-catalog-manager.edonaamulaj.workers.dev";
+import { WORKER_URL } from "./worker-url";
 
 function sanitizeFetchedMaterial(material) {
-  if (!material || !material.is_anonymous) return material;
+  if (!material || typeof material !== "object") return material;
   const copy = { ...material };
-  delete copy.uploader_name;
+  delete copy.user_id;
+  delete copy.file_key;
+  delete copy.fileKey;
+  delete copy.pending_owner_email;
+  delete copy.uploader_email;
+  if (copy.is_anonymous) {
+    delete copy.uploader_name;
+  }
   return copy;
 }
 

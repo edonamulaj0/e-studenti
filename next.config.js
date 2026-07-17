@@ -17,11 +17,11 @@ const nextConfig = {
             key: "Content-Security-Policy",
             value: [
               "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.cloudflareinsights.com",
+              "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
               "style-src 'self' 'unsafe-inline'",
               "img-src 'self' data: https:",
               "font-src 'self' data:",
-              "connect-src 'self' https://r2-catalog-manager.edonaamulaj.workers.dev https://media.e-studenti.com https://cloudflareinsights.com https://*.cloudflareinsights.com",
+              "connect-src 'self' https://api.e-studenti.com https://media.e-studenti.com https://cloudflareinsights.com https://*.cloudflareinsights.com",
               "object-src 'none'",
               "base-uri 'self'",
               "frame-ancestors 'none'",

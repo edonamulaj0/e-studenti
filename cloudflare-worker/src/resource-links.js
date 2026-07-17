@@ -26,7 +26,9 @@ const SHORTENER_HOSTS = new Set([
   "lnkd.in",
 ]);
 
-const BLOCKED_SCHEMES = new Set(["javascript:", "data:", "file:", "vbscript:"]);
+const BLOCKED_SCHEMES = new Set(["javascript:", "data:", "file:", "vbscript:", "ftp:"]);
+const RESOLVE_TIMEOUT_MS = 8_000;
+const MAX_REDIRECTS = 5;
 
 export function extractDomain(urlString) {
   try {
@@ -41,12 +43,51 @@ export function isShortenerHost(hostname) {
   return SHORTENER_HOSTS.has(host);
 }
 
-export function validateResourceUrlInput(rawUrl) {
-  const trimmed = String(rawUrl || "").trim();
-  if (!trimmed) return { ok: false, error: "URL-ja është e detyrueshme." };
+/** Best-effort blocklist for SSRF targets (literals + obvious local names). */
+export function isBlockedHostname(hostname) {
+  const host = String(hostname || "")
+    .trim()
+    .toLowerCase()
+    .replace(/^\[|\]$/g, "");
+  if (!host) return true;
+  if (
+    host === "localhost" ||
+    host === "metadata.google.internal" ||
+    host.endsWith(".localhost") ||
+    host.endsWith(".local") ||
+    host.endsWith(".internal") ||
+    host.endsWith(".lan")
+  ) {
+    return true;
+  }
+
+  const ipv4 = host.match(/^(\d{1,3})\.(\d{1,3})\.(\d{1,3})\.(\d{1,3})$/);
+  if (ipv4) {
+    const parts = ipv4.slice(1).map(Number);
+    if (parts.some((n) => n > 255)) return true;
+    const [a, b] = parts;
+    if (a === 0 || a === 10 || a === 127) return true;
+    if (a === 169 && b === 254) return true;
+    if (a === 172 && b >= 16 && b <= 31) return true;
+    if (a === 192 && b === 168) return true;
+    if (a === 100 && b >= 64 && b <= 127) return true;
+    if (a === 198 && (b === 18 || b === 19)) return true;
+  }
+
+  if (host === "::1" || host === "0:0:0:0:0:0:0:1") return true;
+  if (host.startsWith("fc") || host.startsWith("fd") || host.startsWith("fe80")) return true;
+  if (host.includes(":")) {
+    // Any other raw IPv6 literal — Workers may still reach link-local; block literals.
+    return true;
+  }
+
+  return false;
+}
+
+export function assertPublicHttpUrl(urlString) {
   let parsed;
   try {
-    parsed = new URL(trimmed.startsWith("http") ? trimmed : `https://${trimmed}`);
+    parsed = new URL(urlString);
   } catch {
     return { ok: false, error: "URL-ja nuk është e vlefshme." };
   }
@@ -56,7 +97,22 @@ export function validateResourceUrlInput(rawUrl) {
   if (BLOCKED_SCHEMES.has(parsed.protocol)) {
     return { ok: false, error: "Lloji i URL-së nuk lejohet." };
   }
-  return { ok: true, url: parsed.toString() };
+  if (parsed.username || parsed.password) {
+    return { ok: false, error: "URL-ja nuk lejohet." };
+  }
+  if (isBlockedHostname(parsed.hostname)) {
+    return { ok: false, error: "Destinacioni i URL-së nuk lejohet." };
+  }
+  return { ok: true, url: parsed };
+}
+
+export function validateResourceUrlInput(rawUrl) {
+  const trimmed = String(rawUrl || "").trim();
+  if (!trimmed) return { ok: false, error: "URL-ja është e detyrueshme." };
+  const withScheme = trimmed.startsWith("http") ? trimmed : `https://${trimmed}`;
+  const checked = assertPublicHttpUrl(withScheme);
+  if (!checked.ok) return checked;
+  return { ok: true, url: checked.url.toString() };
 }
 
 export async function resolveResourceUrl(rawUrl) {
@@ -68,16 +124,28 @@ export async function resolveResourceUrl(rawUrl) {
   let wasShortened = isShortenerHost(originalDomain) ? 1 : 0;
 
   try {
-    for (let i = 0; i < 8; i += 1) {
+    for (let i = 0; i < MAX_REDIRECTS; i += 1) {
+      const hopCheck = assertPublicHttpUrl(current);
+      if (!hopCheck.ok) return hopCheck;
+
       const res = await fetch(current, {
         method: "GET",
         redirect: "manual",
         headers: { "User-Agent": "E-Studenti-LinkChecker/1.0" },
+        signal: AbortSignal.timeout(RESOLVE_TIMEOUT_MS),
       });
       if (res.status >= 300 && res.status < 400) {
         const location = res.headers.get("Location");
         if (!location) break;
-        current = new URL(location, current).toString();
+        let next;
+        try {
+          next = new URL(location, current).toString();
+        } catch {
+          return { ok: false, error: "URL-ja nuk mund të verifikohej. Provoni përsëri." };
+        }
+        const nextCheck = assertPublicHttpUrl(next);
+        if (!nextCheck.ok) return nextCheck;
+        current = next;
         if (isShortenerHost(extractDomain(current))) wasShortened = 1;
         continue;
       }
@@ -86,6 +154,9 @@ export async function resolveResourceUrl(rawUrl) {
   } catch {
     return { ok: false, error: "URL-ja nuk mund të verifikohej. Provoni përsëri." };
   }
+
+  const finalCheck = assertPublicHttpUrl(current);
+  if (!finalCheck.ok) return finalCheck;
 
   const resolvedDomain = extractDomain(current);
   if (!resolvedDomain) {
@@ -159,11 +230,11 @@ export function getPublicSubmitterName(link) {
 export function sanitizeResourceLinkForPublic(link, { revealSubmitter = false } = {}) {
   if (!link || typeof link !== "object") return link;
   const sanitized = { ...link };
+  delete sanitized.user_id;
   if (Boolean(link.is_anonymous) && !revealSubmitter) {
     delete sanitized.submitter_name;
     delete sanitized.submitter_surname;
     delete sanitized.submitter_email;
-    delete sanitized.user_id;
   } else if (getPublicSubmitterName(link)) {
     sanitized.submitter_name = getPublicSubmitterName(link);
   }

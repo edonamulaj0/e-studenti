@@ -5,6 +5,7 @@ import Footer from "./components/Footer";
 import { WORKER_URL } from "./lib/worker-url";
 
 const workerOrigin = new URL(WORKER_URL).origin;
+const SITE_URL = "https://e-studenti.com";
 
 const montserrat = Montserrat({
   subsets: ["latin"],
@@ -25,12 +26,30 @@ const playfair = Playfair_Display({
 });
 
 export const metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
     default: "E-Studenti",
-     template: "%s | E-Studenti",
+    template: "%s | E-Studenti",
   },
   description:
     "Platformë komunitare për materiale studimore, fakultete dhe burime të dobishme për studentët e UP-së.",
+  openGraph: {
+    type: "website",
+    locale: "sq_AL",
+    url: SITE_URL,
+    siteName: "E-Studenti",
+    title: "E-Studenti — Materiale dhe burime për studentët e UP-së",
+    description:
+      "Platformë komunitare me materiale studimore, afate, ligjërata dhe burime për studentët e Universitetit të Prishtinës.",
+    images: [{ url: "/logo-color.svg", alt: "E-Studenti" }],
+  },
+  twitter: {
+    card: "summary",
+    title: "E-Studenti",
+    description:
+      "Materiale, provime dhe burime studimore për studentët e UP-së.",
+    images: ["/logo-color.svg"],
+  },
   icons: {
     icon: "/favicon.svg",
     shortcut: "/favicon.svg",

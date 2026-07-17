@@ -4,13 +4,12 @@
 
 ## Features
 
-- **Passwordless accounts**: users register, verify email codes, and receive JWTs for authenticated actions.
+- **Passwordless accounts**: register and verify with an email code.
 - **User-managed uploads**: authenticated users upload materials and edit their own metadata from the web.
-- **Live D1 catalog**: materials are queried from Cloudflare D1 instead of a static `materials.json` file.
+- **Live D1 catalog**: materials are queried from Cloudflare D1.
 - **R2 file storage**: validated files are stored in Cloudflare R2 and served from the media domain.
-- **Private contact form**: messages are sent to the owner through Resend without exposing any email address in the form.
+- **Private contact form**: messages reach the owner through Resend without exposing an email address in the form.
 - **Auto contributors**: contributors are generated from D1 based on uploaded materials.
-- **Security hardening**: short-lived JWTs, hashed verification codes, D1-backed rate limiting, restricted CORS, CSP headers, and ZIP upload limits.
 
 ## Tech Stack
 
@@ -35,7 +34,7 @@ wrangler secret put ADMIN_EMAIL
 npm run deploy
 ```
 
-`JWT_SECRET` should be a random 64-character string. `ADMIN_EMAIL` is only used by the Worker as the private recipient for contact-form messages and is never sent to the frontend. Configure `ALLOWED_ORIGINS`, `JWT_ISSUER`, and `JWT_AUDIENCE` if your production domain differs from the defaults.
+Set secrets via Wrangler only. Configure `ALLOWED_ORIGINS` (and related JWT settings) if your production domain differs from the defaults. The API defaults to `https://api.e-studenti.com`; override with `NEXT_PUBLIC_WORKER_URL` for local/dev.
 
 ## Resend Setup
 
@@ -60,16 +59,10 @@ e-studenti/
 └── README.md
 ```
 
-## Security Notes
-
-- Never commit `.env`, `.dev.vars`, `.wrangler`, `.next`, Cloudflare tokens, Resend keys, or JWT secrets.
-- Use the placeholder values in `.env.example` and `cloudflare-worker/.env.example` as templates only.
-- Rotate any Cloudflare API token that was ever present in a local `.env` before publishing.
-- See `SECURITY.md` and `docs/DEPLOYMENT.md` before opening the repository publicly.
-
 ## Notes
 
+- Never commit `.env`, `.dev.vars`, `.wrangler`, `.next`, or API secrets. Use the `.env.example` files as templates only.
 - Keep `output: "export"` in `next.config.js`.
 - Do not add Next.js route handlers or server-only frontend features.
-- All dynamic requests go to `https://r2-catalog-manager.edonaamulaj.workers.dev`.
-- Auth tokens are short-lived JWTs stored in `localStorage` by client-only code after login or verification. A future backend-compatible auth flow should move tokens to `HttpOnly` cookies with refresh token rotation.
+- All dynamic requests go to `https://api.e-studenti.com` (or `NEXT_PUBLIC_WORKER_URL` when set).
+- See `SECURITY.md` for how to report vulnerabilities.

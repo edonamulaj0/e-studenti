@@ -1,5 +1,17 @@
 export const ANONYMOUS_DISPLAY_NAME = "Anonim";
 
+/** Fields that must never appear on public catalog / detail payloads. */
+const PUBLIC_STRIP_FIELDS = [
+  "user_id",
+  "file_key",
+  "fileKey",
+  "pending_owner_email",
+  "uploader_email",
+  "uploader_surname",
+  "moderator_id",
+  "rejection_reason",
+];
+
 export function isMaterialAnonymous(material) {
   return Boolean(material?.is_anonymous);
 }
@@ -22,11 +34,13 @@ export function sanitizeMaterialForPublic(material, { revealUploader = false } =
     : getPublicUploaderName(material);
 
   const sanitized = { ...material };
+  for (const field of PUBLIC_STRIP_FIELDS) {
+    delete sanitized[field];
+  }
+
   if (anonymous && !revealUploader) {
     delete sanitized.uploader_name;
     delete sanitized.uploaderName;
-    delete sanitized.uploader_surname;
-    delete sanitized.uploader_email;
   } else if (displayName) {
     sanitized.uploader_name = displayName;
   }

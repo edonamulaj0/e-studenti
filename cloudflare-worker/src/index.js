@@ -37,11 +37,14 @@ const MAX_ZIP_FILES = 500;
 const MAX_INDIVIDUAL_ZIP_FILE = 10 * 1024 * 1024;
 const CODE_TTL_SECONDS = 15 * 60;   // must stay in sync with upsertVerificationCode
 const CODE_COOLDOWN_SECONDS = 60;   // minimum gap between successive sends to the same email
+/** Access token lifetime — kept short so stolen cookies expire; logout also bumps token_version. */
+const JWT_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 const RATE_LIMITS = {
   register: { requests: 5, window: 3600 },
   login: { requests: 10, window: 900 },
   verify: { requests: 5, window: 900 },
+  verify_fail: { requests: 5, window: 900 },
   contact: { requests: 3, window: 3600 },
   upload: { requests: 10, window: 3600 },
   report: { requests: 10, window: 3600 },
@@ -63,19 +66,48 @@ const DANGEROUS_EXTENSIONS = [
   "exe",
   "bat",
   "cmd",
+  "com",
+  "scr",
   "sh",
   "ps1",
   "msi",
   "dll",
   "vbs",
   "js",
+  "jse",
   "jar",
   "py",
   "rb",
   "php",
   "asp",
   "aspx",
+  "html",
+  "htm",
+  "svg",
+  "xhtml",
+  "hta",
+  "wsf",
+  "cpl",
 ];
+const CONTENT_TYPE_BY_EXT = {
+  pdf: "application/pdf",
+  doc: "application/msword",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  ppt: "application/vnd.ms-powerpoint",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  xls: "application/vnd.ms-excel",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  zip: "application/zip",
+};
+const ORPHAN_CACHE_TTL_MS = 10 * 60_000;
+const D1_CATALOG_CACHE_TTL_MS = 60_000;
+let orphanCache = { at: 0, materials: null };
+let d1CatalogCache = { at: 0, materials: null };
+
+function invalidateCatalogCaches() {
+  orphanCache = { at: 0, materials: null };
+  d1CatalogCache = { at: 0, materials: null };
+}
 const MAGIC_BYTES = {
   pdf: [0x25, 0x50, 0x44, 0x46],
   zip: [0x50, 0x4b, 0x03, 0x04],
@@ -189,7 +221,16 @@ function getAllowedOrigins(env) {
 
 function isAllowedOrigin(request, env) {
   const origin = request.headers.get("Origin");
-  if (!origin) return true;
+  if (!origin) {
+    const method = request.method.toUpperCase();
+    const isSafe = method === "GET" || method === "HEAD" || method === "OPTIONS";
+    if (!isSafe) {
+      const cookie = request.headers.get("Cookie") || "";
+      // Credentialed cross-site POSTs without Origin are rejected (CSRF hardening).
+      if (/(?:^|;\s*)srh_token=/.test(cookie)) return false;
+    }
+    return true;
+  }
   return getAllowedOrigins(env).includes(origin);
 }
 
@@ -527,7 +568,7 @@ async function signJWT(payload, env) {
     iss: getJwtIssuer(env),
     aud: getJwtAudience(env),
     iat: now,
-    exp: now + 30 * 24 * 60 * 60,
+    exp: now + JWT_TTL_SECONDS,
   };
   const header = base64UrlEncodeJson({ alg: "HS256", typ: "JWT" });
   const body = base64UrlEncodeJson(claims);
@@ -578,6 +619,26 @@ async function verifyJWT(token, env) {
   }
 }
 
+function authCookieHeader(token) {
+  // Same-site with e-studenti.com (api subdomain) — Lax is enough; avoid None+cross-site CSRF surface.
+  return `srh_token=${token}; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=${JWT_TTL_SECONDS}`;
+}
+
+function clearAuthCookieHeader() {
+  return "srh_token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0";
+}
+
+async function ensureTokenVersionColumn(env) {
+  if (!env.DB) return;
+  try {
+    await env.DB.prepare(
+      "ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0"
+    ).run();
+  } catch {
+    // column already exists
+  }
+}
+
 async function getUserFromRequest(request, env) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match = cookieHeader.match(/(?:^|;\s*)srh_token=([^;]+)/);
@@ -591,6 +652,11 @@ async function getUserFromRequest(request, env) {
     .bind(userId)
     .first();
   if (!user) return null;
+
+  const tokenVersion = Number(user.token_version ?? 0);
+  const claimVersion = Number(payload.tv ?? 0);
+  if (claimVersion !== tokenVersion) return null;
+
   await syncModeratorFromEmail(user, env);
   user.is_moderator = userIsModerator(user, env) ? 1 : 0;
   return user;
@@ -700,51 +766,139 @@ function rateLimitIdentity(request) {
   return visitorClientIp(request);
 }
 
-async function checkRateLimit(request, action, env) {
+async function checkRateLimit(request, action, env, identityOverride = "") {
   const config = RATE_LIMITS[action];
   if (!config || !env.DB) return null;
 
   const now = Math.floor(Date.now() / 1000);
-  const key = `${action}:${rateLimitIdentity(request)}`;
+  const identity = identityOverride || rateLimitIdentity(request);
+  const key = `${action}:${identity}`;
+  const resetAt = now + config.window;
 
   try {
-    let row = await env.DB.prepare("SELECT count, reset_at FROM rate_limits WHERE key=?")
+    // Single upsert: insert, reset expired windows, or increment under the cap.
+    // If already at the cap in an active window, the WHERE clause skips the update
+    // and changes === 0.
+    const result = await env.DB.prepare(
+      `INSERT INTO rate_limits (key, count, reset_at) VALUES (?, 1, ?)
+       ON CONFLICT(key) DO UPDATE SET
+         count = CASE WHEN rate_limits.reset_at <= ? THEN 1 ELSE rate_limits.count + 1 END,
+         reset_at = CASE WHEN rate_limits.reset_at <= ? THEN ? ELSE rate_limits.reset_at END
+       WHERE rate_limits.reset_at <= ? OR rate_limits.count < ?`
+    )
+      .bind(key, resetAt, now, now, resetAt, now, config.requests)
+      .run();
+
+    if (Number(result.meta?.changes || 0) > 0) return null;
+
+    const row = await env.DB.prepare("SELECT reset_at FROM rate_limits WHERE key=?")
       .bind(key)
       .first();
-
-    if (!row) {
-      await env.DB.prepare("INSERT INTO rate_limits (key, count, reset_at) VALUES (?,?,?)")
-        .bind(key, 1, now + config.window)
-        .run();
-      return null;
-    }
-
-    if (Number(row.reset_at) <= now) {
-      await env.DB.prepare("UPDATE rate_limits SET count=?, reset_at=? WHERE key=?")
-        .bind(1, now + config.window, key)
-        .run();
-      return null;
-    }
-
-    if (Number(row.count) >= config.requests) {
-      return jsonResponse(
-        {
-          error: "Shumë kërkesa. Provoni përsëri më vonë.",
-          retryAfter: Number(row.reset_at) - now,
-        },
-        429
-      );
-    }
-
-    await env.DB.prepare("UPDATE rate_limits SET count=count+1 WHERE key=?").bind(key).run();
-    return null;
+    return jsonResponse(
+      {
+        error: "Shumë kërkesa. Provoni përsëri më vonë.",
+        retryAfter: Math.max(1, Number(row?.reset_at || resetAt) - now),
+      },
+      429
+    );
   } catch (error) {
     if (String(error.message || error).includes("no such table")) {
       await ensureRateLimitTable(env);
-      return checkRateLimit(request, action, env);
+      return checkRateLimit(request, action, env, identityOverride);
     }
     throw error;
   }
+}
+
+async function recordVerifyFailure(email, env) {
+  if (!env.DB || !email) return { locked: false };
+  const limited = await checkRateLimit(
+    new Request("https://internal/", { headers: { "CF-Connecting-IP": "0.0.0.0" } }),
+    "verify_fail",
+    env,
+    email
+  );
+  return { locked: Boolean(limited) };
+}
+
+async function clearVerifyFailures(email, env) {
+  if (!env.DB || !email) return;
+  try {
+    await env.DB.prepare("DELETE FROM rate_limits WHERE key=?")
+      .bind(`verify_fail:${email}`)
+      .run();
+  } catch {
+    // ignore
+  }
+}
+
+function validateMaterialTextField(value, label, { maxLen = 200, allowEmpty = false } = {}) {
+  const trimmed = String(value || "").trim();
+  if (!trimmed) {
+    return allowEmpty ? { ok: true, value: "" } : { ok: false, error: `${label} është i detyrueshëm.` };
+  }
+  if (trimmed.length > maxLen) {
+    return { ok: false, error: `${label} është shumë i gjatë.` };
+  }
+  if (/[<>]/.test(trimmed)) {
+    return { ok: false, error: `${label} përmban karaktere të palejuara.` };
+  }
+  return { ok: true, value: trimmed };
+}
+
+function isAllowedMediaUrl(urlString) {
+  try {
+    const parsed = new URL(String(urlString || ""));
+    return parsed.origin === MEDIA_BASE && parsed.protocol === "https:";
+  } catch {
+    return false;
+  }
+}
+
+function contentTypeForExtension(ext) {
+  return CONTENT_TYPE_BY_EXT[ext] || "application/octet-stream";
+}
+
+async function loadD1MaterialsCached(env) {
+  const now = Date.now();
+  if (d1CatalogCache.materials && now - d1CatalogCache.at < D1_CATALOG_CACHE_TTL_MS) {
+    return d1CatalogCache.materials;
+  }
+  const materials = await loadD1Materials(env);
+  d1CatalogCache = { at: now, materials };
+  return materials;
+}
+
+/** R2 metadata rows not already present in D1 (legacy orphans only). */
+async function loadR2Orphans(env) {
+  if (!env.METADATA_BUCKET || !env.DB) return [];
+  const now = Date.now();
+  if (orphanCache.materials && now - orphanCache.at < ORPHAN_CACHE_TTL_MS) {
+    return orphanCache.materials;
+  }
+
+  const [dbRows, r2Materials] = await Promise.all([
+    env.DB.prepare(
+      "SELECT file_key, r2_url FROM materials WHERE file_key IS NOT NULL OR r2_url IS NOT NULL"
+    )
+      .all()
+      .catch(() => ({ results: [] })),
+    loadR2Materials(env),
+  ]);
+
+  const seen = new Set();
+  for (const row of dbRows.results || []) {
+    const key = materialDedupeKey(row);
+    if (key) seen.add(key);
+  }
+
+  const orphans = r2Materials.filter((material) => {
+    const key = materialDedupeKey(material);
+    return key && !seen.has(key);
+  });
+
+  orphanCache = { at: now, materials: orphans };
+  return orphans;
 }
 
 function readUInt16LE(bytes, offset) {
@@ -938,7 +1092,8 @@ async function handleRegister(request, env) {
     .bind(email)
     .first();
   if (existing?.email_verified) {
-    return jsonResponse({ error: "Ky email është i regjistruar." }, 400);
+    // Same response as a fresh registration to avoid email enumeration.
+    return jsonResponse({ success: true, message: "Kodi u dërgua në emailin tuaj." });
   }
 
   await env.DB.prepare(
@@ -983,6 +1138,26 @@ async function handleVerify(request, env) {
   const code = String(body.code || "").trim();
   if (!email || !code) return jsonResponse({ error: "Emaili dhe kodi kërkohen." }, 400);
 
+  const failKey = `verify_fail:${email}`;
+  const failRow = await env.DB.prepare("SELECT count, reset_at FROM rate_limits WHERE key=?")
+    .bind(failKey)
+    .first()
+    .catch(() => null);
+  const now = Math.floor(Date.now() / 1000);
+  if (
+    failRow &&
+    Number(failRow.reset_at) > now &&
+    Number(failRow.count) >= RATE_LIMITS.verify_fail.requests
+  ) {
+    return jsonResponse(
+      {
+        error: "Shumë tentativa të pasakta. Kërkoni një kod të ri më vonë.",
+        retryAfter: Math.max(1, Number(failRow.reset_at) - now),
+      },
+      429
+    );
+  }
+
   const row = await env.DB.prepare("SELECT * FROM verification_codes WHERE email=?")
     .bind(email)
     .first();
@@ -993,11 +1168,21 @@ async function handleVerify(request, env) {
   }
   const hashedCode = await hashVerificationCode(email, code, env);
   if (!timingSafeEqual(row.code, hashedCode)) {
+    const { locked } = await recordVerifyFailure(email, env);
+    if (locked) {
+      await env.DB.prepare("DELETE FROM verification_codes WHERE email=?").bind(email).run();
+      return jsonResponse(
+        { error: "Shumë tentativa të pasakta. Kërkoni një kod të ri." },
+        429
+      );
+    }
     return jsonResponse({ error: "Kodi nuk është i saktë." }, 400);
   }
 
+  await clearVerifyFailures(email, env);
   await env.DB.prepare("DELETE FROM verification_codes WHERE email=?").bind(email).run();
   await env.DB.prepare("UPDATE users SET email_verified=1 WHERE email=?").bind(email).run();
+  await ensureTokenVersionColumn(env);
   let user = await env.DB.prepare("SELECT * FROM users WHERE email=?").bind(email).first();
   user = await syncModeratorFromEmail(user, env);
   user.is_moderator = userIsModerator(user, env) ? 1 : 0;
@@ -1018,7 +1203,10 @@ async function handleVerify(request, env) {
     // pending_owner_email column may not exist yet — non-fatal
   }
 
-  const token = await signJWT({ sub: user.id, email: user.email }, env);
+  const token = await signJWT(
+    { sub: user.id, email: user.email, tv: Number(user.token_version ?? 0) },
+    env
+  );
 
   return new Response(
     JSON.stringify({
@@ -1036,7 +1224,7 @@ async function handleVerify(request, env) {
       status: 200,
       headers: {
         "Content-Type": "application/json; charset=utf-8",
-        "Set-Cookie": `srh_token=${token}; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=${30 * 24 * 60 * 60}`,
+        "Set-Cookie": authCookieHeader(token),
       },
     }
   );
@@ -1056,7 +1244,10 @@ async function handleLogin(request, env) {
   )
     .bind(email)
     .first();
-  if (!user) return jsonResponse({ error: "Email-i nuk është i regjistruar." }, 400);
+  if (!user) {
+    // Same response as a successful send to avoid email enumeration.
+    return jsonResponse({ success: true, message: "Kodi u dërgua në emailin tuaj." });
+  }
 
   const cooldown = await checkCodeCooldown(email, env);
   if (cooldown !== null) {
@@ -1205,12 +1396,28 @@ async function handleResolveReport(request, env) {
   return jsonResponse({ success: true });
 }
 
-function handleLogout() {
+async function handleLogout(request, env) {
+  if (env.DB) {
+    await ensureTokenVersionColumn(env);
+    const user = await getUserFromRequest(request, env);
+    if (user) {
+      try {
+        await env.DB.prepare(
+          "UPDATE users SET token_version = COALESCE(token_version, 0) + 1 WHERE id = ?"
+        )
+          .bind(user.id)
+          .run();
+      } catch {
+        // non-fatal — cookie is still cleared
+      }
+    }
+  }
+
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
     headers: {
       "Content-Type": "application/json; charset=utf-8",
-      "Set-Cookie": "srh_token=; HttpOnly; Secure; SameSite=None; Path=/; Max-Age=0",
+      "Set-Cookie": clearAuthCookieHeader(),
     },
   });
 }
@@ -1243,22 +1450,7 @@ async function handleMaterials(request, url, env) {
   const limit = Math.min(100, Math.max(1, requestedLimit));
   const offset = (page - 1) * limit;
 
-  if (env.METADATA_BUCKET && userFilter !== "me") {
-    const [dbMaterials, r2Materials] = await Promise.all([
-      loadD1Materials(env),
-      loadR2Materials(env),
-    ]);
-    return paginatedMaterialsResponse(mergePublicMaterials(dbMaterials, r2Materials), {
-      faculty,
-      type,
-      q,
-      studyLevel,
-      page,
-      limit,
-      sort,
-    });
-  }
-
+  // Public catalog is always D1 SQL pagination. R2 metadata is orphan-only (slug miss).
   if (!env.DB) {
     if (userFilter === "me") return jsonResponse({ error: "Unauthorized" }, 401);
     return jsonResponse({
@@ -1392,18 +1584,18 @@ async function handlePublicMaterial(url, env) {
   const slug = String(url.searchParams.get("slug") || "").trim();
   if (!slug) return jsonResponse({ error: "Slug mungon." }, 400);
 
-  let materials = [];
-  if (env.METADATA_BUCKET) {
-    const [dbMaterials, r2Materials] = await Promise.all([
-      loadD1Materials(env),
-      loadR2Materials(env),
-    ]);
-    materials = mergePublicMaterials(dbMaterials, r2Materials);
-  } else if (env.DB) {
-    materials = await loadD1Materials(env);
+  let match = null;
+  if (env.DB) {
+    const d1Materials = await loadD1MaterialsCached(env);
+    match = findMaterialBySlug(d1Materials, slug);
   }
 
-  const match = findMaterialBySlug(materials, slug);
+  // Legacy rows that exist only in R2 metadata (not imported into D1).
+  if (!match && env.METADATA_BUCKET) {
+    const orphans = await loadR2Orphans(env);
+    match = findMaterialBySlug(orphans, slug);
+  }
+
   if (!match) return jsonResponse({ error: "Materiali nuk u gjet." }, 404);
 
   const material = sanitizeMaterialForPublic(match);
@@ -1419,37 +1611,6 @@ function materialToLegacyEntry(material) {
 }
 
 async function handleContributors(env) {
-  if (env.METADATA_BUCKET) {
-    const [dbMaterials, r2Materials] = await Promise.all([
-      loadD1Materials(env),
-      loadR2Materials(env),
-    ]);
-    const materials = mergePublicMaterials(dbMaterials, r2Materials);
-    const contributors = new Map();
-    for (const material of materials) {
-      if (material.is_anonymous) continue;
-      const name = String(material.uploader_name || "").trim();
-      if (!name) continue;
-      const current = contributors.get(name) || {
-        name,
-        surname: "",
-        created_at: material.created_at || "",
-        material_count: 0,
-        faculty: material.faculty || "",
-      };
-      current.material_count += 1;
-      if (!current.faculty && material.faculty) current.faculty = material.faculty;
-      contributors.set(name, current);
-    }
-    return jsonResponse({
-      contributors: Array.from(contributors.values()).sort((a, b) => {
-        const countDiff = Number(b.material_count || 0) - Number(a.material_count || 0);
-        if (countDiff !== 0) return countDiff;
-        return String(a.name || "").localeCompare(String(b.name || ""), "sq");
-      }),
-    });
-  }
-
   if (!env.DB) {
     return jsonResponse({ contributors: [] });
   }
@@ -1476,11 +1637,26 @@ async function handleUpload(request, env) {
   if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const form = await request.formData();
-  const title = String(form.get("title") || "").trim();
+  const titleCheck = validateMaterialTextField(form.get("title"), "Titulli", { maxLen: 200 });
+  if (!titleCheck.ok) return jsonResponse({ error: titleCheck.error }, 400);
+  const subjectCheck = validateMaterialTextField(form.get("subject"), "Lënda", { maxLen: 200 });
+  if (!subjectCheck.ok) return jsonResponse({ error: subjectCheck.error }, 400);
+  const teacherCheck = validateMaterialTextField(form.get("teacher") || "//", "Profesori", {
+    maxLen: 200,
+    allowEmpty: true,
+  });
+  if (!teacherCheck.ok) return jsonResponse({ error: teacherCheck.error }, 400);
+  const departmentCheck = validateMaterialTextField(form.get("department") || "//", "Departamenti", {
+    maxLen: 200,
+    allowEmpty: true,
+  });
+  if (!departmentCheck.ok) return jsonResponse({ error: departmentCheck.error }, 400);
+
+  const title = titleCheck.value;
   const faculty = String(form.get("faculty") || "").trim().toUpperCase();
-  const department = String(form.get("department") || "").trim() || "//";
-  const subject = String(form.get("subject") || "").trim();
-  const teacher = String(form.get("teacher") || "").trim() || "//";
+  const department = departmentCheck.value || "//";
+  const subject = subjectCheck.value;
+  const teacher = teacherCheck.value || "//";
   const type = String(form.get("type") || "").trim();
   const isAnonymous = form.get("is_anonymous") === "1" ? 1 : 0;
   const studyLevelRaw = String(form.get("study_level") || "bachelor").trim().toLowerCase();
@@ -1499,7 +1675,7 @@ async function handleUpload(request, env) {
 
   const fileKey = `materials/${user.id}/${Date.now()}-${sanitizeFilename(file.name)}`;
   const buffer = await file.arrayBuffer();
-  const contentType = file.type || "application/octet-stream";
+  const contentType = contentTypeForExtension(ext);
   await env.MY_BUCKET.put(fileKey, buffer, {
     httpMetadata: { contentType },
   });
@@ -1513,6 +1689,9 @@ async function handleUpload(request, env) {
     .bind(user.id, title, faculty, department, subject, teacher, type, fileKey, ext, file.size, r2Url, isAnonymous, studyLevel)
     .run();
 
+  // Invalidate public catalog cache after upload
+  invalidateCatalogCaches();
+
   return jsonResponse({
     success: true,
     material: {
@@ -1523,7 +1702,6 @@ async function handleUpload(request, env) {
       subject,
       teacher,
       type,
-      file_key: fileKey,
       file_type: ext,
       file_size: file.size,
       r2_url: r2Url,
@@ -1546,11 +1724,26 @@ async function handleEdit(request, url, env) {
   }
 
   const body = await request.json().catch(() => ({}));
-  const title = String(body.title || "").trim();
+  const titleCheck = validateMaterialTextField(body.title, "Titulli", { maxLen: 200 });
+  if (!titleCheck.ok) return jsonResponse({ error: titleCheck.error }, 400);
+  const subjectCheck = validateMaterialTextField(body.subject, "Lënda", { maxLen: 200 });
+  if (!subjectCheck.ok) return jsonResponse({ error: subjectCheck.error }, 400);
+  const teacherCheck = validateMaterialTextField(body.teacher || "//", "Profesori", {
+    maxLen: 200,
+    allowEmpty: true,
+  });
+  if (!teacherCheck.ok) return jsonResponse({ error: teacherCheck.error }, 400);
+  const departmentCheck = validateMaterialTextField(body.department || "//", "Departamenti", {
+    maxLen: 200,
+    allowEmpty: true,
+  });
+  if (!departmentCheck.ok) return jsonResponse({ error: departmentCheck.error }, 400);
+
+  const title = titleCheck.value;
   const faculty = String(body.faculty || "").trim().toUpperCase();
-  const department = String(body.department || "").trim() || "//";
-  const subject = String(body.subject || "").trim();
-  const teacher = String(body.teacher || "").trim() || "//";
+  const department = departmentCheck.value || "//";
+  const subject = subjectCheck.value;
+  const teacher = teacherCheck.value || "//";
   const type = String(body.type || "").trim();
   const studyLevelRaw = String(body.study_level || material.study_level || "bachelor")
     .trim()
@@ -1570,6 +1763,8 @@ async function handleEdit(request, url, env) {
   )
     .bind(title, faculty, department, subject, teacher, type, studyLevel, id)
     .run();
+
+  invalidateCatalogCaches();
 
   return jsonResponse({ success: true });
 }
@@ -1636,6 +1831,8 @@ async function handleDeleteMaterial(request, env) {
   }
 
   await env.DB.prepare("DELETE FROM materials WHERE id = ?").bind(id).run();
+
+  invalidateCatalogCaches();
 
   return jsonResponse({ success: true });
 }
@@ -1938,17 +2135,41 @@ async function handleProxy(url) {
   } catch {
     return jsonResponse({ error: "Invalid url" }, 400);
   }
-  if (parsed.origin !== MEDIA_BASE) {
+  if (parsed.origin !== MEDIA_BASE || parsed.protocol !== "https:") {
     return jsonResponse({ error: "URL not allowed" }, 403);
   }
-  const res = await fetch(target, { redirect: "follow" });
-  return new Response(res.body, {
-    status: res.status,
-    headers: {
-      "Content-Type": res.headers.get("Content-Type") || "application/octet-stream",
-      "Cache-Control": "public, max-age=300",
-    },
-  });
+
+  let current = parsed.toString();
+  for (let hop = 0; hop < 3; hop += 1) {
+    const res = await fetch(current, {
+      redirect: "manual",
+      signal: AbortSignal.timeout(15_000),
+    });
+    if (res.status >= 300 && res.status < 400) {
+      const location = res.headers.get("Location");
+      if (!location) return jsonResponse({ error: "Invalid redirect" }, 502);
+      let next;
+      try {
+        next = new URL(location, current);
+      } catch {
+        return jsonResponse({ error: "Invalid redirect" }, 502);
+      }
+      if (next.origin !== MEDIA_BASE || next.protocol !== "https:") {
+        return jsonResponse({ error: "URL not allowed" }, 403);
+      }
+      current = next.toString();
+      continue;
+    }
+    return new Response(res.body, {
+      status: res.status,
+      headers: {
+        "Content-Type": res.headers.get("Content-Type") || "application/octet-stream",
+        "Cache-Control": "public, max-age=300",
+        "X-Content-Type-Options": "nosniff",
+      },
+    });
+  }
+  return jsonResponse({ error: "Too many redirects" }, 502);
 }
 
 async function handleTrackView(request, env) {
@@ -1982,15 +2203,27 @@ async function handleRedirectMaterial(request, url, env, eventType) {
   const limited = await checkRateLimit(request, rateLimitKey, env);
   if (limited) return limited;
 
-  const material = await env.DB.prepare("SELECT id, r2_url FROM materials WHERE id = ?")
+  const material = await env.DB.prepare("SELECT id, r2_url, file_key FROM materials WHERE id = ?")
     .bind(materialId)
     .first();
-  if (!material?.r2_url) {
+  if (!material) {
+    return jsonResponse({ error: "Material not found" }, 404);
+  }
+
+  let targetUrl = String(material.r2_url || "");
+  if (!isAllowedMediaUrl(targetUrl)) {
+    const key = material.file_key || publicUrlToKey(targetUrl);
+    if (!key || key.includes("..")) {
+      return jsonResponse({ error: "Material not found" }, 404);
+    }
+    targetUrl = keyToPublicUrl(key);
+  }
+  if (!isAllowedMediaUrl(targetUrl)) {
     return jsonResponse({ error: "Material not found" }, 404);
   }
 
   await trackMaterialEventById(request, env, eventType, materialId);
-  return Response.redirect(String(material.r2_url), 302);
+  return Response.redirect(targetUrl, 302);
 }
 
 async function handleViewMaterial(request, url, env) {
@@ -2118,7 +2351,7 @@ export default {
           response = await handleMe(request, env);
           break;
         case "logout":
-          response = handleLogout();
+          response = await handleLogout(request, env);
           break;
         case "report":
           response = await handleReport(request, env);
