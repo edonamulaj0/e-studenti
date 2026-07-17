@@ -14,9 +14,10 @@ import ReportButton from "../components/ReportButton";
 import { FACULTIES, getFacultyName } from "../lib/material-options";
 import { assignMaterialSlugs } from "../lib/material-slug";
 import { STUDY_LEVELS, getStudyLevelLabel } from "../lib/study-levels";
-import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
+import { WORKER_URL, materialDownloadUrl, materialViewUrl } from "../lib/worker-url";
 import MaterialStatsBadge from "../components/MaterialStatsBadge";
 import TrackableDownloadLink from "../components/TrackableDownloadLink";
+import { trackMaterialView } from "../lib/track-material";
 
 const PAGE_SIZE = 24;
 
@@ -247,6 +248,7 @@ export default function MaterialsClient({ initialData = null }) {
   const handleViewClick = (material, e) => {
     if (isArchiveFile(material.fileType)) {
       e.preventDefault();
+      trackMaterialView(material.id);
       setSelectedMaterial(material);
       setModalOpen(true);
     }
@@ -335,7 +337,7 @@ export default function MaterialsClient({ initialData = null }) {
               </button>
             ) : (
             <a
-              href={material.r2Url}
+              href={materialViewUrl(material.id)}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary flex-1 text-base"

@@ -10,7 +10,8 @@ import ArchiveModal from "./ArchiveModal";
 import ReportButton from "./ReportButton";
 import MaterialStatsBadge from "./MaterialStatsBadge";
 import TrackableDownloadLink from "./TrackableDownloadLink";
-import { materialDownloadUrl } from "../lib/worker-url";
+import { materialDownloadUrl, materialViewUrl } from "../lib/worker-url";
+import { trackMaterialView } from "../lib/track-material";
 
 const TYPE_TONES = [
   {
@@ -172,7 +173,10 @@ export default function MaterialCard({ material, allMaterials = [] }) {
               {isArchive ? (
                 <button
                   type="button"
-                  onClick={() => setModalOpen(true)}
+                  onClick={() => {
+                    trackMaterialView(material.id);
+                    setModalOpen(true);
+                  }}
                   className="btn-outline flex-1 text-base"
                 >
                   <Archive className="w-5 h-5" />
@@ -180,7 +184,7 @@ export default function MaterialCard({ material, allMaterials = [] }) {
                 </button>
               ) : (
               <a
-                href={material.r2Url}
+                href={materialViewUrl(material.id)}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="btn-primary flex-1 text-base"

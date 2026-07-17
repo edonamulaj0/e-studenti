@@ -1969,7 +1969,7 @@ async function handleTrackDownload(request, env) {
   return jsonResponse(result);
 }
 
-async function handleDownloadMaterial(request, url, env) {
+async function handleRedirectMaterial(request, url, env, eventType) {
   if (request.method !== "GET") return jsonResponse({ error: "Method not allowed" }, 405);
   if (!env.DB) return databaseUnavailableResponse();
 
@@ -1978,7 +1978,8 @@ async function handleDownloadMaterial(request, url, env) {
     return jsonResponse({ error: "Invalid material id" }, 400);
   }
 
-  const limited = await checkRateLimit(request, "track_download", env);
+  const rateLimitKey = eventType === "view" ? "track_view" : "track_download";
+  const limited = await checkRateLimit(request, rateLimitKey, env);
   if (limited) return limited;
 
   const material = await env.DB.prepare("SELECT id, r2_url FROM materials WHERE id = ?")
@@ -1988,8 +1989,16 @@ async function handleDownloadMaterial(request, url, env) {
     return jsonResponse({ error: "Material not found" }, 404);
   }
 
-  await trackMaterialEventById(request, env, "download", materialId);
+  await trackMaterialEventById(request, env, eventType, materialId);
   return Response.redirect(String(material.r2_url), 302);
+}
+
+async function handleViewMaterial(request, url, env) {
+  return handleRedirectMaterial(request, url, env, "view");
+}
+
+async function handleDownloadMaterial(request, url, env) {
+  return handleRedirectMaterial(request, url, env, "download");
 }
 
 async function handleSiteStatistics(url, env) {
@@ -2048,6 +2057,7 @@ export default {
       "report",
       "track-view",
       "track-download",
+      "view-material",
       "download-material",
       "site-statistics",
       "me",
@@ -2142,6 +2152,9 @@ export default {
           break;
         case "track-download":
           response = await handleTrackDownload(request, env);
+          break;
+        case "view-material":
+          response = await handleViewMaterial(request, url, env);
           break;
         case "download-material":
           response = await handleDownloadMaterial(request, url, env);
