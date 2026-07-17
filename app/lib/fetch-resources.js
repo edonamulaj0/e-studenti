@@ -1,6 +1,4 @@
-const WORKER_URL =
-  process.env.NEXT_PUBLIC_WORKER_URL ||
-  "https://r2-catalog-manager.edonaamulaj.workers.dev";
+import { WORKER_URL } from "./worker-url";
 
 function sanitizeLink(link) {
   if (!link?.is_anonymous) return link;

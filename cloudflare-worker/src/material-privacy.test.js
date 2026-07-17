@@ -36,6 +36,29 @@ describe("anonymous poster privacy", () => {
     expect(sanitized.is_anonymous).toBe(1);
   });
 
+  it("strips user_id and file_key so anonymous uploads cannot be deanonymized", () => {
+    const sanitized = sanitizeMaterialForPublic({
+      ...anonymousMaterial,
+      user_id: 42,
+      file_key: "materials/42/notes.pdf",
+      pending_owner_email: "secret@example.com",
+    });
+    expect(sanitized.user_id).toBeUndefined();
+    expect(sanitized.file_key).toBeUndefined();
+    expect(sanitized.pending_owner_email).toBeUndefined();
+  });
+
+  it("also strips identity fields for non-anonymous public payloads", () => {
+    const sanitized = sanitizeMaterialForPublic({
+      ...publicMaterial,
+      user_id: 7,
+      file_key: "materials/7/file.pdf",
+    });
+    expect(sanitized.user_id).toBeUndefined();
+    expect(sanitized.file_key).toBeUndefined();
+    expect(sanitized.uploader_name).toBe("Arben Krasniqi");
+  });
+
   it("legacy entry shows Anonim, not the real name", () => {
     const entry = materialToPublicLegacyEntry(anonymousMaterial, (name) => name);
     expect(entry.submittedBy.name).toBe(ANONYMOUS_DISPLAY_NAME);

@@ -21,10 +21,10 @@ Use `.env.example` and `cloudflare-worker/.env.example` as templates. Do not put
 
 ## Security Rules
 
-- Do not commit `.env`, `.dev.vars`, `.wrangler`, `.next`, API tokens, JWT secrets, Resend keys, database dumps, or private admin tooling.
+- Do not commit `.env`, `.dev.vars`, `.wrangler`, `.next`, API tokens, secrets, database dumps, or private admin tooling.
 - Do not add workflows or scripts that publish secrets, local state, or generated build output.
 - Report vulnerabilities privately using the process in `SECURITY.md`.
-- Keep upload validation, CORS, rate limiting, JWT claims, and CSP changes in place unless a replacement is reviewed.
+- Do not weaken auth, upload validation, or browser hardening without a reviewed replacement.
 
 ## Pull Requests
 

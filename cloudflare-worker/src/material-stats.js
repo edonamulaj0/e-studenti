@@ -18,8 +18,9 @@ function utcWeekKey(date = new Date()) {
   return d.toISOString().slice(0, 10);
 }
 
-export async function hashVisitorIdentity(ip, sessionId, secret) {
-  const data = new TextEncoder().encode(`${ip}:${sessionId || ""}:${secret || "stats"}`);
+export async function hashVisitorIdentity(ip, _sessionId, secret) {
+  // Ignore client-supplied session ids — they were rotatable and inflated stats.
+  const data = new TextEncoder().encode(`${ip}:${secret || "stats"}`);
   const digest = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
@@ -120,6 +121,5 @@ export async function trackMaterialEventById(request, env, eventType, materialId
 export async function trackMaterialEvent(request, env, eventType) {
   const body = await request.json().catch(() => ({}));
   const materialId = Number(body.material_id);
-  const sessionId = String(body.session_id || "").trim().slice(0, 64);
-  return trackMaterialEventById(request, env, eventType, materialId, sessionId);
+  return trackMaterialEventById(request, env, eventType, materialId, "");
 }
