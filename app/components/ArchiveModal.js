@@ -10,7 +10,7 @@ import {
   AlertCircle,
 } from "lucide-react";
 import JSZip from "jszip";
-import { WORKER_URL } from "../lib/worker-url";
+import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
 import ModalOverlay from "./ModalOverlay";
 
 export default function ArchiveModal({ isOpen, onClose, material }) {
@@ -264,7 +264,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
         <div className="p-6 border-t border-srh-cream bg-srh-paper rounded-b-2xl">
           <div className="flex space-x-3">
             <a
-              href={material?.r2Url}
+              href={material?.id ? materialDownloadUrl(material.id) : material?.r2Url}
               target="_blank"
               rel="noopener noreferrer"
               download
