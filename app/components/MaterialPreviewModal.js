@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   X,
   Download,
@@ -22,28 +22,57 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
   const [sheetNames, setSheetNames] = useState([]);
   const [activeSheet, setActiveSheet] = useState("");
   const [sheetHtml, setSheetHtml] = useState("");
+  const [pdfBlobUrl, setPdfBlobUrl] = useState("");
 
   const containerRef = useRef(null);
   const workbookRef = useRef(null);
   const xlsxRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   const kind = material ? getPreviewKind(material.fileType) : "unsupported";
   const fileUrl = material?.r2Url || "";
   const downloadHref = material?.id ? materialDownloadUrl(material.id) : fileUrl;
 
+  // Scale wide documents/slides down so they fit the modal width (no h-scroll).
+  const applyFitToWidth = useCallback(() => {
+    const container = containerRef.current;
+    const content = container?.firstElementChild;
+    if (!container || !content) return;
+    content.style.zoom = "";
+    const natural = content.scrollWidth;
+    const avail = container.clientWidth;
+    if (natural > 0 && avail > 0 && natural > avail) {
+      content.style.zoom = String(avail / natural);
+    }
+  }, []);
+
+  // On mobile, the "back" gesture should close the modal and keep the user on
+  // the materials page instead of navigating away in browser history.
+  useEffect(() => {
+    if (!isOpen || typeof window === "undefined") return undefined;
+    const handlePop = () => onCloseRef.current?.();
+    window.history.pushState({ preview: true }, "");
+    window.addEventListener("popstate", handlePop);
+    return () => {
+      window.removeEventListener("popstate", handlePop);
+      if (window.history.state && window.history.state.preview) {
+        window.history.back();
+      }
+    };
+  }, [isOpen]);
+
   useEffect(() => {
     if (!isOpen || !material || !fileUrl) return undefined;
 
     let cancelled = false;
+    let objectUrl = "";
     setSheetNames([]);
     setActiveSheet("");
     setSheetHtml("");
+    setPdfBlobUrl("");
     workbookRef.current = null;
 
-    if (kind === "pdf") {
-      setStatus("ready");
-      return undefined;
-    }
     if (kind === "unsupported" || kind === "archive") {
       setStatus("unsupported");
       return undefined;
@@ -53,13 +82,24 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
 
     (async () => {
       try {
+        // Fetch through the worker proxy (same-origin) so browsers like Brave
+        // and X-Frame-Options can't block embedding the file.
         const res = await fetch(proxyUrl(fileUrl), { cache: "no-cache" });
         if (!res.ok) throw new Error(`fetch ${res.status}`);
         const buffer = await res.arrayBuffer();
         if (cancelled) return;
         if (!buffer || buffer.byteLength === 0) throw new Error("empty file");
 
-        if (kind === "docx") {
+        if (kind === "pdf") {
+          objectUrl = URL.createObjectURL(
+            new Blob([buffer], { type: "application/pdf" })
+          );
+          if (cancelled) {
+            URL.revokeObjectURL(objectUrl);
+            return;
+          }
+          setPdfBlobUrl(objectUrl);
+        } else if (kind === "docx") {
           const docx = await import("docx-preview");
           if (cancelled || !containerRef.current) return;
           containerRef.current.innerHTML = "";
@@ -87,7 +127,12 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
           });
         }
 
-        if (!cancelled) setStatus("ready");
+        if (!cancelled) {
+          setStatus("ready");
+          if (kind === "docx" || kind === "pptx") {
+            requestAnimationFrame(() => applyFitToWidth());
+          }
+        }
       } catch (err) {
         console.error("Preview render error:", err);
         if (!cancelled) setStatus("error");
@@ -96,8 +141,19 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
 
     return () => {
       cancelled = true;
+      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
-  }, [isOpen, material?.id, kind, fileUrl]);
+  }, [isOpen, material?.id, kind, fileUrl, applyFitToWidth]);
+
+  // Re-fit documents/slides when the viewport (modal) width changes.
+  useEffect(() => {
+    if (!isOpen || (kind !== "docx" && kind !== "pptx")) return undefined;
+    const container = containerRef.current;
+    if (!container || typeof ResizeObserver === "undefined") return undefined;
+    const observer = new ResizeObserver(() => applyFitToWidth());
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isOpen, kind, status, applyFitToWidth]);
 
   // Re-render the active spreadsheet sheet as an HTML table.
   useEffect(() => {
@@ -194,11 +250,11 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
             </div>
           )}
 
-          {/* PDF: native browser viewer */}
-          {kind === "pdf" && (
+          {/* PDF: native browser viewer (blob keeps it same-origin) */}
+          {kind === "pdf" && pdfBlobUrl && (
             <iframe
-              key={fileUrl}
-              src={fileUrl}
+              key={pdfBlobUrl}
+              src={pdfBlobUrl}
               title={material.title}
               className="h-full w-full border-0"
             />
