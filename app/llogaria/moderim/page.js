@@ -515,7 +515,7 @@ function ModerimPage() {
                         ) : (
                           <>
                             <Link
-                              href={`/llogaria/ndrysho/${m.id}?from=moderim`}
+                              href={`/llogaria/ndrysho?id=${m.id}&from=moderim`}
                               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 border-navy-900 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-navy-900 hover:text-white"
                             >
                               <Pencil className="h-3.5 w-3.5" />
