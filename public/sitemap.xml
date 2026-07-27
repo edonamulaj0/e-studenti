@@ -126,7 +126,17 @@
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://e-studenti.com/materialet/mekanika-teknike-2-afate-fim</loc>
+    <loc>https://e-studenti.com/materialet/mekanika-teknike-1-afate-fim</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://e-studenti.com/materialet/mekanika-teknike-2-afate-fim-77</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://e-studenti.com/materialet/mekanika-teknike-2-afate-fim-76</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
@@ -417,51 +427,6 @@
   </url>
   <url>
     <loc>https://e-studenti.com/materialet/implantologji-ligjeratat-med</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://e-studenti.com/materialet/elektronika-pjesa-1-fiek</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://e-studenti.com/materialet/elektronika-shenime-fiek</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://e-studenti.com/materialet/kapitulli-4-arkitektura-e-kompjutereve-fiek</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://e-studenti.com/materialet/kapitulli-5-arkitektura-e-kompjutereve-fiek</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://e-studenti.com/materialet/kapitulli-6-arkitektura-e-kompjutereve-fiek</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://e-studenti.com/materialet/kolokviumi-1-arkitektura-e-kompjutereve-fiek</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://e-studenti.com/materialet/matjet-elektronike-fiek</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://e-studenti.com/materialet/mikroprocesoret-dhe-mikrokontrolleret-fiek</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://e-studenti.com/materialet/qarqe-kompjuterike-kombinuese-fiek</loc>
     <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>

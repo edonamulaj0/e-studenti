@@ -1,30 +1,41 @@
 "use client";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+import { fetchCurrentUser } from "../lib/auth";
+import { VIBER_URL } from "./ViberIcon";
 
-const sections = [
-  {
-    title: "Platforma",
-    links: [
-      { href: "/", label: "Ballina" },
-      { href: "/fakultetet", label: "Fakultetet" },
-      { href: "/materialet", label: "Materialet" },
-      { href: "/erasmus", label: "Erasmus+" },
-      { href: "/informacione", label: "Rreth nesh" },
-      { href: "/statistikat", label: "Statistikat" },
-    ],
-  },
-  {
-    title: "Llogaria",
-    links: [
-      { href: "/llogaria/regjistrohu", label: "Regjistrohu" },
-      { href: "/llogaria/hyr", label: "Hyr" },
-      { href: "/llogaria/ngarko", label: "Ngarko material" },
-      { href: "/llogaria/materiale-e-mia", label: "Materialet e mia" },
-    ],
-  },
+const INSTAGRAM_URL = "https://www.instagram.com/estudenti.hub";
+
+const platformaLinks = [
+  { href: "/", label: "Ballina" },
+  { href: "/fakultetet", label: "Fakultetet" },
+  { href: "/materialet", label: "Materialet" },
+  { href: "/erasmus", label: "Erasmus+" },
+  { href: "/informacione", label: "Rreth nesh" },
 ];
 
+const accountLinks = [
+  { href: "/llogaria/ngarko", label: "Ngarko material" },
+  { href: "/llogaria/materiale-e-mia", label: "Materialet e mia" },
+];
+
+const linkClass =
+  "block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white";
+const headingClass =
+  "text-xs font-semibold uppercase tracking-widest text-white/65";
+
 export default function Footer() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    const syncAuth = () => {
+      fetchCurrentUser().then((user) => setIsLoggedIn(!!user));
+    };
+    syncAuth();
+    window.addEventListener("srh-auth-change", syncAuth);
+    return () => window.removeEventListener("srh-auth-change", syncAuth);
+  }, []);
+
   return (
     <footer className="relative overflow-hidden border-t border-white/10 bg-navy-900 text-white">
       <img
@@ -69,53 +80,64 @@ export default function Footer() {
           </div>
 
           <div className="grid grid-cols-2 gap-8 text-sm sm:grid-cols-3">
-            {sections.map((section) => (
-              <div key={section.title} className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-white/65">
-                  {section.title}
-                </p>
-                {section.links.map((link) => (
+            <div className="space-y-2">
+              <p className={headingClass}>Platforma</p>
+              {platformaLinks.map((link) => (
+                <Link key={link.href} href={link.href} className={linkClass}>
+                  {link.label}
+                </Link>
+              ))}
+            </div>
+
+            <div className="space-y-2">
+              <p className={headingClass}>Komuniteti</p>
+              <a
+                href={INSTAGRAM_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={linkClass}
+              >
+                Instagram
+              </a>
+              <a
+                href={VIBER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={linkClass}
+              >
+                Viber
+              </a>
+              <a
+                href="https://github.com/edonamulaj0/e-studenti"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={linkClass}
+              >
+                GitHub
+              </a>
+            </div>
+
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <p className={headingClass}>Llogaria</p>
+                {accountLinks.map((link) => (
                   <Link
                     key={link.href}
-                    href={link.href}
-                    className="block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white"
+                    href={isLoggedIn ? link.href : "/llogaria/regjistrohu"}
+                    className={linkClass}
                   >
                     {link.label}
                   </Link>
                 ))}
               </div>
-            ))}
-            <div className="space-y-5">
               <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-white/65">
-                  Ligjore
-                </p>
-                <Link
-                  href="/privatesia"
-                  className="block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white"
-                >
+                <p className={headingClass}>Ligjore</p>
+                <Link href="/privatesia" className={linkClass}>
                   Politika e privatësisë
                 </Link>
-                <Link
-                  href="/kushtet"
-                  className="block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white"
-                >
+                <Link href="/kushtet" className={linkClass}>
                   Kushtet e shërbimit
                 </Link>
-              </div>
-              <div className="space-y-2">
-                <p className="text-xs font-semibold uppercase tracking-widest text-white/35">
-                  Komuniteti
-                </p>
-              <a
-                href="https://github.com/edonamulaj0/e-studenti"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white"
-              >
-                GitHub
-              </a>
-              <span className="block text-white/65">E mirëmbajtur nga komuniteti.</span>
               </div>
             </div>
           </div>

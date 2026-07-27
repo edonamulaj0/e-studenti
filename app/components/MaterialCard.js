@@ -7,10 +7,11 @@ import { getFacultyName } from "../lib/material-options";
 import { assignMaterialSlugs } from "../lib/material-slug";
 import { getStudyLevelLabel } from "../lib/study-levels";
 import ArchiveModal from "./ArchiveModal";
+import MaterialPreviewModal from "./MaterialPreviewModal";
 import ReportButton from "./ReportButton";
 import MaterialStatsBadge from "./MaterialStatsBadge";
 import TrackableDownloadLink from "./TrackableDownloadLink";
-import { materialDownloadUrl, materialViewUrl } from "../lib/worker-url";
+import { materialDownloadUrl } from "../lib/worker-url";
 import { trackMaterialView } from "../lib/track-material";
 
 const TYPE_TONES = [
@@ -93,6 +94,7 @@ export function normalizeMaterial(material) {
 
 export default function MaterialCard({ material, allMaterials = [] }) {
   const [modalOpen, setModalOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const tone = typeTone(material.type);
   const facultyName = getFacultyName(material.faculty);
   const slug =
@@ -183,16 +185,18 @@ export default function MaterialCard({ material, allMaterials = [] }) {
                   Permbajtja
                 </button>
               ) : (
-              <a
-                href={materialViewUrl(material.id)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary flex-1 text-base"
-              >
-                <Eye className="w-5 h-5" />
-                Shiko
-              </a>
-            )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    trackMaterialView(material.id);
+                    setPreviewOpen(true);
+                  }}
+                  className="btn-primary flex-1 text-base"
+                >
+                  <Eye className="w-5 h-5" />
+                  Shiko
+                </button>
+              )}
             <TrackableDownloadLink
               materialId={material.id}
               href={materialDownloadUrl(material.id)}
@@ -216,6 +220,12 @@ export default function MaterialCard({ material, allMaterials = [] }) {
       <ArchiveModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
+        material={material}
+      />
+
+      <MaterialPreviewModal
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
         material={material}
       />
     </>

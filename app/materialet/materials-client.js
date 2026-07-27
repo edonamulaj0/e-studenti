@@ -10,6 +10,7 @@ import {
   Archive,
 } from "lucide-react";
 import ArchiveModal from "../components/ArchiveModal";
+import MaterialPreviewModal from "../components/MaterialPreviewModal";
 import ReportButton from "../components/ReportButton";
 import { FACULTIES, getFacultyName } from "../lib/material-options";
 import { assignMaterialSlugs } from "../lib/material-slug";
@@ -125,6 +126,7 @@ export default function MaterialsClient({ initialData = null }) {
     initialData?.typeCounts || {}
   );
   const [modalOpen, setModalOpen] = useState(false);
+  const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
 
   useEffect(() => {
@@ -246,11 +248,13 @@ export default function MaterialsClient({ initialData = null }) {
   };
 
   const handleViewClick = (material, e) => {
+    if (e) e.preventDefault();
+    trackMaterialView(material.id);
+    setSelectedMaterial(material);
     if (isArchiveFile(material.fileType)) {
-      e.preventDefault();
-      trackMaterialView(material.id);
-      setSelectedMaterial(material);
       setModalOpen(true);
+    } else {
+      setPreviewOpen(true);
     }
   };
 
@@ -338,6 +342,7 @@ export default function MaterialsClient({ initialData = null }) {
             ) : (
             <a
               href={materialViewUrl(material.id)}
+              onClick={(e) => handleViewClick(material, e)}
               target="_blank"
               rel="noopener noreferrer"
               className="btn-primary flex-1 text-base"
@@ -573,6 +578,12 @@ export default function MaterialsClient({ initialData = null }) {
       <ArchiveModal
         isOpen={modalOpen}
         onClose={() => setModalOpen(false)}
+        material={selectedMaterial}
+      />
+
+      <MaterialPreviewModal
+        isOpen={previewOpen}
+        onClose={() => setPreviewOpen(false)}
         material={selectedMaterial}
       />
     </div>

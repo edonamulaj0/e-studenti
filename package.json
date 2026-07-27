@@ -11,8 +11,10 @@
 		"sync-erasmus": "node scripts/sync-erasmus.mjs"
 	},
 	"dependencies": {
+		"@aiden0z/pptx-renderer": "^1.2.4",
 		"@aws-sdk/client-s3": "^3.850.0",
 		"@aws-sdk/s3-request-presigner": "^3.850.0",
+		"docx-preview": "^0.4.0",
 		"dotenv": "^17.2.0",
 		"framer-motion": "^12.38.0",
 		"jszip": "^3.10.1",
@@ -20,7 +22,8 @@
 		"next": "^15.5.18",
 		"react": "^18.3.1",
 		"react-dom": "^18.3.1",
-		"recharts": "^2.15.4"
+		"recharts": "^2.15.4",
+		"xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
 	},
 	"browserslist": [
 		"chrome >= 93",
