@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
-import { FileText, Download, Eye, Archive } from "lucide-react";
+import { Download, Eye, Archive } from "lucide-react";
 import { getFacultyName } from "../lib/material-options";
 import { assignMaterialSlugs } from "../lib/material-slug";
 import { getStudyLevelLabel } from "../lib/study-levels";
@@ -13,6 +13,7 @@ import MaterialStatsBadge from "./MaterialStatsBadge";
 import TrackableDownloadLink from "./TrackableDownloadLink";
 import { materialDownloadUrl } from "../lib/worker-url";
 import { trackMaterialView } from "../lib/track-material";
+import { getFileTypeBadge } from "../lib/file-preview";
 
 const TYPE_TONES = [
   {
@@ -101,6 +102,7 @@ export default function MaterialCard({ material, allMaterials = [] }) {
     material.slug ||
     assignMaterialSlugs(allMaterials.length ? allMaterials : [material])[0]?.slug;
   const isArchive = material.fileType?.toLowerCase() === "zip";
+  const fileBadge = getFileTypeBadge(material.fileType);
   const department = displayDepartment(material.department);
 
   return (
@@ -133,9 +135,9 @@ export default function MaterialCard({ material, allMaterials = [] }) {
             </div>
           </div>
           <span
-            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tone.icon}`}
+            className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-[11px] font-bold tracking-tight ${fileBadge.className}`}
           >
-            <FileText className="h-6 w-6" />
+            {fileBadge.label}
           </span>
         </div>
 
