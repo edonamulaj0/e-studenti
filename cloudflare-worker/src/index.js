@@ -1574,7 +1574,10 @@ async function handleMaterial(request, url, env) {
   )
     .bind(id)
     .first();
-  if (!material || Number(material.user_id) !== Number(user.id)) {
+  if (
+    !material ||
+    (Number(material.user_id) !== Number(user.id) && !userIsModerator(user, env))
+  ) {
     return jsonResponse({ error: "Nuk keni leje." }, 403);
   }
   return jsonResponse({ material });
