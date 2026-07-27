@@ -165,6 +165,20 @@
   }
 }
 
+/* Document preview (docx-preview): drop the gray canvas + page drop-shadows
+   that render as "random shadows and lines" behind the document. */
+.docx-wrapper {
+  background: transparent !important;
+  padding: 1rem !important;
+}
+
+.docx-wrapper > section.docx {
+  margin-bottom: 1rem !important;
+  box-shadow: none !important;
+  border: 1px solid #e5e0d5 !important;
+  border-radius: 8px;
+}
+
 /* Spreadsheet preview tables (SheetJS sheet_to_html output) */
 .sheet-preview table {
   border-collapse: collapse;
