@@ -188,10 +188,11 @@ export default function Navbar() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Bashkohu në Viber"
-                className="btn-viber mx-auto w-14 px-0"
+                className="btn-viber w-full justify-center"
                 onClick={handleLinkClick}
               >
-                <ViberIcon className="h-6 w-6" />
+                <ViberIcon className="h-5 w-5" />
+                Bashkohu në Viber
               </a>
             )}
             {isLoggedIn && (
