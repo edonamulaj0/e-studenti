@@ -115,15 +115,15 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
   const showSpinner = status === "loading";
 
   return (
-    <ModalOverlay open={isOpen} onClose={onClose} className="!p-2 sm:!p-4">
+    <ModalOverlay open={isOpen} onClose={onClose} className="!p-0 sm:!p-4">
       <div
-        className="flex h-[96vh] w-full max-w-[1600px] flex-col overflow-hidden rounded-2xl border border-srh-cream bg-white shadow-2xl"
+        className="preview-modal-height flex w-full max-w-[1600px] flex-col overflow-hidden border border-srh-cream bg-white shadow-2xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
       >
         {/* Header */}
-        <div className="flex items-center justify-between gap-4 border-b border-srh-cream px-5 py-3">
+        <div className="flex items-center justify-between gap-3 border-b border-srh-cream px-4 py-3 sm:px-5">
           <div className="min-w-0">
             <h2 className="truncate font-playfair text-lg font-bold text-srh-navy sm:text-xl">
               {material.title}

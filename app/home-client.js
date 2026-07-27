@@ -62,9 +62,10 @@ export default function HomeClient() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Bashkohu në Viber"
-                className="btn-viber w-12 px-0"
+                className="btn-viber w-full justify-center text-base sm:w-12 sm:px-0"
               >
                 <ViberIcon className="h-6 w-6" />
+                <span className="sm:hidden">Bashkohu në Viber</span>
               </a>
             </div>
           </motion.div>

@@ -165,6 +165,20 @@
   }
 }
 
+/* Preview modal height: full dynamic viewport on mobile (so the browser URL
+   bar doesn't cover the modal), fixed vh fallback for older browsers. */
+.preview-modal-height {
+  height: 100vh;
+  height: 100dvh;
+}
+
+@media (min-width: 640px) {
+  .preview-modal-height {
+    height: 92vh;
+    height: 92dvh;
+  }
+}
+
 /* Document preview (docx-preview): drop the gray canvas + page drop-shadows
    that render as "random shadows and lines" behind the document. */
 .docx-wrapper {
