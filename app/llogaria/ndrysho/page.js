@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import EditMaterialClient from "./[id]/EditMaterialClient";
+import EditMaterialClient from "./EditMaterialClient";
 
 export default function NdryshoMaterialQueryPage() {
   const [id, setId] = useState(null);

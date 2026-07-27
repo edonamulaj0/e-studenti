@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { WORKER_URL } from "../../../lib/worker-url";
-import { fetchCurrentUser } from "../../../lib/auth";
-import { FACULTIES, MATERIAL_TYPES } from "../../../lib/material-options";
+import { WORKER_URL } from "../../lib/worker-url";
+import { fetchCurrentUser } from "../../lib/auth";
+import { FACULTIES, MATERIAL_TYPES } from "../../lib/material-options";
 
 const emptyForm = {
   title: "",
