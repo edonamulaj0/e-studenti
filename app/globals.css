@@ -153,10 +153,33 @@
     @apply btn border border-gray-200 bg-white/80 text-navy-900 hover:-translate-y-0.5 hover:border-burgundy-600 hover:text-burgundy-600 hover:shadow-sm focus:ring-burgundy-600/15;
   }
 
+  .btn-viber {
+    @apply btn bg-[#7360f2] text-white hover:-translate-y-0.5 hover:bg-[#6250d6] hover:shadow-md focus:ring-[#7360f2]/30;
+  }
+
   .soft-grid {
     background-image:
       linear-gradient(rgba(26, 35, 50, 0.04) 1px, transparent 1px),
       linear-gradient(90deg, rgba(26, 35, 50, 0.04) 1px, transparent 1px);
     background-size: 32px 32px;
   }
+}
+
+/* Spreadsheet preview tables (SheetJS sheet_to_html output) */
+.sheet-preview table {
+  border-collapse: collapse;
+  font-size: 0.8rem;
+  color: #1a2332;
+}
+
+.sheet-preview td,
+.sheet-preview th {
+  border: 1px solid #e5e0d5;
+  padding: 4px 8px;
+  white-space: nowrap;
+  min-width: 48px;
+}
+
+.sheet-preview tr:nth-child(even) td {
+  background: #faf8f4;
 }

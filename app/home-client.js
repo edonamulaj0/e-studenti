@@ -14,6 +14,7 @@ import {
   HelpCircle,
   Upload,
 } from "lucide-react";
+import ViberIcon, { VIBER_URL } from "./components/ViberIcon";
 
 const fadeUp = {
   initial: false,
@@ -56,6 +57,15 @@ export default function HomeClient() {
               <Link href="/llogaria/ngarko" className="btn-outline text-base">
                 Ngarko Materialin Tënd
               </Link>
+              <a
+                href={VIBER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Bashkohu në Viber"
+                className="btn-viber w-12 px-0"
+              >
+                <ViberIcon className="h-6 w-6" />
+              </a>
             </div>
           </motion.div>
 
@@ -229,6 +239,36 @@ export default function HomeClient() {
             ))}
           </div>
         </div>
+      </section>
+
+      <section className="px-6 py-12 md:px-12 md:py-14 lg:py-16">
+        <motion.div
+          {...fadeUp}
+          className="mx-auto flex max-w-7xl flex-col items-center gap-6 overflow-hidden rounded-3xl bg-[#7360f2] p-8 text-center text-white shadow-lg md:flex-row md:justify-between md:p-10 md:text-left"
+        >
+          <div className="flex flex-col items-center gap-5 md:flex-row">
+            <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl bg-white/15">
+              <ViberIcon className="h-9 w-9" />
+            </span>
+            <div>
+              <h2 className="font-display text-2xl font-bold leading-tight text-white md:text-3xl">
+                Bashkohu me komunitetin në Viber
+              </h2>
+              <p className="mt-2 max-w-xl text-white/85">
+                Merr njoftimet, afatet dhe materialet e reja direkt në grupin
+                tonë.
+              </p>
+            </div>
+          </div>
+          <a
+            href={VIBER_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#7360f2] transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/90 focus:outline-none focus:ring-4 focus:ring-white/40"
+          >
+            Bashkohu tani
+          </a>
+        </motion.div>
       </section>
     </div>
   );

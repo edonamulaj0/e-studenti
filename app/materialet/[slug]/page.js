@@ -1,10 +1,11 @@
 import Link from "next/link";
-import { Eye, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 import ReportButton from "../../components/ReportButton";
 import MaterialViewTracker from "../../components/MaterialViewTracker";
+import MaterialViewButton from "../../components/MaterialViewButton";
 import MaterialStatsBadge from "../../components/MaterialStatsBadge";
 import MaterialDownloadButton from "../../components/MaterialDownloadButton";
-import { materialDownloadUrl, materialViewUrl } from "../../lib/worker-url";
+import { materialDownloadUrl } from "../../lib/worker-url";
 import JsonLd, {
   breadcrumbJsonLd,
   materialJsonLd,
@@ -180,15 +181,15 @@ export default async function MaterialDetailPage({ params }) {
             <div className="flex flex-col gap-3 sm:flex-row">
               {material.r2_url && (
                 <>
-                  <a
-                    href={materialViewUrl(material.id)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-primary flex-1"
-                  >
-                    <Eye className="h-5 w-5" />
-                    Shiko materialin
-                  </a>
+                  <MaterialViewButton
+                    material={{
+                      id: material.id,
+                      title: material.title,
+                      r2Url: material.r2_url,
+                      fileType: material.file_type || material.fileType,
+                      fileSize: material.file_size || material.fileSize,
+                    }}
+                  />
                   <MaterialDownloadButton
                     materialId={material.id}
                     href={materialDownloadUrl(material.id)}

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { fetchCurrentUser } from "../lib/auth";
+import ViberIcon, { VIBER_URL } from "./ViberIcon";
 
 const navItems = [
   { href: "/fakultetet", label: "Fakultetet" },
@@ -123,6 +124,17 @@ export default function Navbar() {
             >
               {isLoggedIn ? "Llogaria ime" : "Hyr / Regjistrohu"}
             </Link>
+            {!isLoggedIn && (
+              <a
+                href={VIBER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Bashkohu në Viber"
+                className="btn-viber min-h-[44px] w-11 px-0"
+              >
+                <ViberIcon className="h-5 w-5" />
+              </a>
+            )}
             {isLoggedIn && (
               <Link
                 href="/llogaria/ngarko"
@@ -170,6 +182,18 @@ export default function Navbar() {
             >
               {isLoggedIn ? "Llogaria ime" : "Hyr / Regjistrohu"}
             </Link>
+            {!isLoggedIn && (
+              <a
+                href={VIBER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Bashkohu në Viber"
+                className="btn-viber mx-auto w-14 px-0"
+                onClick={handleLinkClick}
+              >
+                <ViberIcon className="h-6 w-6" />
+              </a>
+            )}
             {isLoggedIn && (
               <Link
                 href="/llogaria/ngarko"

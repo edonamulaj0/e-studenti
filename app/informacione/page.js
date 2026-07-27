@@ -15,6 +15,7 @@ import {
 import { WORKER_URL } from "../lib/worker-url";
 import { FAQ_TEASER } from "../lib/faq-content";
 import Link from "next/link";
+import ViberIcon, { VIBER_URL } from "../components/ViberIcon";
 
 const SUBJECTS = ["Raportoj material", "Kërkesë heqjeje", "Problem teknik", "Bashkëpunim", "Tjetër"];
 
@@ -376,21 +377,48 @@ export default function InformacionePage() {
 
           <SectionCard id="kontakt" icon={Mail} title="Kontakti">
             <div>
-              <div className="mb-6 rounded-2xl bg-burgundy-50 p-5 text-gray-600">
+              <div className="mb-6 grid gap-4 sm:grid-cols-2">
                 <a
                   href="https://www.instagram.com/estudenti.hub"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mb-2 flex items-center gap-2 font-semibold text-burgundy-600 hover:underline"
+                  className="group flex items-center gap-3 rounded-2xl bg-[#f4f2fe] p-5 transition-all hover:-translate-y-0.5 hover:shadow-sm"
                 >
-                  <MessageSquare className="w-5 h-5" />
-                  @estudenti.hub
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-burgundy-600/10 text-burgundy-600">
+                    <MessageSquare className="h-6 w-6" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Instagram
+                    </span>
+                    <span className="block truncate font-semibold text-burgundy-600 group-hover:underline">
+                      @estudenti.hub
+                    </span>
+                  </span>
                 </a>
-                <p className="text-sm leading-relaxed">
-                  Formulari më poshtë mund të përdoret për raporte ose njoftime,
-                  por për përgjigje direkte ju lutemi shkruani në Instagram.
-                </p>
+                <a
+                  href={VIBER_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-3 rounded-2xl bg-[#f4f2fe] p-5 transition-all hover:-translate-y-0.5 hover:shadow-sm"
+                >
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#7360f2]/15 text-[#7360f2]">
+                    <ViberIcon className="h-6 w-6" />
+                  </span>
+                  <span className="min-w-0">
+                    <span className="block text-xs font-semibold uppercase tracking-wide text-gray-500">
+                      Viber
+                    </span>
+                    <span className="block truncate font-semibold text-[#7360f2] group-hover:underline">
+                      Bashkohu në grup
+                    </span>
+                  </span>
+                </a>
               </div>
+              <p className="mb-6 text-sm leading-relaxed text-gray-600">
+                Formulari më poshtë mund të përdoret për raporte ose njoftime,
+                por për përgjigje direkte ju lutemi shkruani në Instagram.
+              </p>
 
               <form onSubmit={submitContact} className="space-y-5">
                 <label className="block">
