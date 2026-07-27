@@ -19,6 +19,7 @@ import { WORKER_URL, materialDownloadUrl, materialViewUrl } from "../lib/worker-
 import MaterialStatsBadge from "../components/MaterialStatsBadge";
 import TrackableDownloadLink from "../components/TrackableDownloadLink";
 import { trackMaterialView } from "../lib/track-material";
+import { getFileTypeBadge } from "../lib/file-preview";
 
 const PAGE_SIZE = 24;
 
@@ -261,6 +262,7 @@ export default function MaterialsClient({ initialData = null }) {
   const renderCard = (material) => {
     const tone = typeTone(material.type);
     const facultyName = getFacultyName(material.faculty);
+    const fileBadge = getFileTypeBadge(material.fileType);
     return (
     <div
       key={material.id}
@@ -288,8 +290,8 @@ export default function MaterialsClient({ initialData = null }) {
             <span>{material.department}</span>
           </div>
         </div>
-        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl ${tone.icon}`}>
-          <FileText className="h-6 w-6" />
+        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-[11px] font-bold tracking-tight ${fileBadge.className}`}>
+          {fileBadge.label}
         </span>
       </div>
 
