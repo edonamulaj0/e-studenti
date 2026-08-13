@@ -30,6 +30,15 @@ export function isArchiveType(fileType) {
   return getPreviewKind(fileType) === "archive";
 }
 
+/**
+ * False for types with no in-browser view at all. RAR is the only one: no
+ * renderer handles it and the archive modal cannot list its entries, so those
+ * materials are offered as a download only.
+ */
+export function hasInBrowserView(fileType) {
+  return normalizeExtension(fileType, "") !== "rar";
+}
+
 /** True for types the preview modal can render inline. */
 export function isPreviewable(fileType) {
   return ["pdf", "docx", "sheet", "pptx"].includes(getPreviewKind(fileType));

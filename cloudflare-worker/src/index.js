@@ -403,12 +403,6 @@ function normalizeR2Material(record, fallbackKey, index = 0) {
   return material;
 }
 
-function isPublicMaterial(material) {
-  return String(material.file_type || material.fileType || "")
-    .toLowerCase()
-    .trim() !== "rar";
-}
-
 async function loadR2Materials(env) {
   if (!env.METADATA_BUCKET) return [];
   const objects = await listAllR2Objects(env.METADATA_BUCKET);
@@ -422,8 +416,7 @@ async function loadR2Materials(env) {
       const parsed = await body.json();
       extractMetadataRecords(parsed).forEach((record, index) => {
         if (record && typeof record === "object") {
-          const material = normalizeR2Material(record, object.key, materials.length + index);
-          if (isPublicMaterial(material)) materials.push(material);
+          materials.push(normalizeR2Material(record, object.key, materials.length + index));
         }
       });
     } catch {
@@ -1461,14 +1454,18 @@ async function loadD1Materials(env) {
   try {
     const result = await env.DB.prepare(
       `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
-       FROM materials m JOIN users u ON m.user_id = u.id
-       WHERE LOWER(COALESCE(m.file_type, '')) != 'rar'`
+       FROM materials m LEFT JOIN users u ON m.user_id = u.id`
     ).all();
     return result.results || [];
   } catch (error) {
     console.error("Unable to load D1 materials for public catalog", error);
     return [];
   }
+}
+
+/** SQL WHERE fragment, or nothing at all when no filter is active. */
+function whereClause(conditions) {
+  return conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 }
 
 async function handleMaterials(request, url, env) {
@@ -1502,7 +1499,9 @@ async function handleMaterials(request, url, env) {
   }
 
   const baseParams = [];
-  const baseWhere = ["LOWER(COALESCE(m.file_type, '')) != 'rar'"];
+  // No baseline filter: every material is listed, including RAR archives and
+  // rows still waiting for their uploader to claim them (LEFT JOIN below).
+  const baseWhere = [];
 
   if (faculty) {
     baseWhere.push("m.faculty = ?");
@@ -1533,8 +1532,8 @@ async function handleMaterials(request, url, env) {
 
   const countStatement = env.DB.prepare(
     `SELECT COUNT(*) as total
-     FROM materials m JOIN users u ON m.user_id = u.id
-     WHERE ${where.join(" AND ")}`
+     FROM materials m LEFT JOIN users u ON m.user_id = u.id
+     ${whereClause(where)}`
   );
   const countResult = params.length
     ? await countStatement.bind(...params).first()
@@ -1543,8 +1542,8 @@ async function handleMaterials(request, url, env) {
 
   const typeCountsStatement = env.DB.prepare(
     `SELECT m.type, COUNT(*) as count
-     FROM materials m JOIN users u ON m.user_id = u.id
-     WHERE ${baseWhere.join(" AND ")}
+     FROM materials m LEFT JOIN users u ON m.user_id = u.id
+     ${whereClause(baseWhere)}
      GROUP BY m.type
      ORDER BY m.type ASC`
   );
@@ -1565,8 +1564,8 @@ async function handleMaterials(request, url, env) {
 
   const statement = env.DB.prepare(
     `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
-     FROM materials m JOIN users u ON m.user_id = u.id
-     WHERE ${where.join(" AND ")}
+     FROM materials m LEFT JOIN users u ON m.user_id = u.id
+     ${whereClause(where)}
      ORDER BY ${orderBy}
      LIMIT ? OFFSET ?`
   );
@@ -1603,7 +1602,7 @@ async function handleMaterial(request, url, env) {
   if (!Number.isFinite(id)) return jsonResponse({ error: "ID i pavlefshëm." }, 400);
   const material = await env.DB.prepare(
     `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
-     FROM materials m JOIN users u ON m.user_id = u.id
+     FROM materials m LEFT JOIN users u ON m.user_id = u.id
      WHERE m.id=?`
   )
     .bind(id)

@@ -13,7 +13,7 @@ import MaterialStatsBadge from "./MaterialStatsBadge";
 import TrackableDownloadLink from "./TrackableDownloadLink";
 import { materialDownloadUrl } from "../lib/worker-url";
 import { trackMaterialView } from "../lib/track-material";
-import { getFileTypeBadge } from "../lib/file-preview";
+import { getFileTypeBadge, hasInBrowserView } from "../lib/file-preview";
 
 const TYPE_TONES = [
   {
@@ -174,31 +174,33 @@ export default function MaterialCard({ material, allMaterials = [] }) {
         <div className="flex flex-col sm:flex-row gap-3 mt-auto">
           {material.r2Url && (
             <>
-              {isArchive ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    trackMaterialView(material.id);
-                    setModalOpen(true);
-                  }}
-                  className="btn-outline flex-1 text-base"
-                >
-                  <Archive className="w-5 h-5" />
-                  Permbajtja
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => {
-                    trackMaterialView(material.id);
-                    setPreviewOpen(true);
-                  }}
-                  className="btn-primary flex-1 text-base"
-                >
-                  <Eye className="w-5 h-5" />
-                  Shiko
-                </button>
-              )}
+              {/* RAR has no viewer, so it gets the download button only. */}
+              {hasInBrowserView(material.fileType) &&
+                (isArchive ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      trackMaterialView(material.id);
+                      setModalOpen(true);
+                    }}
+                    className="btn-outline flex-1 text-base"
+                  >
+                    <Archive className="w-5 h-5" />
+                    Permbajtja
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      trackMaterialView(material.id);
+                      setPreviewOpen(true);
+                    }}
+                    className="btn-primary flex-1 text-base"
+                  >
+                    <Eye className="w-5 h-5" />
+                    Shiko
+                  </button>
+                ))}
             <TrackableDownloadLink
               materialId={material.id}
               href={materialDownloadUrl(material.id)}

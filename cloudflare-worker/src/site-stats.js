@@ -12,8 +12,6 @@ export const STATS_PERIOD_LABELS = {
   "365d": "Vitin e fundit",
 };
 
-const RAR_FILTER = "LOWER(COALESCE(m.file_type, '')) != 'rar'";
-
 function periodSinceSql(period) {
   switch (period) {
     case "24h":
@@ -170,7 +168,7 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
       : 0;
 
   const eventWindow = `e.created_at >= ${sinceSql} AND e.created_at >= ${trackingSql}`;
-  const materialWindow = `${RAR_FILTER} AND m.created_at >= ${sinceSql} AND m.created_at >= ${trackingSql}`;
+  const materialWindow = `m.created_at >= ${sinceSql} AND m.created_at >= ${trackingSql}`;
 
   const [
     viewsRow,
@@ -206,7 +204,7 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
       `SELECT COUNT(DISTINCT m.faculty) as count
        FROM material_stat_events e
        JOIN materials m ON m.id = e.material_id
-       WHERE ${RAR_FILTER} AND ${eventWindow}`
+       WHERE ${eventWindow}`
     ).first(),
     env.DB.prepare(
       `SELECT
@@ -218,7 +216,6 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
        JOIN materials m ON m.id = e.material_id
        JOIN users u ON u.id = m.user_id
        WHERE COALESCE(m.is_anonymous, 0) = 0
-         AND ${RAR_FILTER}
          AND ${eventWindow}
        GROUP BY u.id
        HAVING total_views > 0 OR total_downloads > 0
@@ -230,7 +227,6 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
        FROM material_stat_events e
        JOIN materials m ON m.id = e.material_id
        WHERE e.event_type = 'view'
-         AND ${RAR_FILTER}
          AND ${eventWindow}
        GROUP BY m.id
        ORDER BY view_count DESC, m.created_at DESC
@@ -242,8 +238,7 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
               SUM(CASE WHEN e.event_type = 'view' THEN 1 ELSE 0 END) as total_views
        FROM material_stat_events e
        JOIN materials m ON m.id = e.material_id
-       WHERE ${RAR_FILTER}
-         AND ${eventWindow}
+       WHERE ${eventWindow}
        GROUP BY m.faculty
        ORDER BY total_views DESC, material_count DESC`
     ).all(),
