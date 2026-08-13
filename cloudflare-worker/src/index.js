@@ -53,16 +53,6 @@ const RATE_LIMITS = {
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
 };
-/**
- * The public catalog hides two kinds of rows, and the moderation view reports
- * both so the two totals can be reconciled:
- *  - RAR archives, which the worker cannot open to scan for dangerous entries
- *    and the preview modal cannot render.
- *  - Rows with no matching user, i.e. legacy uploads still waiting to be
- *    claimed via pending_owner_email — there is no uploader to attribute them to.
- */
-const PUBLIC_CATALOG_FILE_TYPE_CLAUSE = "LOWER(COALESCE(m.file_type, '')) != 'rar'";
-
 const ALLOWED_EXTENSIONS = [
   "pdf",
   "doc",
@@ -413,12 +403,6 @@ function normalizeR2Material(record, fallbackKey, index = 0) {
   return material;
 }
 
-function isPublicMaterial(material) {
-  return String(material.file_type || material.fileType || "")
-    .toLowerCase()
-    .trim() !== "rar";
-}
-
 async function loadR2Materials(env) {
   if (!env.METADATA_BUCKET) return [];
   const objects = await listAllR2Objects(env.METADATA_BUCKET);
@@ -432,8 +416,7 @@ async function loadR2Materials(env) {
       const parsed = await body.json();
       extractMetadataRecords(parsed).forEach((record, index) => {
         if (record && typeof record === "object") {
-          const material = normalizeR2Material(record, object.key, materials.length + index);
-          if (isPublicMaterial(material)) materials.push(material);
+          materials.push(normalizeR2Material(record, object.key, materials.length + index));
         }
       });
     } catch {
@@ -1471,14 +1454,18 @@ async function loadD1Materials(env) {
   try {
     const result = await env.DB.prepare(
       `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
-       FROM materials m JOIN users u ON m.user_id = u.id
-       WHERE LOWER(COALESCE(m.file_type, '')) != 'rar'`
+       FROM materials m LEFT JOIN users u ON m.user_id = u.id`
     ).all();
     return result.results || [];
   } catch (error) {
     console.error("Unable to load D1 materials for public catalog", error);
     return [];
   }
+}
+
+/** SQL WHERE fragment, or nothing at all when no filter is active. */
+function whereClause(conditions) {
+  return conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 }
 
 async function handleMaterials(request, url, env) {
@@ -1512,7 +1499,9 @@ async function handleMaterials(request, url, env) {
   }
 
   const baseParams = [];
-  const baseWhere = [PUBLIC_CATALOG_FILE_TYPE_CLAUSE];
+  // No baseline filter: every material is listed, including RAR archives and
+  // rows still waiting for their uploader to claim them (LEFT JOIN below).
+  const baseWhere = [];
 
   if (faculty) {
     baseWhere.push("m.faculty = ?");
@@ -1543,8 +1532,8 @@ async function handleMaterials(request, url, env) {
 
   const countStatement = env.DB.prepare(
     `SELECT COUNT(*) as total
-     FROM materials m JOIN users u ON m.user_id = u.id
-     WHERE ${where.join(" AND ")}`
+     FROM materials m LEFT JOIN users u ON m.user_id = u.id
+     ${whereClause(where)}`
   );
   const countResult = params.length
     ? await countStatement.bind(...params).first()
@@ -1553,8 +1542,8 @@ async function handleMaterials(request, url, env) {
 
   const typeCountsStatement = env.DB.prepare(
     `SELECT m.type, COUNT(*) as count
-     FROM materials m JOIN users u ON m.user_id = u.id
-     WHERE ${baseWhere.join(" AND ")}
+     FROM materials m LEFT JOIN users u ON m.user_id = u.id
+     ${whereClause(baseWhere)}
      GROUP BY m.type
      ORDER BY m.type ASC`
   );
@@ -1575,8 +1564,8 @@ async function handleMaterials(request, url, env) {
 
   const statement = env.DB.prepare(
     `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
-     FROM materials m JOIN users u ON m.user_id = u.id
-     WHERE ${where.join(" AND ")}
+     FROM materials m LEFT JOIN users u ON m.user_id = u.id
+     ${whereClause(where)}
      ORDER BY ${orderBy}
      LIMIT ? OFFSET ?`
   );
@@ -1613,7 +1602,7 @@ async function handleMaterial(request, url, env) {
   if (!Number.isFinite(id)) return jsonResponse({ error: "ID i pavlefshëm." }, 400);
   const material = await env.DB.prepare(
     `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
-     FROM materials m JOIN users u ON m.user_id = u.id
+     FROM materials m LEFT JOIN users u ON m.user_id = u.id
      WHERE m.id=?`
   )
     .bind(id)
@@ -1836,18 +1825,11 @@ async function handleModeratorMaterials(request, url, env) {
   const offset = (page - 1) * LIMIT;
 
   const [countRow, result] = await Promise.all([
-    env.DB.prepare(
-      `SELECT COUNT(*) AS total,
-              SUM(CASE WHEN u.id IS NOT NULL AND ${PUBLIC_CATALOG_FILE_TYPE_CLAUSE}
-                       THEN 1 ELSE 0 END) AS public_total
-       FROM materials m
-       LEFT JOIN users u ON m.user_id = u.id`
-    ).first(),
+    env.DB.prepare("SELECT COUNT(*) AS total FROM materials").first(),
     env.DB.prepare(
       `SELECT m.id, m.title, m.faculty, m.subject, m.type, m.file_type,
               m.r2_url, m.created_at, m.is_anonymous, m.study_level,
               m.pending_owner_email,
-              u.id AS uploader_id,
               u.name AS uploader_name, u.surname AS uploader_surname,
               u.email AS uploader_email
        FROM materials m
@@ -1859,28 +1841,12 @@ async function handleModeratorMaterials(request, url, env) {
       .all(),
   ]);
 
-  const materials = (result.results || []).map((material) => {
-    const { uploader_id: uploaderId, ...rest } = material;
-    return { ...rest, hidden_reason: publicVisibilityReason(material, uploaderId) };
-  });
-  const total = Number(countRow?.total || 0);
-  const publicTotal = Number(countRow?.public_total || 0);
-
   return jsonResponse({
-    materials,
-    total,
-    publicTotal,
-    hiddenTotal: Math.max(0, total - publicTotal),
+    materials: result.results || [],
+    total: Number(countRow?.total || 0),
     page,
     limit: LIMIT,
   });
-}
-
-/** Why the public catalog leaves a material out, or null when it is listed. */
-function publicVisibilityReason(material, uploaderId) {
-  if (String(material.file_type || "").toLowerCase() === "rar") return "rar";
-  if (!uploaderId) return "no_owner";
-  return null;
 }
 
 async function handleDeleteMaterial(request, env) {
