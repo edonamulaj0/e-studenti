@@ -4,11 +4,20 @@ import { useState } from "react";
 import { Eye } from "lucide-react";
 import MaterialPreviewModal from "./MaterialPreviewModal";
 import { materialViewUrl } from "../lib/worker-url";
-import { isArchiveType } from "../lib/file-preview";
+import { hasInBrowserView, isArchiveType } from "../lib/file-preview";
 import { trackMaterialView } from "../lib/track-material";
 
 export default function MaterialViewButton({ material, className = "btn-primary flex-1" }) {
   const [open, setOpen] = useState(false);
+
+  // RAR has no viewer of any kind, so the download button is the only action.
+  if (!hasInBrowserView(material.fileType)) {
+    return (
+      <p className="flex-1 rounded-xl bg-navy-100/40 px-4 py-3 text-sm text-gray-500">
+        Arkivat RAR nuk hapen në shfletues — shkarkoni skedarin për të parë përmbajtjen.
+      </p>
+    );
+  }
 
   // Archives keep the existing redirect (their content viewer lives elsewhere).
   if (isArchiveType(material.fileType)) {

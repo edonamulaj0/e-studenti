@@ -19,7 +19,7 @@ import { WORKER_URL, materialDownloadUrl, materialViewUrl } from "../lib/worker-
 import MaterialStatsBadge from "../components/MaterialStatsBadge";
 import TrackableDownloadLink from "../components/TrackableDownloadLink";
 import { trackMaterialView } from "../lib/track-material";
-import { getFileTypeBadge } from "../lib/file-preview";
+import { getFileTypeBadge, hasInBrowserView } from "../lib/file-preview";
 
 const PAGE_SIZE = 24;
 
@@ -332,27 +332,29 @@ export default function MaterialsClient({ initialData = null }) {
       <div className="flex flex-col sm:flex-row gap-3 mt-auto">
         {material.r2Url && (
           <>
-            {isArchiveFile(material.fileType) ? (
-              <button
-                type="button"
-                onClick={(e) => handleViewClick(material, e)}
-                className="btn-outline flex-1 text-base"
-              >
-                <Archive className="w-5 h-5" />
-                Permbajtja
-              </button>
-            ) : (
-            <a
-              href={materialViewUrl(material.id)}
-              onClick={(e) => handleViewClick(material, e)}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary flex-1 text-base"
-            >
-              <Eye className="w-5 h-5" />
-              Shiko
-            </a>
-          )}
+            {/* RAR has no viewer, so it gets the download button only. */}
+            {hasInBrowserView(material.fileType) &&
+              (isArchiveFile(material.fileType) ? (
+                <button
+                  type="button"
+                  onClick={(e) => handleViewClick(material, e)}
+                  className="btn-outline flex-1 text-base"
+                >
+                  <Archive className="w-5 h-5" />
+                  Permbajtja
+                </button>
+              ) : (
+                <a
+                  href={materialViewUrl(material.id)}
+                  onClick={(e) => handleViewClick(material, e)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn-primary flex-1 text-base"
+                >
+                  <Eye className="w-5 h-5" />
+                  Shiko
+                </a>
+              ))}
           <TrackableDownloadLink
             materialId={material.id}
             href={materialDownloadUrl(material.id)}
