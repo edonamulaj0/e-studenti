@@ -20,6 +20,72 @@ const initialForm = {
   file: null,
 };
 
+/** Must stay in sync with the worker's own limits (MAX_FILE_SIZE, ALLOWED_EXTENSIONS). */
+const MAX_FILE_SIZE = 50 * 1024 * 1024;
+const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "zip"];
+const ACCEPT_ATTRIBUTE = ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(",");
+
+const NETWORK_ERROR =
+  "Lidhja me serverin u ndërpre gjatë ngarkimit. Kontrolloni internetin dhe provoni përsëri — skedarët e mëdhenj kërkojnë lidhje të qëndrueshme.";
+
+function formatMegabytes(bytes) {
+  return (bytes / (1024 * 1024)).toFixed(1).replace(/\.0$/, "");
+}
+
+/** Local check so oversized or unsupported files fail instantly, before a doomed upload. */
+function validateFile(file) {
+  if (!file) return "Zgjidhni një skedar për ngarkim.";
+  if (file.size === 0) return "Skedari është bosh.";
+  const ext = file.name.split(".").pop()?.toLowerCase() || "";
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return `Lloji i skedarit nuk lejohet. Lejohen: ${ALLOWED_EXTENSIONS.join(", ")}`;
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    return `Skedari është ${formatMegabytes(file.size)}MB — madhësia maksimale është 50MB. Zvogëloni ose ndajeni skedarin.`;
+  }
+  return "";
+}
+
+function errorForStatus(status) {
+  if (status === 401) return "Sesioni juaj ka skaduar. Hyni përsëri dhe provoni sërish.";
+  if (status === 413) return "Skedari është shumë i madh. Madhësia maksimale është 50MB.";
+  if (status === 429) return "Shumë ngarkime brenda pak kohe. Provoni përsëri më vonë.";
+  if (status >= 500) return "Serveri nuk e përpunoi dot skedarin. Provoni përsëri.";
+  return `Ngarkimi dështoi (kodi ${status}).`;
+}
+
+/**
+ * XMLHttpRequest instead of fetch: it reports real upload progress, and it lets
+ * transport failures be told apart from HTTP errors so a dropped connection does
+ * not surface as the browser's bare "Failed to fetch".
+ */
+function uploadMaterial(formData, onProgress) {
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open("POST", `${WORKER_URL}/?action=upload`);
+    xhr.withCredentials = true;
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) onProgress(event.loaded / event.total);
+    };
+    xhr.onload = () => {
+      let data = {};
+      try {
+        data = JSON.parse(xhr.responseText);
+      } catch {
+        // Error pages from the edge are not JSON; errorForStatus covers them.
+      }
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve(data);
+        return;
+      }
+      reject(new Error(data.error || errorForStatus(xhr.status)));
+    };
+    xhr.onerror = () => reject(new Error(NETWORK_ERROR));
+    xhr.ontimeout = () => reject(new Error(NETWORK_ERROR));
+    xhr.onabort = () => reject(new Error("Ngarkimi u ndërpre."));
+    xhr.send(formData);
+  });
+}
 
 export default function NgarkoPage() {
   const router = useRouter();
@@ -27,6 +93,7 @@ export default function NgarkoPage() {
   const [isAnonymous, setIsAnonymous] = useState(false);
   const [status, setStatus] = useState("idle");
   const [error, setError] = useState("");
+  const [progress, setProgress] = useState(0);
   const [titleTooltip, setTitleTooltip] = useState(false);
 
   const isPranues = form.type === "Provime Pranuese";
@@ -41,10 +108,23 @@ export default function NgarkoPage() {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
+  const selectFile = (file) => {
+    setField("file", file);
+    setError(file ? validateFile(file) : "");
+  };
+
   const submit = async (event) => {
     event.preventDefault();
+    const fileError = validateFile(form.file);
+    if (fileError) {
+      setStatus("error");
+      setError(fileError);
+      return;
+    }
+
     setStatus("uploading");
     setError("");
+    setProgress(0);
     try {
       const fd = new FormData();
       for (const [key, value] of Object.entries(form)) {
@@ -55,19 +135,15 @@ export default function NgarkoPage() {
         }
       }
       fd.append("is_anonymous", isAnonymous ? "1" : "0");
-      const res = await fetch(`${WORKER_URL}/?action=upload`, {
-        method: "POST",
-        credentials: "include",
-        body: fd,
-      });
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
+      await uploadMaterial(fd, setProgress);
       setStatus("success");
       setForm(initialForm);
       setIsAnonymous(false);
     } catch (err) {
       setStatus("error");
       setError(err.message || "Ngarkimi dështoi.");
+    } finally {
+      setProgress(0);
     }
   };
 
@@ -248,7 +324,7 @@ export default function NgarkoPage() {
                 onDragOver={(e) => e.preventDefault()}
                 onDrop={(e) => {
                   e.preventDefault();
-                  setField("file", e.dataTransfer.files?.[0] || null);
+                  selectFile(e.dataTransfer.files?.[0] || null);
                 }}
                 className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-srh-cream bg-srh-paper px-5 py-10 text-center hover:border-srh-crimson"
               >
@@ -257,21 +333,32 @@ export default function NgarkoPage() {
                   {form.file ? form.file.name : "Klikoni ose tërhiqni skedarin këtu"}
                 </span>
                 <span className="mt-2 text-sm text-srh-navy/60">
-                  .pdf, .doc, .docx, .ppt, .pptx, .xls, .xlsx, .zip
+                  {form.file
+                    ? `${formatMegabytes(form.file.size)}MB nga 50MB të lejuara`
+                    : ACCEPT_ATTRIBUTE.replace(/,/g, ", ")}
                 </span>
                 <input
-                  required
                   type="file"
-                  accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.zip"
+                  accept={ACCEPT_ATTRIBUTE}
                   className="hidden"
-                  onChange={(e) => setField("file", e.target.files?.[0] || null)}
+                  onChange={(e) => selectFile(e.target.files?.[0] || null)}
                 />
               </label>
             </Field>
 
             {status === "uploading" && (
-              <div className="h-2 overflow-hidden rounded-full bg-srh-cream">
-                <div className="h-full w-1/2 animate-pulse rounded-full bg-srh-crimson" />
+              <div>
+                <div className="h-2 overflow-hidden rounded-full bg-srh-cream">
+                  <div
+                    className="h-full rounded-full bg-srh-crimson transition-all duration-200"
+                    style={{ width: `${Math.max(3, Math.round(progress * 100))}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-center text-sm text-srh-navy/60">
+                  {progress < 1
+                    ? `Duke ngarkuar... ${Math.round(progress * 100)}%`
+                    : "Duke përpunuar skedarin..."}
+                </p>
               </div>
             )}
             {error && (

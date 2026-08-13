@@ -18,7 +18,7 @@
 - **Storage**: Cloudflare R2
 - **Database**: Cloudflare D1 (`srh-db`)
 - **Worker email**: Resend API
-- **ZIP scanning**: `fflate`
+- **ZIP scanning**: central-directory and local-header walk in the worker (no decompression)
 
 ## Worker Setup
 

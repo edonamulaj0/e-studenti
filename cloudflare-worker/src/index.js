@@ -1,4 +1,3 @@
-import { unzipSync } from "fflate";
 import {
   buildPublicSearchClause,
   materialMatchesPublic,
@@ -32,6 +31,8 @@ const DEFAULT_ALLOWED_ORIGINS = [
 const DEFAULT_JWT_ISSUER = "https://e-studenti.com";
 const DEFAULT_JWT_AUDIENCE = "https://e-studenti.com";
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
+/** Whole multipart body: the file plus form fields and multipart boundaries. */
+const MAX_UPLOAD_BODY_SIZE = MAX_FILE_SIZE + 1024 * 1024;
 const MAX_DECOMPRESSED_SIZE = 100 * 1024 * 1024;
 const MAX_ZIP_FILES = 500;
 const MAX_INDIVIDUAL_ZIP_FILE = 10 * 1024 * 1024;
@@ -914,6 +915,20 @@ function readUInt32LE(bytes, offset) {
   ) >>> 0;
 }
 
+/** Extension of a ZIP entry name, ignoring directory components. */
+function zipEntryExtension(filename) {
+  const base = filename.split("/").pop() || "";
+  const dot = base.lastIndexOf(".");
+  return dot === -1 ? "" : base.slice(dot + 1).toLowerCase();
+}
+
+/**
+ * Validates a ZIP by walking its central directory and each entry's local
+ * header. Nothing is decompressed: a 50MB archive can inflate to far more than
+ * the Worker's memory budget, and an isolate killed mid-request answers with a
+ * Cloudflare error page that carries no CORS headers — the browser then reports
+ * the upload as "Failed to fetch" instead of showing our error message.
+ */
 function validateZipDirectory(bytes) {
   let eocdOffset = -1;
   const minOffset = Math.max(0, bytes.length - 65557);
@@ -936,20 +951,23 @@ function validateZipDirectory(bytes) {
   let offset = centralDirectoryOffset;
   let totalSize = 0;
   let fileCount = 0;
+  const decoder = new TextDecoder();
   for (let i = 0; i < entryCount; i += 1) {
-    if (readUInt32LE(bytes, offset) !== 0x02014b50) {
+    if (offset + 46 > bytes.length || readUInt32LE(bytes, offset) !== 0x02014b50) {
       return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
     }
     const uncompressedSize = readUInt32LE(bytes, offset + 24);
     const fileNameLength = readUInt16LE(bytes, offset + 28);
     const extraLength = readUInt16LE(bytes, offset + 30);
     const commentLength = readUInt16LE(bytes, offset + 32);
-    const filename = new TextDecoder().decode(
-      bytes.slice(offset + 46, offset + 46 + fileNameLength)
-    );
+    const localHeaderOffset = readUInt32LE(bytes, offset + 42);
+    if (offset + 46 + fileNameLength > bytes.length) {
+      return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
+    }
+    const filename = decoder.decode(bytes.slice(offset + 46, offset + 46 + fileNameLength));
 
     if (!filename.endsWith("/")) {
-      if (uncompressedSize === 0xffffffff) {
+      if (uncompressedSize === 0xffffffff || localHeaderOffset === 0xffffffff) {
         return { ok: false, error: "ZIP64 nuk lejohet për ngarkime." };
       }
       fileCount += 1;
@@ -963,9 +981,32 @@ function validateZipDirectory(bytes) {
       if (fileCount > MAX_ZIP_FILES) {
         return { ok: false, error: "ZIP ka shumë skedarë." };
       }
-      const innerExt = filename.split(".").pop()?.toLowerCase();
+      const innerExt = zipEntryExtension(filename);
       if (DANGEROUS_EXTENSIONS.includes(innerExt)) {
         return { ok: false, error: `ZIP përmban skedar të ndaluar: .${innerExt}` };
+      }
+
+      // Extractors disagree on which name wins when the local header and the
+      // central directory differ, so the local name is checked too.
+      if (
+        localHeaderOffset + 30 > bytes.length ||
+        readUInt32LE(bytes, localHeaderOffset) !== 0x04034b50
+      ) {
+        return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
+      }
+      const localNameLength = readUInt16LE(bytes, localHeaderOffset + 26);
+      if (localHeaderOffset + 30 + localNameLength > bytes.length) {
+        return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
+      }
+      const localFilename = decoder.decode(
+        bytes.slice(localHeaderOffset + 30, localHeaderOffset + 30 + localNameLength)
+      );
+      const localExt = zipEntryExtension(localFilename);
+      if (DANGEROUS_EXTENSIONS.includes(localExt)) {
+        return { ok: false, error: `ZIP përmban skedar të ndaluar: .${localExt}` };
+      }
+      if (localFilename !== filename) {
+        return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
       }
     }
 
@@ -1007,13 +1048,6 @@ async function validateFile(file, ext) {
       const fullBuffer = await file.arrayBuffer();
       const zipDirectory = validateZipDirectory(new Uint8Array(fullBuffer));
       if (!zipDirectory.ok) return zipDirectory;
-      const unzipped = unzipSync(new Uint8Array(fullBuffer));
-      for (const filename of Object.keys(unzipped)) {
-        const innerExt = filename.split(".").pop()?.toLowerCase();
-        if (DANGEROUS_EXTENSIONS.includes(innerExt)) {
-          return { ok: false, error: `ZIP përmban skedar të ndaluar: .${innerExt}` };
-        }
-      }
     } catch {
       return { ok: false, error: "Nuk mund të skanohej skedari ZIP." };
     }
@@ -1639,6 +1673,15 @@ async function handleUpload(request, env) {
   const user = await getUserFromRequest(request, env);
   if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
 
+  // Rejected before the body is buffered: parsing an oversized upload can push
+  // the isolate past its memory limit, and a killed isolate returns a Cloudflare
+  // error page without CORS headers, which the browser surfaces as
+  // "Failed to fetch" rather than as the message below.
+  const declaredSize = Number(request.headers.get("Content-Length") || "0");
+  if (Number.isFinite(declaredSize) && declaredSize > MAX_UPLOAD_BODY_SIZE) {
+    return jsonResponse({ error: "Skedari tejkalon 50MB." }, 413);
+  }
+
   const form = await request.formData();
   const titleCheck = validateMaterialTextField(form.get("title"), "Titulli", { maxLen: 200 });
   if (!titleCheck.ok) return jsonResponse({ error: titleCheck.error }, 400);
@@ -1677,9 +1720,10 @@ async function handleUpload(request, env) {
   if (!validation.ok) return jsonResponse({ error: validation.error }, 400);
 
   const fileKey = `materials/${user.id}/${Date.now()}-${sanitizeFilename(file.name)}`;
-  const buffer = await file.arrayBuffer();
   const contentType = contentTypeForExtension(ext);
-  await env.MY_BUCKET.put(fileKey, buffer, {
+  // The file is handed to R2 as a Blob rather than an ArrayBuffer so the body is
+  // not copied a second time in memory.
+  await env.MY_BUCKET.put(fileKey, file, {
     httpMetadata: { contentType },
   });
 
