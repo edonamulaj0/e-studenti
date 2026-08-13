@@ -53,6 +53,16 @@ const RATE_LIMITS = {
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
 };
+/**
+ * The public catalog hides two kinds of rows, and the moderation view reports
+ * both so the two totals can be reconciled:
+ *  - RAR archives, which the worker cannot open to scan for dangerous entries
+ *    and the preview modal cannot render.
+ *  - Rows with no matching user, i.e. legacy uploads still waiting to be
+ *    claimed via pending_owner_email — there is no uploader to attribute them to.
+ */
+const PUBLIC_CATALOG_FILE_TYPE_CLAUSE = "LOWER(COALESCE(m.file_type, '')) != 'rar'";
+
 const ALLOWED_EXTENSIONS = [
   "pdf",
   "doc",
@@ -1502,7 +1512,7 @@ async function handleMaterials(request, url, env) {
   }
 
   const baseParams = [];
-  const baseWhere = ["LOWER(COALESCE(m.file_type, '')) != 'rar'"];
+  const baseWhere = [PUBLIC_CATALOG_FILE_TYPE_CLAUSE];
 
   if (faculty) {
     baseWhere.push("m.faculty = ?");
@@ -1826,11 +1836,18 @@ async function handleModeratorMaterials(request, url, env) {
   const offset = (page - 1) * LIMIT;
 
   const [countRow, result] = await Promise.all([
-    env.DB.prepare("SELECT COUNT(*) AS total FROM materials").first(),
+    env.DB.prepare(
+      `SELECT COUNT(*) AS total,
+              SUM(CASE WHEN u.id IS NOT NULL AND ${PUBLIC_CATALOG_FILE_TYPE_CLAUSE}
+                       THEN 1 ELSE 0 END) AS public_total
+       FROM materials m
+       LEFT JOIN users u ON m.user_id = u.id`
+    ).first(),
     env.DB.prepare(
       `SELECT m.id, m.title, m.faculty, m.subject, m.type, m.file_type,
               m.r2_url, m.created_at, m.is_anonymous, m.study_level,
               m.pending_owner_email,
+              u.id AS uploader_id,
               u.name AS uploader_name, u.surname AS uploader_surname,
               u.email AS uploader_email
        FROM materials m
@@ -1842,12 +1859,28 @@ async function handleModeratorMaterials(request, url, env) {
       .all(),
   ]);
 
+  const materials = (result.results || []).map((material) => {
+    const { uploader_id: uploaderId, ...rest } = material;
+    return { ...rest, hidden_reason: publicVisibilityReason(material, uploaderId) };
+  });
+  const total = Number(countRow?.total || 0);
+  const publicTotal = Number(countRow?.public_total || 0);
+
   return jsonResponse({
-    materials: result.results || [],
-    total: Number(countRow?.total || 0),
+    materials,
+    total,
+    publicTotal,
+    hiddenTotal: Math.max(0, total - publicTotal),
     page,
     limit: LIMIT,
   });
+}
+
+/** Why the public catalog leaves a material out, or null when it is listed. */
+function publicVisibilityReason(material, uploaderId) {
+  if (String(material.file_type || "").toLowerCase() === "rar") return "rar";
+  if (!uploaderId) return "no_owner";
+  return null;
 }
 
 async function handleDeleteMaterial(request, env) {

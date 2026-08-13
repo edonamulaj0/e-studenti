@@ -17,11 +17,24 @@ import {
   ShieldAlert,
   Layers,
   Link2,
+  EyeOff,
 } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
 import { getResourceCategoryLabel } from "../../lib/resource-options";
+
+/** Why a material is missing from the public catalog, and what would publish it. */
+const HIDDEN_REASONS = {
+  rar: {
+    label: "E fshehur nga publiku — arkiv RAR",
+    hint: "RAR nuk mund të hapet për skanim nga serveri dhe nuk shfaqet në parashikim. Ringarkojeni si ZIP për ta publikuar.",
+  },
+  no_owner: {
+    label: "E fshehur nga publiku — pa pronar",
+    hint: "Materiali nuk është i lidhur me asnjë llogari. Publikohet sapo pronari të verifikojë email-in e tij, ose pasi t'i caktohet një llogari.",
+  },
+};
 
 function formatDate(dateStr) {
   if (!dateStr) return "—";
@@ -54,6 +67,7 @@ function ModerimPage() {
   // ── Materials ──────────────────────────────────────────────────────────
   const [materials, setMaterials] = useState([]);
   const [materialsTotal, setMaterialsTotal] = useState(0);
+  const [publicTotal, setPublicTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [materialsLoading, setMaterialsLoading] = useState(false);
   const [search, setSearch] = useState("");
@@ -68,6 +82,7 @@ function ModerimPage() {
 
   const LIMIT = 50;
   const totalPages = Math.max(1, Math.ceil(materialsTotal / LIMIT));
+  const hiddenTotal = Math.max(0, materialsTotal - publicTotal);
 
   // ── Auth guard ─────────────────────────────────────────────────────────
   useEffect(() => {
@@ -155,6 +170,7 @@ function ModerimPage() {
       if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
       setMaterials(data.materials || []);
       setMaterialsTotal(data.total || 0);
+      setPublicTotal(data.publicTotal || 0);
     } catch (err) {
       setGlobalError(err.message || "Ngarkimi dështoi.");
     } finally {
@@ -401,6 +417,24 @@ function ModerimPage() {
         {/* ── MATERIALS TAB ─────────────────────────────────────────── */}
         {tab === "materialet" && (
           <>
+            {/* Public vs total, so the two counts reconcile */}
+            {materialsTotal > 0 && (
+              <div className="mb-4 rounded-2xl border border-gray-200 bg-white p-4">
+                <p className="font-bold text-navy-900">
+                  {publicTotal} nga {materialsTotal} materiale shfaqen publikisht
+                </p>
+                {hiddenTotal > 0 && (
+                  <p className="mt-1 text-sm text-gray-500">
+                    {hiddenTotal} nuk listohen te{" "}
+                    <Link href="/materialet" className="font-semibold text-burgundy-600 hover:underline">
+                      Materialet
+                    </Link>
+                    : arkivat RAR dhe materialet pa llogari pronare. Secili është i shënuar më poshtë.
+                  </p>
+                )}
+              </div>
+            )}
+
             {/* Search */}
             <div className="relative mb-4">
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
@@ -452,6 +486,20 @@ function ModerimPage() {
                           {getFacultyName(m.faculty)}
                           {m.subject && m.subject !== "//" ? ` · ${m.subject}` : ""}
                         </p>
+                        {m.hidden_reason && (
+                          <div className="mt-2 rounded-xl border border-burgundy-600/20 bg-burgundy-50/60 px-3 py-2">
+                            <p className="inline-flex items-center gap-1.5 text-xs font-bold text-burgundy-600">
+                              <EyeOff className="h-3.5 w-3.5 shrink-0" />
+                              {HIDDEN_REASONS[m.hidden_reason]?.label ||
+                                "E fshehur nga publiku"}
+                            </p>
+                            {HIDDEN_REASONS[m.hidden_reason]?.hint && (
+                              <p className="mt-1 text-xs leading-relaxed text-gray-500">
+                                {HIDDEN_REASONS[m.hidden_reason].hint}
+                              </p>
+                            )}
+                          </div>
+                        )}
                         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-400">
                           {m.pending_owner_email ? (
                             <span className="inline-flex items-center gap-1 rounded-md bg-warning-amber/15 px-2 py-0.5 font-semibold text-warning-amber">
