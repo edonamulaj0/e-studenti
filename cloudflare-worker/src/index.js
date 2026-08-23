@@ -65,6 +65,10 @@ const RATE_LIMITS = {
   resource_link: { requests: 5, window: 3600 },
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
+  // Only counted on a cache miss (see handleProxy), so this bounds *cold*
+  // previews from one address. Deliberately generous: the proxy is anonymous,
+  // so the key is the IP, and a whole faculty can share one behind campus NAT.
+  proxy: { requests: 600, window: 3600 },
 };
 /**
  * Faculty codes and material types the catalogue understands. The upload form
@@ -2348,7 +2352,16 @@ async function handleGenerate(request, env) {
   return handleUpload(request, env);
 }
 
-async function handleProxy(url) {
+/**
+ * Streams a file from the media domain so previews are same-origin.
+ *
+ * Anonymous by necessity — previews work for logged-out visitors — so there is
+ * no account to meter. Two things keep that from being an open, unbounded pipe
+ * through the Worker: responses are served from the edge cache, which costs
+ * neither a subrequest nor a database write, and a cold request is rate limited
+ * by address.
+ */
+async function handleProxy(request, url, env) {
   const target = url.searchParams.get("url");
   if (!target) return jsonResponse({ error: "Missing url" }, 400);
   let parsed;
@@ -2360,6 +2373,18 @@ async function handleProxy(url) {
   if (parsed.origin !== MEDIA_BASE || parsed.protocol !== "https:") {
     return jsonResponse({ error: "URL not allowed" }, 403);
   }
+
+  // The media URL itself is the cache key, so a lookup happens before the
+  // redirect walk. `caches` is absent under the unit-test runner.
+  const cache = typeof caches !== "undefined" ? caches.default : null;
+  const cacheKey = new Request(parsed.toString(), { method: "GET" });
+  if (cache) {
+    const hit = await cache.match(cacheKey);
+    if (hit) return hit;
+  }
+
+  const limited = await checkRateLimit(request, "proxy", env);
+  if (limited) return limited;
 
   let current = parsed.toString();
   for (let hop = 0; hop < 3; hop += 1) {
@@ -2382,7 +2407,7 @@ async function handleProxy(url) {
       current = next.toString();
       continue;
     }
-    return new Response(res.body, {
+    const response = new Response(res.body, {
       status: res.status,
       headers: {
         "Content-Type": res.headers.get("Content-Type") || "application/octet-stream",
@@ -2390,6 +2415,16 @@ async function handleProxy(url) {
         "X-Content-Type-Options": "nosniff",
       },
     });
+    // Only successes are stored; an error page cached for five minutes would
+    // outlast whatever caused it. put() consumes a body, hence the clone.
+    if (cache && response.status === 200) {
+      try {
+        await cache.put(cacheKey, response.clone());
+      } catch {
+        // A response the cache refuses is still fine to return.
+      }
+    }
+    return response;
   }
   return jsonResponse({ error: "Too many redirects" }, 502);
 }
@@ -2567,7 +2602,7 @@ export default {
           response = await handleMaterial(request, url, env);
           break;
         case "proxy":
-          response = await handleProxy(url);
+          response = await handleProxy(request, url, env);
           break;
         case "me":
           response = await handleMe(request, env);
