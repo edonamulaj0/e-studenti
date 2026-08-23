@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import worker from "./index.js";
+import worker, { validateZipArchive } from "./index.js";
 
 const JWT_SECRET = "test-secret-test-secret-test-secret";
 const encoder = new TextEncoder();
@@ -174,11 +174,11 @@ function zipBytes(entries) {
   return output;
 }
 
-async function upload({ env, file, type = "Provime Pranuese", contentLength }) {
+async function upload({ env, file, type = "Provime Pranuese", faculty = "MED", contentLength }) {
   const isPranues = type === "Provime Pranuese";
   const form = new FormData();
   form.append("title", "Stomatologji - Provimi pranues 2024");
-  form.append("faculty", "MED");
+  form.append("faculty", faculty);
   form.append("department", isPranues ? "//" : "Stomatologji");
   form.append("subject", isPranues ? "//" : "Anatomi");
   form.append("teacher", isPranues ? "//" : "Prof. Dr.");
@@ -204,6 +204,87 @@ async function upload({ env, file, type = "Provime Pranuese", contentLength }) {
   }
   return worker.fetch(request, env);
 }
+
+describe("zip scanning reads ranges, not the whole archive", () => {
+  /** Records every range the walker asks for. */
+  function countingReader(archive) {
+    const stats = { total: 0, largest: 0, calls: 0 };
+    const read = async (start, end) => {
+      stats.total += end - start;
+      stats.largest = Math.max(stats.largest, end - start);
+      stats.calls += 1;
+      return archive.slice(start, end);
+    };
+    return { read, stats };
+  }
+
+  it("validates a 10MB archive while reading a sliver of it", async () => {
+    const bulk = "x".repeat(2 * 1024 * 1024);
+    const archive = zipBytes([
+      { name: "ligjeratat/01.pdf", content: bulk },
+      { name: "ligjeratat/02.pdf", content: bulk },
+      { name: "ligjeratat/03.pdf", content: bulk },
+      { name: "ligjeratat/04.pdf", content: bulk },
+      { name: "ligjeratat/05.pdf", content: bulk },
+    ]);
+    expect(archive.length).toBeGreaterThan(10 * 1024 * 1024);
+
+    const { read, stats } = countingReader(archive);
+    const result = await validateZipArchive(archive.length, read);
+
+    expect(result.ok).toBe(true);
+    // The previous implementation pulled 100% of the archive into a second
+    // buffer. This must touch only the tail, the central directory and a few
+    // dozen bytes per local header.
+    expect(stats.total).toBeLessThan(archive.length / 50);
+    // And no single read may be large enough to matter on its own.
+    expect(stats.largest).toBeLessThanOrEqual(128 * 1024);
+  });
+
+  it("reads the same amount whether the archive is 4MB or 32MB", async () => {
+    // The point of the rewrite: cost is a function of the number of entries,
+    // not of the archive's size. A small archive is read in full because the
+    // 64KB end-of-central-directory search window covers it, and that is fine —
+    // what must not happen is that cost tracking the file.
+    async function bytesReadFor(megabytes) {
+      const archive = zipBytes([
+        { name: "ligjeratat/01.pdf", content: "x".repeat(megabytes * 1024 * 1024) },
+      ]);
+      const { read, stats } = countingReader(archive);
+      const result = await validateZipArchive(archive.length, read);
+      expect(result.ok).toBe(true);
+      return stats.total;
+    }
+
+    const small = await bytesReadFor(4);
+    const large = await bytesReadFor(32);
+
+    // Eightfold the archive, and the walk reads no more than it did before.
+    expect(large).toBeLessThanOrEqual(small);
+    expect(large).toBeLessThan(128 * 1024);
+  });
+
+  it("rejects an archive with no end-of-central-directory record", async () => {
+    const junk = new Uint8Array(200);
+    const result = await validateZipArchive(junk.length, async (start, end) =>
+      junk.slice(start, end)
+    );
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/nuk është i vlefshëm/);
+  });
+
+  it("rejects a central directory offset pointing past the EOCD", async () => {
+    const archive = zipBytes([{ name: "a.pdf", content: "%PDF-1.7" }]);
+    const eocdAt = archive.length - 22;
+    writeUInt32LE(archive, eocdAt + 16, archive.length - 4);
+
+    const result = await validateZipArchive(archive.length, async (start, end) =>
+      archive.slice(start, end)
+    );
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/lexohet sigurt/);
+  });
+});
 
 describe("material upload", () => {
   it("accepts a Provime Pranuese PDF and stores it without buffering a copy", async () => {
@@ -349,8 +430,8 @@ describe("material upload", () => {
     expect(rateLimit).toBeDefined();
     // Key is the first bound argument; the signed token in these tests is user 1.
     expect(rateLimit.args[0]).toBe("upload:user:1");
-    // …and the cap bound last is the batch-friendly one, not the old 10.
-    expect(rateLimit.args[rateLimit.args.length - 1]).toBe(100);
+    // …and the cap bound last is the bulk-friendly one, not the old 10.
+    expect(rateLimit.args[rateLimit.args.length - 1]).toBe(300);
   });
 
   it("rejects an unauthenticated upload without recording a rate-limit hit", async () => {
@@ -372,6 +453,131 @@ describe("material upload", () => {
 
     expect(response.status).toBe(401);
     expect(binds.some((entry) => /INSERT INTO rate_limits/.test(entry.sql))).toBe(false);
+  });
+
+  // Windows strips trailing dots and spaces, and C extractors truncate at NUL,
+  // so each of these lands on disk as setup.exe.
+  const DISGUISED_EXECUTABLES = [
+    ["provimet/setup.exe.", "trailing dot"],
+    ["provimet/setup.exe ", "trailing space"],
+    ["provimet/setup.exe\u0000.pdf", "NUL truncation"],
+    ["provimet/setup.exe\t", "trailing tab"],
+  ];
+
+  for (const [name, trick] of DISGUISED_EXECUTABLES) {
+    it(`rejects an executable disguised by ${trick}`, async () => {
+      const { env, puts } = makeEnv();
+      const file = new File([zipBytes([{ name, content: "MZ" }])], "provimet.zip", {
+        type: "application/zip",
+      });
+
+      const response = await upload({ env, file });
+      const body = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(body.error).toMatch(/\.exe/);
+      expect(puts).toHaveLength(0);
+    });
+  }
+
+  const TRAVERSAL_PATHS = [
+    ["../../../etc/passwd", "parent-directory escape"],
+    ["/etc/cron.d/payload", "absolute path"],
+    ["C:/Windows/System32/x.dll", "drive-letter path"],
+    ["provimet/../../escape.pdf", "escape through a subdirectory"],
+  ];
+
+  for (const [name, trick] of TRAVERSAL_PATHS) {
+    it(`rejects a ZIP entry using a ${trick}`, async () => {
+      const { env, puts } = makeEnv();
+      const file = new File([zipBytes([{ name, content: "%PDF-1.7" }])], "provimet.zip", {
+        type: "application/zip",
+      });
+
+      const response = await upload({ env, file });
+      const body = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(body.error).toMatch(/shteg/);
+      expect(puts).toHaveLength(0);
+    });
+  }
+
+  it("still accepts ordinary nested names with dots in them", async () => {
+    const { env } = makeEnv();
+    const file = new File(
+      [
+        zipBytes([
+          { name: "Viti 1/Semestri 2/algjebra.lineare.v2.pdf", content: "%PDF-1.7" },
+          { name: "Viti 1/", content: "" },
+        ]),
+      ],
+      "provimet.zip",
+      { type: "application/zip" }
+    );
+
+    const response = await upload({ env, file });
+    expect(response.status).toBe(200);
+  });
+
+  it("gives each upload a distinct key even within the same millisecond", async () => {
+    const { env, puts } = makeEnv();
+    const makeFile = () =>
+      new File([pdfBytes(2048)], "ligjerata.pdf", { type: "application/pdf" });
+
+    // Date.now is frozen so the collision is forced rather than raced: same
+    // user, same filename, same millisecond is exactly the case where a
+    // timestamp-only key made the second R2 put overwrite the first.
+    const realNow = Date.now;
+    Date.now = () => 1_700_000_000_000;
+    try {
+      await Promise.all([
+        upload({ env, file: makeFile() }),
+        upload({ env, file: makeFile() }),
+        upload({ env, file: makeFile() }),
+      ]);
+    } finally {
+      Date.now = realNow;
+    }
+
+    expect(puts).toHaveLength(3);
+    expect(new Set(puts.map((p) => p.key)).size).toBe(3);
+  });
+
+  it("rejects an unknown faculty code", async () => {
+    const { env, puts } = makeEnv();
+    const file = new File([pdfBytes(2048)], "x.pdf", { type: "application/pdf" });
+
+    const response = await upload({ env, file, faculty: "NOT-A-FACULTY" });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/Fakulteti/);
+    expect(puts).toHaveLength(0);
+  });
+
+  it("rejects an unknown material type", async () => {
+    const { env, puts } = makeEnv();
+    const file = new File([pdfBytes(2048)], "x.pdf", { type: "application/pdf" });
+
+    const response = await upload({ env, file, type: "Whatever I Want" });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/Lloji/);
+    expect(puts).toHaveLength(0);
+  });
+
+  it("rejects an empty file by name rather than as a malformed PDF", async () => {
+    const { env, puts } = makeEnv();
+    const file = new File([new Uint8Array(0)], "bosh.pdf", { type: "application/pdf" });
+
+    const response = await upload({ env, file });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/bosh/);
+    expect(puts).toHaveLength(0);
   });
 
   it("rejects a ZIP whose local header hides a different name", async () => {

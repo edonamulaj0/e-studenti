@@ -10,6 +10,7 @@ import {
   FileText,
 } from "lucide-react";
 import ModalOverlay from "./ModalOverlay";
+import PdfCanvasViewer from "./PdfCanvasViewer";
 import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
 import { getPreviewKind } from "../lib/file-preview";
 
@@ -22,7 +23,6 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
   const [sheetNames, setSheetNames] = useState([]);
   const [activeSheet, setActiveSheet] = useState("");
   const [sheetHtml, setSheetHtml] = useState("");
-  const [pdfBlobUrl, setPdfBlobUrl] = useState("");
 
   const containerRef = useRef(null);
   const workbookRef = useRef(null);
@@ -66,15 +66,20 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
     if (!isOpen || !material || !fileUrl) return undefined;
 
     let cancelled = false;
-    let objectUrl = "";
     setSheetNames([]);
     setActiveSheet("");
     setSheetHtml("");
-    setPdfBlobUrl("");
     workbookRef.current = null;
 
     if (kind === "unsupported" || kind === "archive") {
       setStatus("unsupported");
+      return undefined;
+    }
+
+    // PDFs are handled by PdfCanvasViewer, which fetches and renders on its own
+    // and reports its own loading and error states.
+    if (kind === "pdf") {
+      setStatus("ready");
       return undefined;
     }
 
@@ -90,16 +95,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
         if (cancelled) return;
         if (!buffer || buffer.byteLength === 0) throw new Error("empty file");
 
-        if (kind === "pdf") {
-          objectUrl = URL.createObjectURL(
-            new Blob([buffer], { type: "application/pdf" })
-          );
-          if (cancelled) {
-            URL.revokeObjectURL(objectUrl);
-            return;
-          }
-          setPdfBlobUrl(objectUrl);
-        } else if (kind === "docx") {
+        if (kind === "docx") {
           const docx = await import("docx-preview");
           if (cancelled || !containerRef.current) return;
           containerRef.current.innerHTML = "";
@@ -141,7 +137,6 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
 
     return () => {
       cancelled = true;
-      if (objectUrl) URL.revokeObjectURL(objectUrl);
     };
   }, [isOpen, material?.id, kind, fileUrl, applyFitToWidth]);
 
@@ -250,14 +245,9 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
             </div>
           )}
 
-          {/* PDF: native browser viewer (blob keeps it same-origin) */}
-          {kind === "pdf" && pdfBlobUrl && (
-            <iframe
-              key={pdfBlobUrl}
-              src={pdfBlobUrl}
-              title={material.title}
-              className="h-full w-full border-0"
-            />
+          {/* PDF: rendered to canvases, the only approach mobile browsers support */}
+          {kind === "pdf" && (
+            <PdfCanvasViewer url={proxyUrl(fileUrl)} title={material.title} />
           )}
 
           {/* DOCX / PPTX: rendered imperatively into this container */}
