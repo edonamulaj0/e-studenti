@@ -35,7 +35,14 @@ const MAX_FILE_SIZE = 50 * 1024 * 1024;
 const MAX_UPLOAD_BODY_SIZE = MAX_FILE_SIZE + 1024 * 1024;
 const MAX_DECOMPRESSED_SIZE = 100 * 1024 * 1024;
 const MAX_ZIP_FILES = 500;
-const MAX_INDIVIDUAL_ZIP_FILE = 10 * 1024 * 1024;
+/**
+ * A file inside a ZIP is held to the same limit as one uploaded on its own: a
+ * 40MB archive of scanned lectures is an ordinary upload, and the old 10MB
+ * per-entry cap rejected it with a message that named neither the file nor the
+ * limit it broke. Zip bombs stay bounded by MAX_DECOMPRESSED_SIZE, which caps
+ * the archive as a whole.
+ */
+const MAX_INDIVIDUAL_ZIP_FILE = MAX_FILE_SIZE;
 const CODE_TTL_SECONDS = 15 * 60;   // must stay in sync with upsertVerificationCode
 const CODE_COOLDOWN_SECONDS = 60;   // minimum gap between successive sends to the same email
 /** Access token lifetime — kept short so stolen cookies expire; logout also bumps token_version. */
@@ -47,7 +54,13 @@ const RATE_LIMITS = {
   verify: { requests: 5, window: 900 },
   verify_fail: { requests: 5, window: 900 },
   contact: { requests: 3, window: 3600 },
-  upload: { requests: 10, window: 3600 },
+  // Keyed to the account rather than the IP (see handleUpload), so the ceiling
+  // is what one person may upload in an hour and a batch of files fits under it.
+  upload: {
+    requests: 100,
+    window: 3600,
+    message: "Keni arritur kufirin e ngarkimeve për këtë orë. Provoni përsëri më vonë.",
+  },
   report: { requests: 10, window: 3600 },
   resource_link: { requests: 5, window: 3600 },
   track_view: { requests: 120, window: 3600 },
@@ -790,7 +803,7 @@ async function checkRateLimit(request, action, env, identityOverride = "") {
       .first();
     return jsonResponse(
       {
-        error: "Shumë kërkesa. Provoni përsëri më vonë.",
+        error: config.message || "Shumë kërkesa. Provoni përsëri më vonë.",
         retryAfter: Math.max(1, Number(row?.reset_at || resetAt) - now),
       },
       429
@@ -908,6 +921,22 @@ function readUInt32LE(bytes, offset) {
   ) >>> 0;
 }
 
+/** Bytes as a short MB string for user-facing messages: "18.4MB", "50MB". */
+function formatMegabytes(bytes) {
+  return `${(bytes / (1024 * 1024)).toFixed(1).replace(/\.0$/, "")}MB`;
+}
+
+/**
+ * An entry name trimmed for display in an error. The name comes from the
+ * uploaded archive, so it is stripped of control characters and bounded before
+ * it is echoed back.
+ */
+function zipEntryLabel(filename) {
+  const base = (filename.split("/").pop() || filename).replace(/[\u0000-\u001f\u007f]/g, "");
+  if (!base) return "pa emër";
+  return base.length > 60 ? `${base.slice(0, 57)}…` : base;
+}
+
 /** Extension of a ZIP entry name, ignoring directory components. */
 function zipEntryExtension(filename) {
   const base = filename.split("/").pop() || "";
@@ -938,7 +967,10 @@ function validateZipDirectory(bytes) {
   const entryCount = readUInt16LE(bytes, eocdOffset + 10);
   const centralDirectoryOffset = readUInt32LE(bytes, eocdOffset + 16);
   if (entryCount > MAX_ZIP_FILES) {
-    return { ok: false, error: "ZIP ka shumë skedarë." };
+    return {
+      ok: false,
+      error: `ZIP përmban ${entryCount} skedarë — lejohen deri në ${MAX_ZIP_FILES}.`,
+    };
   }
 
   let offset = centralDirectoryOffset;
@@ -966,13 +998,26 @@ function validateZipDirectory(bytes) {
       fileCount += 1;
       totalSize += uncompressedSize;
       if (uncompressedSize > MAX_INDIVIDUAL_ZIP_FILE) {
-        return { ok: false, error: "ZIP përmban skedar shumë të madh." };
+        return {
+          ok: false,
+          error: `Skedari "${zipEntryLabel(filename)}" brenda ZIP është ${formatMegabytes(
+            uncompressedSize
+          )} — kufiri për një skedar është ${formatMegabytes(MAX_INDIVIDUAL_ZIP_FILE)}.`,
+        };
       }
       if (totalSize > MAX_DECOMPRESSED_SIZE) {
-        return { ok: false, error: "ZIP tejkalon madhësinë e lejuar pas hapjes." };
+        return {
+          ok: false,
+          error: `ZIP arrin ${formatMegabytes(
+            totalSize
+          )} pasi hapet — kufiri është ${formatMegabytes(MAX_DECOMPRESSED_SIZE)}.`,
+        };
       }
       if (fileCount > MAX_ZIP_FILES) {
-        return { ok: false, error: "ZIP ka shumë skedarë." };
+        return {
+          ok: false,
+          error: `ZIP përmban më shumë se ${MAX_ZIP_FILES} skedarë.`,
+        };
       }
       const innerExt = zipEntryExtension(filename);
       if (DANGEROUS_EXTENSIONS.includes(innerExt)) {
@@ -1666,11 +1711,18 @@ async function handleContributors(env) {
 
 async function handleUpload(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
-  const limited = await checkRateLimit(request, "upload", env);
-  if (limited) return limited;
 
+  // Authentication runs before the rate limit so the limit can be keyed to the
+  // account. Keying it to the IP punished shared connections — a faculty behind
+  // one campus NAT spends a single budget between everyone on it — and it
+  // capped a legitimate batch of files from one person at ten. Requests without
+  // a valid token still cost nothing: getUserFromRequest returns before it
+  // touches the database when the cookie is missing or the signature is bad.
   const user = await getUserFromRequest(request, env);
   if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const limited = await checkRateLimit(request, "upload", env, `user:${user.id}`);
+  if (limited) return limited;
 
   // Rejected before the body is buffered: parsing an oversized upload can push
   // the isolate past its memory limit, and a killed isolate returns a Cloudflare

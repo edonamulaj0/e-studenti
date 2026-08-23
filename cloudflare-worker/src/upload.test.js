@@ -41,10 +41,14 @@ async function signedToken() {
 function makeEnv() {
   const puts = [];
   const inserts = [];
+  const binds = [];
   const db = {
     prepare(sql) {
       const statement = {
-        bind: () => statement,
+        bind: (...args) => {
+          binds.push({ sql, args });
+          return statement;
+        },
         async run() {
           if (/INSERT INTO rate_limits/.test(sql)) return { meta: { changes: 1 } };
           if (/INSERT INTO materials/.test(sql)) {
@@ -76,6 +80,7 @@ function makeEnv() {
   return {
     puts,
     inserts,
+    binds,
     env: {
       DB: db,
       MY_BUCKET: {
@@ -133,12 +138,15 @@ function zipBytes(entries) {
     local.set(content, 30 + localName.length);
     parts.push(local);
 
+    // The validator never decompresses: it trusts the size the central directory
+    // declares. `declaredSize` exercises that path without allocating the bytes.
+    const declaredSize = entry.declaredSize ?? content.length;
     const header = new Uint8Array(46 + centralName.length);
     writeUInt32LE(header, 0, 0x02014b50);
     writeUInt16LE(header, 4, 20);
     writeUInt16LE(header, 6, 20);
     writeUInt32LE(header, 20, content.length);
-    writeUInt32LE(header, 24, content.length);
+    writeUInt32LE(header, 24, declaredSize);
     writeUInt16LE(header, 28, centralName.length);
     writeUInt32LE(header, 42, offset);
     header.set(centralName, 46);
@@ -260,6 +268,110 @@ describe("material upload", () => {
 
     expect(response.status).toBe(400);
     expect(body.error).toMatch(/\.exe/);
+  });
+
+  it("accepts a ZIP entry larger than 10MB", async () => {
+    const { env } = makeEnv();
+    const file = new File(
+      [
+        zipBytes([
+          {
+            name: "ligjeratat/skanimi.pdf",
+            content: "%PDF-1.7 scan",
+            declaredSize: 18 * 1024 * 1024,
+          },
+        ]),
+      ],
+      "ligjeratat.zip",
+      { type: "application/zip" }
+    );
+
+    const response = await upload({ env, file });
+    expect(response.status).toBe(200);
+  });
+
+  it("names the file and both limits when a ZIP entry is over 50MB", async () => {
+    const { env } = makeEnv();
+    const file = new File(
+      [
+        zipBytes([
+          {
+            name: "ligjeratat/skanimi-i-madh.pdf",
+            content: "%PDF-1.7 scan",
+            declaredSize: 64 * 1024 * 1024,
+          },
+        ]),
+      ],
+      "ligjeratat.zip",
+      { type: "application/zip" }
+    );
+
+    const response = await upload({ env, file });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toContain("skanimi-i-madh.pdf");
+    expect(body.error).toContain("64MB");
+    expect(body.error).toContain("50MB");
+  });
+
+  it("rejects a ZIP that inflates past the total limit", async () => {
+    const { env } = makeEnv();
+    const file = new File(
+      [
+        zipBytes([
+          { name: "a.pdf", content: "%PDF-1.7", declaredSize: 40 * 1024 * 1024 },
+          { name: "b.pdf", content: "%PDF-1.7", declaredSize: 40 * 1024 * 1024 },
+          { name: "c.pdf", content: "%PDF-1.7", declaredSize: 40 * 1024 * 1024 },
+        ]),
+      ],
+      "bombe.zip",
+      { type: "application/zip" }
+    );
+
+    const response = await upload({ env, file });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toContain("100MB");
+  });
+
+  it("rate limits per account rather than per IP", async () => {
+    const { env, binds } = makeEnv();
+    const file = new File([pdfBytes(2048)], "provimi-pranues.pdf", {
+      type: "application/pdf",
+    });
+
+    const response = await upload({ env, file });
+    expect(response.status).toBe(200);
+
+    const rateLimit = binds.find((entry) => /INSERT INTO rate_limits/.test(entry.sql));
+    expect(rateLimit).toBeDefined();
+    // Key is the first bound argument; the signed token in these tests is user 1.
+    expect(rateLimit.args[0]).toBe("upload:user:1");
+    // …and the cap bound last is the batch-friendly one, not the old 10.
+    expect(rateLimit.args[rateLimit.args.length - 1]).toBe(100);
+  });
+
+  it("rejects an unauthenticated upload without recording a rate-limit hit", async () => {
+    const { env, binds } = makeEnv();
+    const form = new FormData();
+    form.append("title", "Pa token");
+    form.append("faculty", "MED");
+    form.append("type", "Provime Pranuese");
+    form.append("file", new File([pdfBytes(2048)], "x.pdf", { type: "application/pdf" }));
+
+    const response = await worker.fetch(
+      new Request("https://api.e-studenti.com/?action=upload", {
+        method: "POST",
+        headers: { Origin: "http://localhost:3000" },
+        body: form,
+      }),
+      env
+    );
+
+    expect(response.status).toBe(401);
+    expect(binds.some((entry) => /INSERT INTO rate_limits/.test(entry.sql))).toBe(false);
   });
 
   it("rejects a ZIP whose local header hides a different name", async () => {
