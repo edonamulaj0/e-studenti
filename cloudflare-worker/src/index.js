@@ -55,9 +55,9 @@ const RATE_LIMITS = {
   verify_fail: { requests: 5, window: 900 },
   contact: { requests: 3, window: 3600 },
   // Keyed to the account rather than the IP (see handleUpload), so the ceiling
-  // is what one person may upload in an hour and a batch of files fits under it.
+  // is what one person may upload in an hour and a bulk upload fits under it.
   upload: {
-    requests: 100,
+    requests: 300,
     window: 3600,
     message: "Keni arritur kufirin e ngarkimeve për këtë orë. Provoni përsëri më vonë.",
   },
@@ -66,6 +66,36 @@ const RATE_LIMITS = {
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
 };
+/**
+ * Faculty codes and material types the catalogue understands. The upload form
+ * offers only these, but the form is not the only thing that can POST to the
+ * endpoint, and an unrecognised value reaches the public materials page and
+ * every filter built on it. Must stay in sync with app/lib/material-options.js.
+ */
+const ALLOWED_FACULTIES = [
+  "ART",
+  "ECON",
+  "EDU",
+  "FA",
+  "FBV",
+  "FEFS",
+  "FFL",
+  "FFZ",
+  "FIEK",
+  "FIM",
+  "FIN",
+  "FSHMN",
+  "LAW",
+  "MED",
+];
+const ALLOWED_MATERIAL_TYPES = [
+  "Provime Pranuese",
+  "Ligjerata",
+  "Afat",
+  "Projekt",
+  "Libër",
+  "Të tjera",
+];
 const ALLOWED_EXTENSIONS = [
   "pdf",
   "doc",
@@ -927,6 +957,33 @@ function formatMegabytes(bytes) {
 }
 
 /**
+ * The name an extractor will actually write to disk.
+ *
+ * Windows drops trailing dots and spaces from a filename, and extractors
+ * written in C truncate at the first NUL — so "setup.exe.", "setup.exe " and
+ * "setup.exe\u0000.pdf" all land on disk as setup.exe. The extension check has
+ * to see that name, not the one the archive declares, or the executable filter
+ * is trivially bypassed.
+ */
+function normalizeZipEntryName(filename) {
+  return String(filename).split("\u0000")[0].replace(/[\s.]+$/, "");
+}
+
+/**
+ * True when extracting this entry would write outside the folder the user
+ * chose. The worker never unpacks the archive, but the student who downloads
+ * it will, and "../" escapes their target directory.
+ */
+function isUnsafeZipPath(filename) {
+  // Truncated at NUL like normalizeZipEntryName, but trailing dots are left
+  // alone: stripping them would erase the very ".." segments being looked for.
+  const path = String(filename).split("\u0000")[0].replace(/\\/g, "/");
+  if (path.startsWith("/")) return true;
+  if (/^[a-zA-Z]:/.test(path)) return true;
+  return path.split("/").some((segment) => segment.trim() === "..");
+}
+
+/**
  * An entry name trimmed for display in an error. The name comes from the
  * uploaded archive, so it is stripped of control characters and bounded before
  * it is echoed back.
@@ -939,33 +996,50 @@ function zipEntryLabel(filename) {
 
 /** Extension of a ZIP entry name, ignoring directory components. */
 function zipEntryExtension(filename) {
-  const base = filename.split("/").pop() || "";
+  const base = normalizeZipEntryName(filename).split("/").pop() || "";
   const dot = base.lastIndexOf(".");
-  return dot === -1 ? "" : base.slice(dot + 1).toLowerCase();
+  return dot === -1 ? "" : base.slice(dot + 1).toLowerCase().trim();
 }
+
+/** Largest end-of-central-directory search window a ZIP comment can create. */
+const ZIP_EOCD_SEARCH_LENGTH = 65557;
 
 /**
  * Validates a ZIP by walking its central directory and each entry's local
- * header. Nothing is decompressed: a 50MB archive can inflate to far more than
- * the Worker's memory budget, and an isolate killed mid-request answers with a
- * Cloudflare error page that carries no CORS headers — the browser then reports
- * the upload as "Failed to fetch" instead of showing our error message.
+ * header.
+ *
+ * Nothing is decompressed, and nothing large is ever held: `read(start, end)`
+ * slices the uploaded file, and the walk only ever asks for the archive's tail,
+ * its central directory, and a few dozen bytes per local header. Reading the
+ * archive whole — on top of the copy request.formData() already holds — put two
+ * 50MB buffers in a 128MB isolate, and an isolate killed mid-request answers
+ * with a Cloudflare error page carrying no CORS headers, which the browser
+ * reports as "Failed to fetch" instead of the messages below.
+ *
+ * Every offset below is absolute within the file; `cd` is the central directory
+ * with `cdStart` as its base, so bounds are checked against the region the
+ * structure is actually allowed to occupy.
  */
-function validateZipDirectory(bytes) {
-  let eocdOffset = -1;
-  const minOffset = Math.max(0, bytes.length - 65557);
-  for (let offset = bytes.length - 22; offset >= minOffset; offset -= 1) {
-    if (readUInt32LE(bytes, offset) === 0x06054b50) {
-      eocdOffset = offset;
+export async function validateZipArchive(size, read) {
+  // --- locate the end-of-central-directory record in the archive's tail ---
+  const tailLength = Math.min(size, ZIP_EOCD_SEARCH_LENGTH);
+  const tailStart = size - tailLength;
+  const tail = tailLength > 0 ? await read(tailStart, size) : new Uint8Array(0);
+
+  let eocdRel = -1;
+  for (let offset = tail.length - 22; offset >= 0; offset -= 1) {
+    if (readUInt32LE(tail, offset) === 0x06054b50) {
+      eocdRel = offset;
       break;
     }
   }
-  if (eocdOffset === -1) {
+  if (eocdRel === -1) {
     return { ok: false, error: "ZIP nuk është i vlefshëm." };
   }
+  const eocdOffset = tailStart + eocdRel;
 
-  const entryCount = readUInt16LE(bytes, eocdOffset + 10);
-  const centralDirectoryOffset = readUInt32LE(bytes, eocdOffset + 16);
+  const entryCount = readUInt16LE(tail, eocdRel + 10);
+  const centralDirectoryOffset = readUInt32LE(tail, eocdRel + 16);
   if (entryCount > MAX_ZIP_FILES) {
     return {
       ok: false,
@@ -973,23 +1047,38 @@ function validateZipDirectory(bytes) {
     };
   }
 
-  let offset = centralDirectoryOffset;
+  // The central directory ends where the EOCD begins; anything else is malformed.
+  if (centralDirectoryOffset >= eocdOffset) {
+    return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
+  }
+  const cdStart = centralDirectoryOffset;
+  const cd = await read(cdStart, eocdOffset);
+
+  let offset = 0;
   let totalSize = 0;
   let fileCount = 0;
   const decoder = new TextDecoder();
   for (let i = 0; i < entryCount; i += 1) {
-    if (offset + 46 > bytes.length || readUInt32LE(bytes, offset) !== 0x02014b50) {
+    if (offset + 46 > cd.length || readUInt32LE(cd, offset) !== 0x02014b50) {
       return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
     }
-    const uncompressedSize = readUInt32LE(bytes, offset + 24);
-    const fileNameLength = readUInt16LE(bytes, offset + 28);
-    const extraLength = readUInt16LE(bytes, offset + 30);
-    const commentLength = readUInt16LE(bytes, offset + 32);
-    const localHeaderOffset = readUInt32LE(bytes, offset + 42);
-    if (offset + 46 + fileNameLength > bytes.length) {
+    const uncompressedSize = readUInt32LE(cd, offset + 24);
+    const fileNameLength = readUInt16LE(cd, offset + 28);
+    const extraLength = readUInt16LE(cd, offset + 30);
+    const commentLength = readUInt16LE(cd, offset + 32);
+    const localHeaderOffset = readUInt32LE(cd, offset + 42);
+    if (offset + 46 + fileNameLength > cd.length) {
       return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
     }
-    const filename = decoder.decode(bytes.slice(offset + 46, offset + 46 + fileNameLength));
+    const filename = decoder.decode(cd.slice(offset + 46, offset + 46 + fileNameLength));
+
+    // Directories are checked too: "../evil/" escapes just as well as a file.
+    if (isUnsafeZipPath(filename)) {
+      return {
+        ok: false,
+        error: `ZIP përmban shteg të palejuar: ${zipEntryLabel(filename)}`,
+      };
+    }
 
     if (!filename.endsWith("/")) {
       if (uncompressedSize === 0xffffffff || localHeaderOffset === 0xffffffff) {
@@ -1025,20 +1114,33 @@ function validateZipDirectory(bytes) {
       }
 
       // Extractors disagree on which name wins when the local header and the
-      // central directory differ, so the local name is checked too.
+      // central directory differ, so the local name is checked too. Only the
+      // header and its name are read, never the entry's data.
+      if (localHeaderOffset + 30 > size) {
+        return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
+      }
+      const localHeader = await read(localHeaderOffset, localHeaderOffset + 30);
       if (
-        localHeaderOffset + 30 > bytes.length ||
-        readUInt32LE(bytes, localHeaderOffset) !== 0x04034b50
+        localHeader.length < 30 ||
+        readUInt32LE(localHeader, 0) !== 0x04034b50
       ) {
         return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
       }
-      const localNameLength = readUInt16LE(bytes, localHeaderOffset + 26);
-      if (localHeaderOffset + 30 + localNameLength > bytes.length) {
+      const localNameLength = readUInt16LE(localHeader, 26);
+      if (localHeaderOffset + 30 + localNameLength > size) {
         return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
       }
-      const localFilename = decoder.decode(
-        bytes.slice(localHeaderOffset + 30, localHeaderOffset + 30 + localNameLength)
+      const localNameBytes = await read(
+        localHeaderOffset + 30,
+        localHeaderOffset + 30 + localNameLength
       );
+      const localFilename = decoder.decode(localNameBytes);
+      if (isUnsafeZipPath(localFilename)) {
+        return {
+          ok: false,
+          error: `ZIP përmban shteg të palejuar: ${zipEntryLabel(localFilename)}`,
+        };
+      }
       const localExt = zipEntryExtension(localFilename);
       if (DANGEROUS_EXTENSIONS.includes(localExt)) {
         return { ok: false, error: `ZIP përmban skedar të ndaluar: .${localExt}` };
@@ -1054,7 +1156,17 @@ function validateZipDirectory(bytes) {
   return { ok: true };
 }
 
+/** Range reader over an uploaded file; Blob.slice does not copy the whole body. */
+function blobRangeReader(file) {
+  return async (start, end) =>
+    new Uint8Array(await file.slice(start, end).arrayBuffer());
+}
+
 async function validateFile(file, ext) {
+  // Caught here rather than by the magic-byte check below, which would reject
+  // an empty file as a malformed PDF and send the user looking for the wrong
+  // problem. Empty files reach the worker when a transfer is cut short.
+  if (file.size === 0) return { ok: false, error: "Skedari është bosh." };
   if (file.size > MAX_FILE_SIZE) return { ok: false, error: "Skedari tejkalon 50MB." };
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
     return {
@@ -1083,9 +1195,8 @@ async function validateFile(file, ext) {
 
   if (ext === "zip") {
     try {
-      const fullBuffer = await file.arrayBuffer();
-      const zipDirectory = validateZipDirectory(new Uint8Array(fullBuffer));
-      if (!zipDirectory.ok) return zipDirectory;
+      const archive = await validateZipArchive(file.size, blobRangeReader(file));
+      if (!archive.ok) return archive;
     } catch {
       return { ok: false, error: "Nuk mund të skanohej skedari ZIP." };
     }
@@ -1765,12 +1876,25 @@ async function handleUpload(request, env) {
   if (!title || !faculty || !subject || !type || !file || typeof file === "string") {
     return jsonResponse({ error: "Plotësoni të gjitha fushat e detyrueshme." }, 400);
   }
+  if (!ALLOWED_FACULTIES.includes(faculty)) {
+    return jsonResponse({ error: "Fakulteti nuk njihet." }, 400);
+  }
+  if (!ALLOWED_MATERIAL_TYPES.includes(type)) {
+    return jsonResponse({ error: "Lloji i materialit nuk njihet." }, 400);
+  }
 
   const ext = extFromFilename(file.name);
   const validation = await validateFile(file, ext);
   if (!validation.ok) return jsonResponse({ error: validation.error }, 400);
 
-  const fileKey = `materials/${user.id}/${Date.now()}-${sanitizeFilename(file.name)}`;
+  // A random component, not the timestamp alone. Two uploads landing in the
+  // same millisecond whose names sanitise to the same string would otherwise
+  // share a key: the second R2 put replaces the first, and both database rows
+  // go on pointing at one object. Re-uploading after a timeout, or a bulk
+  // upload running several requests at once, makes that collision reachable.
+  const fileKey = `materials/${user.id}/${Date.now()}-${crypto
+    .randomUUID()
+    .slice(0, 8)}-${sanitizeFilename(file.name)}`;
   const contentType = contentTypeForExtension(ext);
   // The file is handed to R2 as a Blob rather than an ArrayBuffer so the body is
   // not copied a second time in memory.
