@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import worker from "./index.js";
+import worker, { validateZipArchive } from "./index.js";
 
 const JWT_SECRET = "test-secret-test-secret-test-secret";
 const encoder = new TextEncoder();
@@ -204,6 +204,87 @@ async function upload({ env, file, type = "Provime Pranuese", faculty = "MED", c
   }
   return worker.fetch(request, env);
 }
+
+describe("zip scanning reads ranges, not the whole archive", () => {
+  /** Records every range the walker asks for. */
+  function countingReader(archive) {
+    const stats = { total: 0, largest: 0, calls: 0 };
+    const read = async (start, end) => {
+      stats.total += end - start;
+      stats.largest = Math.max(stats.largest, end - start);
+      stats.calls += 1;
+      return archive.slice(start, end);
+    };
+    return { read, stats };
+  }
+
+  it("validates a 10MB archive while reading a sliver of it", async () => {
+    const bulk = "x".repeat(2 * 1024 * 1024);
+    const archive = zipBytes([
+      { name: "ligjeratat/01.pdf", content: bulk },
+      { name: "ligjeratat/02.pdf", content: bulk },
+      { name: "ligjeratat/03.pdf", content: bulk },
+      { name: "ligjeratat/04.pdf", content: bulk },
+      { name: "ligjeratat/05.pdf", content: bulk },
+    ]);
+    expect(archive.length).toBeGreaterThan(10 * 1024 * 1024);
+
+    const { read, stats } = countingReader(archive);
+    const result = await validateZipArchive(archive.length, read);
+
+    expect(result.ok).toBe(true);
+    // The previous implementation pulled 100% of the archive into a second
+    // buffer. This must touch only the tail, the central directory and a few
+    // dozen bytes per local header.
+    expect(stats.total).toBeLessThan(archive.length / 50);
+    // And no single read may be large enough to matter on its own.
+    expect(stats.largest).toBeLessThanOrEqual(128 * 1024);
+  });
+
+  it("reads the same amount whether the archive is 4MB or 32MB", async () => {
+    // The point of the rewrite: cost is a function of the number of entries,
+    // not of the archive's size. A small archive is read in full because the
+    // 64KB end-of-central-directory search window covers it, and that is fine —
+    // what must not happen is that cost tracking the file.
+    async function bytesReadFor(megabytes) {
+      const archive = zipBytes([
+        { name: "ligjeratat/01.pdf", content: "x".repeat(megabytes * 1024 * 1024) },
+      ]);
+      const { read, stats } = countingReader(archive);
+      const result = await validateZipArchive(archive.length, read);
+      expect(result.ok).toBe(true);
+      return stats.total;
+    }
+
+    const small = await bytesReadFor(4);
+    const large = await bytesReadFor(32);
+
+    // Eightfold the archive, and the walk reads no more than it did before.
+    expect(large).toBeLessThanOrEqual(small);
+    expect(large).toBeLessThan(128 * 1024);
+  });
+
+  it("rejects an archive with no end-of-central-directory record", async () => {
+    const junk = new Uint8Array(200);
+    const result = await validateZipArchive(junk.length, async (start, end) =>
+      junk.slice(start, end)
+    );
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/nuk është i vlefshëm/);
+  });
+
+  it("rejects a central directory offset pointing past the EOCD", async () => {
+    const archive = zipBytes([{ name: "a.pdf", content: "%PDF-1.7" }]);
+    const eocdAt = archive.length - 22;
+    writeUInt32LE(archive, eocdAt + 16, archive.length - 4);
+
+    const result = await validateZipArchive(archive.length, async (start, end) =>
+      archive.slice(start, end)
+    );
+    expect(result.ok).toBe(false);
+    expect(result.error).toMatch(/lexohet sigurt/);
+  });
+});
 
 describe("material upload", () => {
   it("accepts a Provime Pranuese PDF and stores it without buffering a copy", async () => {
