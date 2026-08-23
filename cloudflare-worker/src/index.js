@@ -55,9 +55,9 @@ const RATE_LIMITS = {
   verify_fail: { requests: 5, window: 900 },
   contact: { requests: 3, window: 3600 },
   // Keyed to the account rather than the IP (see handleUpload), so the ceiling
-  // is what one person may upload in an hour and a batch of files fits under it.
+  // is what one person may upload in an hour and a bulk upload fits under it.
   upload: {
-    requests: 100,
+    requests: 300,
     window: 3600,
     message: "Keni arritur kufirin e ngarkimeve për këtë orë. Provoni përsëri më vonë.",
   },
@@ -66,6 +66,36 @@ const RATE_LIMITS = {
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
 };
+/**
+ * Faculty codes and material types the catalogue understands. The upload form
+ * offers only these, but the form is not the only thing that can POST to the
+ * endpoint, and an unrecognised value reaches the public materials page and
+ * every filter built on it. Must stay in sync with app/lib/material-options.js.
+ */
+const ALLOWED_FACULTIES = [
+  "ART",
+  "ECON",
+  "EDU",
+  "FA",
+  "FBV",
+  "FEFS",
+  "FFL",
+  "FFZ",
+  "FIEK",
+  "FIM",
+  "FIN",
+  "FSHMN",
+  "LAW",
+  "MED",
+];
+const ALLOWED_MATERIAL_TYPES = [
+  "Provime Pranuese",
+  "Ligjerata",
+  "Afat",
+  "Projekt",
+  "Libër",
+  "Të tjera",
+];
 const ALLOWED_EXTENSIONS = [
   "pdf",
   "doc",
@@ -927,6 +957,33 @@ function formatMegabytes(bytes) {
 }
 
 /**
+ * The name an extractor will actually write to disk.
+ *
+ * Windows drops trailing dots and spaces from a filename, and extractors
+ * written in C truncate at the first NUL — so "setup.exe.", "setup.exe " and
+ * "setup.exe\u0000.pdf" all land on disk as setup.exe. The extension check has
+ * to see that name, not the one the archive declares, or the executable filter
+ * is trivially bypassed.
+ */
+function normalizeZipEntryName(filename) {
+  return String(filename).split("\u0000")[0].replace(/[\s.]+$/, "");
+}
+
+/**
+ * True when extracting this entry would write outside the folder the user
+ * chose. The worker never unpacks the archive, but the student who downloads
+ * it will, and "../" escapes their target directory.
+ */
+function isUnsafeZipPath(filename) {
+  // Truncated at NUL like normalizeZipEntryName, but trailing dots are left
+  // alone: stripping them would erase the very ".." segments being looked for.
+  const path = String(filename).split("\u0000")[0].replace(/\\/g, "/");
+  if (path.startsWith("/")) return true;
+  if (/^[a-zA-Z]:/.test(path)) return true;
+  return path.split("/").some((segment) => segment.trim() === "..");
+}
+
+/**
  * An entry name trimmed for display in an error. The name comes from the
  * uploaded archive, so it is stripped of control characters and bounded before
  * it is echoed back.
@@ -939,9 +996,9 @@ function zipEntryLabel(filename) {
 
 /** Extension of a ZIP entry name, ignoring directory components. */
 function zipEntryExtension(filename) {
-  const base = filename.split("/").pop() || "";
+  const base = normalizeZipEntryName(filename).split("/").pop() || "";
   const dot = base.lastIndexOf(".");
-  return dot === -1 ? "" : base.slice(dot + 1).toLowerCase();
+  return dot === -1 ? "" : base.slice(dot + 1).toLowerCase().trim();
 }
 
 /**
@@ -991,6 +1048,14 @@ function validateZipDirectory(bytes) {
     }
     const filename = decoder.decode(bytes.slice(offset + 46, offset + 46 + fileNameLength));
 
+    // Directories are checked too: "../evil/" escapes just as well as a file.
+    if (isUnsafeZipPath(filename)) {
+      return {
+        ok: false,
+        error: `ZIP përmban shteg të palejuar: ${zipEntryLabel(filename)}`,
+      };
+    }
+
     if (!filename.endsWith("/")) {
       if (uncompressedSize === 0xffffffff || localHeaderOffset === 0xffffffff) {
         return { ok: false, error: "ZIP64 nuk lejohet për ngarkime." };
@@ -1039,6 +1104,12 @@ function validateZipDirectory(bytes) {
       const localFilename = decoder.decode(
         bytes.slice(localHeaderOffset + 30, localHeaderOffset + 30 + localNameLength)
       );
+      if (isUnsafeZipPath(localFilename)) {
+        return {
+          ok: false,
+          error: `ZIP përmban shteg të palejuar: ${zipEntryLabel(localFilename)}`,
+        };
+      }
       const localExt = zipEntryExtension(localFilename);
       if (DANGEROUS_EXTENSIONS.includes(localExt)) {
         return { ok: false, error: `ZIP përmban skedar të ndaluar: .${localExt}` };
@@ -1055,6 +1126,10 @@ function validateZipDirectory(bytes) {
 }
 
 async function validateFile(file, ext) {
+  // Caught here rather than by the magic-byte check below, which would reject
+  // an empty file as a malformed PDF and send the user looking for the wrong
+  // problem. Empty files reach the worker when a transfer is cut short.
+  if (file.size === 0) return { ok: false, error: "Skedari është bosh." };
   if (file.size > MAX_FILE_SIZE) return { ok: false, error: "Skedari tejkalon 50MB." };
   if (!ALLOWED_EXTENSIONS.includes(ext)) {
     return {
@@ -1765,12 +1840,25 @@ async function handleUpload(request, env) {
   if (!title || !faculty || !subject || !type || !file || typeof file === "string") {
     return jsonResponse({ error: "Plotësoni të gjitha fushat e detyrueshme." }, 400);
   }
+  if (!ALLOWED_FACULTIES.includes(faculty)) {
+    return jsonResponse({ error: "Fakulteti nuk njihet." }, 400);
+  }
+  if (!ALLOWED_MATERIAL_TYPES.includes(type)) {
+    return jsonResponse({ error: "Lloji i materialit nuk njihet." }, 400);
+  }
 
   const ext = extFromFilename(file.name);
   const validation = await validateFile(file, ext);
   if (!validation.ok) return jsonResponse({ error: validation.error }, 400);
 
-  const fileKey = `materials/${user.id}/${Date.now()}-${sanitizeFilename(file.name)}`;
+  // A random component, not the timestamp alone. Two uploads landing in the
+  // same millisecond whose names sanitise to the same string would otherwise
+  // share a key: the second R2 put replaces the first, and both database rows
+  // go on pointing at one object. Re-uploading after a timeout, or a bulk
+  // upload running several requests at once, makes that collision reachable.
+  const fileKey = `materials/${user.id}/${Date.now()}-${crypto
+    .randomUUID()
+    .slice(0, 8)}-${sanitizeFilename(file.name)}`;
   const contentType = contentTypeForExtension(ext);
   // The file is handed to R2 as a Blob rather than an ArrayBuffer so the body is
   // not copied a second time in memory.

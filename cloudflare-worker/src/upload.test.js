@@ -174,11 +174,11 @@ function zipBytes(entries) {
   return output;
 }
 
-async function upload({ env, file, type = "Provime Pranuese", contentLength }) {
+async function upload({ env, file, type = "Provime Pranuese", faculty = "MED", contentLength }) {
   const isPranues = type === "Provime Pranuese";
   const form = new FormData();
   form.append("title", "Stomatologji - Provimi pranues 2024");
-  form.append("faculty", "MED");
+  form.append("faculty", faculty);
   form.append("department", isPranues ? "//" : "Stomatologji");
   form.append("subject", isPranues ? "//" : "Anatomi");
   form.append("teacher", isPranues ? "//" : "Prof. Dr.");
@@ -349,8 +349,8 @@ describe("material upload", () => {
     expect(rateLimit).toBeDefined();
     // Key is the first bound argument; the signed token in these tests is user 1.
     expect(rateLimit.args[0]).toBe("upload:user:1");
-    // …and the cap bound last is the batch-friendly one, not the old 10.
-    expect(rateLimit.args[rateLimit.args.length - 1]).toBe(100);
+    // …and the cap bound last is the bulk-friendly one, not the old 10.
+    expect(rateLimit.args[rateLimit.args.length - 1]).toBe(300);
   });
 
   it("rejects an unauthenticated upload without recording a rate-limit hit", async () => {
@@ -372,6 +372,131 @@ describe("material upload", () => {
 
     expect(response.status).toBe(401);
     expect(binds.some((entry) => /INSERT INTO rate_limits/.test(entry.sql))).toBe(false);
+  });
+
+  // Windows strips trailing dots and spaces, and C extractors truncate at NUL,
+  // so each of these lands on disk as setup.exe.
+  const DISGUISED_EXECUTABLES = [
+    ["provimet/setup.exe.", "trailing dot"],
+    ["provimet/setup.exe ", "trailing space"],
+    ["provimet/setup.exe\u0000.pdf", "NUL truncation"],
+    ["provimet/setup.exe\t", "trailing tab"],
+  ];
+
+  for (const [name, trick] of DISGUISED_EXECUTABLES) {
+    it(`rejects an executable disguised by ${trick}`, async () => {
+      const { env, puts } = makeEnv();
+      const file = new File([zipBytes([{ name, content: "MZ" }])], "provimet.zip", {
+        type: "application/zip",
+      });
+
+      const response = await upload({ env, file });
+      const body = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(body.error).toMatch(/\.exe/);
+      expect(puts).toHaveLength(0);
+    });
+  }
+
+  const TRAVERSAL_PATHS = [
+    ["../../../etc/passwd", "parent-directory escape"],
+    ["/etc/cron.d/payload", "absolute path"],
+    ["C:/Windows/System32/x.dll", "drive-letter path"],
+    ["provimet/../../escape.pdf", "escape through a subdirectory"],
+  ];
+
+  for (const [name, trick] of TRAVERSAL_PATHS) {
+    it(`rejects a ZIP entry using a ${trick}`, async () => {
+      const { env, puts } = makeEnv();
+      const file = new File([zipBytes([{ name, content: "%PDF-1.7" }])], "provimet.zip", {
+        type: "application/zip",
+      });
+
+      const response = await upload({ env, file });
+      const body = await response.json();
+
+      expect(response.status).toBe(400);
+      expect(body.error).toMatch(/shteg/);
+      expect(puts).toHaveLength(0);
+    });
+  }
+
+  it("still accepts ordinary nested names with dots in them", async () => {
+    const { env } = makeEnv();
+    const file = new File(
+      [
+        zipBytes([
+          { name: "Viti 1/Semestri 2/algjebra.lineare.v2.pdf", content: "%PDF-1.7" },
+          { name: "Viti 1/", content: "" },
+        ]),
+      ],
+      "provimet.zip",
+      { type: "application/zip" }
+    );
+
+    const response = await upload({ env, file });
+    expect(response.status).toBe(200);
+  });
+
+  it("gives each upload a distinct key even within the same millisecond", async () => {
+    const { env, puts } = makeEnv();
+    const makeFile = () =>
+      new File([pdfBytes(2048)], "ligjerata.pdf", { type: "application/pdf" });
+
+    // Date.now is frozen so the collision is forced rather than raced: same
+    // user, same filename, same millisecond is exactly the case where a
+    // timestamp-only key made the second R2 put overwrite the first.
+    const realNow = Date.now;
+    Date.now = () => 1_700_000_000_000;
+    try {
+      await Promise.all([
+        upload({ env, file: makeFile() }),
+        upload({ env, file: makeFile() }),
+        upload({ env, file: makeFile() }),
+      ]);
+    } finally {
+      Date.now = realNow;
+    }
+
+    expect(puts).toHaveLength(3);
+    expect(new Set(puts.map((p) => p.key)).size).toBe(3);
+  });
+
+  it("rejects an unknown faculty code", async () => {
+    const { env, puts } = makeEnv();
+    const file = new File([pdfBytes(2048)], "x.pdf", { type: "application/pdf" });
+
+    const response = await upload({ env, file, faculty: "NOT-A-FACULTY" });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/Fakulteti/);
+    expect(puts).toHaveLength(0);
+  });
+
+  it("rejects an unknown material type", async () => {
+    const { env, puts } = makeEnv();
+    const file = new File([pdfBytes(2048)], "x.pdf", { type: "application/pdf" });
+
+    const response = await upload({ env, file, type: "Whatever I Want" });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/Lloji/);
+    expect(puts).toHaveLength(0);
+  });
+
+  it("rejects an empty file by name rather than as a malformed PDF", async () => {
+    const { env, puts } = makeEnv();
+    const file = new File([new Uint8Array(0)], "bosh.pdf", { type: "application/pdf" });
+
+    const response = await upload({ env, file });
+    const body = await response.json();
+
+    expect(response.status).toBe(400);
+    expect(body.error).toMatch(/bosh/);
+    expect(puts).toHaveLength(0);
   });
 
   it("rejects a ZIP whose local header hides a different name", async () => {
