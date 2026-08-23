@@ -22,6 +22,13 @@ const initialForm = {
 
 /** Must stay in sync with the worker's own limits (MAX_FILE_SIZE, ALLOWED_EXTENSIONS). */
 const MAX_FILE_SIZE = 50 * 1024 * 1024;
+/**
+ * ZIP rules the worker enforces after the 50MB check passes. They are shown on
+ * the form because an archive that clears 50MB can still be rejected for what
+ * is inside it, and the user cannot guess which file to remove.
+ */
+const MAX_ZIP_FILES = 500;
+const MAX_DECOMPRESSED_SIZE = 100 * 1024 * 1024;
 const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "zip"];
 const ACCEPT_ATTRIBUTE = ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(",");
 
@@ -189,6 +196,10 @@ export default function NgarkoPage() {
             <div className="rounded-xl border border-srh-cream bg-srh-cream/60 p-4 text-sm text-srh-navy/75">
               <p>Lejohen: PDF, Word (doc/docx), PowerPoint (ppt/pptx), Excel (xls/xlsx), ZIP</p>
               <p>Madhësia maksimale: 50MB</p>
+              <p>
+                Për ZIP: deri në {MAX_ZIP_FILES} skedarë brenda, secili deri në 50MB dhe
+                deri në {formatMegabytes(MAX_DECOMPRESSED_SIZE)}MB gjithsej pasi hapet.
+              </p>
               <p>Skedarët skanohen automatikisht para ngarkimit.</p>
             </div>
 
