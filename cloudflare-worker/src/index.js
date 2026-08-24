@@ -19,6 +19,7 @@ import {
   resolveResourceUrl,
   sanitizeResourceLinkForPublic,
 } from "./resource-links.js";
+import { hasR2Credentials, presignR2Url } from "./r2-presign.js";
 import { loadSiteStats, refreshSiteStats } from "./site-stats.js";
 
 const MEDIA_BASE = "https://media.e-studenti.com";
@@ -43,6 +44,24 @@ const MAX_ZIP_FILES = 500;
  * the archive as a whole.
  */
 const MAX_INDIVIDUAL_ZIP_FILE = MAX_FILE_SIZE;
+/** Files in one bulk upload. */
+const MAX_BATCH_FILES = 200;
+/** Combined declared size of one bulk upload. */
+const MAX_BATCH_TOTAL_SIZE = 2 * 1024 * 1024 * 1024;
+/**
+ * How long a presigned upload URL stays valid. Long enough for a large file on
+ * a slow connection, short enough that a leaked URL is not a lasting capability.
+ */
+const UPLOAD_URL_TTL_SECONDS = 900;
+/** Presigned uploads never committed are swept after this long. */
+const PENDING_UPLOAD_TTL_SECONDS = 24 * 60 * 60;
+/**
+ * Quarantine bucket for presigned uploads. Separate from the materials bucket
+ * because media.e-studenti.com is a public custom domain bound to that one, so
+ * anything written under a prefix there is readable before it has been scanned.
+ * No custom domain points here.
+ */
+const UPLOAD_BUCKET_NAME = "e-studenti-uploads";
 const CODE_TTL_SECONDS = 15 * 60;   // must stay in sync with upsertVerificationCode
 const CODE_COOLDOWN_SECONDS = 60;   // minimum gap between successive sends to the same email
 /** Access token lifetime — kept short so stolen cookies expire; logout also bumps token_version. */
@@ -807,7 +826,11 @@ function rateLimitIdentity(request) {
   return visitorClientIp(request);
 }
 
-async function checkRateLimit(request, action, env, identityOverride = "") {
+/**
+ * `cost` is how many units the request consumes. A bulk upload charges one per
+ * file, so a batch cannot slip a hundred files past a limit meant to bound one.
+ */
+async function checkRateLimit(request, action, env, identityOverride = "", cost = 1) {
   const config = RATE_LIMITS[action];
   if (!config || !env.DB) return null;
 
@@ -815,19 +838,29 @@ async function checkRateLimit(request, action, env, identityOverride = "") {
   const identity = identityOverride || rateLimitIdentity(request);
   const key = `${action}:${identity}`;
   const resetAt = now + config.window;
+  const amount = Math.max(1, Math.floor(Number(cost) || 1));
+
+  // A request costing more than the whole window can never be admitted, and the
+  // upsert below would silently never match; answer directly instead.
+  if (amount > config.requests) {
+    return jsonResponse(
+      { error: config.message || "Shumë kërkesa. Provoni përsëri më vonë.", retryAfter: config.window },
+      429
+    );
+  }
 
   try {
-    // Single upsert: insert, reset expired windows, or increment under the cap.
-    // If already at the cap in an active window, the WHERE clause skips the update
-    // and changes === 0.
+    // Single upsert: insert, reset expired windows, or add under the cap.
+    // If the window is active and full, the WHERE clause skips the update and
+    // changes === 0.
     const result = await env.DB.prepare(
-      `INSERT INTO rate_limits (key, count, reset_at) VALUES (?, 1, ?)
+      `INSERT INTO rate_limits (key, count, reset_at) VALUES (?, ?, ?)
        ON CONFLICT(key) DO UPDATE SET
-         count = CASE WHEN rate_limits.reset_at <= ? THEN 1 ELSE rate_limits.count + 1 END,
+         count = CASE WHEN rate_limits.reset_at <= ? THEN ? ELSE rate_limits.count + ? END,
          reset_at = CASE WHEN rate_limits.reset_at <= ? THEN ? ELSE rate_limits.reset_at END
-       WHERE rate_limits.reset_at <= ? OR rate_limits.count < ?`
+       WHERE rate_limits.reset_at <= ? OR rate_limits.count + ? <= ?`
     )
-      .bind(key, resetAt, now, now, resetAt, now, config.requests)
+      .bind(key, amount, resetAt, now, amount, amount, now, resetAt, now, amount, config.requests)
       .run();
 
     if (Number(result.meta?.changes || 0) > 0) return null;
@@ -1935,6 +1968,430 @@ async function handleUpload(request, env) {
   });
 }
 
+/** Reads a byte range from an R2 object, for validating without downloading. */
+function r2RangeReader(bucket, key) {
+  return async (start, end) => {
+    const length = end - start;
+    if (length <= 0) return new Uint8Array(0);
+    const object = await bucket.get(key, { range: { offset: start, length } });
+    if (!object) throw new Error("object disappeared mid-scan");
+    return new Uint8Array(await object.arrayBuffer());
+  };
+}
+
+/**
+ * Validates an object that is already in the quarantine bucket.
+ *
+ * This is the check that matters. Everything the client said at init shaped the
+ * presigned URL and nothing more; what is verified here is the object that
+ * actually landed — its real size from head(), its real leading bytes, and for
+ * an archive its real central directory. All of it through ranged reads, so a
+ * 50MB file is inspected without being pulled into the isolate.
+ */
+async function validateStoredUpload(bucket, key, ext, size) {
+  if (size === 0) return { ok: false, error: "Skedari është bosh." };
+  if (size > MAX_FILE_SIZE) return { ok: false, error: "Skedari tejkalon 50MB." };
+  if (!ALLOWED_EXTENSIONS.includes(ext)) {
+    return { ok: false, error: `Lloji i skedarit nuk lejohet: .${ext}` };
+  }
+
+  const read = r2RangeReader(bucket, key);
+  const bytes = await read(0, Math.min(8, size));
+  const isPDF = MAGIC_BYTES.pdf.every((b, i) => bytes[i] === b);
+  const isZIP = MAGIC_BYTES.zip.every((b, i) => bytes[i] === b);
+  const isOLE2 = MAGIC_BYTES.ole2.every((b, i) => bytes[i] === b);
+  const zipBased = ["zip", "docx", "xlsx", "pptx"];
+  const ole2Based = ["doc", "xls", "ppt"];
+
+  if (ext === "pdf" && !isPDF) {
+    return { ok: false, error: "Skedari nuk është PDF i vlefshëm." };
+  }
+  if (zipBased.includes(ext) && !isZIP) {
+    return { ok: false, error: "Skedari nuk është i vlefshëm." };
+  }
+  if (ole2Based.includes(ext) && !isOLE2) {
+    return { ok: false, error: "Skedari nuk është i vlefshëm." };
+  }
+
+  if (ext === "zip") {
+    try {
+      const archive = await validateZipArchive(size, read);
+      if (!archive.ok) return archive;
+    } catch {
+      return { ok: false, error: "Nuk mund të skanohej skedari ZIP." };
+    }
+  }
+
+  return { ok: true };
+}
+
+async function discardPendingUpload(env, pending) {
+  if (env.UPLOAD_BUCKET) {
+    await env.UPLOAD_BUCKET.delete(pending.object_key).catch(() => {});
+  }
+  await env.DB.prepare("DELETE FROM pending_uploads WHERE id = ?").bind(pending.id).run();
+}
+
+/** True when the worker is configured for presigned uploads. */
+function bulkUploadReady(env) {
+  return Boolean(env.UPLOAD_BUCKET) && hasR2Credentials(env);
+}
+
+/**
+ * Step one of a bulk upload: decide whether to issue upload URLs at all, then
+ * reserve a key per file and presign a PUT to the quarantine bucket.
+ *
+ * The worker chooses every key. If the client could name it, one user could
+ * overwrite another's object, and a URL signed for a prefix rather than a
+ * single key would let its holder write anywhere beneath it.
+ */
+async function handleBulkUploadInit(request, env) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  if (!env.DB) return databaseUnavailableResponse();
+
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!bulkUploadReady(env)) {
+    return jsonResponse({ error: "Ngarkimi në grup nuk është i konfiguruar." }, 503);
+  }
+
+  const body = await request.json().catch(() => null);
+  const files = Array.isArray(body?.files) ? body.files : null;
+  if (!files || files.length === 0) {
+    return jsonResponse({ error: "Zgjidhni së paku një skedar." }, 400);
+  }
+  if (files.length > MAX_BATCH_FILES) {
+    return jsonResponse(
+      { error: `Deri në ${MAX_BATCH_FILES} skedarë në një ngarkim.` },
+      400
+    );
+  }
+
+  // One unit per file, charged before anything is signed.
+  const limited = await checkRateLimit(request, "upload", env, `user:${user.id}`, files.length);
+  if (limited) return limited;
+
+  const prepared = [];
+  let totalSize = 0;
+  for (const entry of files) {
+    const filename = String(entry?.filename || "").trim();
+    if (!filename) return jsonResponse({ error: "Emri i skedarit mungon." }, 400);
+    const label = zipEntryLabel(filename);
+
+    const size = Number(entry?.size);
+    if (!Number.isInteger(size) || size <= 0) {
+      return jsonResponse({ error: `Madhësia e "${label}" nuk është e vlefshme.` }, 400);
+    }
+    if (size > MAX_FILE_SIZE) {
+      return jsonResponse(
+        {
+          error: `"${label}" është ${formatMegabytes(size)} — kufiri për një skedar është ${formatMegabytes(MAX_FILE_SIZE)}.`,
+        },
+        400
+      );
+    }
+    const ext = extFromFilename(filename);
+    if (!ALLOWED_EXTENSIONS.includes(ext)) {
+      return jsonResponse(
+        { error: `Lloji i skedarit "${label}" nuk lejohet. Lejohen: ${ALLOWED_EXTENSIONS.join(", ")}` },
+        400
+      );
+    }
+
+    totalSize += size;
+    if (totalSize > MAX_BATCH_TOTAL_SIZE) {
+      return jsonResponse(
+        { error: `Ngarkimi tejkalon ${formatMegabytes(MAX_BATCH_TOTAL_SIZE)} gjithsej.` },
+        400
+      );
+    }
+    prepared.push({ filename, size, ext });
+  }
+
+  let collectionId = null;
+  if (body?.collection) {
+    const created = await createCollection(body.collection, user, env);
+    if (!created.ok) return jsonResponse({ error: created.error }, 400);
+    collectionId = created.id;
+  }
+
+  const issued = [];
+  for (const file of prepared) {
+    const objectKey = `pending/${user.id}/${crypto.randomUUID()}/${sanitizeFilename(file.filename)}`;
+    await env.DB.prepare(
+      `INSERT INTO pending_uploads
+        (user_id, collection_id, object_key, filename, file_type, declared_size)
+       VALUES (?,?,?,?,?,?)`
+    )
+      .bind(user.id, collectionId, objectKey, file.filename, file.ext, file.size)
+      .run();
+
+    const signed = await presignR2Url({
+      accountId: env.R2_ACCOUNT_ID,
+      accessKeyId: env.R2_ACCESS_KEY_ID,
+      secretAccessKey: env.R2_SECRET_ACCESS_KEY,
+      bucket: env.R2_UPLOAD_BUCKET_NAME || UPLOAD_BUCKET_NAME,
+      key: objectKey,
+      method: "PUT",
+      expiresIn: UPLOAD_URL_TTL_SECONDS,
+      // Signed, so a body of any other size fails verification at R2.
+      contentLength: file.size,
+    });
+
+    issued.push({
+      filename: file.filename,
+      key: objectKey,
+      url: signed.url,
+      headers: signed.requiredHeaders,
+      expiresAt: signed.expiresAt,
+    });
+  }
+
+  return jsonResponse({ collectionId, files: issued });
+}
+
+async function createCollection(input, user, env) {
+  const titleCheck = validateMaterialTextField(input?.title, "Titulli i koleksionit", { maxLen: 200 });
+  if (!titleCheck.ok) return { ok: false, error: titleCheck.error };
+  const subjectCheck = validateMaterialTextField(input?.subject, "Lënda", { maxLen: 200 });
+  if (!subjectCheck.ok) return { ok: false, error: subjectCheck.error };
+  const departmentCheck = validateMaterialTextField(input?.department || "//", "Departamenti", {
+    maxLen: 200,
+    allowEmpty: true,
+  });
+  if (!departmentCheck.ok) return { ok: false, error: departmentCheck.error };
+
+  const faculty = String(input?.faculty || "").trim().toUpperCase();
+  if (!ALLOWED_FACULTIES.includes(faculty)) return { ok: false, error: "Fakulteti nuk njihet." };
+
+  const levelRaw = String(input?.study_level || "bachelor").trim().toLowerCase();
+  const studyLevel = ["bachelor", "master", "phd"].includes(levelRaw) ? levelRaw : "bachelor";
+
+  const result = await env.DB.prepare(
+    `INSERT INTO collections (user_id, title, faculty, department, subject, study_level, is_anonymous)
+     VALUES (?,?,?,?,?,?,?)`
+  )
+    .bind(
+      user.id,
+      titleCheck.value,
+      faculty,
+      departmentCheck.value || "//",
+      subjectCheck.value,
+      studyLevel,
+      input?.is_anonymous ? 1 : 0
+    )
+    .run();
+  return { ok: true, id: result.meta.last_row_id };
+}
+
+/**
+ * Step two: verify what landed and publish it.
+ *
+ * Partial success is the normal case — one bad file in forty must not discard
+ * the other thirty-nine — so every file gets its own result rather than the
+ * whole request failing.
+ */
+async function handleBulkUploadCommit(request, env) {
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  if (!env.DB) return databaseUnavailableResponse();
+
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!env.UPLOAD_BUCKET) {
+    return jsonResponse({ error: "Ngarkimi në grup nuk është i konfiguruar." }, 503);
+  }
+
+  const body = await request.json().catch(() => null);
+  const items = Array.isArray(body?.files) ? body.files : null;
+  if (!items || items.length === 0) {
+    return jsonResponse({ error: "Asnjë skedar për publikim." }, 400);
+  }
+  if (items.length > MAX_BATCH_FILES) {
+    return jsonResponse({ error: `Deri në ${MAX_BATCH_FILES} skedarë në një ngarkim.` }, 400);
+  }
+
+  const results = [];
+  let published = 0;
+  for (const item of items) {
+    const key = String(item?.key || "");
+    // Scoped to the caller: a key belonging to someone else simply is not found.
+    const pending = await env.DB.prepare(
+      "SELECT * FROM pending_uploads WHERE object_key = ? AND user_id = ?"
+    )
+      .bind(key, user.id)
+      .first();
+    if (!pending) {
+      results.push({ key, ok: false, error: "Ngarkimi nuk u gjet ose ka skaduar." });
+      continue;
+    }
+
+    const head = await env.UPLOAD_BUCKET.head(key);
+    if (!head) {
+      results.push({ key, ok: false, error: "Skedari nuk arriti të ngarkohet." });
+      continue;
+    }
+
+    // The stored object's own size, never the one declared at init.
+    const validation = await validateStoredUpload(
+      env.UPLOAD_BUCKET,
+      key,
+      pending.file_type,
+      head.size
+    );
+    if (!validation.ok) {
+      await discardPendingUpload(env, pending);
+      results.push({ key, ok: false, error: validation.error });
+      continue;
+    }
+
+    const meta = await materialMetadataFromCommit(item, pending, env);
+    if (!meta.ok) {
+      results.push({ key, ok: false, error: meta.error });
+      continue;
+    }
+
+    const finalKey = `materials/${user.id}/${Date.now()}-${crypto
+      .randomUUID()
+      .slice(0, 8)}-${sanitizeFilename(pending.filename)}`;
+    const source = await env.UPLOAD_BUCKET.get(key);
+    if (!source) {
+      results.push({ key, ok: false, error: "Skedari nuk arriti të ngarkohet." });
+      continue;
+    }
+    // Streamed from one bucket to the other rather than buffered.
+    await env.MY_BUCKET.put(finalKey, source.body, {
+      httpMetadata: { contentType: contentTypeForExtension(pending.file_type) },
+    });
+
+    const r2Url = keyToPublicUrl(finalKey);
+    const insert = await env.DB.prepare(
+      `INSERT INTO materials
+        (user_id, title, faculty, department, subject, teacher, type, file_key, file_type,
+         file_size, r2_url, is_anonymous, study_level, collection_id)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+    )
+      .bind(
+        user.id,
+        meta.title,
+        meta.faculty,
+        meta.department,
+        meta.subject,
+        meta.teacher,
+        meta.type,
+        finalKey,
+        pending.file_type,
+        head.size,
+        r2Url,
+        meta.isAnonymous,
+        meta.studyLevel,
+        pending.collection_id
+      )
+      .run();
+
+    await discardPendingUpload(env, pending);
+    published += 1;
+    results.push({
+      key,
+      ok: true,
+      material: { id: insert.meta.last_row_id, title: meta.title, r2_url: r2Url },
+    });
+  }
+
+  if (published > 0) invalidateCatalogCaches();
+  return jsonResponse({ published, failed: results.length - published, results });
+}
+
+/** Per-file metadata for a commit, falling back to the collection's fields. */
+async function materialMetadataFromCommit(item, pending, env) {
+  const collection = pending.collection_id
+    ? await env.DB.prepare("SELECT * FROM collections WHERE id = ?")
+        .bind(pending.collection_id)
+        .first()
+    : null;
+
+  const titleCheck = validateMaterialTextField(item?.title, "Titulli", { maxLen: 200 });
+  if (!titleCheck.ok) return { ok: false, error: titleCheck.error };
+
+  const subjectSource = item?.subject ?? collection?.subject;
+  const subjectCheck = validateMaterialTextField(subjectSource, "Lënda", { maxLen: 200 });
+  if (!subjectCheck.ok) return { ok: false, error: subjectCheck.error };
+
+  const teacherCheck = validateMaterialTextField(item?.teacher || "//", "Profesori", {
+    maxLen: 200,
+    allowEmpty: true,
+  });
+  if (!teacherCheck.ok) return { ok: false, error: teacherCheck.error };
+
+  const departmentCheck = validateMaterialTextField(
+    item?.department ?? collection?.department ?? "//",
+    "Departamenti",
+    { maxLen: 200, allowEmpty: true }
+  );
+  if (!departmentCheck.ok) return { ok: false, error: departmentCheck.error };
+
+  const faculty = String(item?.faculty || collection?.faculty || "").trim().toUpperCase();
+  if (!ALLOWED_FACULTIES.includes(faculty)) return { ok: false, error: "Fakulteti nuk njihet." };
+
+  const type = String(item?.type || "").trim();
+  if (!ALLOWED_MATERIAL_TYPES.includes(type)) {
+    return { ok: false, error: "Lloji i materialit nuk njihet." };
+  }
+
+  const levelRaw = String(item?.study_level || collection?.study_level || "bachelor")
+    .trim()
+    .toLowerCase();
+  const studyLevel = ["bachelor", "master", "phd"].includes(levelRaw) ? levelRaw : "bachelor";
+
+  const isAnonymous =
+    item?.is_anonymous === undefined
+      ? Number(collection?.is_anonymous || 0)
+      : item.is_anonymous
+        ? 1
+        : 0;
+
+  return {
+    ok: true,
+    title: titleCheck.value,
+    subject: subjectCheck.value,
+    teacher: teacherCheck.value || "//",
+    department: departmentCheck.value || "//",
+    faculty,
+    type,
+    studyLevel,
+    isAnonymous,
+  };
+}
+
+/**
+ * Deletes presigned uploads nobody ever committed.
+ *
+ * Uploading before the review is what makes the interface feel immediate, and
+ * the cost is files that arrive and are then abandoned. Without this they
+ * accumulate silently and are billed for. R2 lifecycle rules on the quarantine
+ * bucket cover the same ground; this runs regardless of how it is configured.
+ */
+export async function sweepAbandonedUploads(env) {
+  if (!env.DB || !env.UPLOAD_BUCKET) return { swept: 0 };
+  const cutoff = new Date(Date.now() - PENDING_UPLOAD_TTL_SECONDS * 1000)
+    .toISOString()
+    .replace("T", " ")
+    .slice(0, 19);
+
+  const stale = await env.DB.prepare(
+    "SELECT id, object_key FROM pending_uploads WHERE created_at < ? LIMIT 500"
+  )
+    .bind(cutoff)
+    .all();
+
+  let swept = 0;
+  for (const row of stale.results || []) {
+    await env.UPLOAD_BUCKET.delete(row.object_key).catch(() => {});
+    await env.DB.prepare("DELETE FROM pending_uploads WHERE id = ?").bind(row.id).run();
+    swept += 1;
+  }
+  return { swept };
+}
+
 async function handleEdit(request, url, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
@@ -2502,6 +2959,7 @@ export default {
   async scheduled(_event, env, ctx) {
     if (!env.DB) return;
     ctx.waitUntil(refreshSiteStats(env));
+    ctx.waitUntil(sweepAbandonedUploads(env));
   },
 
   async fetch(request, env) {
@@ -2522,6 +2980,8 @@ export default {
       "me",
       "material",
       "upload",
+      "bulk-upload-init",
+      "bulk-upload-commit",
       "generate",
       "edit",
       "reports",
@@ -2651,6 +3111,12 @@ export default {
           break;
         case "site-statistics":
           response = await handleSiteStatistics(url, env);
+          break;
+        case "bulk-upload-init":
+          response = await handleBulkUploadInit(request, env);
+          break;
+        case "bulk-upload-commit":
+          response = await handleBulkUploadCommit(request, env);
           break;
         default:
           response = jsonResponse({ error: "Invalid action" }, 400);
