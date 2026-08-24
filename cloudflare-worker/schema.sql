@@ -46,12 +46,14 @@ CREATE TABLE IF NOT EXISTS materials (
   study_level TEXT NOT NULL DEFAULT 'bachelor',
   view_count INTEGER NOT NULL DEFAULT 0,
   download_count INTEGER NOT NULL DEFAULT 0,
+  collection_id INTEGER REFERENCES collections(id),
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_materials_user ON materials(user_id);
 CREATE INDEX IF NOT EXISTS idx_materials_faculty ON materials(faculty);
+CREATE INDEX IF NOT EXISTS idx_materials_collection ON materials(collection_id);
 
 CREATE TABLE IF NOT EXISTS material_stat_events (
   dedupe_key TEXT PRIMARY KEY,
@@ -93,3 +95,37 @@ CREATE TABLE IF NOT EXISTS resource_links (
 
 CREATE INDEX IF NOT EXISTS idx_resource_links_status ON resource_links(status);
 CREATE INDEX IF NOT EXISTS idx_resource_links_faculty ON resource_links(faculty);
+
+-- A folder uploaded in one go stays one thing: each file inside is still its
+-- own material, but the catalogue can present them together.
+CREATE TABLE IF NOT EXISTS collections (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  title TEXT NOT NULL,
+  faculty TEXT NOT NULL,
+  department TEXT DEFAULT '//',
+  subject TEXT NOT NULL,
+  study_level TEXT NOT NULL DEFAULT 'bachelor',
+  is_anonymous INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT DEFAULT (datetime('now')),
+  updated_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_collections_user ON collections(user_id);
+CREATE INDEX IF NOT EXISTS idx_collections_faculty ON collections(faculty);
+
+-- Presigned uploads awaiting validation. Kept out of `materials` so no existing
+-- query can surface an unvalidated file by forgetting to filter.
+CREATE TABLE IF NOT EXISTS pending_uploads (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id),
+  collection_id INTEGER REFERENCES collections(id),
+  object_key TEXT NOT NULL UNIQUE,
+  filename TEXT NOT NULL,
+  file_type TEXT NOT NULL,
+  declared_size INTEGER NOT NULL,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_pending_uploads_user ON pending_uploads(user_id);
+CREATE INDEX IF NOT EXISTS idx_pending_uploads_created ON pending_uploads(created_at);
