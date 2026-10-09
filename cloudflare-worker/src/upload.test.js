@@ -544,6 +544,20 @@ describe("material upload", () => {
     expect(new Set(puts.map((p) => p.key)).size).toBe(3);
   });
 
+  it("keeps the uploader's user id out of the public file key and URL", async () => {
+    const { env, puts } = makeEnv();
+    const file = new File([pdfBytes(2048)], "ligjerata.pdf", { type: "application/pdf" });
+
+    const response = await upload({ env, file });
+    const body = await response.json();
+
+    // The test user's id is 1; a key like "materials/1/…" would identify them.
+    expect(puts[0].key).toMatch(
+      /^materials\/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\/ligjerata\.pdf$/
+    );
+    expect(body.material.r2_url).not.toMatch(/materials\/1\//);
+  });
+
   it("rejects an unknown faculty code", async () => {
     const { env, puts } = makeEnv();
     const file = new File([pdfBytes(2048)], "x.pdf", { type: "application/pdf" });

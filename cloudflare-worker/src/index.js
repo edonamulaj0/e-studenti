@@ -367,6 +367,14 @@ function sanitizeFilename(name) {
   return cleaned || "material";
 }
 
+/** Public R2 key for a new upload. Deliberately free of any user identifier. */
+function newMaterialKey(filename) {
+  return `materials/${crypto.randomUUID()}/${sanitizeFilename(filename)}`;
+}
+
+/** Keys written before opaque keys: materials/<numeric user id>/<file>. */
+const LEGACY_USER_KEY = /^materials\/\d+\//;
+
 function keyToPublicUrl(key) {
   return `${MEDIA_BASE}/${key.split("/").map(encodeURIComponent).join("/")}`;
 }
@@ -1922,14 +1930,12 @@ async function handleUpload(request, env) {
   const validation = await validateFile(file, ext);
   if (!validation.ok) return jsonResponse({ error: validation.error }, 400);
 
-  // A random component, not the timestamp alone. Two uploads landing in the
-  // same millisecond whose names sanitise to the same string would otherwise
-  // share a key: the second R2 put replaces the first, and both database rows
-  // go on pointing at one object. Re-uploading after a timeout, or a bulk
-  // upload running several requests at once, makes that collision reachable.
-  const fileKey = `materials/${user.id}/${Date.now()}-${crypto
-    .randomUUID()
-    .slice(0, 8)}-${sanitizeFilename(file.name)}`;
+  // The key is public (it is the file's URL), so it must not identify the
+  // uploader: it used to embed the numeric user id, which let anonymous uploads
+  // be grouped with each other and with the same person's named ones. A full
+  // random UUID also keeps two same-named uploads in the same millisecond from
+  // sharing a key, which would make the second R2 put replace the first.
+  const fileKey = newMaterialKey(file.name);
   const contentType = contentTypeForExtension(ext);
   // The file is handed to R2 as a Blob rather than an ArrayBuffer so the body is
   // not copied a second time in memory.
@@ -1963,6 +1969,80 @@ async function handleUpload(request, env) {
       file_size: file.size,
       r2_url: r2Url,
     },
+  });
+}
+
+const REKEY_BATCH_SIZE = 10;
+
+/**
+ * One-off migration for objects stored under materials/<user id>/…: copies each
+ * to an opaque key, repoints the row, then deletes the original. Moderator-only
+ * and resumable — call repeatedly with `after_id` set to the previous
+ * `next_after_id` until `done` is true. The batch is small to stay inside the
+ * Worker's subrequest limit. Old URLs stop working once their object is deleted.
+ */
+async function handleRekeyMaterials(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!env.MY_BUCKET) return jsonResponse({ error: "Storage unavailable." }, 503);
+
+  const body = await request.json().catch(() => ({}));
+  const afterId = Math.max(0, Number(body.after_id) || 0);
+
+  const rows = await env.DB.prepare(
+    `SELECT id, file_key FROM materials
+     WHERE id > ?
+       AND file_key GLOB 'materials/[0-9]*/*'
+       AND substr(file_key, 11, instr(substr(file_key, 11), '/') - 1) NOT GLOB '*[^0-9]*'
+     ORDER BY id
+     LIMIT ?`
+  )
+    .bind(afterId, REKEY_BATCH_SIZE)
+    .all();
+  const candidates = rows.results || [];
+
+  const migrated = [];
+  const skipped = [];
+  for (const row of candidates) {
+    const oldKey = String(row.file_key || "");
+    if (!LEGACY_USER_KEY.test(oldKey)) continue;
+    try {
+      const object = await env.MY_BUCKET.get(oldKey);
+      if (!object) {
+        skipped.push({ id: row.id, reason: "missing_object" });
+        continue;
+      }
+      const newKey = `materials/${crypto.randomUUID()}/${oldKey.split("/").pop()}`;
+      await env.MY_BUCKET.put(newKey, object.body, { httpMetadata: object.httpMetadata });
+      const update = await env.DB.prepare(
+        "UPDATE materials SET file_key = ?, r2_url = ? WHERE id = ? AND file_key = ?"
+      )
+        .bind(newKey, keyToPublicUrl(newKey), row.id, oldKey)
+        .run();
+      if (!Number(update.meta?.changes || 0)) {
+        // The row changed under us; do not leave an unreferenced copy behind.
+        await env.MY_BUCKET.delete(newKey).catch(() => {});
+        skipped.push({ id: row.id, reason: "row_changed" });
+        continue;
+      }
+      await env.MY_BUCKET.delete(oldKey).catch(() => {});
+      migrated.push(row.id);
+    } catch (error) {
+      console.error("rekey failed", row.id, error);
+      skipped.push({ id: row.id, reason: "error" });
+    }
+  }
+
+  if (migrated.length) invalidateCatalogCaches();
+
+  const last = candidates.length ? candidates[candidates.length - 1].id : afterId;
+  return jsonResponse({
+    migrated,
+    skipped,
+    next_after_id: last,
+    done: candidates.length < REKEY_BATCH_SIZE,
   });
 }
 
@@ -2559,6 +2639,7 @@ export default {
       "resolve-report",
       "moderator-materials",
       "delete-material",
+      "rekey-materials",
       "submit-resource-link",
       "moderator-resource-links",
       "moderate-resource-link",
@@ -2655,6 +2736,9 @@ export default {
           break;
         case "delete-material":
           response = await handleDeleteMaterial(request, env);
+          break;
+        case "rekey-materials":
+          response = await handleRekeyMaterials(request, env);
           break;
         case "resource-links":
           response = await handleResourceLinks(request, url, env);
