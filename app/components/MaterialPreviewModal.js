@@ -185,11 +185,15 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="preview-modal-title"
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-srh-cream px-4 py-3 sm:px-5">
           <div className="min-w-0">
-            <h2 className="truncate font-playfair text-lg font-bold text-srh-navy sm:text-xl">
+            <h2
+              id="preview-modal-title"
+              className="truncate font-playfair text-lg font-bold text-srh-navy sm:text-xl"
+            >
               {material.title}
             </h2>
             <p className="mt-0.5 text-xs text-srh-navy/60">
@@ -219,6 +223,8 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
               <Download className="h-5 w-5" />
             </a>
             <button
+              type="button"
+              data-autofocus
               onClick={onClose}
               className="rounded-lg p-2 text-srh-navy/70 transition-colors hover:bg-srh-blush/20 hover:text-srh-navy"
               title="Mbyll"
