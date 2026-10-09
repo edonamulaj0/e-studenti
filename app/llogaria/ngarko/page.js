@@ -200,7 +200,10 @@ export default function NgarkoPage() {
                 Për ZIP: deri në {MAX_ZIP_FILES} skedarë brenda, secili deri në 50MB dhe
                 deri në {formatMegabytes(MAX_DECOMPRESSED_SIZE)}MB gjithsej pasi hapet.
               </p>
-              <p>Skedarët skanohen automatikisht para ngarkimit.</p>
+              <p>
+                Kontrollojmë llojin, madhësinë dhe strukturën e skedarit, por nuk bëjmë
+                skanim antivirusi. Ngarkoni vetëm materiale që keni të drejtë t&apos;i ndani.
+              </p>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
