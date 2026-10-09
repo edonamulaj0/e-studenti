@@ -156,11 +156,12 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="archive-modal-title"
       >
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-srh-cream">
           <div>
-            <h2 className="font-playfair text-2xl font-bold text-srh-navy">
+            <h2 id="archive-modal-title" className="font-playfair text-2xl font-bold text-srh-navy">
               {material?.title}
             </h2>
             <p className="text-sm text-srh-navy/60 mt-1">
@@ -168,7 +169,10 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
             </p>
           </div>
           <button
+            type="button"
+            data-autofocus
             onClick={onClose}
+            aria-label="Mbyll"
             className="p-2 hover:bg-srh-blush/20 rounded-lg transition-colors"
           >
             <X className="w-6 h-6 text-srh-navy/70" />
@@ -236,6 +240,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
                       onClick={() => downloadFile(file)}
                       className="ml-3 p-2 text-srh-crimson hover:bg-srh-blush/20 rounded-lg transition-colors flex-shrink-0"
                       title="Shkarko skedarin"
+                      aria-label={`Shkarko ${file.name}`}
                     >
                       <Download className="w-4 h-4" />
                     </button>

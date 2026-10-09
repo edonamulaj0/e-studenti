@@ -52,7 +52,7 @@ export default function ExternalLinkGate({ href, domain, children, className = "
               <ExternalLink className="h-4 w-4" />
               Vazhdo te {targetDomain}
             </a>
-            <button type="button" onClick={close} className="btn-outline flex-1">
+            <button type="button" data-autofocus onClick={close} className="btn-outline flex-1">
               Anulo
             </button>
           </div>
