@@ -67,3 +67,54 @@ export function getFileTypeBadge(fileType) {
   }
   return { label, className: "bg-gray-100 text-gray-500" };
 }
+
+const SAFE_LINK_PROTOCOLS = new Set(["http:", "https:", "mailto:", "tel:"]);
+
+/**
+ * True when a hyperlink found inside an uploaded document may be followed.
+ * Preview renderers copy link targets out of user-supplied files verbatim, and
+ * a `javascript:` target would run on this origin. Same-document anchors are
+ * harmless; everything else must use an allowlisted protocol.
+ */
+export function isSafeLinkHref(href) {
+  const value = String(href ?? "").trim();
+  if (!value) return false;
+  if (value.startsWith("#")) return true;
+  try {
+    return SAFE_LINK_PROTOCOLS.has(new URL(value, "https://e-studenti.com").protocol);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Strips unsafe link targets from rendered preview content and forces external
+ * links to open in a new, isolated tab. Content that mounts later (windowed
+ * slides) is covered by the click guard, not by this pass.
+ */
+export function sanitizePreviewLinks(root) {
+  if (!root?.querySelectorAll) return;
+  for (const anchor of root.querySelectorAll("a")) {
+    const href = anchor.getAttribute("href");
+    if (!isSafeLinkHref(href)) {
+      anchor.removeAttribute("href");
+      anchor.removeAttribute("xlink:href");
+      continue;
+    }
+    if (!href.trim().startsWith("#")) {
+      anchor.setAttribute("target", "_blank");
+      anchor.setAttribute("rel", "noopener noreferrer nofollow ugc");
+    }
+  }
+}
+
+/** Capture-phase click handler that blocks navigation to unsafe link targets. */
+export function blockUnsafeLinkClick(event) {
+  const anchor = event.target?.closest?.("a");
+  if (!anchor) return;
+  const href = anchor.getAttribute("href") ?? anchor.getAttribute("xlink:href");
+  if (href !== null && !isSafeLinkHref(href)) {
+    event.preventDefault();
+    event.stopPropagation();
+  }
+}
