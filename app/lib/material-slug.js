@@ -36,6 +36,12 @@ export function materialSlugBase(material) {
   return `${titlePart}-${facultyPart}`;
 }
 
+/**
+ * Slugs are only unique relative to the whole catalogue, so the API computes
+ * them over every row and sends them as `material.slug`. A slug already present
+ * is kept; the local computation is a fallback for payloads without one and is
+ * only correct when `materials` is the complete list.
+ */
 export function assignMaterialSlugs(materials) {
   const counts = new Map();
   for (const material of materials) {
@@ -46,7 +52,7 @@ export function assignMaterialSlugs(materials) {
   return materials.map((material) => {
     const base = materialSlugBase(material);
     const slug =
-      (counts.get(base) || 0) > 1 ? `${base}-${material.id}` : base;
+      material.slug || ((counts.get(base) || 0) > 1 ? `${base}-${material.id}` : base);
     return { ...material, slug };
   });
 }

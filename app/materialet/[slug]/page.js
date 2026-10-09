@@ -11,16 +11,17 @@ import JsonLd, {
   materialJsonLd,
   SITE_URL,
 } from "../../components/JsonLd";
-import { fetchAllMaterialsForBuild } from "../../lib/fetch-materials";
-import { assignMaterialSlugs, findMaterialBySlug } from "../../lib/material-slug";
+import { fetchAllMaterialsForBuild, fetchMaterialBySlug } from "../../lib/fetch-materials";
+import { assignMaterialSlugs } from "../../lib/material-slug";
 import { getFacultyName } from "../../lib/material-options";
 import { getStudyLevelLabel } from "../../lib/study-levels";
 
 export const dynamicParams = false;
 
 async function loadMaterialBySlug(slug) {
-  const materials = await fetchAllMaterialsForBuild(500);
-  const match = findMaterialBySlug(materials, slug);
+  // The Worker resolves the slug against the full catalogue; resolving it here
+  // against a build-time batch missed everything outside that batch.
+  const match = await fetchMaterialBySlug(slug);
   if (!match) return null;
   const isAnonymous = Boolean(match.is_anonymous);
   return {
@@ -32,7 +33,7 @@ async function loadMaterialBySlug(slug) {
 }
 
 export async function generateStaticParams() {
-  const materials = await fetchAllMaterialsForBuild(500);
+  const materials = await fetchAllMaterialsForBuild();
   return assignMaterialSlugs(materials).map((material) => ({
     slug: material.slug,
   }));

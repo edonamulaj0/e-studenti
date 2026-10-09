@@ -53,6 +53,7 @@ export function materialToPublicLegacyEntry(material, normalizeUploaderName) {
   const displayName = getPublicUploaderName(material);
   return {
     id: material.id,
+    slug: material.slug,
     title: material.title,
     faculty: material.faculty,
     department: material.department || "//",

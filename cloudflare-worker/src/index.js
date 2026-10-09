@@ -151,10 +151,12 @@ const ORPHAN_CACHE_TTL_MS = 10 * 60_000;
 const D1_CATALOG_CACHE_TTL_MS = 60_000;
 let orphanCache = { at: 0, materials: null };
 let d1CatalogCache = { at: 0, materials: null };
+let slugIndexCache = { at: 0, index: null };
 
 function invalidateCatalogCaches() {
   orphanCache = { at: 0, materials: null };
   d1CatalogCache = { at: 0, materials: null };
+  slugIndexCache = { at: 0, index: null };
 }
 const MAGIC_BYTES = {
   pdf: [0x25, 0x50, 0x44, 0x46],
@@ -908,6 +910,31 @@ async function loadD1MaterialsCached(env) {
   const materials = await loadD1Materials(env);
   d1CatalogCache = { at: now, materials };
   return materials;
+}
+
+/**
+ * id -> slug for every D1 material. A slug is only unique relative to the whole
+ * catalogue (title collisions get an "-id" suffix), so it is computed here over
+ * all rows and returned with each listing. Clients that derived it from the page
+ * or build batch they happened to hold produced links that did not match.
+ */
+async function loadSlugIndexCached(env) {
+  const now = Date.now();
+  if (slugIndexCache.index && now - slugIndexCache.at < D1_CATALOG_CACHE_TTL_MS) {
+    return slugIndexCache.index;
+  }
+  const index = new Map();
+  try {
+    const result = await env.DB.prepare("SELECT id, title, faculty FROM materials").all();
+    for (const material of assignMaterialSlugs(result.results || [])) {
+      index.set(material.id, material.slug);
+    }
+  } catch (error) {
+    console.error("Unable to build material slug index", error);
+    return index;
+  }
+  slugIndexCache = { at: now, index };
+  return index;
 }
 
 /** R2 metadata rows not already present in D1 (legacy orphans only). */
@@ -1731,7 +1758,11 @@ async function handleMaterials(request, url, env) {
   );
   const result = await statement.bind(...params, limit, offset).all();
 
-  const rawMaterials = result.results || [];
+  const slugIndex = await loadSlugIndexCached(env);
+  const rawMaterials = (result.results || []).map((material) => {
+    const slug = slugIndex.get(material.id);
+    return slug ? { ...material, slug } : material;
+  });
   const isOwnerView = userFilter === "me";
   const materials = isOwnerView
     ? rawMaterials
