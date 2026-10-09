@@ -1313,21 +1313,25 @@ async function handleRegister(request, env) {
   const existing = await env.DB.prepare("SELECT * FROM users WHERE email = ?")
     .bind(email)
     .first();
-  if (existing?.email_verified) {
-    // Same response as a fresh registration to avoid email enumeration.
-    return jsonResponse({ success: true, message: "Kodi u dërgua në emailin tuaj." });
-  }
+  const alreadyRegistered = Boolean(existing?.email_verified);
 
-  await env.DB.prepare(
-    "INSERT OR IGNORE INTO users (name, surname, email) VALUES (?,?,?)"
-  )
-    .bind(name, surname, email)
-    .run();
-  await env.DB.prepare(
-    "UPDATE users SET name=?, surname=? WHERE email=? AND email_verified=0"
-  )
-    .bind(name, surname, email)
-    .run();
+  // An already-verified address is sent a sign-in code rather than being
+  // silently dropped: the response is identical either way (no enumeration), and
+  // someone who registers again after forgetting they have an account is signed
+  // in instead of waiting for an email that never arrives. Their stored name is
+  // left alone.
+  if (!alreadyRegistered) {
+    await env.DB.prepare(
+      "INSERT OR IGNORE INTO users (name, surname, email) VALUES (?,?,?)"
+    )
+      .bind(name, surname, email)
+      .run();
+    await env.DB.prepare(
+      "UPDATE users SET name=?, surname=? WHERE email=? AND email_verified=0"
+    )
+      .bind(name, surname, email)
+      .run();
+  }
 
   const cooldown = await checkCodeCooldown(email, env);
   if (cooldown !== null) {
@@ -1340,7 +1344,7 @@ async function handleRegister(request, env) {
   const code = await upsertVerificationCode(email, env);
   const sent = await sendEmail(
     email,
-    "Kodi i verifikimit — E-Studenti",
+    alreadyRegistered ? "Kodi i hyrjes — E-Studenti" : "Kodi i verifikimit — E-Studenti",
     codeEmailHtml(code),
     env,
     env.RESEND_VERIFY_FROM || env.RESEND_FROM || DEFAULT_RESEND_FROM
