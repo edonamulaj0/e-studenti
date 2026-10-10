@@ -17,8 +17,9 @@ import {
   ShieldAlert,
   Layers,
   Link2,
+  PackageCheck,
 } from "lucide-react";
-import { WORKER_URL } from "../../lib/worker-url";
+import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
 import { getResourceCategoryLabel } from "../../lib/resource-options";
@@ -41,6 +42,7 @@ function ModerimPage() {
     const t = searchParams.get("tab");
     if (t === "materialet") return "materialet";
     if (t === "burime") return "burime";
+    if (t === "pritje") return "pritje";
     return "raportet";
   });
   const [ready, setReady] = useState(false);
@@ -65,6 +67,12 @@ function ModerimPage() {
   const [resourceLinksLoading, setResourceLinksLoading] = useState(false);
   const [moderatingLinkId, setModeratingLinkId] = useState(null);
   const [rejectReasons, setRejectReasons] = useState({});
+
+  // ── Review queue ───────────────────────────────────────────────────────
+  const [pending, setPending] = useState([]);
+  const [pendingLoading, setPendingLoading] = useState(false);
+  const [reviewingId, setReviewingId] = useState(null);
+  const [pendingReasons, setPendingReasons] = useState({});
 
   const LIMIT = 50;
   const totalPages = Math.max(1, Math.ceil(materialsTotal / LIMIT));
@@ -95,6 +103,49 @@ function ModerimPage() {
       setResourceLinksLoading(false);
     }
   }, [router]);
+
+  const loadPending = useCallback(async () => {
+    setPendingLoading(true);
+    setGlobalError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=moderator-materials&status=pending`, {
+        credentials: "include",
+      });
+      if (res.status === 401) { router.push("/llogaria/hyr"); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
+      setPending(data.materials || []);
+    } catch (err) {
+      setGlobalError(err.message || "Ngarkimi dështoi.");
+    } finally {
+      setPendingLoading(false);
+    }
+  }, [router]);
+
+  const reviewMaterial = async (id, decision) => {
+    setReviewingId(id);
+    setGlobalError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=review-material`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, decision, reason: pendingReasons[id] || "" }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Veprimi dështoi.");
+      setPending((current) => current.filter((item) => item.id !== id));
+      setPendingReasons((current) => {
+        const next = { ...current };
+        delete next[id];
+        return next;
+      });
+    } catch (err) {
+      setGlobalError(err.message || "Veprimi dështoi.");
+    } finally {
+      setReviewingId(null);
+    }
+  };
 
   const moderateResourceLink = async (id, decision) => {
     setModeratingLinkId(id);
@@ -167,7 +218,13 @@ function ModerimPage() {
     if (tab === "raportet") loadReports();
     if (tab === "materialet") { setSearch(""); loadMaterials(page); }
     if (tab === "burime") loadResourceLinks();
+    if (tab === "pritje") loadPending();
   }, [ready, tab]);
+
+  // The queue count is shown on its tab, so load it even from another tab.
+  useEffect(() => {
+    if (ready && tab !== "pritje") loadPending();
+  }, [ready]);
 
   useEffect(() => {
     if (!ready || tab !== "materialet") return;
@@ -253,7 +310,16 @@ function ModerimPage() {
         </header>
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-2 rounded-2xl border border-gray-200 bg-white p-1.5">
+        <div className="mb-6 flex gap-2 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-1.5">
+          <button type="button" onClick={() => setTab("pritje")} className={tabCls("pritje")}>
+            <PackageCheck className="h-4 w-4" />
+            Në pritje
+            {pending.length > 0 && (
+              <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-amber">
+                {pending.length}
+              </span>
+            )}
+          </button>
           <button type="button" onClick={() => setTab("raportet")} className={tabCls("raportet")}>
             <ShieldAlert className="h-4 w-4" />
             Raportet
@@ -560,6 +626,96 @@ function ModerimPage() {
                 >
                   <ChevronRight className="h-4 w-4" />
                 </button>
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── REVIEW QUEUE TAB ───────────────────────────────────────── */}
+        {tab === "pritje" && (
+          <>
+            {pendingLoading ? (
+              <div className="grid gap-4">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-36 animate-pulse rounded-2xl bg-white" />
+                ))}
+              </div>
+            ) : pending.length === 0 ? (
+              <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+                <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-green" />
+                <h2 className="text-xl font-bold text-navy-900">Asnjë material në pritje</h2>
+                <p className="mt-2 text-gray-500">Të gjitha ngarkimet janë shqyrtuar.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {pending.map((item) => {
+                  const reason = pendingReasons[item.id] || "";
+                  const busy = reviewingId === item.id;
+                  return (
+                    <article
+                      key={item.id}
+                      className="rounded-2xl border border-warning-amber/30 bg-white p-6 shadow-sm"
+                    >
+                      <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                        #{item.id} · {formatDate(item.created_at)} ·{" "}
+                        {item.file_type?.toUpperCase()}
+                      </p>
+                      <h2 className="mt-1 font-bold leading-snug text-navy-900">{item.title}</h2>
+                      <p className="mt-1 text-sm text-gray-500">
+                        {getFacultyName(item.faculty)} · {item.subject} · {item.type}
+                      </p>
+                      <p className="mt-1 text-sm text-gray-500">
+                        Ngarkuar nga {`${item.uploader_name || ""} ${item.uploader_surname || ""}`.trim() || "—"}
+                        {item.uploader_email ? ` (${item.uploader_email})` : ""}
+                        {item.is_anonymous ? " · postim anonim" : ""}
+                      </p>
+                      <a
+                        href={materialViewUrl(item.id)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-burgundy-600 hover:underline"
+                      >
+                        <ExternalLink className="h-4 w-4" />
+                        Hap skedarin
+                      </a>
+                      <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
+                        <label className="sr-only" htmlFor={`reject-reason-${item.id}`}>
+                          Arsyeja e refuzimit për {item.title}
+                        </label>
+                        <input
+                          id={`reject-reason-${item.id}`}
+                          value={reason}
+                          maxLength={300}
+                          onChange={(e) =>
+                            setPendingReasons((current) => ({ ...current, [item.id]: e.target.value }))
+                          }
+                          placeholder="Arsyeja e refuzimit (e nevojshme për të refuzuar)"
+                          className="input-srh min-h-[44px] flex-1 text-sm"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            disabled={busy}
+                            onClick={() => reviewMaterial(item.id, "approve")}
+                            className="btn-primary min-h-[44px] px-4 py-2"
+                          >
+                            <CheckCircle2 className="h-4 w-4" />
+                            Aprovo
+                          </button>
+                          <button
+                            type="button"
+                            disabled={busy || reason.trim().length < 5}
+                            onClick={() => reviewMaterial(item.id, "reject")}
+                            className="btn-outline min-h-[44px] px-4 py-2"
+                          >
+                            <XCircle className="h-4 w-4" />
+                            Refuzo
+                          </button>
+                        </div>
+                      </div>
+                    </article>
+                  );
+                })}
               </div>
             )}
           </>

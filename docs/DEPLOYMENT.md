@@ -105,3 +105,24 @@ while (!done) {
 Each file is copied to `materials/<uuid>/…`, its row is repointed, and the
 original object is deleted, so old URLs stop working (bookmarks, search-engine
 results, shared links). Anything listed under `skipped` was not changed.
+
+## Upload review queue
+
+Uploads from users with fewer than 3 approved materials are saved as `pending`
+and stay hidden until a moderator approves them (**Moderim → Në pritje**).
+Moderators and trusted users publish immediately. A user can have at most 10
+items waiting. Rejected items stay visible to their owner with the reason, and
+editing one resubmits it. The uploader is emailed on approval or rejection.
+
+The Worker reads the new `materials.status` column everywhere, so **apply the
+migration before deploying the Worker**, or every catalogue query will fail:
+
+```bash
+cd cloudflare-worker
+wrangler d1 migrations apply e-studenti-auth --remote
+```
+
+Existing materials are marked `approved`. The thresholds are
+`TRUSTED_APPROVED_UPLOADS` and `MAX_PENDING_PER_USER` in `src/index.js`.
+Files under review are not listed or counted, but their unguessable media URL is
+reachable by anyone who has it; only the owner and moderators are given it.

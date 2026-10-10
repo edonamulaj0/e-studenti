@@ -194,7 +194,7 @@ async function computePeriodStats(env, period, trackingSince, now = Date.now()) 
     env.DB.prepare(
       `SELECT COUNT(*) as count
        FROM materials m
-       WHERE ${materialWindow}`
+       WHERE m.status = 'approved' AND ${materialWindow}`
     ).first(),
     env.DB.prepare(
       `SELECT COUNT(*) as count FROM users
