@@ -21,8 +21,21 @@ function normalizeMaterial(material) {
     view_count: Number(material.view_count || 0),
     download_count: Number(material.download_count || 0),
     createdAt: material.created_at,
+    status: material.status || "approved",
+    rejectionReason: material.rejection_reason || "",
   };
 }
+
+const STATUS_BADGES = {
+  pending: {
+    label: "Në pritje të shqyrtimit",
+    className: "bg-warning-amber/15 text-warning-amber",
+  },
+  rejected: {
+    label: "Nuk u aprovua",
+    className: "bg-burgundy-50 text-burgundy-600",
+  },
+};
 
 function MaterialeEMiaPage() {
   const router = useRouter();
@@ -158,7 +171,23 @@ function MaterialeEMiaPage() {
                 className="rounded-2xl border border-srh-cream bg-white p-6 shadow-sm"
               >
                 <FileText className="mb-4 h-9 w-9 text-srh-crimson" />
+                {STATUS_BADGES[material.status] && (
+                  <p
+                    className={`mb-3 inline-block rounded-full px-3 py-1 text-xs font-bold ${
+                      STATUS_BADGES[material.status].className
+                    }`}
+                  >
+                    {STATUS_BADGES[material.status].label}
+                  </p>
+                )}
                 <h2 className="text-xl font-bold text-srh-navy">{material.title}</h2>
+                {material.status === "rejected" && (
+                  <p className="mt-2 text-sm text-srh-navy/75">
+                    <span className="font-semibold">Arsyeja:</span>{" "}
+                    {material.rejectionReason || "—"}. Ndryshojeni materialin për ta
+                    ridërguar për shqyrtim.
+                  </p>
+                )}
                 <p className="mt-2 text-sm text-srh-navy/60">
                   {getFacultyName(material.faculty)} · {material.subject} · {material.type}
                 </p>

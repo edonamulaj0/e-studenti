@@ -103,6 +103,7 @@ export default function NgarkoPage() {
   const [progress, setProgress] = useState(0);
   const [titleTooltip, setTitleTooltip] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [publishedStatus, setPublishedStatus] = useState("approved");
 
   const isPranues = form.type === "Provime Pranuese";
 
@@ -155,7 +156,8 @@ export default function NgarkoPage() {
         }
       }
       fd.append("is_anonymous", isAnonymous ? "1" : "0");
-      await uploadMaterial(fd, setProgress);
+      const result = await uploadMaterial(fd, setProgress);
+      setPublishedStatus(result?.status === "pending" ? "pending" : "approved");
       setStatus("success");
       setForm(initialForm);
       setIsAnonymous(false);
@@ -175,7 +177,8 @@ export default function NgarkoPage() {
             Ngarko material
           </h1>
           <p className="mt-3 text-srh-navy/70">
-            Materiali do të publikohet menjëherë në emrin tuaj.
+            Materialet e para shqyrtohen nga moderatorët para publikimit; pasi
+            të aprovohen disa, të tjerat publikohen menjëherë.
           </p>
         </header>
 
@@ -183,8 +186,16 @@ export default function NgarkoPage() {
           <div className="rounded-2xl border border-srh-cream bg-white p-8 text-center shadow-sm">
             <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-srh-sage" />
             <h2 className="font-playfair text-3xl font-bold text-srh-navy">
-              Materiali u ngarkua me sukses!
+              {publishedStatus === "pending"
+                ? "Materiali u dërgua për shqyrtim"
+                : "Materiali u ngarkua me sukses!"}
             </h2>
+            {publishedStatus === "pending" && (
+              <p className="mt-3 text-srh-navy/70">
+                Do të shfaqet publikisht pasi ta aprovojë një moderator. Statusin e
+                shihni te &quot;Materiale të mia&quot;, dhe do t&apos;ju njoftojmë me email.
+              </p>
+            )}
             <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 href="/materialet"
