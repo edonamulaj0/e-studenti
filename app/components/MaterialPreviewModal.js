@@ -12,7 +12,11 @@ import {
 import ModalOverlay from "./ModalOverlay";
 import PdfCanvasViewer from "./PdfCanvasViewer";
 import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
-import { getPreviewKind } from "../lib/file-preview";
+import {
+  blockUnsafeLinkClick,
+  getPreviewKind,
+  sanitizePreviewLinks,
+} from "../lib/file-preview";
 
 function proxyUrl(fileUrl) {
   return `${WORKER_URL}/?action=proxy&url=${encodeURIComponent(fileUrl)}`;
@@ -105,6 +109,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
             breakPages: true,
             ignoreLastRenderedPageBreak: false,
           });
+          sanitizePreviewLinks(containerRef.current);
         } else if (kind === "sheet") {
           const XLSX = await import("xlsx");
           if (cancelled) return;
@@ -121,6 +126,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
           await PptxViewer.open(buffer, containerRef.current, {
             listOptions: { windowed: true },
           });
+          sanitizePreviewLinks(containerRef.current);
         }
 
         if (!cancelled) {
@@ -157,7 +163,14 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
     }
     const sheet = workbookRef.current.Sheets[activeSheet];
     if (sheet) {
-      setSheetHtml(xlsxRef.current.utils.sheet_to_html(sheet));
+      // Hyperlinks come from the uploaded workbook, so the generated markup is
+      // cleaned before it is injected; the body's click guard is the backstop.
+      const doc = new DOMParser().parseFromString(
+        xlsxRef.current.utils.sheet_to_html(sheet),
+        "text/html"
+      );
+      sanitizePreviewLinks(doc.body);
+      setSheetHtml(doc.body.innerHTML);
     }
   }, [activeSheet, kind]);
 
@@ -172,11 +185,15 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="preview-modal-title"
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-srh-cream px-4 py-3 sm:px-5">
           <div className="min-w-0">
-            <h2 className="truncate font-playfair text-lg font-bold text-srh-navy sm:text-xl">
+            <h2
+              id="preview-modal-title"
+              className="truncate font-playfair text-lg font-bold text-srh-navy sm:text-xl"
+            >
               {material.title}
             </h2>
             <p className="mt-0.5 text-xs text-srh-navy/60">
@@ -206,6 +223,8 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
               <Download className="h-5 w-5" />
             </a>
             <button
+              type="button"
+              data-autofocus
               onClick={onClose}
               className="rounded-lg p-2 text-srh-navy/70 transition-colors hover:bg-srh-blush/20 hover:text-srh-navy"
               title="Mbyll"
@@ -217,7 +236,10 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
         </div>
 
         {/* Body */}
-        <div className="relative flex-1 overflow-hidden bg-srh-paper">
+        <div
+          className="relative flex-1 overflow-hidden bg-srh-paper"
+          onClickCapture={blockUnsafeLinkClick}
+        >
           {showSpinner && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-srh-paper">
               <Loader2 className="mb-4 h-10 w-10 animate-spin text-srh-crimson" />

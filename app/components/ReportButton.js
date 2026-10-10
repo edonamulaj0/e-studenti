@@ -64,13 +64,14 @@ export default function ReportButton({ materialId, materialTitle, materialUrl })
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
+          aria-labelledby="report-modal-title"
         >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
                   Raporto material
                 </p>
-                <h2 className="truncate text-lg font-bold leading-snug text-navy-900">
+                <h2 id="report-modal-title" className="truncate text-lg font-bold leading-snug text-navy-900">
                   {materialTitle}
                 </h2>
               </div>
@@ -112,10 +113,14 @@ export default function ReportButton({ materialId, materialTitle, materialUrl })
             ) : (
               <form onSubmit={submit} className="space-y-4">
                 <div>
-                  <label className="mb-1.5 block text-sm font-semibold text-navy-900">
+                  <label
+                    htmlFor="report-reason"
+                    className="mb-1.5 block text-sm font-semibold text-navy-900"
+                  >
                     Arsyeja e raportimit
                   </label>
                   <select
+                    id="report-reason"
                     required
                     value={reason}
                     onChange={(e) => setReason(e.target.value)}
@@ -130,7 +135,9 @@ export default function ReportButton({ materialId, materialTitle, materialUrl })
                   </select>
                 </div>
                 {error && (
-                  <p className="text-sm font-semibold text-burgundy-600">{error}</p>
+                  <p role="alert" className="text-sm font-semibold text-burgundy-600">
+                    {error}
+                  </p>
                 )}
                 <div className="flex gap-3 pt-1">
                   <button

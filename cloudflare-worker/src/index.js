@@ -43,6 +43,13 @@ const MAX_ZIP_FILES = 500;
  * the archive as a whole.
  */
 const MAX_INDIVIDUAL_ZIP_FILE = MAX_FILE_SIZE;
+/**
+ * Uploads wait for a moderator until the user has this many approved materials.
+ * Moderators are never held. A user with MAX_PENDING_PER_USER items already
+ * waiting cannot add more, which keeps the queue from being flooded.
+ */
+const TRUSTED_APPROVED_UPLOADS = 3;
+const MAX_PENDING_PER_USER = 10;
 const CODE_TTL_SECONDS = 15 * 60;   // must stay in sync with upsertVerificationCode
 const CODE_COOLDOWN_SECONDS = 60;   // minimum gap between successive sends to the same email
 /** Access token lifetime — kept short so stolen cookies expire; logout also bumps token_version. */
@@ -151,10 +158,12 @@ const ORPHAN_CACHE_TTL_MS = 10 * 60_000;
 const D1_CATALOG_CACHE_TTL_MS = 60_000;
 let orphanCache = { at: 0, materials: null };
 let d1CatalogCache = { at: 0, materials: null };
+let slugIndexCache = { at: 0, index: null };
 
 function invalidateCatalogCaches() {
   orphanCache = { at: 0, materials: null };
   d1CatalogCache = { at: 0, materials: null };
+  slugIndexCache = { at: 0, index: null };
 }
 const MAGIC_BYTES = {
   pdf: [0x25, 0x50, 0x44, 0x46],
@@ -364,6 +373,14 @@ function sanitizeFilename(name) {
     .slice(0, 120);
   return cleaned || "material";
 }
+
+/** Public R2 key for a new upload. Deliberately free of any user identifier. */
+function newMaterialKey(filename) {
+  return `materials/${crypto.randomUUID()}/${sanitizeFilename(filename)}`;
+}
+
+/** Keys written before opaque keys: materials/<numeric user id>/<file>. */
+const LEGACY_USER_KEY = /^materials\/\d+\//;
 
 function keyToPublicUrl(key) {
   return `${MEDIA_BASE}/${key.split("/").map(encodeURIComponent).join("/")}`;
@@ -910,6 +927,33 @@ async function loadD1MaterialsCached(env) {
   return materials;
 }
 
+/**
+ * id -> slug for every D1 material. A slug is only unique relative to the whole
+ * catalogue (title collisions get an "-id" suffix), so it is computed here over
+ * all rows and returned with each listing. Clients that derived it from the page
+ * or build batch they happened to hold produced links that did not match.
+ */
+async function loadSlugIndexCached(env) {
+  const now = Date.now();
+  if (slugIndexCache.index && now - slugIndexCache.at < D1_CATALOG_CACHE_TTL_MS) {
+    return slugIndexCache.index;
+  }
+  const index = new Map();
+  try {
+    const result = await env.DB.prepare(
+      "SELECT id, title, faculty FROM materials WHERE status = 'approved'"
+    ).all();
+    for (const material of assignMaterialSlugs(result.results || [])) {
+      index.set(material.id, material.slug);
+    }
+  } catch (error) {
+    console.error("Unable to build material slug index", error);
+    return index;
+  }
+  slugIndexCache = { at: now, index };
+  return index;
+}
+
 /** R2 metadata rows not already present in D1 (legacy orphans only). */
 async function loadR2Orphans(env) {
   if (!env.METADATA_BUCKET || !env.DB) return [];
@@ -1278,21 +1322,25 @@ async function handleRegister(request, env) {
   const existing = await env.DB.prepare("SELECT * FROM users WHERE email = ?")
     .bind(email)
     .first();
-  if (existing?.email_verified) {
-    // Same response as a fresh registration to avoid email enumeration.
-    return jsonResponse({ success: true, message: "Kodi u dërgua në emailin tuaj." });
-  }
+  const alreadyRegistered = Boolean(existing?.email_verified);
 
-  await env.DB.prepare(
-    "INSERT OR IGNORE INTO users (name, surname, email) VALUES (?,?,?)"
-  )
-    .bind(name, surname, email)
-    .run();
-  await env.DB.prepare(
-    "UPDATE users SET name=?, surname=? WHERE email=? AND email_verified=0"
-  )
-    .bind(name, surname, email)
-    .run();
+  // An already-verified address is sent a sign-in code rather than being
+  // silently dropped: the response is identical either way (no enumeration), and
+  // someone who registers again after forgetting they have an account is signed
+  // in instead of waiting for an email that never arrives. Their stored name is
+  // left alone.
+  if (!alreadyRegistered) {
+    await env.DB.prepare(
+      "INSERT OR IGNORE INTO users (name, surname, email) VALUES (?,?,?)"
+    )
+      .bind(name, surname, email)
+      .run();
+    await env.DB.prepare(
+      "UPDATE users SET name=?, surname=? WHERE email=? AND email_verified=0"
+    )
+      .bind(name, surname, email)
+      .run();
+  }
 
   const cooldown = await checkCodeCooldown(email, env);
   if (cooldown !== null) {
@@ -1305,7 +1353,7 @@ async function handleRegister(request, env) {
   const code = await upsertVerificationCode(email, env);
   const sent = await sendEmail(
     email,
-    "Kodi i verifikimit — E-Studenti",
+    alreadyRegistered ? "Kodi i hyrjes — E-Studenti" : "Kodi i verifikimit — E-Studenti",
     codeEmailHtml(code),
     env,
     env.RESEND_VERIFY_FROM || env.RESEND_FROM || DEFAULT_RESEND_FROM
@@ -1614,7 +1662,8 @@ async function loadD1Materials(env) {
   try {
     const result = await env.DB.prepare(
       `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
-       FROM materials m LEFT JOIN users u ON m.user_id = u.id`
+       FROM materials m LEFT JOIN users u ON m.user_id = u.id
+       WHERE m.status = 'approved'`
     ).all();
     return result.results || [];
   } catch (error) {
@@ -1659,9 +1708,11 @@ async function handleMaterials(request, url, env) {
   }
 
   const baseParams = [];
-  // No baseline filter: every material is listed, including RAR archives and
-  // rows still waiting for their uploader to claim them (LEFT JOIN below).
+  // Every approved material is listed, including RAR archives and rows still
+  // waiting for their uploader to claim them (LEFT JOIN below). Materials under
+  // review or rejected are visible only to their owner (?user=me).
   const baseWhere = [];
+  if (userFilter !== "me") baseWhere.push("m.status = 'approved'");
 
   if (faculty) {
     baseWhere.push("m.faculty = ?");
@@ -1731,7 +1782,11 @@ async function handleMaterials(request, url, env) {
   );
   const result = await statement.bind(...params, limit, offset).all();
 
-  const rawMaterials = result.results || [];
+  const slugIndex = await loadSlugIndexCached(env);
+  const rawMaterials = (result.results || []).map((material) => {
+    const slug = slugIndex.get(material.id);
+    return slug ? { ...material, slug } : material;
+  });
   const isOwnerView = userFilter === "me";
   const materials = isOwnerView
     ? rawMaterials
@@ -1816,12 +1871,32 @@ async function handleContributors(env) {
             MIN(m.faculty) as faculty
      FROM users u
      JOIN materials m ON m.user_id = u.id
-     WHERE COALESCE(m.is_anonymous, 0) = 0
+     WHERE COALESCE(m.is_anonymous, 0) = 0 AND m.status = 'approved'
      GROUP BY u.id
      HAVING COUNT(m.id) > 0
      ORDER BY material_count DESC, u.name ASC, u.surname ASC`
   ).all();
   return jsonResponse({ contributors: result.results || [] });
+}
+
+/**
+ * Whether a new upload is published at once or waits for a moderator.
+ * Trusted = moderator, or enough approved materials already.
+ */
+async function uploadReviewStatus(user, env) {
+  if (userIsModerator(user, env)) return { status: "approved", queueFull: false };
+  const row = await env.DB.prepare(
+    `SELECT
+       SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved,
+       SUM(CASE WHEN status = 'pending' THEN 1 ELSE 0 END) AS pending
+     FROM materials WHERE user_id = ?`
+  )
+    .bind(user.id)
+    .first();
+  const approved = Number(row?.approved || 0);
+  const pending = Number(row?.pending || 0);
+  if (approved >= TRUSTED_APPROVED_UPLOADS) return { status: "approved", queueFull: false };
+  return { status: "pending", queueFull: pending >= MAX_PENDING_PER_USER };
 }
 
 async function handleUpload(request, env) {
@@ -1838,6 +1913,18 @@ async function handleUpload(request, env) {
 
   const limited = await checkRateLimit(request, "upload", env, `user:${user.id}`);
   if (limited) return limited;
+
+  // Decided before the body is read, so a user whose queue is full is turned
+  // away without buffering a file.
+  const review = await uploadReviewStatus(user, env);
+  if (review.queueFull) {
+    return jsonResponse(
+      {
+        error: `Keni ${MAX_PENDING_PER_USER} materiale në pritje të shqyrtimit. Prisni që të aprovohen para se të ngarkoni më shumë.`,
+      },
+      429
+    );
+  }
 
   // Rejected before the body is buffered: parsing an oversized upload can push
   // the isolate past its memory limit, and a killed isolate returns a Cloudflare
@@ -1891,14 +1978,12 @@ async function handleUpload(request, env) {
   const validation = await validateFile(file, ext);
   if (!validation.ok) return jsonResponse({ error: validation.error }, 400);
 
-  // A random component, not the timestamp alone. Two uploads landing in the
-  // same millisecond whose names sanitise to the same string would otherwise
-  // share a key: the second R2 put replaces the first, and both database rows
-  // go on pointing at one object. Re-uploading after a timeout, or a bulk
-  // upload running several requests at once, makes that collision reachable.
-  const fileKey = `materials/${user.id}/${Date.now()}-${crypto
-    .randomUUID()
-    .slice(0, 8)}-${sanitizeFilename(file.name)}`;
+  // The key is public (it is the file's URL), so it must not identify the
+  // uploader: it used to embed the numeric user id, which let anonymous uploads
+  // be grouped with each other and with the same person's named ones. A full
+  // random UUID also keeps two same-named uploads in the same millisecond from
+  // sharing a key, which would make the second R2 put replace the first.
+  const fileKey = newMaterialKey(file.name);
   const contentType = contentTypeForExtension(ext);
   // The file is handed to R2 as a Blob rather than an ArrayBuffer so the body is
   // not copied a second time in memory.
@@ -1909,10 +1994,10 @@ async function handleUpload(request, env) {
   const r2Url = keyToPublicUrl(fileKey);
   const insert = await env.DB.prepare(
     `INSERT INTO materials
-      (user_id, title, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)`
+      (user_id, title, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level, status)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
   )
-    .bind(user.id, title, faculty, department, subject, teacher, type, fileKey, ext, file.size, r2Url, isAnonymous, studyLevel)
+    .bind(user.id, title, faculty, department, subject, teacher, type, fileKey, ext, file.size, r2Url, isAnonymous, studyLevel, review.status)
     .run();
 
   // Invalidate public catalog cache after upload
@@ -1920,6 +2005,7 @@ async function handleUpload(request, env) {
 
   return jsonResponse({
     success: true,
+    status: review.status,
     material: {
       id: insert.meta.last_row_id,
       title,
@@ -1932,6 +2018,80 @@ async function handleUpload(request, env) {
       file_size: file.size,
       r2_url: r2Url,
     },
+  });
+}
+
+const REKEY_BATCH_SIZE = 10;
+
+/**
+ * One-off migration for objects stored under materials/<user id>/…: copies each
+ * to an opaque key, repoints the row, then deletes the original. Moderator-only
+ * and resumable — call repeatedly with `after_id` set to the previous
+ * `next_after_id` until `done` is true. The batch is small to stay inside the
+ * Worker's subrequest limit. Old URLs stop working once their object is deleted.
+ */
+async function handleRekeyMaterials(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!env.MY_BUCKET) return jsonResponse({ error: "Storage unavailable." }, 503);
+
+  const body = await request.json().catch(() => ({}));
+  const afterId = Math.max(0, Number(body.after_id) || 0);
+
+  const rows = await env.DB.prepare(
+    `SELECT id, file_key FROM materials
+     WHERE id > ?
+       AND file_key GLOB 'materials/[0-9]*/*'
+       AND substr(file_key, 11, instr(substr(file_key, 11), '/') - 1) NOT GLOB '*[^0-9]*'
+     ORDER BY id
+     LIMIT ?`
+  )
+    .bind(afterId, REKEY_BATCH_SIZE)
+    .all();
+  const candidates = rows.results || [];
+
+  const migrated = [];
+  const skipped = [];
+  for (const row of candidates) {
+    const oldKey = String(row.file_key || "");
+    if (!LEGACY_USER_KEY.test(oldKey)) continue;
+    try {
+      const object = await env.MY_BUCKET.get(oldKey);
+      if (!object) {
+        skipped.push({ id: row.id, reason: "missing_object" });
+        continue;
+      }
+      const newKey = `materials/${crypto.randomUUID()}/${oldKey.split("/").pop()}`;
+      await env.MY_BUCKET.put(newKey, object.body, { httpMetadata: object.httpMetadata });
+      const update = await env.DB.prepare(
+        "UPDATE materials SET file_key = ?, r2_url = ? WHERE id = ? AND file_key = ?"
+      )
+        .bind(newKey, keyToPublicUrl(newKey), row.id, oldKey)
+        .run();
+      if (!Number(update.meta?.changes || 0)) {
+        // The row changed under us; do not leave an unreferenced copy behind.
+        await env.MY_BUCKET.delete(newKey).catch(() => {});
+        skipped.push({ id: row.id, reason: "row_changed" });
+        continue;
+      }
+      await env.MY_BUCKET.delete(oldKey).catch(() => {});
+      migrated.push(row.id);
+    } catch (error) {
+      console.error("rekey failed", row.id, error);
+      skipped.push({ id: row.id, reason: "error" });
+    }
+  }
+
+  if (migrated.length) invalidateCatalogCaches();
+
+  const last = candidates.length ? candidates[candidates.length - 1].id : afterId;
+  return jsonResponse({
+    migrated,
+    skipped,
+    next_after_id: last,
+    done: candidates.length < REKEY_BATCH_SIZE,
   });
 }
 
@@ -1982,17 +2142,25 @@ async function handleEdit(request, url, env) {
     return jsonResponse({ error: "Plotësoni të gjitha fushat e detyrueshme." }, 400);
   }
 
+  // An owner who edits a rejected material is resubmitting it for review.
+  const resubmit =
+    material.status === "rejected" &&
+    Number(material.user_id) === Number(user.id) &&
+    !userIsModerator(user, env);
+
   await env.DB.prepare(
     `UPDATE materials
-     SET title=?, faculty=?, department=?, subject=?, teacher=?, type=?, study_level=?, updated_at=datetime('now')
+     SET title=?, faculty=?, department=?, subject=?, teacher=?, type=?, study_level=?, updated_at=datetime('now'),
+         status = CASE WHEN ? THEN 'pending' ELSE status END,
+         rejection_reason = CASE WHEN ? THEN NULL ELSE rejection_reason END
      WHERE id=?`
   )
-    .bind(title, faculty, department, subject, teacher, type, studyLevel, id)
+    .bind(title, faculty, department, subject, teacher, type, studyLevel, resubmit ? 1 : 0, resubmit ? 1 : 0, id)
     .run();
 
   invalidateCatalogCaches();
 
-  return jsonResponse({ success: true });
+  return jsonResponse({ success: true, status: resubmit ? "pending" : material.status });
 }
 
 async function handleModeratorMaterials(request, url, env) {
@@ -2000,24 +2168,32 @@ async function handleModeratorMaterials(request, url, env) {
   const user = await getUserFromRequest(request, env);
   if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
 
-  const page = Math.max(1, Number(url.searchParams.get("page") || "1"));
+  const page = Math.max(1, Math.floor(Number(url.searchParams.get("page"))) || 1);
+  const status = url.searchParams.get("status");
+  const filterStatus = ["pending", "approved", "rejected"].includes(status) ? status : null;
   const LIMIT = 50;
   const offset = (page - 1) * LIMIT;
+  const where = filterStatus ? "WHERE m.status = ?" : "";
+  const params = filterStatus ? [filterStatus] : [];
 
   const [countRow, result] = await Promise.all([
-    env.DB.prepare("SELECT COUNT(*) AS total FROM materials").first(),
+    env.DB.prepare(`SELECT COUNT(*) AS total FROM materials m ${where}`)
+      .bind(...params)
+      .first(),
     env.DB.prepare(
       `SELECT m.id, m.title, m.faculty, m.subject, m.type, m.file_type,
               m.r2_url, m.created_at, m.is_anonymous, m.study_level,
+              m.status, m.rejection_reason, m.file_size,
               m.pending_owner_email,
               u.name AS uploader_name, u.surname AS uploader_surname,
               u.email AS uploader_email
        FROM materials m
        LEFT JOIN users u ON m.user_id = u.id
-       ORDER BY m.created_at DESC
+       ${where}
+       ORDER BY m.created_at ${filterStatus === "pending" ? "ASC" : "DESC"}
        LIMIT ? OFFSET ?`
     )
-      .bind(LIMIT, offset)
+      .bind(...params, LIMIT, offset)
       .all(),
   ]);
 
@@ -2027,6 +2203,72 @@ async function handleModeratorMaterials(request, url, env) {
     page,
     limit: LIMIT,
   });
+}
+
+/** Approve or reject a material waiting in the review queue. */
+async function handleReviewMaterial(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body.id);
+  const decision = String(body.decision || "").trim();
+  const reason = String(body.reason || "").trim();
+
+  if (!Number.isFinite(id) || id <= 0) return jsonResponse({ error: "ID i pavlefshëm." }, 400);
+  if (!["approve", "reject"].includes(decision)) {
+    return jsonResponse({ error: "Vendimi nuk është i vlefshëm." }, 400);
+  }
+  if (decision === "reject" && (reason.length < 5 || reason.length > 300)) {
+    return jsonResponse({ error: "Jepni një arsye refuzimi (5–300 karaktere)." }, 400);
+  }
+
+  const status = decision === "approve" ? "approved" : "rejected";
+  // The status guard makes a double click or two moderators acting at once
+  // harmless: only the first decision on a pending item takes effect.
+  const result = await env.DB.prepare(
+    `UPDATE materials
+     SET status = ?, rejection_reason = ?, reviewed_at = datetime('now'), reviewed_by = ?
+     WHERE id = ? AND status = 'pending'`
+  )
+    .bind(status, decision === "reject" ? reason : null, user.id, id)
+    .run();
+  if (!Number(result.meta?.changes || 0)) {
+    return jsonResponse({ error: "Materiali nuk u gjet ose është shqyrtuar tashmë." }, 404);
+  }
+
+  invalidateCatalogCaches();
+
+  // Best effort: the decision stands even if the email cannot be sent.
+  try {
+    const row = await env.DB.prepare(
+      `SELECT m.title, u.email FROM materials m JOIN users u ON u.id = m.user_id WHERE m.id = ?`
+    )
+      .bind(id)
+      .first();
+    if (row?.email) {
+      const title = escapeHtml(row.title);
+      const html =
+        decision === "approve"
+          ? `<p>Materiali juaj <strong>${title}</strong> u aprovua dhe tani është publik në E-Studenti. Faleminderit!</p>`
+          : `<p>Materiali juaj <strong>${title}</strong> nuk u aprovua.</p><p><strong>Arsyeja:</strong> ${escapeHtml(
+              reason
+            )}</p><p>Mund ta ndryshoni materialin te "Materiale të mia" dhe ta ridërgoni për shqyrtim.</p>`;
+      await sendEmail(
+        row.email,
+        decision === "approve" ? "Materiali u aprovua — E-Studenti" : "Materiali nuk u aprovua — E-Studenti",
+        html,
+        env,
+        env.RESEND_CONTACT_FROM || env.RESEND_FROM || DEFAULT_RESEND_FROM
+      );
+    }
+  } catch (error) {
+    console.error("review notification failed", error);
+  }
+
+  return jsonResponse({ success: true, status });
 }
 
 async function handleDeleteMaterial(request, env) {
@@ -2460,11 +2702,20 @@ async function handleRedirectMaterial(request, url, env, eventType) {
   const limited = await checkRateLimit(request, rateLimitKey, env);
   if (limited) return limited;
 
-  const material = await env.DB.prepare("SELECT id, r2_url, file_key FROM materials WHERE id = ?")
+  const material = await env.DB.prepare(
+    "SELECT id, r2_url, file_key, status, user_id FROM materials WHERE id = ?"
+  )
     .bind(materialId)
     .first();
   if (!material) {
     return jsonResponse({ error: "Material not found" }, 404);
+  }
+  // Under review or rejected: only the owner and moderators may open the file.
+  if (material.status !== "approved") {
+    const viewer = await getUserFromRequest(request, env);
+    const allowed =
+      viewer && (Number(viewer.id) === Number(material.user_id) || userIsModerator(viewer, env));
+    if (!allowed) return jsonResponse({ error: "Material not found" }, 404);
   }
 
   let targetUrl = String(material.r2_url || "");
@@ -2528,6 +2779,8 @@ export default {
       "resolve-report",
       "moderator-materials",
       "delete-material",
+      "rekey-materials",
+      "review-material",
       "submit-resource-link",
       "moderator-resource-links",
       "moderate-resource-link",
@@ -2624,6 +2877,12 @@ export default {
           break;
         case "delete-material":
           response = await handleDeleteMaterial(request, env);
+          break;
+        case "review-material":
+          response = await handleReviewMaterial(request, env);
+          break;
+        case "rekey-materials":
+          response = await handleRekeyMaterials(request, env);
           break;
         case "resource-links":
           response = await handleResourceLinks(request, url, env);

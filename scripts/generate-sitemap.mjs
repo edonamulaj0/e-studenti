@@ -4,7 +4,7 @@ import path from "node:path";
 const SITE_URL = "https://e-studenti.com";
 const WORKER_URL =
   process.env.NEXT_PUBLIC_WORKER_URL ||
-  "https://r2-catalog-manager.edonaamulaj.workers.dev";
+  "https://api.e-studenti.com";
 
 const FACULTY_SLUGS = [
   "art",
@@ -52,7 +52,7 @@ function assignSlugs(materials) {
   return materials.map((material) => {
     const base = materialSlugBase(material);
     const slug =
-      (counts.get(base) || 0) > 1 ? `${base}-${material.id}` : base;
+      material.slug || ((counts.get(base) || 0) > 1 ? `${base}-${material.id}` : base);
     return { ...material, slug };
   });
 }
@@ -66,10 +66,16 @@ function urlEntry(loc, changefreq = "weekly", priority = "0.7") {
 }
 
 async function fetchMaterials() {
-  const res = await fetch(`${WORKER_URL}/?action=materials&page=1&limit=500`);
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.materials || data.entries || [];
+  // The Worker caps `limit` at 100, so page through the whole catalogue.
+  const all = [];
+  for (let page = 1; page <= 200; page += 1) {
+    const res = await fetch(`${WORKER_URL}/?action=materials&page=${page}&limit=100`);
+    if (!res.ok) break;
+    const data = await res.json();
+    all.push(...(data.materials || data.entries || []));
+    if (!data.pagination?.hasNextPage) break;
+  }
+  return all;
 }
 
 async function main() {

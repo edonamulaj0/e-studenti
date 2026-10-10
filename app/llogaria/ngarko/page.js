@@ -102,6 +102,8 @@ export default function NgarkoPage() {
   const [error, setError] = useState("");
   const [progress, setProgress] = useState(0);
   const [titleTooltip, setTitleTooltip] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [publishedStatus, setPublishedStatus] = useState("approved");
 
   const isPranues = form.type === "Provime Pranuese";
 
@@ -118,6 +120,18 @@ export default function NgarkoPage() {
   const selectFile = (file) => {
     setField("file", file);
     setError(file ? validateFile(file) : "");
+  };
+
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setIsDragging(false);
+    const files = Array.from(event.dataTransfer.files || []);
+    if (files.length === 0) return;
+    selectFile(files[0]);
+    // One file per upload for now; say so instead of silently dropping the rest.
+    if (files.length > 1) {
+      setError("Ngarkoni një skedar në herë — u mor vetëm i pari.");
+    }
   };
 
   const submit = async (event) => {
@@ -142,7 +156,8 @@ export default function NgarkoPage() {
         }
       }
       fd.append("is_anonymous", isAnonymous ? "1" : "0");
-      await uploadMaterial(fd, setProgress);
+      const result = await uploadMaterial(fd, setProgress);
+      setPublishedStatus(result?.status === "pending" ? "pending" : "approved");
       setStatus("success");
       setForm(initialForm);
       setIsAnonymous(false);
@@ -162,7 +177,8 @@ export default function NgarkoPage() {
             Ngarko material
           </h1>
           <p className="mt-3 text-srh-navy/70">
-            Materiali do të publikohet menjëherë në emrin tuaj.
+            Materialet e para shqyrtohen nga moderatorët para publikimit; pasi
+            të aprovohen disa, të tjerat publikohen menjëherë.
           </p>
         </header>
 
@@ -170,8 +186,16 @@ export default function NgarkoPage() {
           <div className="rounded-2xl border border-srh-cream bg-white p-8 text-center shadow-sm">
             <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-srh-sage" />
             <h2 className="font-playfair text-3xl font-bold text-srh-navy">
-              Materiali u ngarkua me sukses!
+              {publishedStatus === "pending"
+                ? "Materiali u dërgua për shqyrtim"
+                : "Materiali u ngarkua me sukses!"}
             </h2>
+            {publishedStatus === "pending" && (
+              <p className="mt-3 text-srh-navy/70">
+                Do të shfaqet publikisht pasi ta aprovojë një moderator. Statusin e
+                shihni te &quot;Materiale të mia&quot;, dhe do t&apos;ju njoftojmë me email.
+              </p>
+            )}
             <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
               <Link
                 href="/materialet"
@@ -200,7 +224,10 @@ export default function NgarkoPage() {
                 Për ZIP: deri në {MAX_ZIP_FILES} skedarë brenda, secili deri në 50MB dhe
                 deri në {formatMegabytes(MAX_DECOMPRESSED_SIZE)}MB gjithsej pasi hapet.
               </p>
-              <p>Skedarët skanohen automatikisht para ngarkimit.</p>
+              <p>
+                Kontrollojmë llojin, madhësinë dhe strukturën e skedarit, por nuk bëjmë
+                skanim antivirusi. Ngarkoni vetëm materiale që keni të drejtë t&apos;i ndani.
+              </p>
             </div>
 
             <div className="grid gap-5 md:grid-cols-2">
@@ -330,36 +357,59 @@ export default function NgarkoPage() {
               </Field>
             </div>
 
-            <Field label="Skedari" required>
+            {/* A div, not <Field>: Field is a <label>, and the drop zone is one too. */}
+            <div>
+              <span id="file-label" className="mb-1.5 block text-sm font-bold text-srh-navy">
+                Skedari<span className="text-srh-crimson"> *</span>
+              </span>
               <label
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
+                onDragEnter={() => setIsDragging(true)}
+                onDragOver={(e) => {
                   e.preventDefault();
-                  selectFile(e.dataTransfer.files?.[0] || null);
+                  setIsDragging(true);
                 }}
-                className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-srh-cream bg-srh-paper px-5 py-10 text-center hover:border-srh-crimson"
+                onDragLeave={(e) => {
+                  if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false);
+                }}
+                onDrop={handleDrop}
+                className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-5 py-10 text-center focus-within:border-srh-crimson focus-within:ring-4 focus-within:ring-burgundy-600/25 hover:border-srh-crimson ${
+                  isDragging
+                    ? "border-srh-crimson bg-srh-blush"
+                    : "border-srh-cream bg-srh-paper"
+                }`}
               >
-                <Upload className="mb-3 h-12 w-12 text-srh-crimson" />
+                <Upload className="mb-3 h-12 w-12 text-srh-crimson" aria-hidden="true" />
                 <span className="font-bold text-srh-navy">
                   {form.file ? form.file.name : "Klikoni ose tërhiqni skedarin këtu"}
                 </span>
-                <span className="mt-2 text-sm text-srh-navy/60">
+                <span id="file-hint" className="mt-2 text-sm text-srh-navy/60">
                   {form.file
                     ? `${formatMegabytes(form.file.size)}MB nga 50MB të lejuara`
                     : ACCEPT_ATTRIBUTE.replace(/,/g, ", ")}
                 </span>
+                {/* Visually hidden, not display:none, so it stays in the tab
+                    order; the label's focus ring shows where focus is. */}
                 <input
                   type="file"
                   accept={ACCEPT_ATTRIBUTE}
-                  className="hidden"
+                  className="sr-only"
+                  aria-labelledby="file-label"
+                  aria-describedby={error ? "file-hint upload-error" : "file-hint"}
                   onChange={(e) => selectFile(e.target.files?.[0] || null)}
                 />
               </label>
-            </Field>
+            </div>
 
             {status === "uploading" && (
               <div>
-                <div className="h-2 overflow-hidden rounded-full bg-srh-cream">
+                <div
+                  role="progressbar"
+                  aria-label="Ngarkimi i skedarit"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(progress * 100)}
+                  className="h-2 overflow-hidden rounded-full bg-srh-cream"
+                >
                   <div
                     className="h-full rounded-full bg-srh-crimson transition-all duration-200"
                     style={{ width: `${Math.max(3, Math.round(progress * 100))}%` }}
@@ -373,7 +423,11 @@ export default function NgarkoPage() {
               </div>
             )}
             {error && (
-              <p className="rounded-xl border border-srh-cream bg-srh-paper p-4 text-sm font-semibold text-srh-crimson">
+              <p
+                id="upload-error"
+                role="alert"
+                className="rounded-xl border border-srh-cream bg-srh-paper p-4 text-sm font-semibold text-srh-crimson"
+              >
                 {error}
               </p>
             )}

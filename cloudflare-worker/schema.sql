@@ -46,10 +46,15 @@ CREATE TABLE IF NOT EXISTS materials (
   study_level TEXT NOT NULL DEFAULT 'bachelor',
   view_count INTEGER NOT NULL DEFAULT 0,
   download_count INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'approved',
+  rejection_reason TEXT,
+  reviewed_at TEXT,
+  reviewed_by INTEGER,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE INDEX IF NOT EXISTS idx_materials_status ON materials(status);
 CREATE INDEX IF NOT EXISTS idx_materials_user ON materials(user_id);
 CREATE INDEX IF NOT EXISTS idx_materials_faculty ON materials(faculty);
 

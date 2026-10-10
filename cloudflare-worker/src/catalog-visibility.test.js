@@ -102,18 +102,19 @@ describe("public catalog visibility", () => {
     expect(unclaimed.submittedBy).toBeUndefined();
   });
 
-  it("omits the WHERE clause entirely when no filter is active", async () => {
+  it("filters only on review status when no other filter is active", async () => {
     const { sql } = await catalog();
     const listing = sql.find((statement) => /LIMIT \? OFFSET \?/.test(statement));
 
-    expect(listing).not.toMatch(/WHERE/);
+    // The only baseline condition is review status; nothing else is excluded.
+    expect(listing).toMatch(/WHERE m\.status = 'approved'\s+ORDER BY/);
   });
 
   it("still applies requested filters", async () => {
     const { sql } = await catalog("&faculty=med&niveli=master");
     const listing = sql.find((statement) => /LIMIT \? OFFSET \?/.test(statement));
 
-    expect(listing).toMatch(/WHERE m\.faculty = \?/);
+    expect(listing).toMatch(/WHERE m\.status = 'approved' AND m\.faculty = \?/);
     expect(listing).toMatch(/study_level/);
   });
 });

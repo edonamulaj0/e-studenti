@@ -76,6 +76,7 @@ export function normalizeMaterial(material) {
   const displayName = isAnonymous ? "Anonim" : rawName;
   return {
     id: material.id,
+    slug: material.slug,
     title: material.title,
     faculty: material.faculty,
     department: material.department || "//",

@@ -54,23 +54,32 @@ export async function fetchMaterialsPage({
   }
 }
 
-export async function fetchAllMaterialsForBuild(limit = 500) {
-  const params = new URLSearchParams({
-    action: "materials",
-    page: "1",
-    limit: String(limit),
-  });
+/** The Worker caps `limit` at 100, so a full listing has to be paged. */
+const BUILD_PAGE_SIZE = 100;
+const BUILD_MAX_PAGES = 200;
 
-  try {
-    const res = await fetch(`${WORKER_URL}/?${params.toString()}`, {
-      next: { revalidate: 3600 },
+export async function fetchAllMaterialsForBuild() {
+  const all = [];
+  for (let page = 1; page <= BUILD_MAX_PAGES; page += 1) {
+    const params = new URLSearchParams({
+      action: "materials",
+      page: String(page),
+      limit: String(BUILD_PAGE_SIZE),
     });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return (data.materials || data.entries || []).map(sanitizeFetchedMaterial);
-  } catch {
-    return [];
+    let data;
+    try {
+      const res = await fetch(`${WORKER_URL}/?${params.toString()}`, {
+        next: { revalidate: 3600 },
+      });
+      if (!res.ok) break;
+      data = await res.json();
+    } catch {
+      break;
+    }
+    all.push(...(data.materials || data.entries || []).map(sanitizeFetchedMaterial));
+    if (!data.pagination?.hasNextPage) break;
   }
+  return all;
 }
 
 export async function fetchMaterialBySlug(slug) {

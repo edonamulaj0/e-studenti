@@ -94,7 +94,7 @@ export async function trackMaterialEventById(request, env, eventType, materialId
     return { ok: false, reason: "invalid_id" };
   }
 
-  const material = await env.DB.prepare("SELECT id FROM materials WHERE id = ?")
+  const material = await env.DB.prepare("SELECT id FROM materials WHERE id = ? AND status = 'approved'")
     .bind(materialId)
     .first();
   if (!material) {
