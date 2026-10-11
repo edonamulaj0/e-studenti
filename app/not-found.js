@@ -5,6 +5,46 @@ import { useState } from "react";
 import MaterialDetail from "./components/MaterialDetail";
 import { useLateMaterial } from "./lib/use-late-material";
 
+/**
+ * Stands in for the page while we find out whether this address is a material
+ * added since the last build. It is also what the static 404.html contains, so
+ * the "not found" text is never painted first and then replaced.
+ */
+function PageSkeleton() {
+  const bar = "rounded-lg bg-gray-200 motion-safe:animate-pulse";
+  return (
+    <div className="page-shell" role="status" aria-busy="true">
+      <span className="sr-only">Duke ngarkuar…</span>
+      <noscript>
+        <p className="mb-6 text-center text-lg font-semibold text-navy-900">
+          Faqja nuk u gjet. Aktivizoni JavaScript për të parë materialet e shtuara së fundi.
+        </p>
+      </noscript>
+      <div className="section-shell max-w-4xl" aria-hidden="true">
+        <div className={`${bar} mb-6 h-4 w-56`} />
+        <div className="surface-card p-6 md:p-10">
+          <div className="mb-6 flex gap-2">
+            <div className={`${bar} h-7 w-32 !rounded-full`} />
+            <div className={`${bar} h-7 w-24 !rounded-full`} />
+            <div className={`${bar} h-7 w-20 !rounded-full`} />
+          </div>
+          <div className={`${bar} mb-4 h-10 w-3/4`} />
+          <div className={`${bar} mb-8 h-5 w-1/2`} />
+          <div className="mb-8 grid gap-4 sm:grid-cols-2">
+            {[0, 1, 2, 3].map((i) => (
+              <div key={i} className={`${bar} h-20 !rounded-2xl`} />
+            ))}
+          </div>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className={`${bar} h-12 flex-1 !rounded-xl`} />
+            <div className={`${bar} h-12 flex-1 !rounded-xl`} />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function NotFound() {
   const [isLoading, setIsLoading] = useState(false);
   const late = useLateMaterial();
@@ -12,16 +52,8 @@ export default function NotFound() {
   if (late.phase === "found") {
     return <MaterialDetail material={late.material} slug={late.slug} />;
   }
-  if (late.phase === "loading") {
-    return (
-      <div
-        role="status"
-        className="flex min-h-[60vh] items-center justify-center bg-srh-paper"
-      >
-        <Loader2 className="h-10 w-10 animate-spin text-srh-crimson" aria-hidden="true" />
-        <span className="sr-only">Duke ngarkuar materialin…</span>
-      </div>
-    );
+  if (late.phase === "checking" || late.phase === "loading") {
+    return <PageSkeleton />;
   }
 
   const handleRefresh = () => {
