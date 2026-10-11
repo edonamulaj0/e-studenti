@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Download, Eye, Archive, BadgeCheck } from "lucide-react";
+import { Download, Eye, Archive, BadgeCheck, Tag } from "lucide-react";
 import { getFacultyName } from "../lib/material-options";
 import { getStudyLevelLabel } from "../lib/study-levels";
 import ReportButton from "./ReportButton";
@@ -64,20 +64,19 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
       </div>
 
       {(hasSubject || teacher !== "—") && (
-        <p className="truncate text-sm text-gray-600">
+        <p className="flex min-w-0 items-center gap-2 text-sm text-gray-600">
           {hasSubject &&
             (showSubject ? (
               <Link
                 href={`/lenda/${subjectSlug(material.faculty, material.subject)}`}
-                className="font-semibold text-navy-900 hover:text-burgundy-600 hover:underline"
+                className="inline-flex min-w-0 max-w-[65%] shrink-0 items-center gap-1 rounded-full bg-burgundy-50 px-2.5 py-0.5 text-xs font-semibold text-burgundy-600 hover:bg-burgundy-600 hover:text-white"
+                title={`Të gjitha materialet për ${material.subject}`}
               >
-                {material.subject}
+                <Tag className="h-3 w-3 shrink-0" aria-hidden />
+                <span className="truncate">{material.subject}</span>
               </Link>
-            ) : (
-              <span className="font-semibold text-navy-900">{material.subject}</span>
-            ))}
-          {hasSubject && teacher !== "—" && " · "}
-          {teacher !== "—" && teacher}
+            ) : null)}
+          {teacher !== "—" && <span className="truncate">{teacher}</span>}
         </p>
       )}
 

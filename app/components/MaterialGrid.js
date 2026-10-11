@@ -7,7 +7,7 @@ import MaterialPreviewModal from "./MaterialPreviewModal";
 import { trackMaterialView } from "../lib/track-material";
 
 /** A grid of compact cards that share one preview modal and one archive modal. */
-export default function MaterialGrid({ materials, showSubject = true, className = "" }) {
+export default function MaterialGrid({ materials, showSubject = true, className = "", columns = "sm:grid-cols-2 xl:grid-cols-3" }) {
   const [selected, setSelected] = useState(null);
   const [kind, setKind] = useState(null);
 
@@ -20,7 +20,7 @@ export default function MaterialGrid({ materials, showSubject = true, className 
 
   return (
     <>
-      <div className={`grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 ${className}`}>
+      <div className={`grid grid-cols-1 gap-3 ${columns} ${className}`}>
         {materials.map((m) => (
           <MaterialCard key={m.id} material={m} onView={open} showSubject={showSubject} />
         ))}

@@ -114,7 +114,7 @@ describe("public catalog visibility", () => {
     const { sql } = await catalog("&faculty=med&niveli=master");
     const listing = sql.find((statement) => /LIMIT \? OFFSET \?/.test(statement));
 
-    expect(listing).toMatch(/WHERE m\.status = 'approved' AND m\.faculty = \?/);
+    expect(listing).toMatch(/WHERE m\.status = 'approved' AND m\.faculty IN \(\?\)/);
     expect(listing).toMatch(/study_level/);
   });
 });

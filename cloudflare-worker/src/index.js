@@ -1921,11 +1921,21 @@ function whereClause(conditions) {
   return conditions.length ? `WHERE ${conditions.join(" AND ")}` : "";
 }
 
+/** A filter that accepts one value or a comma-separated list (the sidebar sends several). */
+function listParam(url, name, max = 20) {
+  return String(url.searchParams.get(name) || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean)
+    .slice(0, max);
+}
+
 async function handleMaterials(request, url, env) {
-  const faculty = url.searchParams.get("faculty");
-  const type = url.searchParams.get("type");
+  const faculties = listParam(url, "faculty").map((value) => value.toUpperCase());
+  const types = listParam(url, "type");
+  const levels = listParam(url, "niveli").concat(listParam(url, "study_level"));
+  const subjectSlugs = listParam(url, "subjects");
   const q = capSearchTerm(url.searchParams.get("q") || url.searchParams.get("search"));
-  const studyLevel = url.searchParams.get("niveli") || url.searchParams.get("study_level");
   const userFilter = url.searchParams.get("user");
   const sortParam = url.searchParams.get("sort") || "newest";
   const sort = ["views", "downloads"].includes(sortParam) ? sortParam : "newest";
@@ -1958,18 +1968,33 @@ async function handleMaterials(request, url, env) {
   const baseWhere = [];
   if (userFilter !== "me") baseWhere.push("m.status = 'approved'");
 
-  if (faculty) {
-    baseWhere.push("m.faculty = ?");
-    baseParams.push(faculty.toUpperCase());
+  if (faculties.length) {
+    baseWhere.push(`m.faculty IN (${faculties.map(() => "?").join(",")})`);
+    baseParams.push(...faculties);
+  }
+  if (subjectSlugs.length) {
+    // A subject is a faculty plus every spelling stored for it.
+    const groups = (await loadSubjectGroupsCached(env)).filter((g) => subjectSlugs.includes(g.slug));
+    const clauses = [];
+    const bound = [];
+    for (const group of groups) {
+      const names = group.variants.map((v) => v.name).slice(0, 20);
+      clauses.push(`(m.faculty = ? AND m.subject IN (${names.map(() => "?").join(",")}))`);
+      bound.push(group.faculty, ...names);
+    }
+    // Unknown slugs match nothing, rather than silently showing everything.
+    baseWhere.push(clauses.length && bound.length <= 40 ? `(${clauses.join(" OR ")})` : "0 = 1");
+    if (clauses.length && bound.length <= 40) baseParams.push(...bound);
   }
   if (q) {
     const search = buildPublicSearchClause(q);
     baseWhere.push(search.clause);
     baseParams.push(...search.params);
   }
-  if (studyLevel && STUDY_LEVEL_VALUES.includes(studyLevel)) {
-    baseWhere.push("COALESCE(m.study_level, 'bachelor') = ?");
-    baseParams.push(studyLevel);
+  const validLevels = levels.filter((level) => STUDY_LEVEL_VALUES.includes(level));
+  if (validLevels.length) {
+    baseWhere.push(`COALESCE(m.study_level, 'bachelor') IN (${validLevels.map(() => "?").join(",")})`);
+    baseParams.push(...validLevels);
   }
   if (userFilter === "me") {
     const user = await getUserFromRequest(request, env);
@@ -1980,9 +2005,9 @@ async function handleMaterials(request, url, env) {
 
   const where = [...baseWhere];
   const params = [...baseParams];
-  if (type) {
-    where.push("m.type = ?");
-    params.push(type);
+  if (types.length) {
+    where.push(`m.type IN (${types.map(() => "?").join(",")})`);
+    params.push(...types);
   }
 
   const countStatement = env.DB.prepare(
