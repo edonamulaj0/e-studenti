@@ -45,7 +45,6 @@ async function main() {
   const staticPaths = [
     "/",
     "/materialet",
-    "/lendet",
     "/burime",
     "/fakultetet",
     "/per-aplikantet",

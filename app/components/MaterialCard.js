@@ -9,14 +9,15 @@ import TrackableDownloadLink from "./TrackableDownloadLink";
 import { formatStatCount } from "../lib/track-material";
 import { materialDownloadUrl, materialViewUrl } from "../lib/worker-url";
 import { getFileTypeBadge, hasInBrowserView } from "../lib/file-preview";
-import { displayTeacher, normalizeMaterial, typeTone } from "../lib/material-view";
+import { displayTeacher, levelTone, normalizeMaterial, typeTone } from "../lib/material-view";
 import { isRealSubject, subjectSlug } from "../lib/subjects";
 
 export { normalizeMaterial, typeTone };
 
 /**
- * One catalogue entry, kept to roughly 150px: badge + two-line title, one line
- * of facts, one line for subject and teacher, one footer row. Opening the
+ * One catalogue entry: file badge and two-line title, type and level chips,
+ * subject tag and teacher, faculty, then stats and uploader, and a last row that
+ * holds only the buttons. Opening the
  * preview is the grid's job (`onView`), so a page of cards shares one modal.
  */
 export default function MaterialCard({ material, onView, showSubject = true }) {
@@ -24,14 +25,14 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
   const isArchive = material.fileType?.toLowerCase() === "zip";
   const fileBadge = getFileTypeBadge(material.fileType);
   const teacher = displayTeacher(material);
-  const hasSubject = isRealSubject(material.subject);
+  const hasSubject = isRealSubject(material.subject) && showSubject;
   const views = Number(material.view_count || 0);
   const downloads = Number(material.download_count || 0);
   const canView = Boolean(material.r2Url) && hasInBrowserView(material.fileType);
 
   return (
     <article
-      className={`surface-card group flex h-full flex-col gap-2.5 p-3.5 hover:shadow-md ${tone.card}`}
+      className={`surface-card group flex h-full flex-col gap-2 p-3.5 hover:shadow-md ${tone.card}`}
     >
       <div className="flex items-start gap-3">
         <span
@@ -48,121 +49,106 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
               material.title
             )}
           </h3>
-          <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-gray-600">
-            <abbr
-              title={getFacultyName(material.faculty)}
-              className="rounded-md bg-navy-100 px-1.5 py-0.5 font-semibold text-navy-800 no-underline"
-            >
-              {material.faculty}
-            </abbr>
-            <span className={`rounded-md px-1.5 py-0.5 font-semibold ${tone.chip}`}>
-              {material.type}
+          <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
+            <span className={`rounded-full px-2.5 py-1 font-semibold ${tone.chip}`}>{material.type}</span>
+            <span className={`rounded-full px-2.5 py-1 font-semibold ${levelTone(material.study_level)}`}>
+              {getStudyLevelLabel(material.study_level)}
             </span>
-            <span>{getStudyLevelLabel(material.study_level)}</span>
           </p>
         </div>
       </div>
 
-      {(hasSubject || teacher !== "—") && (
-        <p className="flex min-w-0 items-center gap-2 text-sm text-gray-600">
-          {hasSubject &&
-            (showSubject ? (
+      <div className="min-w-0 space-y-1 text-sm text-gray-600">
+        {(hasSubject || teacher !== "—") && (
+          <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
+            {hasSubject && (
               <Link
                 href={`/lenda/${subjectSlug(material.faculty, material.subject)}`}
-                className="inline-flex min-w-0 max-w-[65%] shrink-0 items-center gap-1 rounded-full bg-burgundy-50 px-2.5 py-0.5 text-xs font-semibold text-burgundy-600 hover:bg-burgundy-600 hover:text-white"
+                className="inline-flex max-w-full items-center gap-1 rounded-full bg-burgundy-50 px-2.5 py-0.5 text-xs font-semibold text-burgundy-600 hover:bg-burgundy-600 hover:text-white"
                 title={`Të gjitha materialet për ${material.subject}`}
               >
                 <Tag className="h-3 w-3 shrink-0" aria-hidden />
                 <span className="truncate">{material.subject}</span>
               </Link>
-            ) : null)}
-          {teacher !== "—" && <span className="truncate">{teacher}</span>}
-        </p>
-      )}
+            )}
+            {teacher !== "—" && <span className="min-w-0 truncate">{teacher}</span>}
+          </p>
+        )}
+        <p className="truncate text-xs text-gray-600">{getFacultyName(material.faculty)}</p>
+      </div>
 
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 pt-2.5">
-        <div className="flex min-w-0 flex-1 items-center gap-2 text-xs text-gray-600">
-          {(views > 0 || downloads > 0) && (
-            <span className="inline-flex shrink-0 items-center gap-2 font-semibold">
-              {views > 0 && (
-                <span className="inline-flex items-center gap-1" title="Shikime">
-                  <Eye className="h-3.5 w-3.5" aria-hidden />
-                  <span className="sr-only">Shikime:</span>
-                  {formatStatCount(views)}
-                </span>
-              )}
-              {downloads > 0 && (
-                <span className="inline-flex items-center gap-1" title="Shkarkime">
-                  <Download className="h-3.5 w-3.5" aria-hidden />
-                  <span className="sr-only">Shkarkime:</span>
-                  {formatStatCount(downloads)}
-                </span>
-              )}
-            </span>
-          )}
-          {material.submittedBy?.name && (
-            <span className="inline-flex min-w-0 items-center gap-1 text-gray-500">
-              {material.uploader_trusted && (
-                <BadgeCheck
-                  className="h-3.5 w-3.5 shrink-0 text-info-text"
-                  aria-label="Kontribues i besuar"
-                  role="img"
-                />
-              )}
-              <span className="truncate">{material.submittedBy.name}</span>
-            </span>
-          )}
-        </div>
+      <div className="mt-auto flex items-center justify-between gap-3 border-t border-gray-100 pt-2 text-xs text-gray-600">
+        <span className="inline-flex shrink-0 items-center gap-3 font-semibold">
+          <span className="inline-flex items-center gap-1" title="Shikime">
+            <Eye className="h-3.5 w-3.5" aria-hidden />
+            <span className="sr-only">Shikime:</span>
+            {formatStatCount(views)}
+          </span>
+          <span className="inline-flex items-center gap-1" title="Shkarkime">
+            <Download className="h-3.5 w-3.5" aria-hidden />
+            <span className="sr-only">Shkarkime:</span>
+            {formatStatCount(downloads)}
+          </span>
+        </span>
+        {material.submittedBy?.name && (
+          <span className="inline-flex min-w-0 items-center gap-1 text-gray-600">
+            {material.uploader_trusted && (
+              <BadgeCheck
+                className="h-3.5 w-3.5 shrink-0 text-info-text"
+                aria-label="Kontribues i besuar"
+                role="img"
+              />
+            )}
+            <span className="truncate">{material.submittedBy.name}</span>
+          </span>
+        )}
+      </div>
 
-        <div className="flex shrink-0 items-center gap-1">
-          {canView &&
-            (isArchive ? (
-              <button
-                type="button"
-                onClick={() => onView?.(material)}
-                className="btn-outline min-h-[36px] px-3 py-1.5 text-sm"
-              >
-                <Archive className="h-4 w-4" aria-hidden />
-                Përmbajtja
-              </button>
-            ) : (
-              <a
-                href={materialViewUrl(material.id)}
-                onClick={(e) => {
-                  e.preventDefault();
-                  onView?.(material);
-                }}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-primary min-h-[36px] px-3 py-1.5 text-sm"
-              >
-                <Eye className="h-4 w-4" aria-hidden />
-                Shiko
-              </a>
-            ))}
-          {material.r2Url && (
-            <TrackableDownloadLink
-              materialId={material.id}
-              href={materialDownloadUrl(material.id)}
+      <div className="flex items-center gap-2">
+        {canView &&
+          (isArchive ? (
+            <button
+              type="button"
+              onClick={() => onView?.(material)}
+              className="btn-outline min-h-[40px] flex-1 px-3 py-1.5 text-sm"
+            >
+              <Archive className="h-4 w-4" aria-hidden />
+              Përmbajtja
+            </button>
+          ) : (
+            <a
+              href={materialViewUrl(material.id)}
+              onClick={(e) => {
+                e.preventDefault();
+                onView?.(material);
+              }}
               target="_blank"
               rel="noopener noreferrer"
-              download={
-                material.title.replace(/[^a-z0-9]/gi, "_") + "." + (material.fileType || "pdf")
-              }
-              aria-label={`Shkarko: ${material.title}`}
-              title="Shkarko"
-              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-navy-800 transition-colors hover:border-burgundy-600 hover:text-burgundy-600"
+              className="btn-primary min-h-[40px] flex-1 px-3 py-1.5 text-sm"
             >
-              <Download className="h-4 w-4" aria-hidden />
-            </TrackableDownloadLink>
-          )}
-          <ReportButton
-            compact
+              <Eye className="h-4 w-4" aria-hidden />
+              Shiko
+            </a>
+          ))}
+        {material.r2Url && (
+          <TrackableDownloadLink
             materialId={material.id}
-            materialTitle={material.title}
-            materialUrl={material.r2Url}
-          />
-        </div>
+            href={materialDownloadUrl(material.id)}
+            target="_blank"
+            rel="noopener noreferrer"
+            download={material.title.replace(/[^a-z0-9]/gi, "_") + "." + (material.fileType || "pdf")}
+            className="btn-secondary min-h-[40px] flex-1 px-3 py-1.5 text-sm"
+          >
+            <Download className="h-4 w-4" aria-hidden />
+            Shkarko
+          </TrackableDownloadLink>
+        )}
+        <ReportButton
+          compact
+          materialId={material.id}
+          materialTitle={material.title}
+          materialUrl={material.r2Url}
+        />
       </div>
     </article>
   );

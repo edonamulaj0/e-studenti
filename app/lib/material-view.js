@@ -42,6 +42,16 @@ export function typeTone(type) {
   );
 }
 
+const LEVEL_TONES = {
+  bachelor: "bg-teal-100 text-teal-900",
+  master: "bg-violet-100 text-violet-900",
+  phd: "bg-fuchsia-100 text-fuchsia-900",
+};
+
+export function levelTone(level) {
+  return LEVEL_TONES[level] || LEVEL_TONES.bachelor;
+}
+
 export function displayTeacher(material) {
   const t = material.teacher;
   if (t == null) return "—";

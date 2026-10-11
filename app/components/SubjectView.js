@@ -25,7 +25,7 @@ export default function SubjectView({ subject, materials }) {
         <nav aria-label="Navigimi" className="mb-4 flex items-center gap-1 text-sm text-gray-600">
           <Link href="/materialet" className="hover:text-burgundy-600 hover:underline">Materialet</Link>
           <ChevronRight className="h-4 w-4" aria-hidden />
-          <Link href="/lendet" className="hover:text-burgundy-600 hover:underline">Lëndët</Link>
+          <span aria-current="page">{subject.name}</span>
         </nav>
         <header className="mb-6 max-w-3xl">
           <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{subject.name}</h1>

@@ -37,7 +37,7 @@ export default async function SubjectPage({ params }) {
         <div className="surface-card mx-auto max-w-2xl p-10 text-center">
           <BookOpen className="mx-auto mb-5 h-16 w-16 text-gray-500" />
           <h1 className="mb-4 font-display text-3xl font-bold text-navy-900">Lënda nuk u gjet</h1>
-          <Link href="/lendet" className="btn-primary">Shiko të gjitha lëndët</Link>
+          <Link href="/materialet" className="btn-primary">Kthehu te materialet</Link>
         </div>
       </div>
     );
@@ -47,7 +47,7 @@ export default async function SubjectPage({ params }) {
       <JsonLd
         data={breadcrumbJsonLd([
           { name: "Ballina", url: SITE_URL },
-          { name: "Lëndët", url: `${SITE_URL}/lendet` },
+          { name: "Materialet", url: `${SITE_URL}/materialet` },
           { name: found.subject.name, url: `${SITE_URL}/lenda/${params.slug}` },
         ])}
       />
