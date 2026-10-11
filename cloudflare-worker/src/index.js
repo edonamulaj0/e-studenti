@@ -168,6 +168,90 @@ function invalidateCatalogCaches() {
   orphanCache = { at: 0, materials: null };
   slugIndexCache = { at: 0, index: null };
 }
+/**
+ * Called after anything that changes what the public site shows. Clears the
+ * in-memory caches and records that the static pages are out of date, so the
+ * hourly job can request a rebuild (see triggerRebuildIfDue).
+ */
+async function catalogChanged(env, { publicChange = true } = {}) {
+  invalidateCatalogCaches();
+  if (!publicChange || !env.DB) return;
+  try {
+    await env.DB.prepare(
+      `INSERT INTO rebuild_state (id, dirty_since) VALUES (1, datetime('now'))
+       ON CONFLICT(id) DO UPDATE SET dirty_since = COALESCE(rebuild_state.dirty_since, datetime('now'))`
+    ).run();
+  } catch (error) {
+    // Never let bookkeeping fail the request that changed the catalogue.
+    console.error("could not record catalogue change", error);
+  }
+}
+
+/** Fewest hours between rebuilds; keeps well inside Pages' monthly build quota. */
+const MIN_REBUILD_INTERVAL_HOURS = 2;
+const DEPLOY_HOOK_PREFIX = "https://api.cloudflare.com/";
+
+/**
+ * Asks Cloudflare Pages for a new build when the catalogue has changed and the
+ * last request was long enough ago. Does nothing unless PAGES_DEPLOY_HOOK is
+ * set. On failure the "changed" mark is restored, so the next run retries.
+ */
+export async function triggerRebuildIfDue(env, now = new Date()) {
+  const hook = env.PAGES_DEPLOY_HOOK;
+  if (!hook || !env.DB) return { triggered: false, reason: "not_configured" };
+  if (!String(hook).startsWith(DEPLOY_HOOK_PREFIX)) {
+    console.error("PAGES_DEPLOY_HOOK must be a Cloudflare deploy hook URL");
+    return { triggered: false, reason: "invalid_hook" };
+  }
+
+  let state;
+  try {
+    state = await env.DB.prepare(
+      "SELECT dirty_since, last_triggered_at FROM rebuild_state WHERE id = 1"
+    ).first();
+  } catch (error) {
+    console.error("rebuild state unavailable", error);
+    return { triggered: false, reason: "no_state" };
+  }
+  if (!state?.dirty_since) return { triggered: false, reason: "clean" };
+
+  if (state.last_triggered_at) {
+    const last = Date.parse(`${String(state.last_triggered_at).replace(" ", "T")}Z`);
+    if (Number.isFinite(last) && now.getTime() - last < MIN_REBUILD_INTERVAL_HOURS * 3600_000) {
+      return { triggered: false, reason: "too_soon" };
+    }
+  }
+
+  const stamp = now.toISOString().slice(0, 19).replace("T", " ");
+  // Clear the mark first: a change that lands while the build starts re-marks it.
+  await env.DB.prepare(
+    "UPDATE rebuild_state SET dirty_since = NULL, last_triggered_at = ? WHERE id = 1"
+  )
+    .bind(stamp)
+    .run();
+
+  let ok = false;
+  try {
+    const res = await fetch(hook, { method: "POST", signal: AbortSignal.timeout(10_000) });
+    ok = res.ok;
+    if (!ok) console.error("deploy hook responded", res.status);
+  } catch (error) {
+    console.error("deploy hook failed", error);
+  }
+
+  if (!ok) {
+    await env.DB.prepare(
+      `UPDATE rebuild_state
+       SET dirty_since = COALESCE(dirty_since, ?), last_triggered_at = ?
+       WHERE id = 1`
+    )
+      .bind(state.dirty_since, state.last_triggered_at ?? null)
+      .run();
+    return { triggered: false, reason: "hook_failed" };
+  }
+  return { triggered: true };
+}
+
 const MAGIC_BYTES = {
   pdf: [0x25, 0x50, 0x44, 0x46],
   zip: [0x50, 0x4b, 0x03, 0x04],
@@ -2050,7 +2134,7 @@ async function handleUpload(request, env) {
     .run();
 
   // Invalidate public catalog cache after upload
-  invalidateCatalogCaches();
+  await catalogChanged(env, { publicChange: review.status === "approved" });
 
   return jsonResponse({
     success: true,
@@ -2242,7 +2326,7 @@ async function handleDeleteAccount(request, env) {
       if (key) await env.MY_BUCKET.delete(key).catch(() => {});
     }
   }
-  invalidateCatalogCaches();
+  await catalogChanged(env);
 
   return new Response(JSON.stringify({ success: true }), {
     status: 200,
@@ -2316,7 +2400,7 @@ async function handleRekeyMaterials(request, env) {
     }
   }
 
-  if (migrated.length) invalidateCatalogCaches();
+  if (migrated.length) await catalogChanged(env);
 
   const last = candidates.length ? candidates[candidates.length - 1].id : afterId;
   return jsonResponse({
@@ -2397,7 +2481,7 @@ async function handleEdit(request, url, env) {
     .bind(title, faculty, department, subject, teacher, type, studyLevel, resubmit ? 1 : 0, resubmit ? 1 : 0, id)
     .run();
 
-  invalidateCatalogCaches();
+  await catalogChanged(env);
 
   return jsonResponse({ success: true, status: resubmit ? "pending" : material.status });
 }
@@ -2488,7 +2572,7 @@ async function handleReviewMaterial(request, env) {
     return jsonResponse({ error: "Materiali nuk u gjet ose është shqyrtuar tashmë." }, 404);
   }
 
-  invalidateCatalogCaches();
+  await catalogChanged(env);
 
   // Best effort: the decision stands even if the email cannot be sent.
   try {
@@ -2551,7 +2635,7 @@ async function handleDeleteMaterial(request, env) {
     if (key) await env.MY_BUCKET.delete(key).catch(() => {});
   }
 
-  invalidateCatalogCaches();
+  await catalogChanged(env);
 
   return jsonResponse({ success: true });
 }
@@ -3056,6 +3140,7 @@ export default {
     if (!env.DB) return;
     ctx.waitUntil(refreshSiteStats(env));
     ctx.waitUntil(pruneExpiredRows(env));
+    ctx.waitUntil(triggerRebuildIfDue(env));
   },
 
   async fetch(request, env) {
