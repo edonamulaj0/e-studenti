@@ -16,10 +16,12 @@ import { WORKER_URL } from "../lib/worker-url";
 import { FAQ_TEASER } from "../lib/faq-content";
 import Link from "next/link";
 import ViberIcon, { VIBER_URL } from "../components/ViberIcon";
+import { useT } from "../components/Preferences";
 
 const SUBJECTS = ["Raportoj material", "Kërkesë heqjeje", "Problem teknik", "Bashkëpunim", "Tjetër"];
 
 function SectionCard({ id, icon: Icon, title, children }) {
+  const t = useT();
   return (
     <section
       id={id}
@@ -32,7 +34,7 @@ function SectionCard({ id, icon: Icon, title, children }) {
       </div>
       <div>
         <h2 className="mb-6 font-display text-2xl font-semibold text-navy-900">
-          {title}
+          {t(title)}
         </h2>
         {children}
       </div>
@@ -41,6 +43,7 @@ function SectionCard({ id, icon: Icon, title, children }) {
 }
 
 export default function InformacionePage() {
+  const t = useT();
   const [contributors, setContributors] = useState([]);
   const [loadingContributors, setLoadingContributors] = useState(true);
   const [senderName, setSenderName] = useState("");
@@ -114,34 +117,32 @@ export default function InformacionePage() {
     <div className="page-shell">
       <div className="section-shell">
         <header className="mb-12 max-w-3xl">
-          <p className="page-kicker mb-5">Rreth platformës</p>
+          <p className="page-kicker mb-5">{t("Rreth platformës")}</p>
           <h1 className="page-title mb-5">
-            Rreth nesh
+            {t("Rreth nesh")}
           </h1>
           <p className="page-subtitle max-w-3xl text-lg md:text-xl">
-            E-Studenti është një iniciativë komunitare e ndërtuar nga studentë —
-            jo platformë zyrtare e Universitetit të Prishtinës.
+            {t("E-Studenti është një iniciativë komunitare e ndërtuar nga studentë — jo platformë zyrtare e asnjë universiteti.")}
           </p>
           <div className="mt-6 rounded-2xl border border-burgundy-600/20 bg-burgundy-50/60 p-5 text-sm leading-relaxed text-navy-900">
-            <strong>Jo zyrtare:</strong> Nuk jemi të autorizuar, të miratuar ose të
-            mbështetur nga UP-ja. Materialet janë kontribute vullnetare të
-            komunitetit.
+            <strong>{t("Jo zyrtare:")}</strong>{" "}
+            {t("Nuk jemi të autorizuar, të miratuar ose të mbështetur nga asnjë universitet. Materialet janë kontribute vullnetare të komunitetit.")}
           </div>
           <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
             <Link href="/statistikat" className="text-burgundy-600 hover:underline">
-              Statistikat
+              {t("Statistikat")}
             </Link>
             <Link href="/privatesia" className="text-burgundy-600 hover:underline">
-              Privatësia
+              {t("Privatësia")}
             </Link>
             <Link href="/kushtet" className="text-burgundy-600 hover:underline">
-              Kushtet
+              {t("Kushtet")}
             </Link>
           </div>
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[16rem_1fr] lg:items-start">
-          <aside className="hidden rounded-3xl border border-gray-200 bg-white/80 p-4 shadow-sm backdrop-blur lg:sticky lg:top-28 lg:block">
+          <aside className="hidden rounded-3xl border border-gray-200 bg-surface/80 p-4 shadow-sm backdrop-blur lg:sticky lg:top-28 lg:block">
             {[
               ["#misioni", "Misioni"],
               ["#privatesia", "Privatësia"],
@@ -153,20 +154,20 @@ export default function InformacionePage() {
                 href={href}
                 className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-burgundy-50 hover:text-burgundy-600"
               >
-                {label}
+                {t(label)}
               </a>
             ))}
             <Link
               href="/statistikat"
               className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-burgundy-50 hover:text-burgundy-600"
             >
-              Statistikat
+              {t("Statistikat")}
             </Link>
             <Link
               href="/rreth-nesh/pyetje-te-shpeshta"
               className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-burgundy-50 hover:text-burgundy-600"
             >
-              Pyetje të shpeshta
+              {t("Pyetje të shpeshta")}
             </Link>
             {[
               ["#kodi", "Kodi"],
@@ -177,7 +178,7 @@ export default function InformacionePage() {
                 href={href}
                 className="block rounded-2xl px-4 py-3 text-sm font-semibold text-gray-600 transition-colors hover:bg-burgundy-50 hover:text-burgundy-600"
               >
-                {label}
+                {t(label)}
               </a>
             ))}
           </aside>
@@ -186,26 +187,21 @@ export default function InformacionePage() {
           <SectionCard id="misioni" icon={Shield} title="Misioni dhe transparenca">
             <div className="space-y-4 text-base leading-relaxed text-gray-600 md:text-lg">
               <p>
-                Synojmë t'i ndihmojmë studentët të gjejnë materiale studimore,
-                lidhje burimesh dhe informacion fakulteti — me transparencë,
-                respekt për autorët dhe pa monetizim.
+                {t("Synojmë t'i ndihmojmë studentët të gjejnë materiale studimore, lidhje burimesh dhe informacion fakulteti — me transparencë, respekt për autorët dhe pa monetizim.")}
               </p>
               <p>
-                E-Studenti është ndërtuar me synim zero-fitimi — vetëm për të
-                ndihmuar studentët. Nuk do të ketë kurrë monetizim: pa reklama,
-                pa abonime të paguara dhe pa shitje të dhënave. Ky angazhim
-                është i përhershëm.
+                {t("E-Studenti është ndërtuar me synim zero-fitimi — vetëm për të ndihmuar studentët. Nuk do të ketë kurrë monetizim: pa reklama, pa abonime të paguara dhe pa shitje të dhënave. Ky angazhim është i përhershëm.")}
               </p>
               <div className="grid gap-4 md:grid-cols-2">
                 {[
-                  ["Jo zyrtare", "Komunitet studentor, jo UP"],
+                  ["Jo zyrtare", "Komunitet studentor, jo universitet"],
                   ["Transparent", "Kodi publik në GitHub"],
                   ["Privat", "Anonimitet real në kërkim/API publike"],
                   ["Jofitimprurëse", "Pa monetizim — kurrë"],
                 ].map(([title, text]) => (
                   <div key={title} className="rounded-2xl border border-gray-200 bg-navy-100/50 p-5">
-                    <h3 className="font-semibold text-navy-900">{title}</h3>
-                    <p className="mt-2 text-sm text-gray-600">{text}</p>
+                    <h3 className="font-semibold text-navy-900">{t(title)}</h3>
+                    <p className="mt-2 text-sm text-gray-600">{t(text)}</p>
                   </div>
                 ))}
               </div>
@@ -214,26 +210,26 @@ export default function InformacionePage() {
 
           <SectionCard id="autoret" icon={Code} title="Të drejtat e autorit">
             <p className="mb-6 text-base leading-relaxed text-gray-600 md:text-lg">
-              Respektojmë të drejtat e autorëve dhe krijuesve të përmbajtjes.
+              {t("Respektojmë të drejtat e autorëve dhe krijuesve të përmbajtjes.")}
             </p>
             <div className="grid md:grid-cols-2 gap-5">
               <div className="rounded-2xl border border-gray-200 bg-navy-100/50 p-5">
-                <h3 className="mb-3 font-semibold text-navy-900">Për autorët</h3>
+                <h3 className="mb-3 font-semibold text-navy-900">{t("Për autorët")}</h3>
                 <ul className="space-y-2 text-sm text-gray-600 md:text-base">
-                  <li>• Kërkesë për heqje — përgjigje sa më shpejt</li>
-                  <li>• Heqje pa pyetje të panevojshme</li>
-                  <li>• Respekt për kërkesat ligjore</li>
+                  <li>{t("• Kërkesë për heqje — përgjigje sa më shpejt")}</li>
+                  <li>{t("• Heqje pa pyetje të panevojshme")}</li>
+                  <li>{t("• Respekt për kërkesat ligjore")}</li>
                 </ul>
               </div>
-              <div className="rounded-2xl border border-gray-200 bg-white p-5">
-                <h3 className="mb-3 font-semibold text-navy-900">Kontakt heqjeje</h3>
+              <div className="rounded-2xl border border-gray-200 bg-surface p-5">
+                <h3 className="mb-3 font-semibold text-navy-900">{t("Kontakt heqjeje")}</h3>
                 <div className="space-y-3 text-sm md:text-base">
                   <a
                     href="#kontakt"
                     className="flex items-center gap-2 font-semibold text-burgundy-600 hover:underline"
                   >
                     <Mail className="w-4 h-4" />
-                    Formulari i kontaktit
+                    {t("Formulari i kontaktit")}
                   </a>
                   <a
                     href="https://github.com/edonamulaj0/e-studenti"
@@ -260,7 +256,7 @@ export default function InformacionePage() {
 
           <SectionCard id="kontribuesit" icon={Users} title="Kontribuesit">
             <p className="mb-6 text-base italic text-gray-600">
-              Faleminderit studentëve dhe profesorëve që kanë ndarë burime.
+              {t("Faleminderit studentëve dhe profesorëve që kanë ndarë burime.")}
             </p>
             {loadingContributors && (
               <div className="grid sm:grid-cols-3 gap-4">
@@ -274,7 +270,7 @@ export default function InformacionePage() {
             )}
             {!loadingContributors && visibleContributors.length === 0 && (
               <p className="rounded-2xl border border-gray-200 bg-navy-100/50 p-4 text-gray-600">
-                Kontribuesit do të shfaqen këtu pasi materiali i parë të ngarkohet.
+                {t("Kontribuesit do të shfaqen këtu pasi materiali i parë të ngarkohet.")}
               </p>
             )}
             {!loadingContributors && visibleContributors.length > 0 && (
@@ -282,7 +278,7 @@ export default function InformacionePage() {
                 {visibleContributors.map((c, index) => (
                   <div
                     key={`${c.name}-${c.surname}-${index}`}
-                    className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-white p-4"
+                    className="flex items-center gap-4 rounded-2xl border border-gray-200 bg-surface p-4"
                   >
                     <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-burgundy-50 text-sm font-bold text-burgundy-600">
                       {c.name?.[0]}{c.surname?.[0]}
@@ -292,10 +288,10 @@ export default function InformacionePage() {
                         {c.name} {c.surname}
                       </p>
                       {c.webNote ? (
-                        <p className="mt-1 text-sm text-gray-600">{c.webNote}</p>
+                        <p className="mt-1 text-sm text-gray-600">{t(c.webNote)}</p>
                       ) : (
                         <p className="mt-1 text-sm text-gray-600">
-                          {c.faculty || "Fakulteti"} · {c.material_count} materiale
+                          {c.faculty || t("Fakulteti")} · {t("{n} materiale", { n: c.material_count })}
                         </p>
                       )}
                     </div>
@@ -307,7 +303,7 @@ export default function InformacionePage() {
 
           <SectionCard id="faq" icon={HelpCircle} title="Pyetje të shpeshta">
             <p className="mb-6 text-base leading-relaxed text-gray-600 md:text-lg">
-              Përgjigje të shpejta për pyetjet më të zakonshme rreth platformës.
+              {t("Përgjigje të shpejta për pyetjet më të zakonshme rreth platformës.")}
             </p>
             <div className="space-y-4">
               {FAQ_TEASER.map((item) => (
@@ -315,9 +311,9 @@ export default function InformacionePage() {
                   key={item.question}
                   className="rounded-2xl border border-gray-200 bg-navy-100/50 p-5"
                 >
-                  <h3 className="font-semibold text-navy-900">{item.question}</h3>
+                  <h3 className="font-semibold text-navy-900">{t(item.question)}</h3>
                   <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                    {item.answer}
+                    {t(item.answer)}
                   </p>
                 </div>
               ))}
@@ -326,7 +322,7 @@ export default function InformacionePage() {
               href="/rreth-nesh/pyetje-te-shpeshta"
               className="mt-6 inline-flex items-center gap-2 font-semibold text-burgundy-600 hover:text-burgundy-700"
             >
-              Shiko të gjitha pyetjet
+              {t("Shiko të gjitha pyetjet")}
               <ArrowRight className="h-4 w-4" />
             </Link>
           </SectionCard>
@@ -334,21 +330,21 @@ export default function InformacionePage() {
           <SectionCard id="kodi" icon={Code} title="Kodi i hapur">
             <div className="space-y-5">
               <div className="rounded-2xl border border-gray-200 bg-navy-100/50 p-5">
-                <h3 className="mb-2 font-semibold text-navy-900">Transparencë</h3>
+                <h3 className="mb-2 font-semibold text-navy-900">{t("Transparencë")}</h3>
                 <ul className="space-y-2 text-sm text-gray-600 md:text-base">
-                  <li>• Struktura dhe funksionimi të verifikueshëm nga kodi</li>
-                  <li>• Pa funksionalitet të fshehur</li>
+                  <li>{t("• Struktura dhe funksionimi të verifikueshëm nga kodi")}</li>
+                  <li>{t("• Pa funksionalitet të fshehur")}</li>
                 </ul>
               </div>
               <a
                 href="https://github.com/edonamulaj0/e-studenti"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center justify-between gap-4 rounded-2xl bg-navy-900 p-5 text-white transition-all hover:-translate-y-0.5 hover:bg-burgundy-600 hover:shadow-md"
+                className="group flex items-center justify-between gap-4 rounded-2xl bg-ink p-5 text-white transition-all hover:-translate-y-0.5 hover:bg-burgundy-600 hover:shadow-md"
               >
                 <div>
                   <p className="font-bold text-lg">GitHub</p>
-                  <p className="text-sm text-white/60">Shiko kodin</p>
+                  <p className="text-sm text-white/60">{t("Shiko kodin")}</p>
                 </div>
                 <ArrowRight className="w-6 h-6 group-hover:translate-x-0.5 transition-transform" />
               </a>
@@ -358,18 +354,18 @@ export default function InformacionePage() {
           <SectionCard id="kufizime" icon={Shield} title="Vërejtje dhe kufizime">
             <div className="grid gap-6 text-sm text-gray-600 md:grid-cols-2 md:text-base">
               <div>
-                <h3 className="mb-2 font-semibold text-navy-900">Përgjegjësia</h3>
+                <h3 className="mb-2 font-semibold text-navy-900">{t("Përgjegjësia")}</h3>
                 <ul className="space-y-2">
-                  <li>• Vetëm për qëllime edukative</li>
-                  <li>• Verifikoni saktësinë me burimet zyrtare</li>
-                  <li>• Përmbajtja mund të jetë e vjetër</li>
+                  <li>{t("• Vetëm për qëllime edukative")}</li>
+                  <li>{t("• Verifikoni saktësinë me burimet zyrtare")}</li>
+                  <li>{t("• Përmbajtja mund të jetë e vjetër")}</li>
                 </ul>
               </div>
               <div>
-                <h3 className="mb-2 font-semibold text-navy-900">Përdorimi</h3>
+                <h3 className="mb-2 font-semibold text-navy-900">{t("Përdorimi")}</h3>
                 <ul className="space-y-2">
-                  <li>• Respektoni ligjet dhe autorët</li>
-                  <li>• Përdorni në mënyrë etike</li>
+                  <li>{t("• Respektoni ligjet dhe autorët")}</li>
+                  <li>{t("• Përdorni në mënyrë etike")}</li>
                 </ul>
               </div>
             </div>
@@ -410,20 +406,19 @@ export default function InformacionePage() {
                       Viber
                     </span>
                     <span className="block truncate font-semibold text-[#7360f2] group-hover:underline">
-                      Bashkohu në grup
+                      {t("Bashkohu në grup")}
                     </span>
                   </span>
                 </a>
               </div>
               <p className="mb-6 text-sm leading-relaxed text-gray-600">
-                Formulari më poshtë mund të përdoret për raporte ose njoftime,
-                por për përgjigje direkte ju lutemi shkruani në Instagram.
+                {t("Formulari më poshtë mund të përdoret për raporte ose njoftime, por për përgjigje direkte ju lutemi shkruani në Instagram.")}
               </p>
 
               <form onSubmit={submitContact} className="space-y-5">
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-semibold text-navy-900">
-                    Emri juaj
+                    {t("Emri juaj")}
                   </span>
                   <input
                     required
@@ -435,7 +430,7 @@ export default function InformacionePage() {
 
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-semibold text-navy-900">
-                    Subjekti
+                    {t("Subjekti")}
                   </span>
                   <select
                     required
@@ -444,14 +439,14 @@ export default function InformacionePage() {
                     className="input-srh"
                   >
                     {SUBJECTS.map((item) => (
-                      <option key={item}>{item}</option>
+                      <option key={item} value={item}>{t(item)}</option>
                     ))}
                   </select>
                 </label>
 
                 <label className="block">
                   <span className="mb-1.5 block text-sm font-semibold text-navy-900">
-                    Mesazhi
+                    {t("Mesazhi")}
                   </span>
                   <textarea
                     required
@@ -462,19 +457,19 @@ export default function InformacionePage() {
                     onChange={(e) => setMessage(e.target.value.slice(0, 2000))}
                     className="input-srh min-h-[160px] resize-y py-3"
                   />
-                  <span className="mt-1 block text-right text-xs text-gray-400">
+                  <span className="mt-1 block text-right text-xs text-gray-500">
                     {message.length}/2000
                   </span>
                 </label>
 
                 {contactStatus === "success" && (
-                  <p className="rounded-2xl border border-success-green/20 bg-success-green/10 p-4 font-semibold text-success-green">
-                    Mesazhi juaj u pranua. Për përgjigje direkte, na shkruani në Instagram: @estudenti.hub.
+                  <p className="rounded-2xl border border-success-green/20 bg-success-green/10 p-4 font-semibold text-success-text">
+                    {t("Mesazhi juaj u pranua. Për përgjigje direkte, na shkruani në Instagram: @estudenti.hub.")}
                   </p>
                 )}
                 {contactError && (
                   <p className="rounded-2xl border border-burgundy-600/20 bg-burgundy-50 p-4 font-semibold text-burgundy-600">
-                    {contactError}
+                    {t(contactError)}
                   </p>
                 )}
 
@@ -484,7 +479,7 @@ export default function InformacionePage() {
                   className="btn-primary w-full text-base"
                 >
                   <Send className="h-5 w-5" />
-                  {contactStatus === "sending" ? "Duke dërguar..." : "Dërgo mesazhin"}
+                  {contactStatus === "sending" ? t("Duke dërguar...") : t("Dërgo mesazhin")}
                 </button>
               </form>
             </div>
@@ -493,8 +488,7 @@ export default function InformacionePage() {
         </div>
 
         <p className="mx-auto mt-12 max-w-2xl text-center text-base italic text-gray-600">
-          Faleminderit që përdorni E-Studenti — së bashku për një komunitet më të
-          hapur.
+          {t("Faleminderit që përdorni E-Studenti — së bashku për një komunitet më të hapur.")}
         </p>
       </div>
     </div>

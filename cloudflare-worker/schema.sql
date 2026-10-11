@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   email_verified INTEGER DEFAULT 0,
   is_moderator INTEGER NOT NULL DEFAULT 0,
   token_version INTEGER NOT NULL DEFAULT 0,
+  trust_revoked INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -33,6 +34,7 @@ CREATE TABLE IF NOT EXISTS materials (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),
   title TEXT NOT NULL,
+  university TEXT NOT NULL DEFAULT 'universiteti-i-prishtines-hasan-prishtina',
   faculty TEXT NOT NULL,
   department TEXT DEFAULT '//',
   subject TEXT NOT NULL,
@@ -46,12 +48,23 @@ CREATE TABLE IF NOT EXISTS materials (
   study_level TEXT NOT NULL DEFAULT 'bachelor',
   view_count INTEGER NOT NULL DEFAULT 0,
   download_count INTEGER NOT NULL DEFAULT 0,
+  status TEXT NOT NULL DEFAULT 'approved',
+  rejection_reason TEXT,
+  reviewed_at TEXT,
+  reviewed_by INTEGER,
+  content_hash TEXT,
+  client_upload_id TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
+CREATE INDEX IF NOT EXISTS idx_materials_status ON materials(status);
+CREATE INDEX IF NOT EXISTS idx_materials_content_hash ON materials(content_hash);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_materials_client_upload
+  ON materials(user_id, client_upload_id) WHERE client_upload_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_materials_user ON materials(user_id);
 CREATE INDEX IF NOT EXISTS idx_materials_faculty ON materials(faculty);
+CREATE INDEX IF NOT EXISTS idx_materials_university ON materials(university);
 
 CREATE TABLE IF NOT EXISTS material_stat_events (
   dedupe_key TEXT PRIMARY KEY,
@@ -69,6 +82,33 @@ CREATE TABLE IF NOT EXISTS site_stats (
   computed_at TEXT NOT NULL,
   tracking_since TEXT NOT NULL
 );
+
+CREATE TABLE IF NOT EXISTS rebuild_state (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  dirty_since TEXT,
+  last_triggered_at TEXT
+);
+
+CREATE TABLE IF NOT EXISTS reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  material_id INTEGER NOT NULL,
+  reporter_id INTEGER,
+  reason TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  reporter_key TEXT,
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reports_one_per_reporter
+  ON reports(material_id, reporter_key) WHERE reporter_key IS NOT NULL;
+CREATE TABLE IF NOT EXISTS report_alerts (
+  material_id INTEGER PRIMARY KEY,
+  notified_at TEXT,
+  reminded_at TEXT
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_material ON reports(material_id);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
 
 CREATE TABLE IF NOT EXISTS resource_links (
   id INTEGER PRIMARY KEY AUTOINCREMENT,

@@ -1,0 +1,51 @@
+faculty,programme,level,courses,directory_ids,source
+administrate-publike,Administratë Publike,bachelor,20,kolegji-aab/administrate-publike-me-dy-specializime-ba-prishtine,https://aab-edu.net/fakultetet/administrate-publike/programet-studimore/administrate-publike-dhe-diplomaci/
+administrate-publike,Administratë Publike,bachelor,35,kolegji-aab/administrate-publike-me-dy-specializime-ba-prishtine,https://aab-edu.net/fakultetet/administrate-publike/programet-studimore/administrate-publike-i-pergjithshem/
+administrate-publike,Administratë Publike Specializim: Shkenca Politike dhe diplomaci,bachelor,25,,https://aab-edu.net/fakultetet/administrate-publike/programet-studimore/shkenca-politike-dhe-diplomaci/
+arkitekture,Arkitekturë,bachelor,45,kolegji-aab/arkitekture-ba-prishtine,https://aab-edu.net/fakultetet/arkitekture/programet-studimore/arkitekture/
+arte,Artet Aplikative në dizajnimin e hapësirave te brendshme,bachelor,39,kolegji-aab/arte-aplikative-ne-dizajnimin-e-hapesirave-te-brendshme-ba-prishtine,https://aab-edu.net/fakultetet/arte/programet-studimore/artet-aplikative-ne-dizajnimin-e-hapesirave-te-brendshme/
+arte,Dizajn Grafik,master,19,kolegji-aab/dizajn-grafik-ma-prishtine,https://aab-edu.net/fakultetet/arte/programet-studimore/dizajn-grafik-ma/
+arte,Dizajn Grafik Profesional,bachelor,33,kolegji-aab/dizajn-grafik-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/arte/programet-studimore/dizajn-grafik-profesional/
+arte,Dizajn i Modës,bachelor,34,kolegji-aab/dizajn-i-modes-ba-prishtine,https://aab-edu.net/fakultetet/arte/programet-studimore/dizajn-i-modes/
+arte,Dizajn Grafik dhe Arte Vizuele,bachelor,40,kolegji-aab/dizajn-grafik-dhe-arte-vizuele-ba-prishtine,https://aab-edu.net/fakultetet/arte/programet-studimore/dizajni-grafik-dhe-multimedia/
+arte,Pikturë dhe Arte Vizuele,bachelor,41,kolegji-aab/pikture-dhe-arte-vizuele-ba-prishtine,https://aab-edu.net/fakultetet/arte/programet-studimore/pikture-dhe-arte-vizuele/
+ekonomik,"Banka, Financa dhe Kontabilitet",bachelor,43,kolegji-aab/banka-financa-dhe-kontabilitet-bsc-prishtine,https://aab-edu.net/fakultetet/ekonomik/programet-studimore/banka-financa-dhe-kontabilitet/
+ekonomik,Biznes Digjital,bachelor,39,kolegji-aab/biznes-digjital-me-dy-specializime-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/ekonomik/programet-studimore/biznes-digjital/
+ekonomik,Kontabilitet dhe Auditim,bachelor,16,,https://aab-edu.net/fakultetet/ekonomik/programet-studimore/kontabilitet-dhe-auditim/
+ekonomik,Marketing dhe Menaxhim Biznesi,master,19,kolegji-aab/marketing-dhe-menaxhimi-i-biznesit-ma-prishtine,https://aab-edu.net/fakultetet/ekonomik/programet-studimore/ma-marketing-dhe-menaxhim-biznesi/
+ekonomik,Menaxhment,master,18,kolegji-aab/menaxhment-ma-prishtine,https://aab-edu.net/fakultetet/ekonomik/programet-studimore/ma-menaxhment-dhe-informatike/
+ekonomik,Marketing dhe Biznes,bachelor,37,kolegji-aab/marketing-dhe-biznes-ba-prishtine,https://aab-edu.net/fakultetet/ekonomik/programet-studimore/marketing-dhe-administrim-biznesi/
+ekonomik,Marketing Digjital dhe Inteligjencë Artificiale,bachelor,0,kolegji-aab/marketing-digjital-dhe-inteligjence-artificiale-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/ekonomik/programet-studimore/marketing-digjital-dhe-inteligjence-artificiale/
+ekonomik,Menaxhment,bachelor,43,kolegji-aab/menaxhment-ba-prishtine,https://aab-edu.net/fakultetet/ekonomik/programet-studimore/menaxhment/
+gjuhe-te-huaja,Gjuhë Angleze,bachelor,38,kolegji-aab/gjuhe-angleze-ba-prishtine,https://aab-edu.net/fakultetet/gjuhe-te-huaja/programet-studimore/gjuhe-angleze/
+gjuhe-te-huaja,Gjuhë Gjermane – Përkthim dhe interpretim,bachelor,30,,https://aab-edu.net/fakultetet/gjuhe-te-huaja/programet-studimore/gjuhe-gjermane/
+gjuhe-te-huaja,Gjuhë Angleze,master,23,kolegji-aab/gjuhe-angleze-ma-prishtine,https://aab-edu.net/fakultetet/gjuhe-te-huaja/programet-studimore/ma-gjuhe-angleze/
+juridik,Juridik Civil,bachelor,13,,https://aab-edu.net/fakultetet/juridik/programet-studimore/juridik-civil/
+juridik,Juridik i Përgjithshëm,bachelor,76,kolegji-aab/juridik-i-pergjithshem-llb-prishtine,https://aab-edu.net/fakultetet/juridik/programet-studimore/juridik-i-pergjithshem/
+juridik,Juridik i Përgjithshëm Specializim: Kriminalistikë,bachelor,12,kolegji-aab/juridik-i-pergjithshem-llb-prishtine,https://aab-edu.net/fakultetet/juridik/programet-studimore/juridik-kriminalistike/
+juridik,Juridik Penal,bachelor,13,,https://aab-edu.net/fakultetet/juridik/programet-studimore/juridik-penal/
+komunikim-masiv,Komunikim Masiv Gazetari,bachelor,36,kolegji-aab/komunikim-masiv-dhe-gazetari-ba-prishtine,https://aab-edu.net/fakultetet/komunikim-masiv/programet-studimore/komunikim-masiv-gazetari/
+komunikim-masiv,Komunikim Masiv dhe Gazetari,master,16,kolegji-aab/komunikim-masiv-dhe-gazetari-ma-prishtine,https://aab-edu.net/fakultetet/komunikim-masiv/programet-studimore/ma-komunikim-masiv-dhe-gazetari/
+komunikim-masiv,Produksion Medial,bachelor,33,kolegji-aab/produksion-medial-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/komunikim-masiv/programet-studimore/produksion-medial/
+kulture-fizike-dhe-sport,Kulturë Fizike dhe Sport,bachelor,41,kolegji-aab/kulture-fizike-dhe-sport-ba-prishtine,https://aab-edu.net/fakultetet/kulture-fizike-dhe-sport/programet-studimore/kulture-fizike-dhe-sport/
+kulture-fizike-dhe-sport,Kulturë Fizike dhe Sport,master,9,kolegji-aab/kulture-fizike-dhe-sport-ma-prishtine,https://aab-edu.net/fakultetet/kulture-fizike-dhe-sport/programet-studimore/ma-kulture-fizike-dhe-sport/
+psikologji,Psikologji,bachelor,32,kolegji-aab/psikologji-ba-prishtine,https://aab-edu.net/fakultetet/psikologji/programet-studimore/psikologji/
+psikologji,Shëndet Mendor,bachelor,15,,https://aab-edu.net/fakultetet/psikologji/programet-studimore/shendet-mendor/
+shkenca-kompjuterike,Kompjuterikë dhe FinTech,bachelor,0,kolegji-aab/kompjuterike-dhe-fintech-bsc-prishtine,https://aab-edu.net/fakultetet/shkenca-kompjuterike/programet-studimore/kompjuterike-dhe-fintech/
+shkenca-kompjuterike,Shkenca Kompjuterike,master,18,kolegji-aab/shkenca-kompjuterike-msc-prishtine,https://aab-edu.net/fakultetet/shkenca-kompjuterike/programet-studimore/ma-shkenca-kompjuterike/
+shkenca-kompjuterike,Programim dhe IA,bachelor,34,kolegji-aab/programim-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/shkenca-kompjuterike/programet-studimore/programim-dhe-ia/
+shkenca-kompjuterike,Programim dhe Multimedia,bachelor,34,kolegji-aab/programim-dhe-multimedia-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/shkenca-kompjuterike/programet-studimore/programim-dhe-multimedia/
+shkenca-kompjuterike,Programim i Lojërave Kompjuterike,bachelor,30,kolegji-aab/programim-i-lojerave-kompjuterike-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/shkenca-kompjuterike/programet-studimore/programim-i-lojerave-kompjuterike/
+shkenca-kompjuterike,Programim,bachelor,31,kolegji-aab/programim-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/shkenca-kompjuterike/programet-studimore/programim/
+shkenca-kompjuterike,Shkenca Kompjuterike dhe Inxhinieri Softuerike,bachelor,0,kolegji-aab/shkenca-kompjuterike-dhe-inxhinieri-softuerike-bsc-prishtine,https://aab-edu.net/fakultetet/shkenca-kompjuterike/programet-studimore/shkenca-kompjuterike-bsc/
+shkenca-kompjuterike,Siguri Kibernetike,bachelor,29,kolegji-aab/siguri-kibernetike-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/shkenca-kompjuterike/programet-studimore/siguri-kibernetike-dhe-sisteme-te-informacionit/
+shkenca-shendetesore,Estetike dhe Kozmetologji,bachelor,33,kolegji-aab/estetike-dhe-kozmetologji-bsc-prishtine,https://aab-edu.net/fakultetet/shkenca-shendetesore/programet-studimore/estetike-dhe-kozmetologji/
+shkenca-shendetesore,Infermieri,bachelor,34,kolegji-aab/infermieri-bsc-prishtine,https://aab-edu.net/fakultetet/shkenca-shendetesore/programet-studimore/infermieri-e-pergjithshme/
+shkenca-shendetesore,Logopedi,bachelor,37,kolegji-aab/logopedi-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/shkenca-shendetesore/programet-studimore/logopedi/
+shkenca-shendetesore,Menaxhment Shëndetësor,bachelor,30,kolegji-aab/menaxhment-ba-prishtine,https://aab-edu.net/fakultetet/shkenca-shendetesore/programet-studimore/menaxhment-shendetesor/
+shkenca-shendetesore,Teknik i Radiologjisë,bachelor,38,kolegji-aab/teknik-i-radiologjise-bachelor-profesional-prishtine,https://aab-edu.net/fakultetet/shkenca-shendetesore/programet-studimore/radiologji/
+shkenca-shendetesore,Teknik i Laboratorit,bachelor,42,kolegji-aab/teknik-i-laboratorit-bsc-prishtine,https://aab-edu.net/fakultetet/shkenca-shendetesore/programet-studimore/teknik-i-laboratorit/
+shkenca-sociale,Përkujdesja dhe Mirëqenia e Fëmijëve,bachelor,9,kolegji-aab/perkujdesje-dhe-mireqenie-e-femijeve-ba-prishtine,https://aab-edu.net/fakultetet/shkenca-sociale/programet-studimore/perkujdesja-dhe-mireqenia-e-femijeve/
+shkenca-sociale,Përkujdesje dhe Mirëqenia e Fëmijëve,bachelor,46,kolegji-aab/perkujdesje-dhe-mireqenie-e-femijeve-ba-prishtine,https://aab-edu.net/fakultetet/shkenca-sociale/programet-studimore/perkujdesje-dhe-mireqenie-e-femijeve/
+stomatologji,Stomatologji,bachelor,101,kolegji-aab/stomatologji-dr-dent-dr-dent-prishtine,https://aab-edu.net/fakultetet/stomatologji/programet-studimore/stomatologji/
+stomatologji,Teknik Dentar,bachelor,47,kolegji-aab/teknik-dentar-bsc-prishtine,https://aab-edu.net/fakultetet/stomatologji/programet-studimore/teknik-dentar/

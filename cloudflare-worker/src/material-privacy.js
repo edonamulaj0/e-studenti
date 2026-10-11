@@ -41,6 +41,8 @@ export function sanitizeMaterialForPublic(material, { revealUploader = false } =
   if (anonymous && !revealUploader) {
     delete sanitized.uploader_name;
     delete sanitized.uploaderName;
+    // A "trusted contributor" mark would single out an anonymous upload.
+    delete sanitized.uploader_trusted;
   } else if (displayName) {
     sanitized.uploader_name = displayName;
   }
@@ -53,6 +55,7 @@ export function materialToPublicLegacyEntry(material, normalizeUploaderName) {
   const displayName = getPublicUploaderName(material);
   return {
     id: material.id,
+    slug: material.slug,
     title: material.title,
     faculty: material.faculty,
     department: material.department || "//",
@@ -69,9 +72,14 @@ export function materialToPublicLegacyEntry(material, normalizeUploaderName) {
     submittedBy: displayName
       ? { name: normalizeUploaderName ? normalizeUploaderName(displayName) : displayName }
       : undefined,
+    uploader_trusted: isMaterialAnonymous(material) ? undefined : Boolean(material.uploader_trusted),
   };
 }
 
+/**
+ * @param {Record<string, any>} material
+ * @param {{ faculty?: string, type?: string, q?: string, studyLevel?: string }} [filters]
+ */
 export function materialMatchesPublic(material, { faculty, type, q, studyLevel } = {}) {
   if (faculty && material.faculty !== faculty.toUpperCase()) return false;
   if (type && material.type !== type) return false;
@@ -93,11 +101,20 @@ export function materialMatchesPublic(material, { faculty, type, q, studyLevel }
     .some((value) => String(value).toLowerCase().includes(needle));
 }
 
+/**
+ * LIKE pattern matching `q` as plain text. `%` and `_` in the search term are
+ * escaped so they match themselves instead of acting as wildcards (a lone "%"
+ * would otherwise match every row).
+ */
+export function likePattern(q) {
+  return `%${String(q).replace(/[\\%_]/g, "\\$&")}%`;
+}
+
 export function buildPublicSearchClause(q) {
   if (!q) return { clause: null, params: [] };
   return {
     clause:
-      "(m.title LIKE ? OR m.subject LIKE ? OR m.teacher LIKE ? OR (COALESCE(m.is_anonymous, 0) = 0 AND (u.name LIKE ? OR COALESCE(u.surname, '') LIKE ?)))",
-    params: [`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`],
+      "(m.title LIKE ? ESCAPE '\\' OR m.subject LIKE ? ESCAPE '\\' OR m.teacher LIKE ? ESCAPE '\\' OR (COALESCE(m.is_anonymous, 0) = 0 AND (u.name LIKE ? ESCAPE '\\' OR COALESCE(u.surname, '') LIKE ? ESCAPE '\\')))",
+    params: Array(5).fill(likePattern(q)),
   };
 }

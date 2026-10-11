@@ -16,35 +16,25 @@ import {
 } from "./site-stats.js";
 
 describe("moderators", () => {
-  it("parses comma-separated moderator emails", () => {
-    expect(
-      parseModeratorEmails({
-        MODERATOR_EMAILS: " One@Example.com , two@example.com ",
-      })
-    ).toEqual(["one@example.com", "two@example.com"]);
+  it("has exactly one moderator", () => {
+    expect(parseModeratorEmails()).toEqual(["edonaamulaj@gmail.com"]);
   });
 
-  it("supports legacy MODERATOR_EMAIL env var", () => {
-    expect(
-      isModeratorEmail("admin@uni-pr.edu", {
-        MODERATOR_EMAIL: "admin@uni-pr.edu",
-      })
-    ).toBe(true);
+  it("matches that address case-insensitively and nothing else", () => {
+    expect(isModeratorEmail("Edonaamulaj@Gmail.com")).toBe(true);
+    expect(isModeratorEmail(" edonaamulaj@gmail.com ")).toBe(true);
+    expect(isModeratorEmail("edonaamulaj+x@gmail.com")).toBe(false);
+    expect(isModeratorEmail("edonaamulaj@gmail.com.evil.com")).toBe(false);
+    expect(isModeratorEmail("")).toBe(false);
   });
 
-  it("grants moderator via email list or db flag", () => {
+  it("ignores the database flag and the old environment variables", () => {
+    expect(userIsModerator({ email: "user@example.com", is_moderator: 1 })).toBe(false);
     expect(
-      userIsModerator(
-        { email: "mod@example.com", is_moderator: 0 },
-        { MODERATOR_EMAILS: "mod@example.com" }
-      )
-    ).toBe(true);
-    expect(
-      userIsModerator(
-        { email: "user@example.com", is_moderator: 1 },
-        { MODERATOR_EMAILS: "mod@example.com" }
-      )
-    ).toBe(true);
+      userIsModerator({ email: "mod@example.com", is_moderator: 0 }, { MODERATOR_EMAILS: "mod@example.com" })
+    ).toBe(false);
+    expect(userIsModerator({ email: "edonaamulaj@gmail.com", is_moderator: 0 })).toBe(true);
+    expect(userIsModerator(null)).toBe(false);
   });
 });
 

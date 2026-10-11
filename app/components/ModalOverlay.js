@@ -1,8 +1,18 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { useFocusTrap } from "../lib/use-focus-trap";
 
+/**
+ * Portal-mounted backdrop for dialogs. While open it:
+ * - moves focus into the dialog (an element marked `data-autofocus`, else the
+ *   first focusable one, else the dialog itself) and restores it on close;
+ * - keeps Tab / Shift+Tab inside the dialog;
+ * - closes on Escape;
+ * - locks page scroll.
+ * The dialog element itself (`role="dialog"`) is supplied by the caller.
+ */
 export default function ModalOverlay({
   open,
   onClose,
@@ -11,6 +21,9 @@ export default function ModalOverlay({
   className = "",
 }) {
   const [mounted, setMounted] = useState(false);
+  const overlayRef = useRef(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
 
   useEffect(() => {
     setMounted(true);
@@ -27,6 +40,8 @@ export default function ModalOverlay({
     };
   }, [open]);
 
+  useFocusTrap(open && mounted, overlayRef, () => onCloseRef.current?.());
+
   if (!open || !mounted) return null;
 
   const alignClass =
@@ -34,7 +49,8 @@ export default function ModalOverlay({
 
   return createPortal(
     <div
-      className={`fixed inset-0 z-[200] flex justify-center bg-navy-900/65 p-4 backdrop-blur-md ${alignClass} ${className}`}
+      ref={overlayRef}
+      className={`fixed inset-0 z-[200] flex justify-center bg-ink/65 p-4 backdrop-blur-md ${alignClass} ${className}`}
       onClick={onClose}
       role="presentation"
     >

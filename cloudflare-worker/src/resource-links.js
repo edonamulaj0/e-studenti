@@ -1,4 +1,4 @@
-import { ANONYMOUS_DISPLAY_NAME } from "./material-privacy.js";
+import { ANONYMOUS_DISPLAY_NAME, likePattern } from "./material-privacy.js";
 
 export const RESOURCE_CATEGORIES = [
   "course_site",
@@ -246,7 +246,7 @@ export function buildResourceSearchClause(q) {
   if (!q) return { clause: null, params: [] };
   return {
     clause:
-      "(r.title LIKE ? OR r.description LIKE ? OR r.subject LIKE ? OR r.resolved_domain LIKE ? OR (COALESCE(r.is_anonymous, 0) = 0 AND (u.name LIKE ? OR COALESCE(u.surname, '') LIKE ?)))",
-    params: [`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`],
+      "(r.title LIKE ? ESCAPE '\\' OR r.description LIKE ? ESCAPE '\\' OR r.subject LIKE ? ESCAPE '\\' OR r.resolved_domain LIKE ? ESCAPE '\\' OR (COALESCE(r.is_anonymous, 0) = 0 AND (u.name LIKE ? ESCAPE '\\' OR COALESCE(u.surname, '') LIKE ? ESCAPE '\\')))",
+    params: Array(6).fill(likePattern(q)),
   };
 }

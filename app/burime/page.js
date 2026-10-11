@@ -1,4 +1,5 @@
 import BurimeClient from "./burime-client";
+import { T } from "../components/Preferences";
 import { fetchResourceLinksPage } from "../lib/fetch-resources";
 import { getFacultyName } from "../lib/material-options";
 import { getResourceCategoryLabel } from "../lib/resource-options";
@@ -12,7 +13,7 @@ export default async function BurimePage() {
       <noscript>
         <section className="page-shell">
           <div className="section-shell">
-            <h1>Burime shtesë</h1>
+            <h1><T>Burime shtesë</T></h1>
             <ul>
               {links.map((link) => (
                 <li key={link.id}>

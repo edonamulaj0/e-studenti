@@ -6,15 +6,17 @@ import MaterialPreviewModal from "./MaterialPreviewModal";
 import { materialViewUrl } from "../lib/worker-url";
 import { hasInBrowserView, isArchiveType } from "../lib/file-preview";
 import { trackMaterialView } from "../lib/track-material";
+import { useT } from "./Preferences";
 
 export default function MaterialViewButton({ material, className = "btn-primary flex-1" }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
 
   // RAR has no viewer of any kind, so the download button is the only action.
   if (!hasInBrowserView(material.fileType)) {
     return (
       <p className="flex-1 rounded-xl bg-navy-100/40 px-4 py-3 text-sm text-gray-500">
-        Arkivat RAR nuk hapen në shfletues — shkarkoni skedarin për të parë përmbajtjen.
+        {t("Arkivat RAR nuk hapen në shfletues — shkarkoni skedarin për të parë përmbajtjen.")}
       </p>
     );
   }
@@ -29,7 +31,7 @@ export default function MaterialViewButton({ material, className = "btn-primary 
         className={className}
       >
         <Eye className="h-5 w-5" />
-        Shiko materialin
+        {t("Shiko materialin")}
       </a>
     );
   }
@@ -45,7 +47,7 @@ export default function MaterialViewButton({ material, className = "btn-primary 
         className={className}
       >
         <Eye className="h-5 w-5" />
-        Shiko materialin
+        {t("Shiko materialin")}
       </button>
       <MaterialPreviewModal
         isOpen={open}

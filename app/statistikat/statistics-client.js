@@ -26,6 +26,7 @@ import {
 import { WORKER_URL } from "../lib/worker-url";
 import { getFacultyName } from "../lib/material-options";
 import { formatStatCount } from "../lib/track-material";
+import { useLang, useT } from "../components/Preferences";
 
 const TRACKING_SINCE_LABEL = "7 KORRIK 2026";
 
@@ -37,18 +38,19 @@ const PERIOD_OPTIONS = [
 ];
 
 function StatCard({ icon: Icon, label, value, tone = "navy" }) {
+  const t = useT();
   const tones = {
     navy: "bg-navy-100 text-navy-800",
     burgundy: "bg-burgundy-50 text-burgundy-600",
-    blue: "bg-info-blue/10 text-info-blue",
-    green: "bg-success-green/10 text-success-green",
+    blue: "bg-info-blue/10 text-info-text",
+    green: "bg-success-green/10 text-success-text",
   };
   return (
     <div className="surface-card p-6">
       <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl ${tones[tone]}`}>
         <Icon className="h-6 w-6" aria-hidden />
       </div>
-      <p className="text-sm font-semibold uppercase tracking-widest text-gray-400">{label}</p>
+      <p className="text-sm font-semibold uppercase tracking-widest text-gray-500">{t(label)}</p>
       <p className="mt-2 font-display text-3xl font-bold text-navy-900">
         {formatStatCount(value ?? 0)}
       </p>
@@ -56,39 +58,40 @@ function StatCard({ icon: Icon, label, value, tone = "navy" }) {
   );
 }
 
-function formatBucketLabel(bucket, period) {
+function formatBucketLabel(bucket, period, locale = "sq-AL") {
   if (!bucket) return "";
   if (period === "24h") {
     const date = new Date(`${bucket.replace(" ", "T")}:00:00Z`);
     if (!Number.isNaN(date.getTime())) {
-      return date.toLocaleTimeString("sq-AL", { hour: "2-digit", minute: "2-digit" });
+      return date.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
     }
   }
   if (period === "365d" && /^\d{4}-\d{2}$/.test(bucket)) {
     const [year, monthNum] = bucket.split("-");
     const date = new Date(Number(year), Number(monthNum) - 1, 1);
-    return date.toLocaleDateString("sq-AL", { month: "short", year: "numeric" });
+    return date.toLocaleDateString(locale, { month: "short", year: "numeric" });
   }
   const date = new Date(`${bucket}T12:00:00`);
   if (!Number.isNaN(date.getTime())) {
-    return date.toLocaleDateString("sq-AL", { day: "numeric", month: "short" });
+    return date.toLocaleDateString(locale, { day: "numeric", month: "short" });
   }
   return bucket;
 }
 
 function TrendTooltip({ active, payload, label, preTrackingMessage }) {
+  const t = useT();
   if (!active || !payload?.length) return null;
   const point = payload[0]?.payload;
   if (point?.before_tracking) {
     return (
-      <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-md">
+      <div className="rounded-xl border border-gray-200 bg-surface px-3 py-2 text-sm shadow-md">
         <p className="font-semibold text-gray-500">{label}</p>
-        <p className="text-gray-500">{preTrackingMessage || "Nuk ka të dhëna para kësaj kohe"}</p>
+        <p className="text-gray-500">{t(preTrackingMessage || "Nuk ka të dhëna para kësaj kohe")}</p>
       </div>
     );
   }
   return (
-    <div className="rounded-xl border border-gray-200 bg-white px-3 py-2 text-sm shadow-md">
+    <div className="rounded-xl border border-gray-200 bg-surface px-3 py-2 text-sm shadow-md">
       <p className="mb-1 font-semibold text-navy-900">{label}</p>
       {payload.map((entry) => (
         <p key={entry.name} style={{ color: entry.color }}>
@@ -100,6 +103,7 @@ function TrendTooltip({ active, payload, label, preTrackingMessage }) {
 }
 
 function TrendChart({ data, period, periodLabel, hasPreTrackingGap, preTrackingMessage }) {
+  const t = useT();
   const firstTrackedIndex = data.findIndex((point) => !point.before_tracking);
   const lastPreTrackingIndex = firstTrackedIndex > 0 ? firstTrackedIndex - 1 : -1;
   const preTrackingStartLabel = lastPreTrackingIndex >= 0 ? data[0]?.label : null;
@@ -110,11 +114,11 @@ function TrendChart({ data, period, periodLabel, hasPreTrackingGap, preTrackingM
   return (
     <section className="surface-card p-6 md:p-7">
       <h2 className="mb-5 text-2xl font-semibold text-navy-900">
-        Trendi ({periodLabel.toLowerCase()})
+        {t("Trendi")} ({t(periodLabel).toLowerCase()})
       </h2>
       {hasPreTrackingGap && (
         <p className="mb-4 text-sm text-gray-500">
-          {preTrackingMessage || "Nuk ka të dhëna para kësaj kohe"}
+          {t(preTrackingMessage || "Nuk ka të dhëna para kësaj kohe")}
         </p>
       )}
       <div className="h-80 w-full">
@@ -149,7 +153,7 @@ function TrendChart({ data, period, periodLabel, hasPreTrackingGap, preTrackingM
             <Line
               type="monotone"
               dataKey="views"
-              name="Shikime"
+              name={t("Shikime")}
               stroke="#2563eb"
               strokeWidth={2}
               dot={false}
@@ -158,7 +162,7 @@ function TrendChart({ data, period, periodLabel, hasPreTrackingGap, preTrackingM
             <Line
               type="monotone"
               dataKey="downloads"
-              name="Shkarkime"
+              name={t("Shkarkime")}
               stroke="#8B3A3A"
               strokeWidth={2}
               dot={false}
@@ -172,6 +176,9 @@ function TrendChart({ data, period, periodLabel, hasPreTrackingGap, preTrackingM
 }
 
 export default function StatisticsClient() {
+  const t = useT();
+  const lang = useLang();
+  const locale = lang === "en" ? "en-GB" : "sq-AL";
   const [period, setPeriod] = useState("7d");
   const [payload, setPayload] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -217,21 +224,20 @@ export default function StatisticsClient() {
   const trendChartData = useMemo(
     () =>
       (stats?.trend || []).map((row) => ({
-        label: formatBucketLabel(row.bucket, period),
+        label: formatBucketLabel(row.bucket, period, locale),
         bucket: row.bucket,
         views: row.before_tracking ? 0 : row.views,
         downloads: row.before_tracking ? 0 : row.downloads,
         before_tracking: Boolean(row.before_tracking),
       })),
-    [stats, period]
+    [stats, period, locale]
   );
 
   return (
     <div className="space-y-8">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
         <p className="rounded-2xl border border-navy-100 bg-navy-100/40 px-4 py-3 text-sm text-navy-800 lg:max-w-2xl">
-          Të dhënat që nga {trackingLabel}. Numërimi i shikimeve dhe shkarkimeve fillon me
-          lançimin e kësaj veçorie.
+          {t("Të dhënat që nga {date}. Numërimi i shikimeve dhe shkarkimeve fillon me lançimin e kësaj veçorie.", { date: t(trackingLabel) })}
         </p>
 
         <div className="flex flex-wrap gap-2">
@@ -243,10 +249,10 @@ export default function StatisticsClient() {
               className={`rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
                 period === option.value
                   ? "bg-burgundy-600 text-white"
-                  : "bg-white text-navy-800 ring-1 ring-navy-100 hover:bg-burgundy-50"
+                  : "bg-surface text-navy-800 ring-1 ring-navy-100 hover:bg-burgundy-50"
               }`}
             >
-              {option.label}
+              {t(option.label)}
             </button>
           ))}
         </div>
@@ -263,7 +269,7 @@ export default function StatisticsClient() {
       {!loading && error && (
         <div className="surface-card p-8 text-center">
           <BarChart3 className="mx-auto mb-4 h-12 w-12 text-burgundy-600" />
-          <p className="text-gray-600">{error}</p>
+          <p className="text-gray-600">{t(error)}</p>
         </div>
       )}
 
@@ -279,9 +285,9 @@ export default function StatisticsClient() {
 
           <div className="grid gap-5 xl:grid-cols-2">
             <section className="surface-card p-6 md:p-7">
-              <h2 className="mb-5 text-2xl font-semibold text-navy-900">Kontribuesit më aktivë</h2>
+              <h2 className="mb-5 text-2xl font-semibold text-navy-900">{t("Kontribuesit më aktivë")}</h2>
               {(stats.top_contributors || []).length === 0 ? (
-                <p className="text-gray-600">Ende nuk ka të dhëna publike për këtë periudhë.</p>
+                <p className="text-gray-600">{t("Ende nuk ka të dhëna publike për këtë periudhë.")}</p>
               ) : (
                 <ol className="space-y-3">
                   {stats.top_contributors.map((contributor, index) => (
@@ -294,12 +300,12 @@ export default function StatisticsClient() {
                           {index + 1}. {contributor.name}
                         </p>
                         <p className="text-sm text-gray-500">
-                          {contributor.material_count} materiale ·{" "}
-                          {formatStatCount(contributor.total_views)} shikime
+                          {t("{n} materiale", { n: contributor.material_count })} ·{" "}
+                          {formatStatCount(contributor.total_views)} {t("shikime")}
                         </p>
                       </div>
                       <span className="text-sm font-semibold text-burgundy-600">
-                        {formatStatCount(contributor.total_downloads)} shk.
+                        {formatStatCount(contributor.total_downloads)} {t("shk.")}
                       </span>
                     </li>
                   ))}
@@ -308,9 +314,9 @@ export default function StatisticsClient() {
             </section>
 
             <section className="surface-card p-6 md:p-7">
-              <h2 className="mb-5 text-2xl font-semibold text-navy-900">Materialet më të shikuara</h2>
+              <h2 className="mb-5 text-2xl font-semibold text-navy-900">{t("Materialet më të shikuara")}</h2>
               {(stats.most_viewed_materials || []).length === 0 ? (
-                <p className="text-gray-600">Ende nuk ka shikime të regjistruara për këtë periudhë.</p>
+                <p className="text-gray-600">{t("Ende nuk ka shikime të regjistruara për këtë periudhë.")}</p>
               ) : (
                 <ol className="space-y-3">
                   {stats.most_viewed_materials.map((material, index) => (
@@ -334,8 +340,8 @@ export default function StatisticsClient() {
                             {getFacultyName(material.faculty)}
                           </p>
                         </div>
-                        <span className="shrink-0 text-sm font-semibold text-info-blue">
-                          {formatStatCount(material.view_count)} shik.
+                        <span className="shrink-0 text-sm font-semibold text-info-text">
+                          {formatStatCount(material.view_count)} {t("shik.")}
                         </span>
                       </div>
                     </li>
@@ -346,9 +352,9 @@ export default function StatisticsClient() {
           </div>
 
           <section className="surface-card p-6 md:p-7">
-            <h2 className="mb-5 text-2xl font-semibold text-navy-900">Aktiviteti sipas fakultetit</h2>
+            <h2 className="mb-5 text-2xl font-semibold text-navy-900">{t("Aktiviteti sipas fakultetit")}</h2>
             {facultyChartData.length === 0 ? (
-              <p className="text-gray-600">Ende nuk ka të dhëna për fakultetet në këtë periudhë.</p>
+              <p className="text-gray-600">{t("Ende nuk ka të dhëna për fakultetet në këtë periudhë.")}</p>
             ) : (
               <div className="h-80 w-full">
                 <ResponsiveContainer width="100%" height="100%">
@@ -357,8 +363,8 @@ export default function StatisticsClient() {
                     <XAxis dataKey="faculty" tick={{ fontSize: 12 }} interval={0} angle={-20} textAnchor="end" height={70} />
                     <YAxis tick={{ fontSize: 12 }} allowDecimals={false} />
                     <Tooltip />
-                    <Bar dataKey="views" name="Shikime" fill="#2563eb" radius={[6, 6, 0, 0]} />
-                    <Bar dataKey="materials" name="Materiale" fill="#8B3A3A" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="views" name={t("Shikime")} fill="#2563eb" radius={[6, 6, 0, 0]} />
+                    <Bar dataKey="materials" name={t("Materiale")} fill="#8B3A3A" radius={[6, 6, 0, 0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -376,8 +382,8 @@ export default function StatisticsClient() {
           )}
 
           {payload?.computed_at && (
-            <p className="text-center text-xs text-gray-400">
-              Përditësuar: {new Date(payload.computed_at).toLocaleString("sq-AL")}
+            <p className="text-center text-xs text-gray-500">
+              {t("Përditësuar:")} {new Date(payload.computed_at).toLocaleString(locale)}
             </p>
           )}
         </>

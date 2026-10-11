@@ -8,7 +8,7 @@ export function organizationJsonLd() {
     url: SITE_URL,
     logo: `${SITE_URL}/logo-color.svg`,
     description:
-      "Platformë komunitare për materiale studimore dhe burime për studentët e Universitetit të Prishtinës.",
+      "Platformë komunitare për materiale studimore dhe burime për studentët e universiteteve në Kosovë.",
     sameAs: ["https://github.com/edonamulaj0/e-studenti"],
   };
 }
@@ -20,7 +20,7 @@ export function websiteJsonLd() {
     name: "E-Studenti",
     url: SITE_URL,
     description:
-      "Materiale, provime dhe burime studimore për studentët e UP-së.",
+      "Materiale, provime dhe burime studimore për studentët e universiteteve në Kosovë.",
     potentialAction: {
       "@type": "SearchAction",
       target: `${SITE_URL}/materialet?q={search_term_string}`,

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { T } from "../../components/Preferences";
 import JsonLd, { faqPageJsonLd } from "../../components/JsonLd";
 import { FAQ_ITEMS } from "../../lib/faq-content";
 
@@ -18,11 +19,10 @@ export default function FaqPage() {
       <div className="page-shell">
         <div className="section-shell max-w-3xl">
           <header className="mb-10">
-            <p className="page-kicker mb-4">Rreth nesh · Ndihmë</p>
-            <h1 className="page-title mb-4">Pyetje të shpeshta</h1>
+            <p className="page-kicker mb-4"><T>Rreth nesh · Ndihmë</T></p>
+            <h1 className="page-title mb-4"><T>Pyetje të shpeshta</T></h1>
             <p className="page-subtitle">
-              Gjithçka që duhet të dini për përdorimin e E-Studenti, ngarkimin e
-              materialeve dhe mbrojtjen e privatësisë.
+              <T>Gjithçka që duhet të dini për përdorimin e E-Studenti, ngarkimin e materialeve dhe mbrojtjen e privatësisë.</T>
             </p>
           </header>
 
@@ -34,21 +34,21 @@ export default function FaqPage() {
               >
                 <summary className="cursor-pointer list-none font-semibold text-navy-900 marker:content-none">
                   <span className="flex items-start justify-between gap-4">
-                    {item.question}
+                    <T>{item.question}</T>
                     <span className="text-burgundy-600 transition group-open:rotate-45">
                       +
                     </span>
                   </span>
                 </summary>
-                <p className="mt-4 leading-relaxed text-gray-600">{item.answer}</p>
+                <p className="mt-4 leading-relaxed text-gray-600"><T>{item.answer}</T></p>
               </details>
             ))}
           </div>
 
           <p className="mt-10 text-sm text-gray-500">
-            Nuk gjetët përgjigjen?{" "}
+            <T>Nuk gjetët përgjigjen?</T>{" "}
             <Link href="/informacione#kontakt" className="font-semibold text-burgundy-600">
-              Na kontaktoni
+              <T>Na kontaktoni</T>
             </Link>
             .
           </p>

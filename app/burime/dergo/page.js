@@ -8,6 +8,7 @@ import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
 import { FACULTIES } from "../../lib/material-options";
 import { RESOURCE_CATEGORIES } from "../../lib/resource-options";
+import { useT } from "../../components/Preferences";
 
 const initialForm = {
   url: "",
@@ -19,6 +20,7 @@ const initialForm = {
 };
 
 export default function DergoBurimPage() {
+  const t = useT();
   const router = useRouter();
   const [form, setForm] = useState(initialForm);
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -61,28 +63,28 @@ export default function DergoBurimPage() {
     <div className="page-shell">
       <div className="mx-auto max-w-2xl px-4 py-12">
         <header className="mb-8 text-center">
-          <p className="page-kicker mb-3">Burime shtesë</p>
-          <h1 className="page-title mb-3">Dërgo lidhje</h1>
+          <p className="page-kicker mb-3">{t("Burime shtesë")}</p>
+          <h1 className="page-title mb-3">{t("Dërgo lidhje")}</h1>
           <p className="page-subtitle">
-            Lidhja do të shqyrtohet nga moderatorët para se të shfaqet publikisht.
+            {t("Lidhja do të shqyrtohet nga moderatorët para se të shfaqet publikisht.")}
           </p>
         </header>
 
         {status === "success" ? (
           <div className="surface-card p-8 text-center">
-            <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-success-green" />
+            <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-success-text" />
             <h2 className="mb-3 text-2xl font-bold text-navy-900">
-              Lidhja u dërgua për moderim
+              {t("Lidhja u dërgua për moderim")}
             </h2>
             <p className="mb-6 text-gray-600">
-              Do të njoftoheni kur të aprovohet. Faleminderit për kontributin!
+              {t("Do të njoftoheni kur të aprovohet. Faleminderit për kontributin!")}
             </p>
             <div className="flex flex-col justify-center gap-3 sm:flex-row">
               <Link href="/burime" className="btn-primary">
-                Shiko burimet
+                {t("Shiko burimet")}
               </Link>
               <button type="button" onClick={() => setStatus("idle")} className="btn-outline">
-                Dërgo tjetër
+                {t("Dërgo tjetër")}
               </button>
             </div>
           </div>
@@ -104,7 +106,7 @@ export default function DergoBurimPage() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-navy-900">
-                Titulli <span className="text-burgundy-600">*</span>
+                {t("Titulli")} <span className="text-burgundy-600">*</span>
               </span>
               <input
                 required
@@ -116,7 +118,7 @@ export default function DergoBurimPage() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-navy-900">
-                Përshkrimi <span className="text-burgundy-600">*</span>
+                {t("Përshkrimi")} <span className="text-burgundy-600">*</span>
               </span>
               <textarea
                 required
@@ -126,13 +128,13 @@ export default function DergoBurimPage() {
                 value={form.description}
                 onChange={(e) => setField("description", e.target.value)}
                 className="input-srh"
-                placeholder="Çfarë përmban kjo lidhje dhe pse është e dobishme?"
+                placeholder={t("Çfarë përmban kjo lidhje dhe pse është e dobishme?")}
               />
             </label>
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-navy-900">
-                Kategoria <span className="text-burgundy-600">*</span>
+                {t("Kategoria")} <span className="text-burgundy-600">*</span>
               </span>
               <select
                 required
@@ -140,10 +142,10 @@ export default function DergoBurimPage() {
                 onChange={(e) => setField("category", e.target.value)}
                 className="input-srh"
               >
-                <option value="">Zgjidhni</option>
+                <option value="">{t("Zgjidhni")}</option>
                 {RESOURCE_CATEGORIES.map((category) => (
                   <option key={category.value} value={category.value}>
-                    {category.label}
+                    {t(category.label)}
                   </option>
                 ))}
               </select>
@@ -151,7 +153,7 @@ export default function DergoBurimPage() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-navy-900">
-                Fakulteti <span className="text-burgundy-600">*</span>
+                {t("Fakulteti")} <span className="text-burgundy-600">*</span>
               </span>
               <select
                 required
@@ -159,7 +161,7 @@ export default function DergoBurimPage() {
                 onChange={(e) => setField("faculty", e.target.value)}
                 className="input-srh"
               >
-                <option value="">Zgjidhni</option>
+                <option value="">{t("Zgjidhni")}</option>
                 {FACULTIES.map((faculty) => (
                   <option key={faculty.code} value={faculty.code}>
                     {faculty.name}
@@ -170,12 +172,12 @@ export default function DergoBurimPage() {
 
             <label className="block">
               <span className="mb-2 block text-sm font-semibold text-navy-900">
-                Lënda / kursi
+                {t("Lënda / kursi")}
               </span>
               <input
                 value={form.subject}
                 onChange={(e) => setField("subject", e.target.value)}
-                placeholder="p.sh. Algjebër Lineare"
+                placeholder={t("p.sh. Algjebër Lineare")}
                 className="input-srh"
               />
             </label>
@@ -188,16 +190,16 @@ export default function DergoBurimPage() {
                   onChange={(e) => setIsAnonymous(e.target.checked)}
                   className="h-4 w-4 accent-burgundy-600"
                 />
-                Dërgo si anonim
+                {t("Dërgo si anonim")}
               </label>
               <p className="mt-1.5 pl-7 text-xs text-gray-500">
-                Emri juaj nuk shfaqet publikisht dhe nuk përdoret në kërkim. Moderatorët e shohin për moderim.
+                {t("Emri juaj nuk shfaqet publikisht dhe nuk përdoret në kërkim. Moderatorët e shohin për moderim.")}
               </p>
             </div>
 
             {error && (
               <p className="rounded-xl border border-burgundy-600/20 bg-burgundy-50 p-4 text-sm font-semibold text-burgundy-600">
-                {error}
+                {t(error)}
               </p>
             )}
 
@@ -207,7 +209,7 @@ export default function DergoBurimPage() {
               className="btn-primary w-full text-base"
             >
               <Link2 className="h-5 w-5" />
-              {status === "submitting" ? "Duke dërguar..." : "Dërgo për moderim"}
+              {status === "submitting" ? t("Duke dërguar...") : t("Dërgo për moderim")}
             </button>
           </form>
         )}

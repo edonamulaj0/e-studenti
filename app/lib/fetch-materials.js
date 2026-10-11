@@ -54,23 +54,35 @@ export async function fetchMaterialsPage({
   }
 }
 
-export async function fetchAllMaterialsForBuild(limit = 500) {
-  const params = new URLSearchParams({
-    action: "materials",
-    page: "1",
-    limit: String(limit),
-  });
+/** The Worker caps `limit` at 100, so a full listing has to be paged. */
+const BUILD_PAGE_SIZE = 100;
+const BUILD_MAX_PAGES = 200;
 
-  try {
+/**
+ * Every published material, for generating pages and the sitemap at build time.
+ * Throws if the API cannot be read: a build made from a partial or empty list
+ * would silently ship a site without its material pages, and a failed build
+ * leaves the previous deployment running.
+ */
+export async function fetchAllMaterialsForBuild() {
+  const all = [];
+  for (let page = 1; page <= BUILD_MAX_PAGES; page += 1) {
+    const params = new URLSearchParams({
+      action: "materials",
+      page: String(page),
+      limit: String(BUILD_PAGE_SIZE),
+    });
     const res = await fetch(`${WORKER_URL}/?${params.toString()}`, {
       next: { revalidate: 3600 },
     });
-    if (!res.ok) return [];
+    if (!res.ok) {
+      throw new Error(`Could not list materials for the build: ${WORKER_URL} answered ${res.status}`);
+    }
     const data = await res.json();
-    return (data.materials || data.entries || []).map(sanitizeFetchedMaterial);
-  } catch {
-    return [];
+    all.push(...(data.materials || data.entries || []).map(sanitizeFetchedMaterial));
+    if (!data.pagination?.hasNextPage) break;
   }
+  return all;
 }
 
 export async function fetchMaterialBySlug(slug) {
@@ -86,6 +98,31 @@ export async function fetchMaterialBySlug(slug) {
     if (!res.ok) return null;
     const data = await res.json();
     return data.material || null;
+  } catch {
+    return null;
+  }
+}
+
+/** Every subject with its published-material count, for generating pages at build time. Throws if unreadable. */
+export async function fetchSubjectsForBuild() {
+  const res = await fetch(`${WORKER_URL}/?action=subjects`, { next: { revalidate: 3600 } });
+  if (!res.ok) {
+    throw new Error(`Could not list subjects for the build: ${WORKER_URL} answered ${res.status}`);
+  }
+  const data = await res.json();
+  return Array.isArray(data.subjects) ? data.subjects : [];
+}
+
+export async function fetchSubjectBySlug(slug) {
+  try {
+    const res = await fetch(
+      `${WORKER_URL}/?action=subject-public&slug=${encodeURIComponent(slug)}`,
+      { next: { revalidate: 300 } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.subject) return null;
+    return { subject: data.subject, materials: (data.materials || []).map(sanitizeFetchedMaterial) };
   } catch {
     return null;
   }
