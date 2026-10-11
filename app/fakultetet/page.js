@@ -170,7 +170,7 @@ export default function Faculties() {
   return (
     <div className="page-shell">
       <div className="section-shell">
-        <div className="mb-8 flex items-center gap-2 text-sm font-semibold text-gray-400">
+        <div className="mb-8 flex items-center gap-2 text-sm font-semibold text-gray-500">
           <Link href="/" className="hover:text-burgundy-600">
             Ballina
           </Link>
@@ -222,7 +222,7 @@ export default function Faculties() {
 
               <div className="mb-5 text-base text-gray-600">
                 <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5">
-                  <BookOpen className="w-5 h-5 text-success-green shrink-0" />
+                  <BookOpen className="w-5 h-5 text-success-text shrink-0" />
                   <span className="font-semibold">
                     {faculty.departments.length} departamente
                   </span>
@@ -230,7 +230,7 @@ export default function Faculties() {
               </div>
 
               <div className="mb-6">
-                <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-500">
                   Departamentet
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-600">
@@ -250,7 +250,7 @@ export default function Faculties() {
               </div>
 
               <div className="pointer-events-none relative z-20 mt-auto flex items-center justify-between border-t border-gray-200/70 pt-5">
-                <span className="text-sm font-semibold text-gray-400">
+                <span className="text-sm font-semibold text-gray-500">
                   {faculty.departments.length} programe
                 </span>
                 <span className="btn-primary min-h-[42px] px-4 py-2 group-hover:bg-burgundy-500">

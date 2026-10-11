@@ -341,7 +341,7 @@ function ModerimPage() {
     }`;
 
   return (
-    <div className="min-h-screen bg-srh-paper px-4 py-12">
+    <div className="bg-srh-paper px-4 py-12">
       <div className="container mx-auto max-w-5xl">
 
         {/* Header */}
@@ -361,7 +361,7 @@ function ModerimPage() {
             <PackageCheck className="h-4 w-4" />
             Në pritje
             {pending.length > 0 && (
-              <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-amber">
+              <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-text">
                 {pending.length}
               </span>
             )}
@@ -370,7 +370,7 @@ function ModerimPage() {
             <ShieldAlert className="h-4 w-4" />
             Raportet
             {reports.length > 0 && (
-              <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-amber">
+              <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-text">
                 {reports.length}
               </span>
             )}
@@ -397,7 +397,7 @@ function ModerimPage() {
             <Link2 className="h-4 w-4" />
             Burime
             {resourceLinks.length > 0 && tab !== "burime" && (
-              <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-amber">
+              <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-text">
                 {resourceLinks.length}
               </span>
             )}
@@ -422,7 +422,7 @@ function ModerimPage() {
               </div>
             ) : reports.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
-                <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-green" />
+                <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-text" />
                 <h2 className="text-xl font-bold text-navy-900">Asnjë raport i hapur</h2>
                 <p className="mt-2 text-gray-500">Të gjitha raportet janë trajtuar.</p>
               </div>
@@ -436,8 +436,8 @@ function ModerimPage() {
                     <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                       <div className="min-w-0 flex-1">
                         <div className="mb-3 flex items-center gap-2">
-                          <AlertTriangle className="h-5 w-5 shrink-0 text-warning-amber" />
-                          <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                          <AlertTriangle className="h-5 w-5 shrink-0 text-warning-text" />
+                          <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                             Raport #{report.id} · {formatDate(report.created_at)}
                           </span>
                         </div>
@@ -469,13 +469,13 @@ function ModerimPage() {
 
                         <div className="grid gap-2 text-sm md:grid-cols-2">
                           <div>
-                            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                            <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                               Arsyeja
                             </span>
                             <p className="mt-1 font-semibold text-navy-900">{report.reason}</p>
                           </div>
                           <div>
-                            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                            <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                               Raportues
                             </span>
                             <p className="mt-1 font-semibold text-navy-900">
@@ -485,7 +485,7 @@ function ModerimPage() {
                                 : "Anonim"}
                             </p>
                             {report.reporter_email && (
-                              <p className="text-xs text-gray-400">{report.reporter_email}</p>
+                              <p className="text-xs text-gray-500">{report.reporter_email}</p>
                             )}
                           </div>
                         </div>
@@ -524,7 +524,7 @@ function ModerimPage() {
           <>
             {/* Search */}
             <div className="relative mb-4">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 value={search}
@@ -564,7 +564,7 @@ function ModerimPage() {
                           <span className="rounded-lg bg-navy-100/60 px-2 py-0.5 text-xs font-bold text-navy-700">
                             #{m.id}
                           </span>
-                          <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                          <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                             {m.type}
                           </span>
                         </div>
@@ -573,9 +573,9 @@ function ModerimPage() {
                           {getFacultyName(m.faculty)}
                           {m.subject && m.subject !== "//" ? ` · ${m.subject}` : ""}
                         </p>
-                        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-400">
+                        <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
                           {m.pending_owner_email ? (
-                            <span className="inline-flex items-center gap-1 rounded-md bg-warning-amber/15 px-2 py-0.5 font-semibold text-warning-amber">
+                            <span className="inline-flex items-center gap-1 rounded-md bg-warning-amber/15 px-2 py-0.5 font-semibold text-warning-text">
                               Në pritje — {m.pending_owner_email}
                             </span>
                           ) : (
@@ -697,7 +697,7 @@ function ModerimPage() {
               </div>
             ) : pending.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
-                <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-green" />
+                <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-text" />
                 <h2 className="text-xl font-bold text-navy-900">Asnjë material në pritje</h2>
                 <p className="mt-2 text-gray-500">Të gjitha ngarkimet janë shqyrtuar.</p>
               </div>
@@ -711,7 +711,7 @@ function ModerimPage() {
                       key={item.id}
                       className="rounded-2xl border border-warning-amber/30 bg-white p-6 shadow-sm"
                     >
-                      <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                      <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                         #{item.id} · {formatDate(item.created_at)} ·{" "}
                         {item.file_type?.toUpperCase()}
                       </p>
@@ -787,7 +787,7 @@ function ModerimPage() {
               </div>
             ) : messages.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
-                <Mail className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                <Mail className="mx-auto mb-4 h-12 w-12 text-gray-500" />
                 <h2 className="text-xl font-bold text-navy-900">Asnjë mesazh</h2>
                 <p className="mt-2 text-gray-500">Mesazhet nga formulari i kontaktit shfaqen këtu.</p>
               </div>
@@ -795,7 +795,7 @@ function ModerimPage() {
               <div className="grid gap-4">
                 {messages.map((item) => (
                   <article key={item.id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
-                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                       #{item.id} · {formatDate(item.created_at)}
                     </p>
                     <h2 className="mt-1 font-bold leading-snug text-navy-900">{item.subject}</h2>
@@ -848,7 +848,7 @@ function ModerimPage() {
               </div>
             ) : resourceLinks.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
-                <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-green" />
+                <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-text" />
                 <h2 className="text-xl font-bold text-navy-900">Asnjë lidhje në pritje</h2>
                 <p className="mt-2 text-gray-500">Të gjitha dërgesat janë trajtuar.</p>
               </div>
@@ -894,7 +894,7 @@ function ModerimPage() {
                           </div>
                           <div className="flex flex-wrap gap-2 text-xs">
                             {flags.was_shortened && (
-                              <span className="rounded-full bg-warning-amber/15 px-2.5 py-1 font-semibold text-warning-amber">
+                              <span className="rounded-full bg-warning-amber/15 px-2.5 py-1 font-semibold text-warning-text">
                                 URL e shkurtuar
                               </span>
                             )}
@@ -904,7 +904,7 @@ function ModerimPage() {
                               </span>
                             )}
                             {safeBrowsing.checked && !hasThreats && (
-                              <span className="rounded-full bg-success-green/10 px-2.5 py-1 font-semibold text-success-green">
+                              <span className="rounded-full bg-success-green/10 px-2.5 py-1 font-semibold text-success-text">
                                 Safe Browsing: pa alarme
                               </span>
                             )}

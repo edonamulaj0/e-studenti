@@ -27,7 +27,7 @@ export default function ExternalLinkGate({ href, domain, children, className = "
           onClick={(e) => e.stopPropagation()}
         >
           <div className="mb-4 flex items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-warning-amber/15 text-warning-amber">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-warning-amber/15 text-warning-text">
               <AlertTriangle className="h-5 w-5" />
             </span>
             <div>

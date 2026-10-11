@@ -324,7 +324,7 @@ export default function NgarkoPage() {
   const pendingCount = rows.filter((r) => r.status === "done" && r.resultStatus === "pending").length;
 
   return (
-    <div className="min-h-screen bg-srh-paper px-4 py-12">
+    <div className="bg-srh-paper px-4 py-12">
       <div className="mx-auto max-w-4xl">
         <header className="mb-8 text-center">
           <h1 className="font-playfair text-4xl md:text-5xl font-black text-srh-navy">Ngarko materiale</h1>
@@ -372,7 +372,7 @@ export default function NgarkoPage() {
           >
             <Upload className="mb-3 h-12 w-12 text-srh-crimson" aria-hidden="true" />
             <span className="font-bold text-srh-navy">Klikoni ose tërhiqni skedarët këtu</span>
-            <span id="file-hint" className="mt-2 text-sm text-srh-navy/60">
+            <span id="file-hint" className="mt-2 text-sm text-srh-navy/70">
               {ACCEPT_ATTRIBUTE.replace(/,/g, ", ")}
             </span>
             {/* Visually hidden, not display:none, so it stays in the tab order. */}
@@ -410,7 +410,7 @@ export default function NgarkoPage() {
               <h2 id="defaults-heading" className="font-bold text-srh-navy">
                 Të dhënat e përbashkëta
               </h2>
-              <p className="mt-1 text-sm text-srh-navy/60">
+              <p className="mt-1 text-sm text-srh-navy/70">
                 Vlen për të gjithë skedarët; mund ta ndryshoni për secilin më poshtë.
               </p>
               <div className="mt-4 grid gap-4 md:grid-cols-3">
@@ -495,7 +495,7 @@ export default function NgarkoPage() {
                 />
                 Publiko si anonim
               </label>
-              <p className="mt-1 pl-7 text-xs text-srh-navy/60">
+              <p className="mt-1 pl-7 text-xs text-srh-navy/70">
                 Emri juaj nuk do të shfaqet publikisht, por mbetet i dukshëm për moderatorët në rast raportimi.
               </p>
             </section>
@@ -515,7 +515,7 @@ export default function NgarkoPage() {
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate font-semibold text-srh-navy">{row.file.name}</p>
-                        <p className="text-xs text-srh-navy/60">{formatMegabytes(row.file.size)}MB</p>
+                        <p className="text-xs text-srh-navy/70">{formatMegabytes(row.file.size)}MB</p>
                       </div>
                       <div className="flex items-center gap-2">
                         <StatusBadge row={row} />
@@ -541,7 +541,7 @@ export default function NgarkoPage() {
                             type="button"
                             onClick={() => removeRow(row.id)}
                             aria-label={`Hiq ${row.file.name}`}
-                            className="rounded-lg p-2 text-srh-navy/60 hover:bg-srh-blush hover:text-srh-crimson"
+                            className="rounded-lg p-2 text-srh-navy/70 hover:bg-srh-blush hover:text-srh-crimson"
                           >
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
                           </button>
@@ -735,9 +735,9 @@ function Field({ label, error, children }) {
 
 const STATUS_LABELS = {
   ready: { text: "Gati", className: "bg-srh-cream text-srh-navy" },
-  queued: { text: "Në radhë", className: "bg-info-blue/10 text-info-blue" },
-  uploading: { text: "Duke u ngarkuar", className: "bg-info-blue/10 text-info-blue" },
-  done: { text: "U ngarkua", className: "bg-success-green/10 text-success-green" },
+  queued: { text: "Në radhë", className: "bg-info-blue/10 text-info-text" },
+  uploading: { text: "Duke u ngarkuar", className: "bg-info-blue/10 text-info-text" },
+  done: { text: "U ngarkua", className: "bg-success-green/10 text-success-text" },
   failed: { text: "Dështoi", className: "bg-burgundy-50 text-burgundy-600" },
   skipped: { text: "U kapërcye", className: "bg-srh-cream text-srh-navy/70" },
 };
@@ -746,7 +746,7 @@ function StatusBadge({ row }) {
   let label = STATUS_LABELS[row.status] || STATUS_LABELS.ready;
   if (row.status === "ready" && row.hashing) label = { text: "Duke kontrolluar…", className: label.className };
   if (row.status === "done" && row.resultStatus === "pending") {
-    label = { text: "Në pritje të shqyrtimit", className: "bg-warning-amber/15 text-warning-amber" };
+    label = { text: "Në pritje të shqyrtimit", className: "bg-warning-amber/15 text-warning-text" };
   }
   return (
     <span className={`rounded-full px-3 py-1 text-xs font-bold ${label.className}`}>{label.text}</span>

@@ -15,6 +15,7 @@ module.exports = {
           100: "rgb(var(--navy-100-rgb) / <alpha-value>)",
         },
         burgundy: {
+          700: "#5e1621",
           600: "rgb(var(--burgundy-600-rgb) / <alpha-value>)",
           500: "rgb(var(--burgundy-500-rgb) / <alpha-value>)",
           50: "rgb(var(--burgundy-50-rgb) / <alpha-value>)",
@@ -28,6 +29,12 @@ module.exports = {
         "success-green": "rgb(var(--success-green-rgb) / <alpha-value>)",
         "warning-amber": "rgb(var(--warning-amber-rgb) / <alpha-value>)",
         "info-blue": "rgb(var(--info-blue-rgb) / <alpha-value>)",
+        // Darker siblings of the three status colours, for TEXT. The base
+        // colours are 2.0-3.6:1 on light backgrounds (AA needs 4.5:1); these
+        // are 5.3-6.9:1. Keep the base colours for fills, borders and tints.
+        "success-text": "#047857",
+        "warning-text": "#92400e",
+        "info-text": "#1d4ed8",
         srh: {
           crimson: "rgb(var(--burgundy-600-rgb) / <alpha-value>)",
           navy: "rgb(var(--navy-900-rgb) / <alpha-value>)",

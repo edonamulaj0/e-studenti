@@ -71,9 +71,19 @@ export default function RootLayout({ children }) {
           crossOrigin="anonymous"
         />
       </head>
-      <body className="font-montserrat text-base antialiased">
+      <body className="flex min-h-dvh flex-col font-montserrat text-base antialiased">
+        <a
+          href="#main"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:rounded-xl focus:bg-navy-900 focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
+        >
+          Kalo te përmbajtja
+        </a>
         <Navbar />
-        <main className="min-h-screen">{children}</main>
+        {/* flex-1: short pages end at the bottom of the viewport instead of
+            being padded to a full screen, so the footer no longer forces a scrollbar */}
+        <main id="main" tabIndex={-1} className="flex-1 outline-none">
+          {children}
+        </main>
         <Footer />
       </body>
     </html>

@@ -64,13 +64,13 @@ export default function MaterialDetail({ material, slug }) {
 
           <dl className="mb-8 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl bg-navy-100/40 p-4">
-              <dt className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+              <dt className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                 Lënda
               </dt>
               <dd className="mt-1 font-semibold text-navy-900">{material.subject}</dd>
             </div>
             <div className="rounded-2xl bg-white p-4 ring-1 ring-gray-100">
-              <dt className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+              <dt className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                 Profesor/i
               </dt>
               <dd className="mt-1 font-semibold text-navy-900">
@@ -78,7 +78,7 @@ export default function MaterialDetail({ material, slug }) {
               </dd>
             </div>
             <div className="rounded-2xl bg-white p-4 ring-1 ring-gray-100">
-              <dt className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+              <dt className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                 Ngarkuar nga
               </dt>
               <dd className="mt-1 font-semibold text-navy-900">
@@ -86,7 +86,7 @@ export default function MaterialDetail({ material, slug }) {
               </dd>
             </div>
             <div className="rounded-2xl bg-white p-4 ring-1 ring-gray-100">
-              <dt className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+              <dt className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                 Formati
               </dt>
               <dd className="mt-1 font-semibold uppercase text-navy-900">

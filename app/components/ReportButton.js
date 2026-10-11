@@ -52,7 +52,7 @@ export default function ReportButton({ materialId, materialTitle, materialUrl })
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-sm font-semibold text-gray-400 underline decoration-dotted underline-offset-4 transition-colors hover:text-burgundy-600"
+        className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 underline decoration-dotted underline-offset-4 transition-colors hover:text-burgundy-600"
       >
         <Flag className="w-4 h-4" />
         Raporto
@@ -68,7 +68,7 @@ export default function ReportButton({ materialId, materialTitle, materialUrl })
         >
             <div className="mb-5 flex items-start justify-between gap-4">
               <div className="min-w-0">
-                <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-400">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-500">
                   Raporto material
                 </p>
                 <h2 id="report-modal-title" className="truncate text-lg font-bold leading-snug text-navy-900">
@@ -78,7 +78,7 @@ export default function ReportButton({ materialId, materialTitle, materialUrl })
               <button
                 type="button"
                 onClick={close}
-                className="shrink-0 rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-100 hover:text-gray-600"
+                className="shrink-0 rounded-xl p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600"
                 aria-label="Mbyll"
               >
                 <X className="h-5 w-5" />
@@ -99,7 +99,7 @@ export default function ReportButton({ materialId, materialTitle, materialUrl })
 
             {status === "done" ? (
               <div className="rounded-xl bg-success-green/10 p-5 text-center">
-                <p className="font-bold text-success-green">
+                <p className="font-bold text-success-text">
                   Faleminderit! Raporti u dërgua.
                 </p>
                 <button

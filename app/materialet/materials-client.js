@@ -35,20 +35,20 @@ const TYPE_TONES = [
   {
     match: "ligjerata",
     card: "border-info-blue/35 hover:border-info-blue/60",
-    icon: "bg-info-blue/10 text-info-blue",
-    chip: "bg-info-blue/10 text-info-blue",
+    icon: "bg-info-blue/10 text-info-text",
+    chip: "bg-info-blue/10 text-info-text",
   },
   {
     match: "afat",
     card: "border-warning-amber/45 hover:border-warning-amber/70",
-    icon: "bg-warning-amber/10 text-warning-amber",
-    chip: "bg-warning-amber/10 text-warning-amber",
+    icon: "bg-warning-amber/10 text-warning-text",
+    chip: "bg-warning-amber/10 text-warning-text",
   },
   {
     match: "projekt",
     card: "border-success-green/35 hover:border-success-green/60",
-    icon: "bg-success-green/10 text-success-green",
-    chip: "bg-success-green/10 text-success-green",
+    icon: "bg-success-green/10 text-success-text",
+    chip: "bg-success-green/10 text-success-text",
   },
   {
     match: "lib",
@@ -126,6 +126,7 @@ export default function MaterialsClient({ initialData = null }) {
   const [availableTypeCounts, setAvailableTypeCounts] = useState(
     initialData?.typeCounts || {}
   );
+  const [filtersOpen, setFiltersOpen] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [selectedMaterial, setSelectedMaterial] = useState(null);
@@ -297,14 +298,14 @@ export default function MaterialsClient({ initialData = null }) {
 
       <div className="mb-6 grid gap-3 text-sm">
         <div className="rounded-2xl bg-navy-100/40 p-4">
-          <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+          <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
             Lënda
           </span>
           <p className="mt-1 font-semibold text-navy-900">{material.subject}</p>
         </div>
         <div>
           <div className="rounded-2xl bg-white p-4">
-            <span className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+            <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
               Autor/e
             </span>
             <p className="mt-1 font-semibold text-navy-900">
@@ -323,7 +324,7 @@ export default function MaterialsClient({ initialData = null }) {
           />
         </div>
         {material.submittedBy?.name && (
-          <span className="truncate text-right text-sm text-gray-400">
+          <span className="truncate text-right text-sm text-gray-500">
             Dërguar nga: {material.submittedBy.name}
           </span>
         )}
@@ -378,7 +379,23 @@ export default function MaterialsClient({ initialData = null }) {
   };
 
   if (loading && !hasLoaded) {
-    return null;
+    return (
+      <div className="page-shell" role="status" aria-busy="true">
+        <span className="sr-only">Duke ngarkuar materialet…</span>
+        <div className="section-shell" aria-hidden="true">
+          <div className="mb-10 max-w-3xl space-y-4">
+            <div className="h-8 w-32 rounded-full bg-gray-200 motion-safe:animate-pulse" />
+            <div className="h-12 w-2/3 rounded-lg bg-gray-200 motion-safe:animate-pulse" />
+            <div className="h-5 w-full max-w-xl rounded-lg bg-gray-200 motion-safe:animate-pulse" />
+          </div>
+          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
+            {[0, 1, 2, 3, 4, 5].map((i) => (
+              <div key={i} className="h-72 rounded-3xl bg-gray-200/70 motion-safe:animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (error && !hasLoaded) {
@@ -432,11 +449,21 @@ export default function MaterialsClient({ initialData = null }) {
           className="sticky top-24 z-20 mb-8 py-3 backdrop-blur"
         >
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
+            <button
+              type="button"
+              onClick={() => setFiltersOpen((open) => !open)}
+              aria-expanded={filtersOpen}
+              aria-controls="material-filters"
+              className="btn-outline min-h-[44px] justify-between md:hidden"
+            >
+              {filtersOpen ? "Fshih filtrat" : "Filtra dhe renditja"}
+            </button>
             <div className="relative w-full lg:max-w-[200px] lg:shrink-0">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 placeholder="Kërko…"
+                aria-label="Kërko materiale"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && runSearch()}
@@ -447,7 +474,8 @@ export default function MaterialsClient({ initialData = null }) {
             <select
               value={selectedFaculty}
               onChange={(e) => setSelectedFaculty(e.target.value)}
-              className="input-srh hidden min-h-[44px] min-w-0 flex-1 text-sm md:block"
+              className={`input-srh min-h-[44px] min-w-0 flex-1 text-sm md:block ${filtersOpen ? "block" : "hidden"}`}
+              aria-label="Fakulteti"
             >
               <option value="">Të gjitha fakultetet</option>
               {FACULTIES.map((faculty) => (
@@ -460,7 +488,8 @@ export default function MaterialsClient({ initialData = null }) {
             <select
               value={selectedType}
               onChange={(e) => setSelectedType(e.target.value)}
-              className="input-srh hidden min-h-[44px] min-w-0 flex-1 text-sm md:block"
+              className={`input-srh min-h-[44px] min-w-0 flex-1 text-sm md:block ${filtersOpen ? "block" : "hidden"}`}
+              aria-label="Lloji i materialit"
             >
               <option value="">Të gjitha llojet</option>
               {typeOptions.map((t) => (
@@ -473,7 +502,8 @@ export default function MaterialsClient({ initialData = null }) {
             <select
               value={selectedStudyLevel}
               onChange={(e) => setSelectedStudyLevel(e.target.value)}
-              className="input-srh hidden min-h-[44px] min-w-0 flex-1 text-sm md:block"
+              className={`input-srh min-h-[44px] min-w-0 flex-1 text-sm md:block ${filtersOpen ? "block" : "hidden"}`}
+              aria-label="Niveli i studimit"
             >
               <option value="">Të gjitha nivelet</option>
               {STUDY_LEVELS.map((level) => (
@@ -486,7 +516,8 @@ export default function MaterialsClient({ initialData = null }) {
             <select
               value={selectedSort}
               onChange={(e) => setSelectedSort(e.target.value)}
-              className="input-srh hidden min-h-[44px] min-w-0 flex-1 text-sm md:block"
+              className={`input-srh min-h-[44px] min-w-0 flex-1 text-sm md:block ${filtersOpen ? "block" : "hidden"}`}
+              aria-label="Rendit sipas"
             >
               <option value="newest">Më të rejat</option>
               <option value="views">Më të shikuarat</option>
@@ -496,7 +527,7 @@ export default function MaterialsClient({ initialData = null }) {
             <button
               type="button"
               onClick={runSearch}
-              className="btn-primary hidden min-h-[44px] shrink-0 px-5 py-2 text-sm md:inline-flex"
+              className={`btn-primary min-h-[44px] shrink-0 px-5 py-2 text-sm md:inline-flex ${filtersOpen ? "inline-flex" : "hidden"}`}
             >
               <Search className="h-4 w-4" />
               Kërko
@@ -505,6 +536,9 @@ export default function MaterialsClient({ initialData = null }) {
         </div>
 
         <div id="material-results" className="scroll-mt-28">
+          <p className="sr-only" role="status" aria-live="polite">
+            {loading ? "Duke përditësuar rezultatet…" : `${pagination.total} materiale u gjetën.`}
+          </p>
           {loading && hasLoaded && (
             <div className="mb-6 rounded-2xl border border-gray-200 bg-white/80 p-4 text-sm font-semibold text-gray-600 shadow-sm">
               Duke përditësuar rezultatet...
@@ -517,7 +551,7 @@ export default function MaterialsClient({ initialData = null }) {
           )}
           {filteredMaterials.length === 0 ? (
             <div className="surface-card mx-auto max-w-xl p-10 text-center">
-              <FileText className="mx-auto mb-6 h-16 w-16 text-gray-400" />
+              <FileText className="mx-auto mb-6 h-16 w-16 text-gray-500" />
               <h3 className="mb-2 text-2xl font-semibold text-navy-900">
                 Nuk ka të dhëna
               </h3>

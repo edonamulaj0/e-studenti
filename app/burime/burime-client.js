@@ -139,7 +139,7 @@ export default function BurimeClient({ initialData = null }) {
         <div className="sticky top-24 z-20 mb-8 py-3 backdrop-blur">
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
             <div className="relative md:col-span-2 xl:col-span-2">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
                 placeholder="Kërko titull, përshkrim, domen…"
@@ -196,7 +196,7 @@ export default function BurimeClient({ initialData = null }) {
 
         {links.length === 0 ? (
           <div className="surface-card mx-auto max-w-xl p-10 text-center">
-            <Link2 className="mx-auto mb-6 h-16 w-16 text-gray-400" />
+            <Link2 className="mx-auto mb-6 h-16 w-16 text-gray-500" />
             <h3 className="mb-2 text-2xl font-semibold text-navy-900">
               Nuk ka lidhje të aprovuara
             </h3>
@@ -231,7 +231,7 @@ export default function BurimeClient({ initialData = null }) {
                     {link.resolved_domain}
                   </span>
                   {link.submitter_name && (
-                    <span className="truncate text-gray-400">
+                    <span className="truncate text-gray-500">
                       nga {link.submitter_name}
                     </span>
                   )}

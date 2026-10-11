@@ -462,13 +462,13 @@ export default function InformacionePage() {
                     onChange={(e) => setMessage(e.target.value.slice(0, 2000))}
                     className="input-srh min-h-[160px] resize-y py-3"
                   />
-                  <span className="mt-1 block text-right text-xs text-gray-400">
+                  <span className="mt-1 block text-right text-xs text-gray-500">
                     {message.length}/2000
                   </span>
                 </label>
 
                 {contactStatus === "success" && (
-                  <p className="rounded-2xl border border-success-green/20 bg-success-green/10 p-4 font-semibold text-success-green">
+                  <p className="rounded-2xl border border-success-green/20 bg-success-green/10 p-4 font-semibold text-success-text">
                     Mesazhi juaj u pranua. Për përgjigje direkte, na shkruani në Instagram: @estudenti.hub.
                   </p>
                 )}

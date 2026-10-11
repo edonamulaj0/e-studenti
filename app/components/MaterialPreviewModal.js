@@ -192,7 +192,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
             >
               {material.title}
             </h2>
-            <p className="mt-0.5 text-xs text-srh-navy/60">
+            <p className="mt-0.5 text-xs text-srh-navy/70">
               {material.fileType?.toUpperCase() || "PDF"}
             </p>
           </div>
@@ -255,7 +255,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
 
           {status === "unsupported" && (
             <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-              <FileText className="mb-4 h-12 w-12 text-srh-navy/40" />
+              <FileText className="mb-4 h-12 w-12 text-srh-navy/70" />
               <p className="max-w-md text-srh-navy/70">
                 Ky format skedari nuk mund të shfaqet online. Ju lutemi hapeni në
                 skedë të re ose shkarkojeni për ta parë.

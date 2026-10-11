@@ -18,7 +18,7 @@ export default function Error({ error, reset }) {
       <button
         type="button"
         onClick={() => reset()}
-        className="px-6 py-3 bg-srh-crimson text-white rounded-lg font-semibold hover:bg-[#5e1621]"
+        className="px-6 py-3 bg-srh-crimson text-white rounded-lg font-semibold hover:bg-burgundy-700"
       >
         Provo përsëri
       </button>

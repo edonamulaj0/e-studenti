@@ -40,15 +40,15 @@ function StatCard({ icon: Icon, label, value, tone = "navy" }) {
   const tones = {
     navy: "bg-navy-100 text-navy-800",
     burgundy: "bg-burgundy-50 text-burgundy-600",
-    blue: "bg-info-blue/10 text-info-blue",
-    green: "bg-success-green/10 text-success-green",
+    blue: "bg-info-blue/10 text-info-text",
+    green: "bg-success-green/10 text-success-text",
   };
   return (
     <div className="surface-card p-6">
       <div className={`mb-4 inline-flex h-12 w-12 items-center justify-center rounded-2xl ${tones[tone]}`}>
         <Icon className="h-6 w-6" aria-hidden />
       </div>
-      <p className="text-sm font-semibold uppercase tracking-widest text-gray-400">{label}</p>
+      <p className="text-sm font-semibold uppercase tracking-widest text-gray-500">{label}</p>
       <p className="mt-2 font-display text-3xl font-bold text-navy-900">
         {formatStatCount(value ?? 0)}
       </p>
@@ -334,7 +334,7 @@ export default function StatisticsClient() {
                             {getFacultyName(material.faculty)}
                           </p>
                         </div>
-                        <span className="shrink-0 text-sm font-semibold text-info-blue">
+                        <span className="shrink-0 text-sm font-semibold text-info-text">
                           {formatStatCount(material.view_count)} shik.
                         </span>
                       </div>
@@ -376,7 +376,7 @@ export default function StatisticsClient() {
           )}
 
           {payload?.computed_at && (
-            <p className="text-center text-xs text-gray-400">
+            <p className="text-center text-xs text-gray-500">
               Përditësuar: {new Date(payload.computed_at).toLocaleString("sq-AL")}
             </p>
           )}

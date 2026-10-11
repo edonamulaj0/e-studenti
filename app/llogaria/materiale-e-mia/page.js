@@ -30,7 +30,7 @@ function normalizeMaterial(material) {
 const STATUS_BADGES = {
   pending: {
     label: "Në pritje të shqyrtimit",
-    className: "bg-warning-amber/15 text-warning-amber",
+    className: "bg-warning-amber/15 text-warning-text",
   },
   rejected: {
     label: "Nuk u aprovua",
@@ -147,7 +147,7 @@ function MaterialeEMiaPage() {
   };
 
   return (
-    <div className="min-h-screen bg-srh-paper px-4 py-12">
+    <div className="bg-srh-paper px-4 py-12">
       <div className="container mx-auto max-w-6xl">
         <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
@@ -162,7 +162,7 @@ function MaterialeEMiaPage() {
             {user?.is_moderator && (
               <Link
                 href="/llogaria/moderim"
-                className="inline-flex items-center gap-2 rounded-xl border-2 border-warning-amber/60 px-5 py-3 font-bold text-warning-amber hover:bg-warning-amber/10"
+                className="inline-flex items-center gap-2 rounded-xl border-2 border-warning-amber/60 px-5 py-3 font-bold text-warning-text hover:bg-warning-amber/10"
               >
                 <ShieldAlert className="h-5 w-5" />
                 Moderim
@@ -170,7 +170,7 @@ function MaterialeEMiaPage() {
             )}
             <Link
               href="/llogaria/ngarko"
-              className="inline-flex items-center gap-2 rounded-xl bg-srh-crimson px-5 py-3 font-bold text-white hover:bg-[#5e1621]"
+              className="inline-flex items-center gap-2 rounded-xl bg-srh-crimson px-5 py-3 font-bold text-white hover:bg-burgundy-700"
             >
               <Plus className="h-5 w-5" />
               Shto material të ri
@@ -188,8 +188,8 @@ function MaterialeEMiaPage() {
 
         {linkedCount > 0 && (
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-success-green/30 bg-success-green/10 p-4">
-            <PackageCheck className="mt-0.5 h-5 w-5 shrink-0 text-success-green" />
-            <p className="text-sm font-semibold text-success-green">
+            <PackageCheck className="mt-0.5 h-5 w-5 shrink-0 text-success-text" />
+            <p className="text-sm font-semibold text-success-text">
               Kemi gjetur {linkedCount} {linkedCount === 1 ? "material" : "materiale"} që keni ndarë më parë —{" "}
               tani {linkedCount === 1 ? "është" : "janë"} në llogarinë tuaj.
             </p>
@@ -247,11 +247,11 @@ function MaterialeEMiaPage() {
                     ridërguar për shqyrtim.
                   </p>
                 )}
-                <p className="mt-2 text-sm text-srh-navy/60">
+                <p className="mt-2 text-sm text-srh-navy/70">
                   {getFacultyName(material.faculty)} · {material.subject} · {material.type}
                 </p>
                 {(material.view_count > 0 || material.download_count > 0) && (
-                  <p className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-srh-navy/55">
+                  <p className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-srh-navy/70">
                     {material.view_count > 0 && (
                       <span className="inline-flex items-center gap-1">
                         <Eye className="h-3.5 w-3.5" aria-hidden />
@@ -269,7 +269,7 @@ function MaterialeEMiaPage() {
                 <div className="mt-5 flex gap-3">
                   <Link
                     href={`/llogaria/ndrysho?id=${material.id}`}
-                    className="rounded-xl bg-srh-crimson px-4 py-2 font-bold text-white hover:bg-[#5e1621]"
+                    className="rounded-xl bg-srh-crimson px-4 py-2 font-bold text-white hover:bg-burgundy-700"
                   >
                     Ndrysho
                   </Link>

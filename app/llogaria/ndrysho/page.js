@@ -12,7 +12,7 @@ export default function NdryshoMaterialQueryPage() {
 
   if (!id) {
     return (
-      <div className="min-h-screen bg-srh-paper px-4 py-20 text-center">
+      <div className="bg-srh-paper px-4 py-20 text-center">
         <h1 className="font-playfair text-3xl font-bold text-srh-navy">
           Duke ngarkuar materialin...
         </h1>

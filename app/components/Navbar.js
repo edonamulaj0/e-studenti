@@ -1,9 +1,10 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { fetchCurrentUser } from "../lib/auth";
+import { useFocusTrap } from "../lib/use-focus-trap";
 import ViberIcon, { VIBER_URL } from "./ViberIcon";
 
 const navItems = [
@@ -21,6 +22,11 @@ export default function Navbar() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const pathname = usePathname();
+  const menuRef = useRef(null);
+
+  // Mobile menu behaves like a dialog: focus moves in, Tab stays inside,
+  // Escape closes it, and focus returns to the button that opened it.
+  useFocusTrap(isOpen, menuRef, () => setIsOpen(false));
 
   useEffect(() => {
     const syncAuth = () => {
@@ -80,6 +86,7 @@ export default function Navbar() {
 
   return (
     <nav
+      aria-label="Kryesore"
       className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
         isScrolled
           ? "border-gray-200/80 bg-cream-50/88 shadow-sm backdrop-blur-xl"
@@ -105,7 +112,7 @@ export default function Navbar() {
               <span className="block font-display text-2xl md:text-3xl font-bold tracking-tight">
                 E-Studenti
               </span>
-              <span className="hidden md:block text-[10px] font-semibold tracking-widest text-gray-400">
+              <span className="hidden md:block text-[10px] font-semibold tracking-widest text-gray-500">
                 NGA KOMUNITETI, PËR ÇDO STUDENT.
               </span>
             </span>
@@ -149,7 +156,7 @@ export default function Navbar() {
           <button
             onClick={() => setIsOpen(!isOpen)}
             className="absolute right-0 top-1/2 z-[80] -translate-y-1/2 rounded-xl p-2.5 text-navy-900 transition-colors hover:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy-600/15 md:hidden"
-            aria-label="Toggle menu"
+            aria-label={isOpen ? "Mbyll menunë" : "Hap menunë"}
             aria-expanded={isOpen}
             aria-controls="mobile-navigation"
           >
@@ -160,9 +167,15 @@ export default function Navbar() {
       {isOpen && (
         <div
           id="mobile-navigation"
+          ref={menuRef}
           className="fixed inset-0 z-[70] flex h-dvh items-end bg-navy-900/30 px-4 pb-4 backdrop-blur-sm md:hidden"
         >
-          <div className="mx-auto w-full max-w-md rounded-[1.75rem] border border-gray-200 bg-cream-50 p-4 shadow-xl">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menyja"
+            className="mx-auto w-full max-w-md rounded-[1.75rem] border border-gray-200 bg-cream-50 p-4 shadow-xl"
+          >
             <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-gray-200" />
             <div className="flex flex-col gap-2">
             {mobileNavItems.map((item) => (
