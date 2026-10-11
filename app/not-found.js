@@ -1,10 +1,28 @@
 "use client";
 
-import { Home, RefreshCw, AlertTriangle } from "lucide-react";
+import { Home, RefreshCw, AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
+import MaterialDetail from "./components/MaterialDetail";
+import { useLateMaterial } from "./lib/use-late-material";
 
 export default function NotFound() {
   const [isLoading, setIsLoading] = useState(false);
+  const late = useLateMaterial();
+
+  if (late.phase === "found") {
+    return <MaterialDetail material={late.material} slug={late.slug} />;
+  }
+  if (late.phase === "loading") {
+    return (
+      <div
+        role="status"
+        className="flex min-h-[60vh] items-center justify-center bg-srh-paper"
+      >
+        <Loader2 className="h-10 w-10 animate-spin text-srh-crimson" aria-hidden="true" />
+        <span className="sr-only">Duke ngarkuar materialin…</span>
+      </div>
+    );
+  }
 
   const handleRefresh = () => {
     setIsLoading(true);

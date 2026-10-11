@@ -17,6 +17,7 @@ import {
   ShieldAlert,
   Layers,
   Link2,
+  Mail,
   PackageCheck,
 } from "lucide-react";
 import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
@@ -43,6 +44,7 @@ function ModerimPage() {
     if (t === "materialet") return "materialet";
     if (t === "burime") return "burime";
     if (t === "pritje") return "pritje";
+    if (t === "mesazhe") return "mesazhe";
     return "raportet";
   });
   const [ready, setReady] = useState(false);
@@ -73,6 +75,12 @@ function ModerimPage() {
   const [pendingLoading, setPendingLoading] = useState(false);
   const [reviewingId, setReviewingId] = useState(null);
   const [pendingReasons, setPendingReasons] = useState({});
+
+  // ── Contact messages ───────────────────────────────────────────────────
+  const [messages, setMessages] = useState([]);
+  const [messagesTotal, setMessagesTotal] = useState(0);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [confirmDeleteMessageId, setConfirmDeleteMessageId] = useState(null);
 
   const LIMIT = 50;
   const totalPages = Math.max(1, Math.ceil(materialsTotal / LIMIT));
@@ -121,6 +129,42 @@ function ModerimPage() {
       setPendingLoading(false);
     }
   }, [router]);
+
+  const loadMessages = useCallback(async () => {
+    setMessagesLoading(true);
+    setGlobalError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=contact-messages`, { credentials: "include" });
+      if (res.status === 401) { router.push("/llogaria/hyr"); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
+      setMessages(data.messages || []);
+      setMessagesTotal(data.total || 0);
+    } catch (err) {
+      setGlobalError(err.message || "Ngarkimi dështoi.");
+    } finally {
+      setMessagesLoading(false);
+    }
+  }, [router]);
+
+  const deleteMessage = async (id) => {
+    setGlobalError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=delete-contact-message`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Fshirja dështoi.");
+      setMessages((current) => current.filter((item) => item.id !== id));
+      setMessagesTotal((total) => Math.max(0, total - 1));
+      setConfirmDeleteMessageId(null);
+    } catch (err) {
+      setGlobalError(err.message || "Fshirja dështoi.");
+    }
+  };
 
   const reviewMaterial = async (id, decision) => {
     setReviewingId(id);
@@ -219,11 +263,13 @@ function ModerimPage() {
     if (tab === "materialet") { setSearch(""); loadMaterials(page); }
     if (tab === "burime") loadResourceLinks();
     if (tab === "pritje") loadPending();
+    if (tab === "mesazhe") loadMessages();
   }, [ready, tab]);
 
   // The queue count is shown on its tab, so load it even from another tab.
   useEffect(() => {
     if (ready && tab !== "pritje") loadPending();
+    if (ready && tab !== "mesazhe") loadMessages();
   }, [ready]);
 
   useEffect(() => {
@@ -335,6 +381,15 @@ function ModerimPage() {
             {materialsTotal > 0 && (
               <span className="rounded-full bg-navy-100 px-1.5 py-0.5 text-xs font-bold text-navy-700">
                 {materialsTotal}
+              </span>
+            )}
+          </button>
+          <button type="button" onClick={() => setTab("mesazhe")} className={tabCls("mesazhe")}>
+            <Mail className="h-4 w-4" />
+            Mesazhe
+            {messagesTotal > 0 && (
+              <span className="rounded-full bg-navy-100 px-1.5 py-0.5 text-xs font-bold text-navy-700">
+                {messagesTotal}
               </span>
             )}
           </button>
@@ -716,6 +771,67 @@ function ModerimPage() {
                     </article>
                   );
                 })}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── CONTACT MESSAGES TAB ───────────────────────────────────── */}
+        {tab === "mesazhe" && (
+          <>
+            {messagesLoading ? (
+              <div className="grid gap-4">
+                {[0, 1, 2].map((i) => (
+                  <div key={i} className="h-28 animate-pulse rounded-2xl bg-white" />
+                ))}
+              </div>
+            ) : messages.length === 0 ? (
+              <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+                <Mail className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+                <h2 className="text-xl font-bold text-navy-900">Asnjë mesazh</h2>
+                <p className="mt-2 text-gray-500">Mesazhet nga formulari i kontaktit shfaqen këtu.</p>
+              </div>
+            ) : (
+              <div className="grid gap-4">
+                {messages.map((item) => (
+                  <article key={item.id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
+                      #{item.id} · {formatDate(item.created_at)}
+                    </p>
+                    <h2 className="mt-1 font-bold leading-snug text-navy-900">{item.subject}</h2>
+                    <p className="text-sm text-gray-500">Nga {item.sender_name}</p>
+                    <p className="mt-3 whitespace-pre-wrap break-words text-gray-700">{item.message}</p>
+                    <div className="mt-4">
+                      {confirmDeleteMessageId === item.id ? (
+                        <span className="inline-flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => deleteMessage(item.id)}
+                            className="btn-primary min-h-[40px] px-4 py-2"
+                          >
+                            Konfirmo fshirjen
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setConfirmDeleteMessageId(null)}
+                            className="btn-outline min-h-[40px] px-4 py-2"
+                          >
+                            Anulo
+                          </button>
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => setConfirmDeleteMessageId(item.id)}
+                          className="btn-outline min-h-[40px] px-4 py-2"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Fshi
+                        </button>
+                      )}
+                    </div>
+                  </article>
+                ))}
               </div>
             )}
           </>

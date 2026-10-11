@@ -119,10 +119,51 @@ migration before deploying the Worker**, or every catalogue query will fail:
 
 ```bash
 cd cloudflare-worker
-wrangler d1 migrations apply e-studenti-auth --remote
+wrangler d1 migrations apply e-studenti-auth --remote   # applies 0011 and 0012
 ```
 
 Existing materials are marked `approved`. The thresholds are
 `TRUSTED_APPROVED_UPLOADS` and `MAX_PENDING_PER_USER` in `src/index.js`.
 Files under review are not listed or counted, but their unguessable media URL is
 reachable by anyone who has it; only the owner and moderators are given it.
+
+## Moderator access
+
+There is exactly one moderator: **edonaamulaj@gmail.com** (`MODERATOR_EMAIL` in
+`cloudflare-worker/src/moderators.js`). Access follows the verified email on the
+account alone; the `users.is_moderator` column and the old `MODERATOR_EMAILS`
+secret are no longer consulted. Changing who moderates means changing that
+constant. Migration `0012_single_moderator.sql` makes the column agree. You can
+also delete the now-unused secret:
+
+```bash
+wrangler secret delete MODERATOR_EMAILS
+```
+
+## Accounts: export and deletion
+
+Signed-in users can download their data and delete their account from
+**Materiale të mia**.
+
+- **Export** (JSON): profile, their materials (metadata and file URLs), their
+  submitted links, and the reports they filed. No other users' data and no
+  internal moderation or safety-scan fields.
+- **Deletion:** name, surname and email are erased and the address can sign up
+  again as a new account. Published materials and approved links remain, shown
+  as "Anonim", and can no longer be edited or deleted by the former owner (the
+  moderator can still remove them). Pending and rejected items, including their
+  files, are deleted. The moderator account cannot be deleted this way.
+
+## Contact messages
+
+Messages from the contact form appear in **Moderim → Mesazhe** and can be
+deleted there; they are stored in D1 whether or not `ADMIN_EMAIL` is set.
+
+## Materials added after a build
+
+Material pages are generated at build time. A material uploaded later has no
+static page, so `/materialet/<slug>` falls through to the 404 page, which loads
+it from the API and shows the normal detail view (no redeploy needed). Until
+the next build such a page is not in the sitemap and is served with a 404
+status, which is fine for people but means search engines pick it up only after
+a rebuild.

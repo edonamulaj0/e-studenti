@@ -46,7 +46,7 @@ function makeEnv({ counts = { approved: 0, pending: 0 }, moderator = false, mate
         },
         async first() {
           if (/FROM users WHERE id/.test(sql)) {
-            return { id: 1, email: "u@example.com", name: "U", token_version: 0, is_moderator: moderator ? 1 : 0 };
+            return { id: 1, email: moderator ? "edonaamulaj@gmail.com" : "u@example.com", name: "U", token_version: 0, is_moderator: moderator ? 1 : 0 };
           }
           if (/SUM\(CASE WHEN status/.test(sql)) return counts;
           if (/FROM materials WHERE id = \?/.test(sql) || /FROM materials WHERE id=\?/.test(sql)) return material;

@@ -29,8 +29,8 @@ const sections = [
     text: "Përdorim Cloudflare (Workers, D1, R2, Pages) për hostim, ruajtje skedarësh dhe siguri. Email-et e verifikimit dërgohen përmes Resend. Nëse është konfiguruar, Google Safe Browsing mund të kontrollojë URL-të e dërguara për alarme sigurie — vetëm si flamur moderimi, jo bllokim automatik. Statistika të përgjithshme hostimi (vizita, lloji shfletuesi) mund të përdoren për mirëmbajtje.",
   },
   {
-    title: "Ruajtja dhe fshirja",
-    text: "Të dhënat e llogarisë dhe përmbajtja e ngarkuar ruhen derisa të kërkoni fshirje ose derisa të hiqen për shkelje/kërkesë heqjeje. Për fshirje llogarie ose materialesh, na kontaktoni përmes formularit të kontaktit (subjekti \"Problem teknik\" ose \"Tjetër\") ose në Instagram @estudenti.hub.",
+    title: "Ruajtja, shkarkimi dhe fshirja",
+    text: "Te \"Materiale të mia\" mund të shkarkoni një kopje të të dhënave tuaja (profili, materialet dhe lidhjet që keni dërguar, raportet që keni bërë) dhe ta fshini llogarinë vetë. Fshirja heq emrin, mbiemrin dhe emailin tuaj dhe fshin përgjithmonë çdo material ose lidhje që nuk është publikuar. Materialet dhe lidhjet e publikuara mbeten të dukshme si \"Anonim\" dhe nuk mund të ndryshohen ose fshihen më nga ju — vetëm një moderator mund t'i heqë; për heqje shkruani në formularin e kontaktit ose Instagram @estudenti.hub.",
   },
   {
     title: "Pa monetizim / pa shitje të dhënash",

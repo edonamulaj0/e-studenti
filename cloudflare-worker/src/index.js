@@ -72,6 +72,8 @@ const RATE_LIMITS = {
     message: "Keni arritur kufirin e ngarkimeve për këtë orë. Provoni përsëri më vonë.",
   },
   report: { requests: 10, window: 3600 },
+  export_account: { requests: 5, window: 3600 },
+  delete_account: { requests: 3, window: 3600 },
   resource_link: { requests: 5, window: 3600 },
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
@@ -2068,6 +2070,189 @@ async function handleUpload(request, env) {
   });
 }
 
+const CONTACT_PAGE_SIZE = 50;
+
+/** Contact-form messages, newest first. Moderator only. */
+async function handleContactMessages(request, url, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const page = Math.max(1, Math.floor(Number(url.searchParams.get("page"))) || 1);
+  try {
+    const [countRow, result] = await Promise.all([
+      env.DB.prepare("SELECT COUNT(*) AS total FROM contact_messages").first(),
+      env.DB.prepare(
+        `SELECT id, sender_name, subject, message, created_at
+         FROM contact_messages
+         ORDER BY created_at DESC, id DESC
+         LIMIT ? OFFSET ?`
+      )
+        .bind(CONTACT_PAGE_SIZE, (page - 1) * CONTACT_PAGE_SIZE)
+        .all(),
+    ]);
+    return jsonResponse({
+      messages: result.results || [],
+      total: Number(countRow?.total || 0),
+      page,
+      limit: CONTACT_PAGE_SIZE,
+    });
+  } catch (error) {
+    // The table is created on the first submission; before that there is nothing to show.
+    if (String(error.message || error).includes("no such table")) {
+      return jsonResponse({ messages: [], total: 0, page, limit: CONTACT_PAGE_SIZE });
+    }
+    throw error;
+  }
+}
+
+async function handleDeleteContactMessage(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body.id);
+  if (!Number.isFinite(id) || id <= 0) return jsonResponse({ error: "ID i pavlefshëm." }, 400);
+
+  const result = await env.DB.prepare("DELETE FROM contact_messages WHERE id = ?").bind(id).run();
+  if (!Number(result.meta?.changes || 0)) {
+    return jsonResponse({ error: "Mesazhi nuk u gjet." }, 404);
+  }
+  return jsonResponse({ success: true });
+}
+
+/**
+ * Everything the site holds about the signed-in user: their profile, the
+ * materials and links they submitted, and the reports they filed. Nothing about
+ * other people, and no internal moderation notes or safety-scan results.
+ */
+async function handleExportAccount(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const limited = await checkRateLimit(request, "export_account", env, `user:${user.id}`);
+  if (limited) return limited;
+
+  const rows = async (sql) => {
+    try {
+      return (await env.DB.prepare(sql).bind(user.id).all()).results || [];
+    } catch (error) {
+      if (String(error.message || error).includes("no such table")) return [];
+      throw error;
+    }
+  };
+
+  const [materials, resourceLinks, reports] = await Promise.all([
+    rows(
+      `SELECT id, title, faculty, department, subject, teacher, type, study_level,
+              file_type, file_size, r2_url, is_anonymous, status, rejection_reason,
+              view_count, download_count, created_at, updated_at
+       FROM materials WHERE user_id = ? ORDER BY id`
+    ),
+    rows(
+      `SELECT id, url, resolved_url, title, description, category, faculty, subject,
+              is_anonymous, status, rejection_reason, created_at
+       FROM resource_links WHERE user_id = ? ORDER BY id`
+    ),
+    rows(
+      `SELECT material_id, reason, status, created_at
+       FROM reports WHERE reporter_id = ? ORDER BY id`
+    ),
+  ]);
+
+  const payload = {
+    exported_at: new Date().toISOString(),
+    account: {
+      name: user.name,
+      surname: user.surname,
+      email: user.email,
+      created_at: user.created_at,
+    },
+    materials,
+    resource_links: resourceLinks,
+    reports_submitted: reports,
+  };
+
+  return new Response(JSON.stringify(payload, null, 2), {
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Content-Disposition": 'attachment; filename="e-studenti-te-dhenat.json"',
+      "Cache-Control": "no-store",
+    },
+  });
+}
+
+/**
+ * Closes the signed-in user's account.
+ *
+ * Published materials and approved links stay up, relabelled "Anonim", and can
+ * no longer be edited or deleted by their former owner (a moderator still can).
+ * Anything never published (pending or rejected) is deleted, along with the
+ * profile data: name, email, outstanding codes and report authorship. The user
+ * row itself is kept as an empty shell so the remaining rows keep a valid owner,
+ * and its email is replaced so the address can sign up again as a new account.
+ */
+async function handleDeleteAccount(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const limited = await checkRateLimit(request, "delete_account", env, `user:${user.id}`);
+  if (limited) return limited;
+
+  if (userIsModerator(user, env)) {
+    return jsonResponse({ error: "Llogaria e moderatorit nuk mund të fshihet këtu." }, 403);
+  }
+  const body = await request.json().catch(() => ({}));
+  if (normalizeEmail(body.confirm_email) !== normalizeEmail(user.email)) {
+    return jsonResponse({ error: "Shkruani emailin tuaj saktësisht për ta konfirmuar." }, 400);
+  }
+
+  // Files that were never public go with the account.
+  const unpublished = await env.DB.prepare(
+    "SELECT file_key, r2_url FROM materials WHERE user_id = ? AND status != 'approved'"
+  )
+    .bind(user.id)
+    .all();
+
+  // The batch is atomic, so a missing table would undo the whole deletion.
+  await ensureReportsTable(env);
+
+  const placeholderEmail = `deleted-${user.id}@deleted.invalid`;
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM materials WHERE user_id = ? AND status != 'approved'").bind(user.id),
+    env.DB.prepare("UPDATE materials SET is_anonymous = 1 WHERE user_id = ?").bind(user.id),
+    env.DB.prepare("DELETE FROM resource_links WHERE user_id = ? AND status != 'approved'").bind(user.id),
+    env.DB.prepare("UPDATE resource_links SET is_anonymous = 1 WHERE user_id = ?").bind(user.id),
+    env.DB.prepare("UPDATE reports SET reporter_id = NULL WHERE reporter_id = ?").bind(user.id),
+    env.DB.prepare("DELETE FROM verification_codes WHERE email = ?").bind(user.email),
+    env.DB.prepare(
+      `UPDATE users
+       SET name = 'Anonim', surname = NULL, email = ?, email_verified = 0,
+           is_moderator = 0, token_version = COALESCE(token_version, 0) + 1
+       WHERE id = ?`
+    ).bind(placeholderEmail, user.id),
+  ]);
+
+  if (env.MY_BUCKET) {
+    for (const row of unpublished.results || []) {
+      const key = row.file_key || publicUrlToKey(row.r2_url);
+      if (key) await env.MY_BUCKET.delete(key).catch(() => {});
+    }
+  }
+  invalidateCatalogCaches();
+
+  return new Response(JSON.stringify({ success: true }), {
+    status: 200,
+    headers: {
+      "Content-Type": "application/json; charset=utf-8",
+      "Set-Cookie": clearAuthCookieHeader(),
+    },
+  });
+}
+
 const REKEY_BATCH_SIZE = 10;
 
 /**
@@ -2898,6 +3083,10 @@ export default {
       "delete-material",
       "rekey-materials",
       "review-material",
+      "contact-messages",
+      "delete-contact-message",
+      "export-account",
+      "delete-account",
       "submit-resource-link",
       "moderator-resource-links",
       "moderate-resource-link",
@@ -3002,6 +3191,18 @@ export default {
           break;
         case "delete-material":
           response = await handleDeleteMaterial(request, env);
+          break;
+        case "contact-messages":
+          response = await handleContactMessages(request, url, env);
+          break;
+        case "delete-contact-message":
+          response = await handleDeleteContactMessage(request, env);
+          break;
+        case "export-account":
+          response = await handleExportAccount(request, env);
+          break;
+        case "delete-account":
+          response = await handleDeleteAccount(request, env);
           break;
         case "review-material":
           response = await handleReviewMaterial(request, env);
