@@ -56,7 +56,7 @@ export function SubjectLine({ material, showSubject = true, className = "" }) {
       {hasSubject && (
         <Link
           href={`/lenda/${subjectSlug(material.faculty, material.subject, material.university)}`}
-          className="hover:text-burgundy-600 hover:underline"
+          className="relative z-10 hover:text-burgundy-600 hover:underline"
           title={t("Të gjitha materialet për {subject}", { subject: material.subject })}
         >
           {material.subject}
@@ -75,7 +75,7 @@ export const placementLine = (material, t) =>
 export default function MaterialCard({ material, onView, showSubject = true }) {
   const t = useT();
   return (
-    <article className="surface-card flex h-full flex-col gap-2 p-4 hover:shadow-md">
+    <article className="surface-card relative flex h-full flex-col gap-2 p-4 hover:shadow-md">
       <div className="flex items-center gap-2">
         <FileBadge fileType={material.fileType} />
         <span className="min-w-0 truncate text-xs text-gray-600">
@@ -87,7 +87,15 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
       </div>
 
       <h3 className="line-clamp-2 font-display text-base font-bold leading-snug text-navy-900 hover:text-burgundy-600">
-        {material.slug ? <Link href={`/materialet/${material.slug}`}>{material.title}</Link> : material.title}
+        {material.slug ? (
+          // The link's ::after covers the whole card, so a click anywhere opens the details;
+          // the subject link, "…" menu and buttons sit above it (relative z-10).
+          <Link href={`/materialet/${material.slug}`} className="after:absolute after:inset-0 after:content-['']">
+            {material.title}
+          </Link>
+        ) : (
+          material.title
+        )}
       </h3>
 
       <SubjectLine material={material} showSubject={showSubject} />

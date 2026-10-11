@@ -12,7 +12,7 @@ export default function MaterialActions({ material, onView }) {
   const isArchive = material.fileType?.toLowerCase() === "zip";
   const canView = Boolean(material.r2Url) && hasInBrowserView(material.fileType);
   return (
-    <div className="flex items-center gap-2">
+    <div className="relative z-10 flex items-center gap-2">
       {canView &&
         (isArchive ? (
           <button type="button" onClick={() => onView?.(material)} className="btn-outline min-h-[38px] px-3.5 py-1.5 text-sm">

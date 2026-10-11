@@ -24,11 +24,17 @@ export default function MaterialRow({ material, onView, showSubject = true }) {
   ].filter(Boolean);
 
   return (
-    <li className="flex items-center gap-3 px-4 py-3 first:rounded-t-2xl last:rounded-b-2xl hover:bg-gray-50">
+    <li className="relative flex items-center gap-3 px-4 py-3 first:rounded-t-2xl last:rounded-b-2xl hover:bg-gray-50">
       <FileBadge fileType={material.fileType} />
       <div className="min-w-0 flex-1">
         <h3 className="truncate font-display text-base font-bold text-navy-900 hover:text-burgundy-600">
-          {material.slug ? <Link href={`/materialet/${material.slug}`}>{material.title}</Link> : material.title}
+          {material.slug ? (
+            <Link href={`/materialet/${material.slug}`} className="after:absolute after:inset-0 after:content-['']">
+              {material.title}
+            </Link>
+          ) : (
+            material.title
+          )}
         </h3>
         <p className="truncate text-xs text-gray-600">{meta.join(" · ")}</p>
       </div>
