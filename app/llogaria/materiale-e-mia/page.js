@@ -62,6 +62,7 @@ function MaterialeEMiaPage() {
       setUser(currentUser);
       loadMaterials(currentUser);
     });
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- loadMaterials is a plain function; this runs once per sign-in check
   }, [router]);
 
   const loadMaterials = async (currentUser) => {

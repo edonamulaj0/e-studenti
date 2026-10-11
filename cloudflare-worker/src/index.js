@@ -20,6 +20,17 @@ import {
   sanitizeResourceLinkForPublic,
 } from "./resource-links.js";
 import { loadSiteStats, refreshSiteStats } from "./site-stats.js";
+import {
+  ALWAYS_ALLOWED_DOMAINS as ALWAYS_ALLOWED_EMAIL_DOMAINS,
+  isDisposableEmail,
+} from "../../shared/email-domains.mjs";
+import { FACULTY_CODES, MATERIAL_TYPES, STUDY_LEVEL_VALUES } from "../../shared/material-options.mjs";
+import {
+  ALLOWED_EXTENSIONS,
+  MAX_DECOMPRESSED_SIZE,
+  MAX_FILE_SIZE,
+  MAX_ZIP_FILES,
+} from "../../shared/upload-limits.mjs";
 
 const MEDIA_BASE = "https://media.e-studenti.com";
 const DEFAULT_RESEND_FROM = "E-Studenti <onboarding@resend.dev>";
@@ -30,11 +41,8 @@ const DEFAULT_ALLOWED_ORIGINS = [
 ];
 const DEFAULT_JWT_ISSUER = "https://e-studenti.com";
 const DEFAULT_JWT_AUDIENCE = "https://e-studenti.com";
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
 /** Whole multipart body: the file plus form fields and multipart boundaries. */
 const MAX_UPLOAD_BODY_SIZE = MAX_FILE_SIZE + 1024 * 1024;
-const MAX_DECOMPRESSED_SIZE = 100 * 1024 * 1024;
-const MAX_ZIP_FILES = 500;
 /**
  * A file inside a ZIP is held to the same limit as one uploaded on its own: a
  * 40MB archive of scanned lectures is an ordinary upload, and the old 10MB
@@ -83,46 +91,6 @@ const RATE_LIMITS = {
   // so the key is the IP, and a whole faculty can share one behind campus NAT.
   proxy: { requests: 600, window: 3600 },
 };
-/**
- * Faculty codes and material types the catalogue understands. The upload form
- * offers only these, but the form is not the only thing that can POST to the
- * endpoint, and an unrecognised value reaches the public materials page and
- * every filter built on it. Must stay in sync with app/lib/material-options.js.
- */
-const ALLOWED_FACULTIES = [
-  "ART",
-  "ECON",
-  "EDU",
-  "FA",
-  "FBV",
-  "FEFS",
-  "FFL",
-  "FFZ",
-  "FIEK",
-  "FIM",
-  "FIN",
-  "FSHMN",
-  "LAW",
-  "MED",
-];
-const ALLOWED_MATERIAL_TYPES = [
-  "Provime Pranuese",
-  "Ligjerata",
-  "Afat",
-  "Projekt",
-  "Libër",
-  "Të tjera",
-];
-const ALLOWED_EXTENSIONS = [
-  "pdf",
-  "doc",
-  "docx",
-  "ppt",
-  "pptx",
-  "xls",
-  "xlsx",
-  "zip",
-];
 const DANGEROUS_EXTENSIONS = [
   "exe",
   "bat",
@@ -258,81 +226,6 @@ const MAGIC_BYTES = {
   zip: [0x50, 0x4b, 0x03, 0x04],
   ole2: [0xd0, 0xcf, 0x11, 0xe0],
 };
-
-const ALWAYS_ALLOWED_EMAIL_DOMAINS = [
-  "gmail.com",
-  "outlook.com",
-  "hotmail.com",
-  "live.com",
-  "protonmail.com",
-  "proton.me",
-  "uni-pr.edu",
-];
-
-const DISPOSABLE_EMAIL_DOMAINS = [
-  "mailinator.com",
-  "10minutemail.com",
-  "10minutemail.net",
-  "guerrillamail.com",
-  "guerrillamail.net",
-  "guerrillamail.org",
-  "guerrillamail.biz",
-  "tempmail.com",
-  "temp-mail.org",
-  "temp-mail.io",
-  "yopmail.com",
-  "yopmail.fr",
-  "throwawaymail.com",
-  "trashmail.com",
-  "trashmail.net",
-  "getnada.com",
-  "maildrop.cc",
-  "dispostable.com",
-  "fakeinbox.com",
-  "mintemail.com",
-  "mohmal.com",
-  "moakt.com",
-  "emailondeck.com",
-  "sharklasers.com",
-  "spam4.me",
-  "mailnesia.com",
-  "mailcatch.com",
-  "mytemp.email",
-  "tempinbox.com",
-  "burnermail.io",
-  "33mail.com",
-  "anonaddy.com",
-  "simplelogin.io",
-  "discard.email",
-  "tempr.email",
-  "fakemail.net",
-  "mailsac.com",
-  "inboxkitten.com",
-  "tempmailo.com",
-  "emailfake.com",
-  "crazymailing.com",
-  "tempmail.ninja",
-  "mail-temp.com",
-  "1secmail.com",
-  "1secmail.net",
-  "1secmail.org",
-  "luxusmail.org",
-  "rootfest.net",
-  "mailbox52.ml",
-  "spambox.us",
-  "tempmail2.com",
-  "throwam.com",
-  "kleemail.com",
-  "deadaddress.com",
-];
-
-function isDisposableEmail(email) {
-  const domain = String(email || "").toLowerCase().split("@")[1];
-  if (!domain) return true;
-  if (ALWAYS_ALLOWED_EMAIL_DOMAINS.includes(domain)) return false;
-  if (DISPOSABLE_EMAIL_DOMAINS.includes(domain)) return true;
-  return false;
-}
 
 async function hasMxRecord(domain) {
   try {
@@ -820,12 +713,22 @@ async function loadUserFromRequest(request, env) {
   if (claimVersion !== tokenVersion) return null;
 
   await syncModeratorFromEmail(user, env);
-  user.is_moderator = userIsModerator(user, env) ? 1 : 0;
+  user.is_moderator = userIsModerator(user) ? 1 : 0;
   return user;
 }
 
 async function sendEmail(to, subject, html, env, from = env.RESEND_FROM || DEFAULT_RESEND_FROM) {
-  if (!env.RESEND_API_KEY) return false;
+  if (!env.RESEND_API_KEY) {
+    // Local development without a Resend account: print the message instead, so
+    // the sign-in code can be read from the Worker's console. Never outside dev.
+    if (env.ENVIRONMENT !== "production") {
+      console.log(
+        `[dev email] to=${to} subject=${subject}\n${html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim()}`
+      );
+      return true;
+    }
+    return false;
+  }
   const res = await fetch("https://api.resend.com/emails", {
     method: "POST",
     headers: {
@@ -1506,10 +1409,12 @@ async function handleVerify(request, env) {
   if (!email || !code) return jsonResponse({ error: "Emaili dhe kodi kërkohen." }, 400);
 
   const now = Math.floor(Date.now() / 1000);
-  for (const [key, cap] of [
-    [`verify_fail:${email}|${rateLimitIdentity(request)}`, RATE_LIMITS.verify_fail.requests],
-    [`verify_fail_email:${email}`, RATE_LIMITS.verify_fail_email.requests],
-  ]) {
+  /** @type {{ key: string, cap: number }[]} */
+  const lockouts = [
+    { key: `verify_fail:${email}|${rateLimitIdentity(request)}`, cap: RATE_LIMITS.verify_fail.requests },
+    { key: `verify_fail_email:${email}`, cap: RATE_LIMITS.verify_fail_email.requests },
+  ];
+  for (const { key, cap } of lockouts) {
     const failRow = await env.DB.prepare("SELECT count, reset_at FROM rate_limits WHERE key=?")
       .bind(key)
       .first()
@@ -1552,7 +1457,7 @@ async function handleVerify(request, env) {
   await ensureTokenVersionColumn(env);
   let user = await env.DB.prepare("SELECT * FROM users WHERE email=?").bind(email).first();
   user = await syncModeratorFromEmail(user, env);
-  user.is_moderator = userIsModerator(user, env) ? 1 : 0;
+  user.is_moderator = userIsModerator(user) ? 1 : 0;
 
   // Claim any legacy materials whose pending_owner_email matches this user.
   // Runs on every verification but is a no-op for the vast majority (0 rows matched).
@@ -1647,7 +1552,7 @@ async function handleMe(request, env) {
       name: user.name,
       surname: user.surname,
       email: user.email,
-      is_moderator: userIsModerator(user, env),
+      is_moderator: userIsModerator(user),
     },
   });
 }
@@ -1708,7 +1613,7 @@ async function handleReport(request, env) {
 async function handleReports(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !userIsModerator(user, env)) {
+  if (!user || !userIsModerator(user)) {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
@@ -1737,7 +1642,7 @@ async function handleReports(request, env) {
 async function handleResolveReport(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !userIsModerator(user, env)) {
+  if (!user || !userIsModerator(user)) {
     return jsonResponse({ error: "Unauthorized" }, 401);
   }
 
@@ -1847,7 +1752,7 @@ async function handleMaterials(request, url, env) {
     baseWhere.push(search.clause);
     baseParams.push(...search.params);
   }
-  if (studyLevel && ["bachelor", "master", "phd"].includes(studyLevel)) {
+  if (studyLevel && STUDY_LEVEL_VALUES.includes(studyLevel)) {
     baseWhere.push("COALESCE(m.study_level, 'bachelor') = ?");
     baseParams.push(studyLevel);
   }
@@ -1948,7 +1853,7 @@ async function handleMaterial(request, url, env) {
     .first();
   if (
     !material ||
-    (Number(material.user_id) !== Number(user.id) && !userIsModerator(user, env))
+    (Number(material.user_id) !== Number(user.id) && !userIsModerator(user))
   ) {
     return jsonResponse({ error: "Nuk keni leje." }, 403);
   }
@@ -2018,7 +1923,7 @@ async function handleContributors(env) {
  * Trusted = moderator, or enough approved materials already.
  */
 async function uploadReviewStatus(user, env) {
-  if (userIsModerator(user, env)) return { status: "approved", queueFull: false };
+  if (userIsModerator(user)) return { status: "approved", queueFull: false };
   const row = await env.DB.prepare(
     `SELECT
        SUM(CASE WHEN status = 'approved' THEN 1 ELSE 0 END) AS approved,
@@ -2149,7 +2054,7 @@ async function handleUpload(request, env) {
   const type = String(form.get("type") || "").trim();
   const isAnonymous = form.get("is_anonymous") === "1" ? 1 : 0;
   const studyLevelRaw = String(form.get("study_level") || "bachelor").trim().toLowerCase();
-  const studyLevel = ["bachelor", "master", "phd"].includes(studyLevelRaw)
+  const studyLevel = STUDY_LEVEL_VALUES.includes(studyLevelRaw)
     ? studyLevelRaw
     : "bachelor";
   const file = form.get("file");
@@ -2157,10 +2062,10 @@ async function handleUpload(request, env) {
   if (!title || !faculty || !subject || !type || !file || typeof file === "string") {
     return jsonResponse({ error: "Plotësoni të gjitha fushat e detyrueshme." }, 400);
   }
-  if (!ALLOWED_FACULTIES.includes(faculty)) {
+  if (!FACULTY_CODES.includes(faculty)) {
     return jsonResponse({ error: "Fakulteti nuk njihet." }, 400);
   }
-  if (!ALLOWED_MATERIAL_TYPES.includes(type)) {
+  if (!MATERIAL_TYPES.includes(type)) {
     return jsonResponse({ error: "Lloji i materialit nuk njihet." }, 400);
   }
 
@@ -2286,7 +2191,7 @@ const CONTACT_PAGE_SIZE = 50;
 async function handleContactMessages(request, url, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const page = Math.max(1, Math.floor(Number(url.searchParams.get("page"))) || 1);
   try {
@@ -2320,7 +2225,7 @@ async function handleDeleteContactMessage(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
   const user = await getUserFromRequest(request, env);
-  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const body = await request.json().catch(() => ({}));
   const id = Number(body.id);
@@ -2412,7 +2317,7 @@ async function handleDeleteAccount(request, env) {
   const limited = await checkRateLimit(request, "delete_account", env, `user:${user.id}`);
   if (limited) return limited;
 
-  if (userIsModerator(user, env)) {
+  if (userIsModerator(user)) {
     return jsonResponse({ error: "Llogaria e moderatorit nuk mund të fshihet këtu." }, 403);
   }
   const body = await request.json().catch(() => ({}));
@@ -2476,7 +2381,7 @@ async function handleRekeyMaterials(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
   const user = await getUserFromRequest(request, env);
-  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
   if (!env.MY_BUCKET) return jsonResponse({ error: "Storage unavailable." }, 503);
 
   const body = await request.json().catch(() => ({}));
@@ -2547,7 +2452,7 @@ async function handleEdit(request, url, env) {
   const material = await env.DB.prepare("SELECT * FROM materials WHERE id=?")
     .bind(id)
     .first();
-  if (!material || (Number(material.user_id) !== Number(user.id) && !userIsModerator(user, env))) {
+  if (!material || (Number(material.user_id) !== Number(user.id) && !userIsModerator(user))) {
     return jsonResponse({ error: "Nuk keni leje." }, 403);
   }
 
@@ -2576,7 +2481,7 @@ async function handleEdit(request, url, env) {
   const studyLevelRaw = String(body.study_level || material.study_level || "bachelor")
     .trim()
     .toLowerCase();
-  const studyLevel = ["bachelor", "master", "phd"].includes(studyLevelRaw)
+  const studyLevel = STUDY_LEVEL_VALUES.includes(studyLevelRaw)
     ? studyLevelRaw
     : "bachelor";
 
@@ -2584,10 +2489,10 @@ async function handleEdit(request, url, env) {
     return jsonResponse({ error: "Plotësoni të gjitha fushat e detyrueshme." }, 400);
   }
   // Same allowlists as upload: faculty and type feed public filters and slugs.
-  if (!ALLOWED_FACULTIES.includes(faculty)) {
+  if (!FACULTY_CODES.includes(faculty)) {
     return jsonResponse({ error: "Fakulteti nuk njihet." }, 400);
   }
-  if (!ALLOWED_MATERIAL_TYPES.includes(type)) {
+  if (!MATERIAL_TYPES.includes(type)) {
     return jsonResponse({ error: "Lloji i materialit nuk njihet." }, 400);
   }
 
@@ -2595,7 +2500,7 @@ async function handleEdit(request, url, env) {
   const resubmit =
     material.status === "rejected" &&
     Number(material.user_id) === Number(user.id) &&
-    !userIsModerator(user, env);
+    !userIsModerator(user);
 
   await env.DB.prepare(
     `UPDATE materials
@@ -2615,7 +2520,7 @@ async function handleEdit(request, url, env) {
 async function handleModeratorMaterials(request, url, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const page = Math.max(1, Math.floor(Number(url.searchParams.get("page"))) || 1);
   const status = url.searchParams.get("status");
@@ -2669,7 +2574,7 @@ async function handleReviewMaterial(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
   if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
   const user = await getUserFromRequest(request, env);
-  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const body = await request.json().catch(() => ({}));
   const id = Number(body.id);
@@ -2742,7 +2647,7 @@ async function handleDeleteMaterial(request, env) {
   const material = await env.DB.prepare("SELECT * FROM materials WHERE id = ?").bind(id).first();
   if (!material) return jsonResponse({ error: "Materiali nuk u gjet." }, 404);
 
-  if (Number(material.user_id) !== Number(user.id) && !userIsModerator(user, env)) {
+  if (Number(material.user_id) !== Number(user.id) && !userIsModerator(user)) {
     return jsonResponse({ error: "Nuk keni leje." }, 403);
   }
 
@@ -2983,7 +2888,7 @@ function extractDomainFromUrl(urlString) {
 async function handleModeratorResourceLinks(request, url, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const status = url.searchParams.get("status") || "pending";
   const allowed = ["pending", "approved", "rejected", "all"];
@@ -3016,7 +2921,7 @@ async function handleModeratorResourceLinks(request, url, env) {
 async function handleModerateResourceLink(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
   const user = await getUserFromRequest(request, env);
-  if (!user || !userIsModerator(user, env)) return jsonResponse({ error: "Unauthorized" }, 401);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const body = await request.json().catch(() => ({}));
   const id = Number(body.id);
@@ -3200,7 +3105,7 @@ async function handleRedirectMaterial(request, url, env, eventType) {
   if (material.status !== "approved") {
     const viewer = await getUserFromRequest(request, env);
     const allowed =
-      viewer && (Number(viewer.id) === Number(material.user_id) || userIsModerator(viewer, env));
+      viewer && (Number(viewer.id) === Number(material.user_id) || userIsModerator(viewer));
     if (!allowed) return jsonResponse({ error: "Material not found" }, 404);
   }
 
@@ -3261,7 +3166,7 @@ async function pruneExpiredRows(env) {
   }
 }
 
-export default {
+const worker = {
   async scheduled(_event, env, ctx) {
     if (!env.DB) return;
     ctx.waitUntil(refreshSiteStats(env));
@@ -3466,3 +3371,5 @@ export default {
     }
   },
 };
+
+export default worker;

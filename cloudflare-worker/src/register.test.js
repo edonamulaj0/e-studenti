@@ -38,6 +38,30 @@ function register(env) {
 
 afterEach(() => vi.unstubAllGlobals());
 
+describe("email without a Resend key", () => {
+  it("prints the code in development so local sign-in works", async () => {
+    const log = vi.spyOn(console, "log").mockImplementation(() => {});
+    const { env } = makeEnv({ existingUser: null });
+    delete env.RESEND_API_KEY;
+
+    const response = await register(env);
+
+    expect(response.status).toBe(200);
+    expect(log.mock.calls.flat().join("\n")).toMatch(/\[dev email\] to=ana@gmail\.com[\s\S]*\d{6}/);
+    log.mockRestore();
+  });
+
+  it("fails closed in production", async () => {
+    const { env } = makeEnv({ existingUser: null });
+    delete env.RESEND_API_KEY;
+    env.ENVIRONMENT = "production";
+
+    const response = await register(env);
+
+    expect(response.status).toBe(502);
+  });
+});
+
 describe("register for an email that already has an account", () => {
   it("sends a sign-in code instead of silently doing nothing", async () => {
     const sent = [];

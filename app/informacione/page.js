@@ -186,7 +186,7 @@ export default function InformacionePage() {
           <SectionCard id="misioni" icon={Shield} title="Misioni dhe transparenca">
             <div className="space-y-4 text-base leading-relaxed text-gray-600 md:text-lg">
               <p>
-                Synojmë t'i ndihmojmë studentët të gjejnë materiale studimore,
+                Synojmë t&apos;i ndihmojmë studentët të gjejnë materiale studimore,
                 lidhje burimesh dhe informacion fakulteti — me transparencë,
                 respekt për autorët dhe pa monetizim.
               </p>

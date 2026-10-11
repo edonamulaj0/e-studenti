@@ -73,6 +73,10 @@ export function materialToPublicLegacyEntry(material, normalizeUploaderName) {
   };
 }
 
+/**
+ * @param {Record<string, any>} material
+ * @param {{ faculty?: string, type?: string, q?: string, studyLevel?: string }} [filters]
+ */
 export function materialMatchesPublic(material, { faculty, type, q, studyLevel } = {}) {
   if (faculty && material.faculty !== faculty.toUpperCase()) return false;
   if (type && material.type !== type) return false;

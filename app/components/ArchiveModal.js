@@ -54,6 +54,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
     if (isOpen && material) {
       loadArchiveContents();
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- reload only when the modal opens or the material changes; the loaders are recreated each render
   }, [isOpen, material]);
 
   const loadArchiveContents = async () => {

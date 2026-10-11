@@ -145,6 +145,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
     return () => {
       cancelled = true;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the material id, not the object, so a re-render with the same material does not re-fetch the file
   }, [isOpen, material?.id, kind, fileUrl, applyFitToWidth]);
 
   // Re-fit documents/slides when the viewport (modal) width changes.

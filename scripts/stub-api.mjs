@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+/**
+ * A tiny fake of the public API, so the website can be built and browsed with no
+ * Worker, database or internet (`npm run stub-api`, then in another terminal
+ * `NEXT_PUBLIC_WORKER_URL=http://127.0.0.1:8799 npm run build`). CI uses it too.
+ * It answers only the read-only calls the build needs; everything else is `{}`.
+ * `STUB_EMPTY=1` serves an empty catalogue.
+ */
+import http from "node:http";
+
+const PORT = Number(process.env.PORT) || 8799;
+
+const materials = process.env.STUB_EMPTY ? [] : [
+  {
+    id: 1, title: "Anatomia 1", slug: "anatomia-1-med", faculty: "MED", subject: "Anatomi",
+    type: "Ligjerata", teacher: "//", department: "//", study_level: "bachelor", file_type: "pdf",
+    r2_url: "https://media.e-studenti.com/materials/example/anatomia.pdf",
+    is_anonymous: 0, uploader_name: "Ana Beri", view_count: 3, download_count: 1,
+  },
+  {
+    id: 2, title: "Algoritme", slug: "algoritme-fiek", faculty: "FIEK", subject: "Algoritme",
+    type: "Afat", teacher: "//", department: "//", study_level: "bachelor", file_type: "docx",
+    r2_url: "https://media.e-studenti.com/materials/example/algoritme.docx",
+    is_anonymous: 1, view_count: 0, download_count: 0,
+  },
+];
+
+const page = (items) => ({
+  pagination: { page: 1, limit: 100, total: items.length, totalPages: 1, hasNextPage: false },
+});
+
+const server = http.createServer((req, res) => {
+  const url = new URL(req.url, "http://localhost");
+  const action = url.searchParams.get("action") || "materials";
+  res.setHeader("Content-Type", "application/json");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+
+  if (action === "materials") {
+    return res.end(JSON.stringify({ materials, entries: [], typeCounts: { Ligjerata: 1, Afat: 1 }, ...page(materials) }));
+  }
+  if (action === "material-public") {
+    const found = materials.find((m) => m.slug === url.searchParams.get("slug"));
+    res.statusCode = found ? 200 : 404;
+    return res.end(JSON.stringify(found ? { material: found } : { error: "Materiali nuk u gjet." }));
+  }
+  if (action === "resource-links") return res.end(JSON.stringify({ links: [], ...page([]) }));
+  if (action === "me") return res.end(JSON.stringify({ user: null }));
+  res.end("{}");
+});
+
+server.listen(PORT, "127.0.0.1", () => {
+  console.log(`stub API on http://127.0.0.1:${PORT}  (NEXT_PUBLIC_WORKER_URL=http://127.0.0.1:${PORT})`);
+});

@@ -4,10 +4,6 @@ import { WORKER_URL } from "./worker-url";
 let _user = undefined;
 let _fetchPromise = null;
 
-export function getUser() {
-  return _user;
-}
-
 export function setUser(user) {
   _user = user;
   if (typeof window !== "undefined") {
