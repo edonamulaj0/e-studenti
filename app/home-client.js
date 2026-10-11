@@ -183,9 +183,9 @@ export default function HomeClient({ latest = [] }) {
               },
               {
                 icon: Building2,
-                title: "Fakultetet",
-                text: "Informacion dhe materiale sipas fakultetit.",
-                href: "/fakultetet",
+                title: "Universitetet",
+                text: "Programet e akredituara dhe krahasim.",
+                href: "/universitetet",
                 tone: "bg-info-blue/10 text-info-text",
               },
               {

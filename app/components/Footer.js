@@ -8,7 +8,7 @@ const INSTAGRAM_URL = "https://www.instagram.com/estudenti.hub";
 
 const platformaLinks = [
   { href: "/", label: "Ballina" },
-  { href: "/fakultetet", label: "Fakultetet" },
+  { href: "/universitetet", label: "Universitetet" },
   { href: "/materialet", label: "Materialet" },
   { href: "/erasmus", label: "Erasmus+" },
   { href: "/informacione", label: "Rreth nesh" },

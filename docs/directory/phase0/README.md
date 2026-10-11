@@ -55,3 +55,7 @@ Early reading: curriculum data is easiest where an institution publishes plain H
 - UBT and Universum fees by contacting admissions; check the MEST instruction for the public tariff.
 - Source inventory for the remaining institutions.
 - An end-to-end extraction of 2-3 programmes with source checks, then the cost estimate and recommendation.
+
+## 6. First public pages
+
+`scripts/build-directory-data.mjs` turns the CSV into `app/data/universities.json`. The site shows it at `/universitetet` (cards), `/universitetet/<slug>` (programmes by level, Bachelor to PhD) and `/krahaso` (two programmes side by side). The old `/fakultetet` pages still exist but are no longer linked from the navigation.
