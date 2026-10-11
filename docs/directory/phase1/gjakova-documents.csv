@@ -1,0 +1,22 @@
+page_id,programme,level,courses,status,source,directory_ids
+1,Edukim Fillor,bachelor,58,ok,https://edukimi.uni-gjk.org/syllabuset/1,universiteti-fehmi-agani-gjakove/edukim-fillor-ba-gjakove
+2,Edukim Parashkollor,bachelor,57,ok,https://edukimi.uni-gjk.org/syllabuset/2,
+3,Gjuhë shqipe,bachelor,29,ok,https://filologjiku.uni-gjk.org/syllabuset/3,
+4,Gjuhë dhe Letërsi Angleze,bachelor,24,ok,https://filologjiku.uni-gjk.org/syllabuset/4,
+5,Letërsi Shqipe,bachelor,32,ok,https://filologjiku.uni-gjk.org/syllabuset/5,
+6,Infermieri,bachelor,48,ok,https://mjeksia.uni-gjk.org/syllabuset/6,
+7,Mami,bachelor,14,ok,https://mjeksia.uni-gjk.org/syllabuset/7,
+8,Gjuhë Shqipe dhe Letërsi,bachelor,60,ok,https://filologjiku.uni-gjk.org/syllabuset/8,universiteti-fehmi-agani-gjakove/gjuhe-shqipe-dhe-letersi-ba-gjakove
+9,Kujdesi dhe Mirëqenia Sociale,bachelor,54,ok,https://fshs.uni-gjk.org/syllabuset/9,universiteti-fehmi-agani-gjakove/kujdesi-dhe-mireqenia-sociale-ba-gjakove
+10,Gjuhë Shqipe Master,master,25,ok,https://filologjiku.uni-gjk.org/syllabuset/10,universiteti-fehmi-agani-gjakove/gjuhe-shqipe-ma-gjakove
+11,Gjuhë Angleze  Përkthim dhe interpretim,bachelor,47,ok,https://filologjiku.uni-gjk.org/syllabuset/11,universiteti-fehmi-agani-gjakove/gjuhe-angleze-perkthim-dhe-interpretim-ba-gjakove
+12,Shëndeti Publik,bachelor,39,ok,https://mjeksia.uni-gjk.org/syllabuset/12,universiteti-fehmi-agani-gjakove/shendeti-publik-bsc-gjakove
+13,Menaxhimi Shëndetsor Master,master,27,ok,https://mjeksia.uni-gjk.org/syllabuset/13,universiteti-fehmi-agani-gjakove/menaxhimi-shendetsor-ma-gjakove
+14,Fizioterapi,bachelor,45,ok,https://mjeksia.uni-gjk.org/syllabuset/14,
+15,Informatikë Inxhinierike,bachelor,45,ok,https://fsha.uni-gjk.org/syllabuset/15,universiteti-fehmi-agani-gjakove/informatike-inxhinierike-bsc-gjakove
+16,Mësimdhënia e Gjuhës së Huaj Angleze,bachelor,16,ok,https://edukimi.uni-gjk.org/syllabuset/16,
+17,Mësimdhënia e Letërsisë për Fëmijë,bachelor,16,ok,https://edukimi.uni-gjk.org/syllabuset/17,
+18,Studime Letrare,master,17,ok,https://filologjiku.uni-gjk.org/syllabuset/18,universiteti-fehmi-agani-gjakove/studime-letrare-ma-gjakove
+19,Mësimdhënia e Matematikës,bachelor,16,ok,https://edukimi.uni-gjk.org/syllabuset/19,
+20,Kujdesi Shëndetësorë në Komunitet,bachelor,45,ok,https://mjeksia.uni-gjk.org/syllabuset/20,universiteti-fehmi-agani-gjakove/kujdesi-shendetesor-ne-komunitet-bsc-gjakove
+21,Shkencat Shëndetësore në Sport dhe Turizëm,bachelor,1,check,https://edukimi.uni-gjk.org/syllabuset/21,universiteti-fehmi-agani-gjakove/shkencat-shendetesore-ne-sport-dhe-turizem-bsc-gjakove

@@ -83,6 +83,16 @@ for (const inst of ["peja", "mitrovica"]) {
   }
 }
 
+// Gjakova, Prizren, Ferizaj: one list per page or document, attached to its matched programme.
+for (const inst of ["gjakova", "prizren", "ferizaj"]) {
+  const groups = groupBy(read(`${inst}-courses.csv`).filter((r) => r.directory_ids), (r) => `${r.directory_ids}|${r.source}|${r.title}`);
+  for (const [, rows] of groups) {
+    const id = rows[0].directory_ids.split("|")[0];
+    const courses = rows.filter((r) => r.name).map(compact);
+    if (courses.length) offer(id, { source: rows[0].source, courses, score: courses.length, method: inst });
+  }
+}
+
 const out = {};
 for (const [id, e] of candidates) {
   out[id] = { source: e.source, namesOnly: e.courses.every((c) => c[3] == null), courses: e.courses };
