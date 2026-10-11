@@ -50,4 +50,4 @@ Total on the site now: 181 programmes with course lists, 6,641 courses.
 
 ## On the site
 
-`node scripts/build-curricula-data.mjs` turns these CSVs into `app/data/courses.json` (181 programmes, 6,641 courses). Opening a programme on `/universitetet/<slug>` shows its courses by year and semester, with a link to the source document; `/krahaso` shows both programmes' course lists side by side. The file loads on demand, so it does not slow the other pages. Programmes without a list say so.
+`node scripts/build-curricula-data.mjs` turns these CSVs into `app/data/courses.json` (181 programmes, 6,641 courses). The site does not show the course lists on programme or comparison pages. They feed the subject suggestions on the upload and edit forms: while someone types a subject, the matching course names of the selected university (plus subjects that already have materials) are listed to pick from (`app/lib/subject-suggestions.js`, `app/components/SubjectInput.js`). The data file loads only when the field is focused.
