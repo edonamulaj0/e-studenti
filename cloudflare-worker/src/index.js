@@ -52,14 +52,17 @@ const TRUSTED_APPROVED_UPLOADS = 3;
 const MAX_PENDING_PER_USER = 10;
 const CODE_TTL_SECONDS = 15 * 60;   // must stay in sync with upsertVerificationCode
 const CODE_COOLDOWN_SECONDS = 60;   // minimum gap between successive sends to the same email
-/** Access token lifetime — kept short so stolen cookies expire; logout also bumps token_version. */
+/** Access token lifetime. Logout bumps token_version, which revokes every outstanding token. */
 const JWT_TTL_SECONDS = 7 * 24 * 60 * 60;
 
 const RATE_LIMITS = {
   register: { requests: 5, window: 3600 },
   login: { requests: 10, window: 900 },
   verify: { requests: 5, window: 900 },
+  // Per email *and* address, so a stranger cannot lock someone else out of
+  // verifying; the per-email ceiling still stops a distributed guessing run.
   verify_fail: { requests: 5, window: 900 },
+  verify_fail_email: { requests: 50, window: 900 },
   contact: { requests: 3, window: 3600 },
   // Keyed to the account rather than the IP (see handleUpload), so the ceiling
   // is what one person may upload in an hour and a bulk upload fits under it.
@@ -157,12 +160,10 @@ const CONTENT_TYPE_BY_EXT = {
 const ORPHAN_CACHE_TTL_MS = 10 * 60_000;
 const D1_CATALOG_CACHE_TTL_MS = 60_000;
 let orphanCache = { at: 0, materials: null };
-let d1CatalogCache = { at: 0, materials: null };
 let slugIndexCache = { at: 0, index: null };
 
 function invalidateCatalogCaches() {
   orphanCache = { at: 0, materials: null };
-  d1CatalogCache = { at: 0, materials: null };
   slugIndexCache = { at: 0, index: null };
 }
 const MAGIC_BYTES = {
@@ -686,8 +687,11 @@ function clearAuthCookieHeader() {
   return "srh_token=; HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=0";
 }
 
+let tokenVersionColumnChecked = false;
+
 async function ensureTokenVersionColumn(env) {
-  if (!env.DB) return;
+  if (!env.DB || tokenVersionColumnChecked) return;
+  tokenVersionColumnChecked = true;
   try {
     await env.DB.prepare(
       "ALTER TABLE users ADD COLUMN token_version INTEGER NOT NULL DEFAULT 0"
@@ -697,7 +701,20 @@ async function ensureTokenVersionColumn(env) {
   }
 }
 
-async function getUserFromRequest(request, env) {
+/**
+ * The fetch handler authenticates non-public actions and each handler then asks
+ * again; caching per Request keeps that to one lookup (and one moderator sync).
+ */
+const requestUsers = new WeakMap();
+
+function getUserFromRequest(request, env) {
+  if (!requestUsers.has(request)) {
+    requestUsers.set(request, loadUserFromRequest(request, env));
+  }
+  return requestUsers.get(request);
+}
+
+async function loadUserFromRequest(request, env) {
   const cookieHeader = request.headers.get("Cookie") || "";
   const match = cookieHeader.match(/(?:^|;\s*)srh_token=([^;]+)/);
   if (!match) return null;
@@ -764,7 +781,9 @@ function hexFromBuffer(buffer) {
 }
 
 async function hashVerificationCode(email, code, env) {
-  const data = new TextEncoder().encode(`${normalizeEmail(email)}:${code}:${env.JWT_SECRET}`);
+  const data = new TextEncoder().encode(
+    `verify-code:${normalizeEmail(email)}:${code}:${env.HASH_SECRET || env.JWT_SECRET}`
+  );
   return hexFromBuffer(await crypto.subtle.digest("SHA-256", data));
 }
 
@@ -868,22 +887,22 @@ async function checkRateLimit(request, action, env, identityOverride = "") {
   }
 }
 
-async function recordVerifyFailure(email, env) {
+async function recordVerifyFailure(request, email, env) {
   if (!env.DB || !email) return { locked: false };
-  const limited = await checkRateLimit(
-    new Request("https://internal/", { headers: { "CF-Connecting-IP": "0.0.0.0" } }),
-    "verify_fail",
-    env,
-    email
-  );
-  return { locked: Boolean(limited) };
+  const ip = rateLimitIdentity(request);
+  const perClient = await checkRateLimit(request, "verify_fail", env, `${email}|${ip}`);
+  const perEmail = await checkRateLimit(request, "verify_fail_email", env, email);
+  return { locked: Boolean(perClient || perEmail) };
 }
 
-async function clearVerifyFailures(email, env) {
+async function clearVerifyFailures(request, email, env) {
   if (!env.DB || !email) return;
   try {
-    await env.DB.prepare("DELETE FROM rate_limits WHERE key=?")
-      .bind(`verify_fail:${email}`)
+    await env.DB.prepare("DELETE FROM rate_limits WHERE key IN (?, ?)")
+      .bind(
+        `verify_fail:${email}|${rateLimitIdentity(request)}`,
+        `verify_fail_email:${email}`
+      )
       .run();
   } catch {
     // ignore
@@ -917,16 +936,6 @@ function contentTypeForExtension(ext) {
   return CONTENT_TYPE_BY_EXT[ext] || "application/octet-stream";
 }
 
-async function loadD1MaterialsCached(env) {
-  const now = Date.now();
-  if (d1CatalogCache.materials && now - d1CatalogCache.at < D1_CATALOG_CACHE_TTL_MS) {
-    return d1CatalogCache.materials;
-  }
-  const materials = await loadD1Materials(env);
-  d1CatalogCache = { at: now, materials };
-  return materials;
-}
-
 /**
  * id -> slug for every D1 material. A slug is only unique relative to the whole
  * catalogue (title collisions get an "-id" suffix), so it is computed here over
@@ -938,13 +947,14 @@ async function loadSlugIndexCached(env) {
   if (slugIndexCache.index && now - slugIndexCache.at < D1_CATALOG_CACHE_TTL_MS) {
     return slugIndexCache.index;
   }
-  const index = new Map();
+  const index = { byId: new Map(), bySlug: new Map() };
   try {
     const result = await env.DB.prepare(
       "SELECT id, title, faculty FROM materials WHERE status = 'approved'"
     ).all();
     for (const material of assignMaterialSlugs(result.results || [])) {
-      index.set(material.id, material.slug);
+      index.byId.set(material.id, material.slug);
+      index.bySlug.set(material.slug, material.id);
     }
   } catch (error) {
     console.error("Unable to build material slug index", error);
@@ -1049,6 +1059,9 @@ function zipEntryExtension(filename) {
   return dot === -1 ? "" : base.slice(dot + 1).toLowerCase().trim();
 }
 
+/** DEFLATE cannot expand data by more than about 1032:1. */
+const MAX_DEFLATE_RATIO = 1032;
+
 /** Largest end-of-central-directory search window a ZIP comment can create. */
 const ZIP_EOCD_SEARCH_LENGTH = 65557;
 
@@ -1110,6 +1123,9 @@ export async function validateZipArchive(size, read) {
     if (offset + 46 > cd.length || readUInt32LE(cd, offset) !== 0x02014b50) {
       return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
     }
+    const flags = readUInt16LE(cd, offset + 8);
+    const method = readUInt16LE(cd, offset + 10);
+    const compressedSize = readUInt32LE(cd, offset + 20);
     const uncompressedSize = readUInt32LE(cd, offset + 24);
     const fileNameLength = readUInt16LE(cd, offset + 28);
     const extraLength = readUInt16LE(cd, offset + 30);
@@ -1161,6 +1177,23 @@ export async function validateZipArchive(size, read) {
         return { ok: false, error: `ZIP përmban skedar të ndaluar: .${innerExt}` };
       }
 
+      // The declared size is all that is checked above, and the uploader writes
+      // it. Nothing is inflated here, so these checks can only reject headers that
+      // cannot be true. An archive that under-declares a real bomb passes, which
+      // is why the browser also caps what it will inflate (ArchiveModal).
+      if (method !== 0 && method !== 8) {
+        return {
+          ok: false,
+          error: `Skedari "${zipEntryLabel(filename)}" përdor një metodë kompresimi që nuk mbështetet. Krijoni ZIP-in me kompresim standard (Deflate).`,
+        };
+      }
+      if (method === 0 && compressedSize !== uncompressedSize) {
+        return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
+      }
+      if (method === 8 && uncompressedSize > compressedSize * MAX_DEFLATE_RATIO + 64) {
+        return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
+      }
+
       // Extractors disagree on which name wins when the local header and the
       // central directory differ, so the local name is checked too. Only the
       // header and its name are read, never the entry's data.
@@ -1171,6 +1204,15 @@ export async function validateZipArchive(size, read) {
       if (
         localHeader.length < 30 ||
         readUInt32LE(localHeader, 0) !== 0x04034b50
+      ) {
+        return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
+      }
+      // Unless sizes follow the data (flag bit 3), the local header must repeat
+      // the central directory's; extractors differ on which one they believe.
+      if (
+        !(flags & 0x08) &&
+        (readUInt32LE(localHeader, 18) !== compressedSize ||
+          readUInt32LE(localHeader, 22) !== uncompressedSize)
       ) {
         return { ok: false, error: "ZIP nuk mund të lexohet sigurt." };
       }
@@ -1324,6 +1366,17 @@ async function handleRegister(request, env) {
     .first();
   const alreadyRegistered = Boolean(existing?.email_verified);
 
+  // Cooldown first: the stored name must not change on a request that is about
+  // to be refused, or anyone could rewrite a pending sign-up's name by hitting
+  // the endpoint during the cooldown window.
+  const cooldown = await checkCodeCooldown(email, env);
+  if (cooldown !== null) {
+    return jsonResponse(
+      { error: `Ju lutemi prisni ${cooldown}s para se të dërgoni kodin përsëri.`, retryAfter: cooldown },
+      429
+    );
+  }
+
   // An already-verified address is sent a sign-in code rather than being
   // silently dropped: the response is identical either way (no enumeration), and
   // someone who registers again after forgetting they have an account is signed
@@ -1340,14 +1393,6 @@ async function handleRegister(request, env) {
     )
       .bind(name, surname, email)
       .run();
-  }
-
-  const cooldown = await checkCodeCooldown(email, env);
-  if (cooldown !== null) {
-    return jsonResponse(
-      { error: `Ju lutemi prisni ${cooldown}s para se të dërgoni kodin përsëri.`, retryAfter: cooldown },
-      429
-    );
   }
 
   const code = await upsertVerificationCode(email, env);
@@ -1373,24 +1418,24 @@ async function handleVerify(request, env) {
   const code = String(body.code || "").trim();
   if (!email || !code) return jsonResponse({ error: "Emaili dhe kodi kërkohen." }, 400);
 
-  const failKey = `verify_fail:${email}`;
-  const failRow = await env.DB.prepare("SELECT count, reset_at FROM rate_limits WHERE key=?")
-    .bind(failKey)
-    .first()
-    .catch(() => null);
   const now = Math.floor(Date.now() / 1000);
-  if (
-    failRow &&
-    Number(failRow.reset_at) > now &&
-    Number(failRow.count) >= RATE_LIMITS.verify_fail.requests
-  ) {
-    return jsonResponse(
-      {
-        error: "Shumë tentativa të pasakta. Kërkoni një kod të ri më vonë.",
-        retryAfter: Math.max(1, Number(failRow.reset_at) - now),
-      },
-      429
-    );
+  for (const [key, cap] of [
+    [`verify_fail:${email}|${rateLimitIdentity(request)}`, RATE_LIMITS.verify_fail.requests],
+    [`verify_fail_email:${email}`, RATE_LIMITS.verify_fail_email.requests],
+  ]) {
+    const failRow = await env.DB.prepare("SELECT count, reset_at FROM rate_limits WHERE key=?")
+      .bind(key)
+      .first()
+      .catch(() => null);
+    if (failRow && Number(failRow.reset_at) > now && Number(failRow.count) >= cap) {
+      return jsonResponse(
+        {
+          error: "Shumë tentativa të pasakta. Kërkoni një kod të ri më vonë.",
+          retryAfter: Math.max(1, Number(failRow.reset_at) - now),
+        },
+        429
+      );
+    }
   }
 
   const row = await env.DB.prepare("SELECT * FROM verification_codes WHERE email=?")
@@ -1403,7 +1448,7 @@ async function handleVerify(request, env) {
   }
   const hashedCode = await hashVerificationCode(email, code, env);
   if (!timingSafeEqual(row.code, hashedCode)) {
-    const { locked } = await recordVerifyFailure(email, env);
+    const { locked } = await recordVerifyFailure(request, email, env);
     if (locked) {
       await env.DB.prepare("DELETE FROM verification_codes WHERE email=?").bind(email).run();
       return jsonResponse(
@@ -1414,7 +1459,7 @@ async function handleVerify(request, env) {
     return jsonResponse({ error: "Kodi nuk është i saktë." }, 400);
   }
 
-  await clearVerifyFailures(email, env);
+  await clearVerifyFailures(request, email, env);
   await env.DB.prepare("DELETE FROM verification_codes WHERE email=?").bind(email).run();
   await env.DB.prepare("UPDATE users SET email_verified=1 WHERE email=?").bind(email).run();
   await ensureTokenVersionColumn(env);
@@ -1657,19 +1702,11 @@ async function handleLogout(request, env) {
   });
 }
 
-async function loadD1Materials(env) {
-  if (!env.DB) return [];
-  try {
-    const result = await env.DB.prepare(
-      `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
-       FROM materials m LEFT JOIN users u ON m.user_id = u.id
-       WHERE m.status = 'approved'`
-    ).all();
-    return result.results || [];
-  } catch (error) {
-    console.error("Unable to load D1 materials for public catalog", error);
-    return [];
-  }
+const MAX_SEARCH_LENGTH = 100;
+
+/** Search text, trimmed and bounded so a query cannot be arbitrarily long. */
+function capSearchTerm(value) {
+  return String(value || "").trim().slice(0, MAX_SEARCH_LENGTH);
 }
 
 /** SQL WHERE fragment, or nothing at all when no filter is active. */
@@ -1680,7 +1717,7 @@ function whereClause(conditions) {
 async function handleMaterials(request, url, env) {
   const faculty = url.searchParams.get("faculty");
   const type = url.searchParams.get("type");
-  const q = url.searchParams.get("q") || url.searchParams.get("search");
+  const q = capSearchTerm(url.searchParams.get("q") || url.searchParams.get("search"));
   const studyLevel = url.searchParams.get("niveli") || url.searchParams.get("study_level");
   const userFilter = url.searchParams.get("user");
   const sortParam = url.searchParams.get("sort") || "newest";
@@ -1784,7 +1821,7 @@ async function handleMaterials(request, url, env) {
 
   const slugIndex = await loadSlugIndexCached(env);
   const rawMaterials = (result.results || []).map((material) => {
-    const slug = slugIndex.get(material.id);
+    const slug = slugIndex.byId.get(material.id);
     return slug ? { ...material, slug } : material;
   });
   const isOwnerView = userFilter === "me";
@@ -1837,8 +1874,18 @@ async function handlePublicMaterial(url, env) {
 
   let match = null;
   if (env.DB) {
-    const d1Materials = await loadD1MaterialsCached(env);
-    match = findMaterialBySlug(d1Materials, slug);
+    // Resolve the slug to an id through the cached index, then read one row,
+    // instead of loading the whole catalogue to search it.
+    const id = (await loadSlugIndexCached(env)).bySlug.get(slug);
+    if (id) {
+      match = await env.DB.prepare(
+        `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name
+         FROM materials m LEFT JOIN users u ON m.user_id = u.id
+         WHERE m.id = ? AND m.status = 'approved'`
+      )
+        .bind(id)
+        .first();
+    }
   }
 
   // Legacy rows that exist only in R2 metadata (not imported into D1).
@@ -2141,6 +2188,13 @@ async function handleEdit(request, url, env) {
   if (!title || !faculty || !subject || !type) {
     return jsonResponse({ error: "Plotësoni të gjitha fushat e detyrueshme." }, 400);
   }
+  // Same allowlists as upload: faculty and type feed public filters and slugs.
+  if (!ALLOWED_FACULTIES.includes(faculty)) {
+    return jsonResponse({ error: "Fakulteti nuk njihet." }, 400);
+  }
+  if (!ALLOWED_MATERIAL_TYPES.includes(type)) {
+    return jsonResponse({ error: "Lloji i materialit nuk njihet." }, 400);
+  }
 
   // An owner who edits a rejected material is resubmitting it for review.
   const resubmit =
@@ -2176,15 +2230,14 @@ async function handleModeratorMaterials(request, url, env) {
   const where = filterStatus ? "WHERE m.status = ?" : "";
   const params = filterStatus ? [filterStatus] : [];
 
-  const [countRow, result] = await Promise.all([
-    env.DB.prepare(`SELECT COUNT(*) AS total FROM materials m ${where}`)
-      .bind(...params)
-      .first(),
+  // pending_owner_email predates the migrations and is missing from fresh
+  // databases, so retry without it rather than failing the whole page.
+  const listMaterials = (ownerColumn) =>
     env.DB.prepare(
       `SELECT m.id, m.title, m.faculty, m.subject, m.type, m.file_type,
               m.r2_url, m.created_at, m.is_anonymous, m.study_level,
               m.status, m.rejection_reason, m.file_size,
-              m.pending_owner_email,
+              ${ownerColumn}
               u.name AS uploader_name, u.surname AS uploader_surname,
               u.email AS uploader_email
        FROM materials m
@@ -2194,7 +2247,18 @@ async function handleModeratorMaterials(request, url, env) {
        LIMIT ? OFFSET ?`
     )
       .bind(...params, LIMIT, offset)
-      .all(),
+      .all();
+
+  const [countRow, result] = await Promise.all([
+    env.DB.prepare(`SELECT COUNT(*) AS total FROM materials m ${where}`)
+      .bind(...params)
+      .first(),
+    listMaterials("m.pending_owner_email,").catch((error) => {
+      if (String(error.message || error).includes("pending_owner_email")) {
+        return listMaterials("");
+      }
+      throw error;
+    }),
   ]);
 
   return jsonResponse({
@@ -2287,18 +2351,20 @@ async function handleDeleteMaterial(request, env) {
     return jsonResponse({ error: "Nuk keni leje." }, 403);
   }
 
-  if (env.MY_BUCKET) {
-    const key = material.file_key || publicUrlToKey(material.r2_url);
-    if (key) await env.MY_BUCKET.delete(key).catch(() => {});
-  }
-
   try {
     await env.DB.prepare("DELETE FROM reports WHERE material_id = ?").bind(id).run();
   } catch {
     // reports table may not exist yet — non-fatal
   }
 
+  // Row first, file second: if the file delete fails the leftover object is
+  // invisible, whereas the other order could leave a listed row with no file.
   await env.DB.prepare("DELETE FROM materials WHERE id = ?").bind(id).run();
+
+  if (env.MY_BUCKET) {
+    const key = material.file_key || publicUrlToKey(material.r2_url);
+    if (key) await env.MY_BUCKET.delete(key).catch(() => {});
+  }
 
   invalidateCatalogCaches();
 
@@ -2383,7 +2449,7 @@ async function handleResourceLinks(request, url, env) {
 
   const faculty = url.searchParams.get("faculty");
   const category = url.searchParams.get("category");
-  const q = url.searchParams.get("q") || url.searchParams.get("search");
+  const q = capSearchTerm(url.searchParams.get("q") || url.searchParams.get("search"));
   const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
   const limit = Math.min(100, Math.max(1, Number(url.searchParams.get("limit")) || 50));
   const offset = (page - 1) * limit;
@@ -2587,11 +2653,32 @@ async function handleModerateResourceLink(request, env) {
     .bind(status, decision === "reject" ? rejectionReason : null, user.id, id)
     .run();
 
-  return jsonResponse({ success: true, status });
-}
+  // Best effort: the decision stands even if the email cannot be sent.
+  try {
+    const owner = await env.DB.prepare("SELECT email FROM users WHERE id = ?")
+      .bind(link.user_id)
+      .first();
+    if (owner?.email) {
+      const title = escapeHtml(link.title);
+      const html =
+        decision === "approve"
+          ? `<p>Lidhja juaj <strong>${title}</strong> u aprovua dhe tani shfaqet te Burime shtesë. Faleminderit!</p>`
+          : `<p>Lidhja juaj <strong>${title}</strong> nuk u aprovua.</p><p><strong>Arsyeja:</strong> ${escapeHtml(
+              rejectionReason
+            )}</p>`;
+      await sendEmail(
+        owner.email,
+        decision === "approve" ? "Lidhja u aprovua — E-Studenti" : "Lidhja nuk u aprovua — E-Studenti",
+        html,
+        env,
+        env.RESEND_CONTACT_FROM || env.RESEND_FROM || DEFAULT_RESEND_FROM
+      );
+    }
+  } catch (error) {
+    console.error("resource link notification failed", error);
+  }
 
-async function handleGenerate(request, env) {
-  return handleUpload(request, env);
+  return jsonResponse({ success: true, status });
 }
 
 /**
@@ -2655,6 +2742,10 @@ async function handleProxy(request, url, env) {
         "Content-Type": res.headers.get("Content-Type") || "application/octet-stream",
         "Cache-Control": "public, max-age=300",
         "X-Content-Type-Options": "nosniff",
+        // The body is user-supplied and served from the API origin, which holds
+        // the session cookie. If a browser ever renders it as a document it must
+        // be inert: no scripts, unique opaque origin.
+        "Content-Security-Policy": "sandbox; default-src 'none'",
       },
     });
     // Only successes are stored; an error page cached for five minutes would
@@ -2749,10 +2840,37 @@ async function handleSiteStatistics(url, env) {
   return jsonResponse(payload);
 }
 
+/** Days of view/download events kept; the longest statistics window is 365. */
+const STAT_EVENT_RETENTION_DAYS = 400;
+
+/**
+ * Hourly housekeeping. Rate-limit counters, verification codes and per-visitor
+ * stat events are written on every request and would otherwise grow forever.
+ */
+async function pruneExpiredRows(env) {
+  const now = Math.floor(Date.now() / 1000);
+  const statements = [
+    ["DELETE FROM rate_limits WHERE reset_at < ?", [now]],
+    ["DELETE FROM verification_codes WHERE expires_at < ?", [new Date().toISOString()]],
+    [
+      `DELETE FROM material_stat_events WHERE created_at < datetime('now', '-${STAT_EVENT_RETENTION_DAYS} days')`,
+      [],
+    ],
+  ];
+  for (const [sql, params] of statements) {
+    try {
+      await env.DB.prepare(sql).bind(...params).run();
+    } catch (error) {
+      console.error("prune failed", sql, error);
+    }
+  }
+}
+
 export default {
   async scheduled(_event, env, ctx) {
     if (!env.DB) return;
     ctx.waitUntil(refreshSiteStats(env));
+    ctx.waitUntil(pruneExpiredRows(env));
   },
 
   async fetch(request, env) {
@@ -2773,7 +2891,6 @@ export default {
       "me",
       "material",
       "upload",
-      "generate",
       "edit",
       "reports",
       "resolve-report",
@@ -2811,6 +2928,17 @@ export default {
         return withCors(databaseUnavailableResponse(), request, env);
       }
 
+      // Without a signing secret every token fails to verify and codes hash to a
+      // known value; say so in the logs instead of failing obscurely.
+      if ((accountActions.includes(action) || action === "logout") && !env.JWT_SECRET) {
+        console.error("JWT_SECRET is not configured");
+        return withCors(
+          jsonResponse({ error: "Shërbimi nuk është konfiguruar siç duhet." }, 503),
+          request,
+          env
+        );
+      }
+
       if (!publicActions.includes(action)) {
         const user = await getUserFromRequest(request, env);
         if (!user) {
@@ -2844,9 +2972,6 @@ export default {
           break;
         case "upload":
           response = await handleUpload(request, env);
-          break;
-        case "generate":
-          response = await handleGenerate(request, env);
           break;
         case "edit":
           response = await handleEdit(request, url, env);

@@ -128,7 +128,11 @@ function mergeTrendRows(period, rawRows, trackingSince, now = new Date()) {
   });
 }
 
+let siteStatsTableChecked = false;
+
 export async function ensureSiteStatsTable(env) {
+  if (siteStatsTableChecked) return;
+  siteStatsTableChecked = true;
   await env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS site_stats (
       id INTEGER PRIMARY KEY CHECK (id = 1),

@@ -14,6 +14,7 @@ import PdfCanvasViewer from "./PdfCanvasViewer";
 import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
 import {
   blockUnsafeLinkClick,
+  cleanSheetHtml,
   getPreviewKind,
   sanitizePreviewLinks,
 } from "../lib/file-preview";
@@ -163,14 +164,9 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
     }
     const sheet = workbookRef.current.Sheets[activeSheet];
     if (sheet) {
-      // Hyperlinks come from the uploaded workbook, so the generated markup is
-      // cleaned before it is injected; the body's click guard is the backstop.
-      const doc = new DOMParser().parseFromString(
-        xlsxRef.current.utils.sheet_to_html(sheet),
-        "text/html"
-      );
-      sanitizePreviewLinks(doc.body);
-      setSheetHtml(doc.body.innerHTML);
+      // The workbook is user-supplied, so only an allowlisted rebuild of its
+      // table (plain-text cells, no links or attributes) is ever injected.
+      setSheetHtml(cleanSheetHtml(xlsxRef.current.utils.sheet_to_html(sheet)));
     }
   }, [activeSheet, kind]);
 

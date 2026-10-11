@@ -128,11 +128,21 @@ function zipBytes(entries) {
     const localName = encoder.encode(entry.localName ?? entry.name);
     const centralName = encoder.encode(entry.name);
 
+    // `declaredSize` fakes a large entry without allocating it, so it also
+    // declares DEFLATE with a plausible compressed size (a stored entry's two
+    // sizes must match, and DEFLATE cannot exceed ~1032:1).
+    const declared = entry.declaredSize ?? content.length;
+    const method = entry.method ?? (entry.declaredSize ? 8 : 0);
+    const compressed =
+      entry.compressedSize ??
+      (entry.declaredSize ? Math.ceil(entry.declaredSize / 500) : content.length);
+
     const local = new Uint8Array(30 + localName.length + content.length);
     writeUInt32LE(local, 0, 0x04034b50);
     writeUInt16LE(local, 4, 20);
-    writeUInt32LE(local, 18, content.length);
-    writeUInt32LE(local, 22, content.length);
+    writeUInt16LE(local, 8, method);
+    writeUInt32LE(local, 18, entry.localCompressedSize ?? compressed);
+    writeUInt32LE(local, 22, entry.localUncompressedSize ?? declared);
     writeUInt16LE(local, 26, localName.length);
     local.set(localName, 30);
     local.set(content, 30 + localName.length);
@@ -145,7 +155,8 @@ function zipBytes(entries) {
     writeUInt32LE(header, 0, 0x02014b50);
     writeUInt16LE(header, 4, 20);
     writeUInt16LE(header, 6, 20);
-    writeUInt32LE(header, 20, content.length);
+    writeUInt16LE(header, 10, method);
+    writeUInt32LE(header, 20, compressed);
     writeUInt32LE(header, 24, declaredSize);
     writeUInt16LE(header, 28, centralName.length);
     writeUInt32LE(header, 42, offset);
@@ -394,6 +405,52 @@ describe("material upload", () => {
     expect(body.error).toContain("skanimi-i-madh.pdf");
     expect(body.error).toContain("64MB");
     expect(body.error).toContain("50MB");
+  });
+
+  describe("zip header plausibility", () => {
+    const zipUpload = async (entry) => {
+      const { env } = makeEnv();
+      const file = new File([zipBytes([entry])], "a.zip", { type: "application/zip" });
+      const response = await upload({ env, file });
+      return { response, body: await response.json() };
+    };
+
+    it("rejects a stored entry whose two sizes disagree", async () => {
+      const { response } = await zipUpload({ name: "a.pdf", content: "%PDF-1.7", compressedSize: 3 });
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects a DEFLATE entry that claims more than DEFLATE can produce", async () => {
+      // 8 bytes compressed, 20MB declared: far beyond the ~1032:1 ceiling.
+      const { response } = await zipUpload({
+        name: "a.pdf",
+        content: "%PDF-1.7",
+        method: 8,
+        compressedSize: 8,
+        declaredSize: 20 * 1024 * 1024,
+      });
+      expect(response.status).toBe(400);
+    });
+
+    it("rejects compression methods the site cannot safely bound", async () => {
+      const { response, body } = await zipUpload({ name: "a.pdf", content: "%PDF-1.7", method: 12 });
+      expect(response.status).toBe(400);
+      expect(body.error).toMatch(/Deflate/);
+    });
+
+    it("rejects a local header that disagrees with the central directory", async () => {
+      const { response } = await zipUpload({
+        name: "a.pdf",
+        content: "%PDF-1.7",
+        localUncompressedSize: 12345,
+      });
+      expect(response.status).toBe(400);
+    });
+
+    it("still accepts an ordinary entry", async () => {
+      const { response } = await zipUpload({ name: "a.pdf", content: "%PDF-1.7" });
+      expect(response.status).toBe(200);
+    });
   });
 
   it("rejects a ZIP that inflates past the total limit", async () => {

@@ -75,6 +75,18 @@ CREATE TABLE IF NOT EXISTS site_stats (
   tracking_since TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  material_id INTEGER NOT NULL,
+  reporter_id INTEGER,
+  reason TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'pending',
+  created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE INDEX IF NOT EXISTS idx_reports_material ON reports(material_id);
+CREATE INDEX IF NOT EXISTS idx_reports_status ON reports(status);
+
 CREATE TABLE IF NOT EXISTS resource_links (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),

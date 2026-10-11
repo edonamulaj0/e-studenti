@@ -116,7 +116,7 @@ export default function RegjistrohuPage() {
             </div>
             <div className="rounded-3xl bg-white/10 p-6 backdrop-blur">
               <Users className="mb-3 h-6 w-6" />
-              <p className="text-lg font-semibold">500+ studentë aktiv</p>
+              <p className="text-lg font-semibold">Nga komuniteti, për çdo student</p>
               <p className="mt-2 text-sm leading-relaxed text-white/65">
                 Materialet e komunitetit bëhen më të dobishme sa herë që dikush
                 kontribuon.
