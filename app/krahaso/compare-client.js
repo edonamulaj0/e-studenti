@@ -17,7 +17,7 @@ function rowsFor(p) {
   return {
     Universiteti: u.name.replace(/"/g, ""),
     Lloji: sectorLabel(u.sector),
-    "Fakulteti / njësia": p.unit || "—",
+    "Fakulteti / fusha": p.unit || p.field,
     Niveli: `${levelLabel(p.level)} (${p.degree})`,
     Kohëzgjatja: durationLabel(p.ects),
     Kreditet: `${p.ects} ECTS`,
