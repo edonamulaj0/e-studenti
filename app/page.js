@@ -6,10 +6,10 @@ import JsonLd, { organizationJsonLd, websiteJsonLd } from "./components/JsonLd";
 export const metadata = {
   title: {
     absolute:
-      "E-Studenti — Materiale, Provime dhe Burime për Studentët e UP-së",
+      "E-Studenti — Materiale, Provime dhe Burime për Studentët në Kosovë",
   },
   description:
-    "Platformë komunitare me materiale studimore, afate, ligjërata dhe burime për studentët e Universitetit të Prishtinës. Shfletoni, shkarkoni dhe kontribuoni.",
+    "Platformë komunitare me materiale studimore, afate, ligjërata dhe burime për studentët e universiteteve në Kosovë. Shfletoni, shkarkoni dhe kontribuoni.",
   alternates: {
     canonical: "https://e-studenti.com",
   },

@@ -34,22 +34,22 @@ export const metadata = {
     template: "%s | E-Studenti",
   },
   description:
-    "Platformë komunitare për materiale studimore, fakultete dhe burime të dobishme për studentët e UP-së.",
+    "Platformë komunitare për materiale studimore, universitete dhe burime të dobishme për studentët në Kosovë.",
   openGraph: {
     type: "website",
     locale: "sq_AL",
     url: SITE_URL,
     siteName: "E-Studenti",
-    title: "E-Studenti — Materiale dhe burime për studentët e UP-së",
+    title: "E-Studenti — Materiale dhe burime për studentët në Kosovë",
     description:
-      "Platformë komunitare me materiale studimore, afate, ligjërata dhe burime për studentët e Universitetit të Prishtinës.",
+      "Platformë komunitare me materiale studimore, afate, ligjërata dhe burime për studentët e universiteteve në Kosovë.",
     images: [{ url: "/logo-color.svg", alt: "E-Studenti" }],
   },
   twitter: {
     card: "summary",
     title: "E-Studenti",
     description:
-      "Materiale, provime dhe burime studimore për studentët e UP-së.",
+      "Materiale, provime dhe burime studimore për studentët e universiteteve në Kosovë.",
     images: ["/logo-color.svg"],
   },
   icons: {

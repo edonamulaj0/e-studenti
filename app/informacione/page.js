@@ -122,11 +122,11 @@ export default function InformacionePage() {
             {t("Rreth nesh")}
           </h1>
           <p className="page-subtitle max-w-3xl text-lg md:text-xl">
-            {t("E-Studenti është një iniciativë komunitare e ndërtuar nga studentë — jo platformë zyrtare e Universitetit të Prishtinës.")}
+            {t("E-Studenti është një iniciativë komunitare e ndërtuar nga studentë — jo platformë zyrtare e asnjë universiteti.")}
           </p>
           <div className="mt-6 rounded-2xl border border-burgundy-600/20 bg-burgundy-50/60 p-5 text-sm leading-relaxed text-navy-900">
             <strong>{t("Jo zyrtare:")}</strong>{" "}
-            {t("Nuk jemi të autorizuar, të miratuar ose të mbështetur nga UP-ja. Materialet janë kontribute vullnetare të komunitetit.")}
+            {t("Nuk jemi të autorizuar, të miratuar ose të mbështetur nga asnjë universitet. Materialet janë kontribute vullnetare të komunitetit.")}
           </div>
           <div className="mt-4 flex flex-wrap gap-3 text-sm font-semibold">
             <Link href="/statistikat" className="text-burgundy-600 hover:underline">
@@ -194,7 +194,7 @@ export default function InformacionePage() {
               </p>
               <div className="grid gap-4 md:grid-cols-2">
                 {[
-                  ["Jo zyrtare", "Komunitet studentor, jo UP"],
+                  ["Jo zyrtare", "Komunitet studentor, jo universitet"],
                   ["Transparent", "Kodi publik në GitHub"],
                   ["Privat", "Anonimitet real në kërkim/API publike"],
                   ["Jofitimprurëse", "Pa monetizim — kurrë"],

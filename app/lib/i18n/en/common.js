@@ -14,7 +14,7 @@ const common = {
   "Mbyll menunë": "Close menu",
   "Hap menunë": "Open menu",
   "Menyja": "Menu",
-  "Platformë komunitare për materiale studimore dhe burime të dobishme për studentët e UP-së.": "A community platform for study materials and useful resources for UP students.",
+  "Platformë komunitare për materiale studimore dhe burime të dobishme për studentët e universiteteve në Kosovë.": "A community platform for study materials and useful resources for students of universities in Kosovo.",
   "Komuniteti": "Community",
   "Llogaria": "Account",
   "Ligjore": "Legal",

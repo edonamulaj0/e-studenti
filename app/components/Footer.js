@@ -11,7 +11,6 @@ const platformaLinks = [
   { href: "/", label: "Ballina" },
   { href: "/universitetet", label: "Universitetet" },
   { href: "/materialet", label: "Materialet" },
-  { href: "/erasmus", label: "Erasmus+" },
   { href: "/informacione", label: "Rreth nesh" },
 ];
 
@@ -62,7 +61,7 @@ export default function Footer() {
               E-Studenti
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/60">
-              {t("Platformë komunitare për materiale studimore dhe burime të dobishme për studentët e UP-së.")}
+              {t("Platformë komunitare për materiale studimore dhe burime të dobishme për studentët e universiteteve në Kosovë.")}
             </p>
             <p className="mt-5 text-xs font-medium text-white/70">
               © 2026 E-Studenti.

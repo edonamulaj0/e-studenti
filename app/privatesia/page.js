@@ -10,7 +10,7 @@ export const metadata = {
 const sections = [
   {
     title: "Kush jemi",
-    text: "E-Studenti është një platformë komunitare e ndërtuar nga studentë — shërbim jozyrtar i Universitetit të Prishtinës dhe iniciativë jofitimprurëse.",
+    text: "E-Studenti është një platformë komunitare e ndërtuar nga studentë — shërbim jozyrtar, i palidhur me asnjë universitet, dhe iniciativë jofitimprurëse.",
   },
   {
     title: "Çfarë mbledhim",

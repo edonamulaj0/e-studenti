@@ -1,8 +1,9 @@
 # E-Studenti
 
-A community library of study materials for students of the University of
-Prishtina: lecture notes, exam papers, projects and useful links, uploaded and
-reviewed by the students themselves. The site is in Albanian and is not an
+A community library of study materials for students of universities and
+colleges in Kosovo, plus a directory of their accredited programmes: lecture
+notes, exam papers, projects and useful links, uploaded and reviewed by the
+students themselves. The site is in Albanian and English and is not an
 official university service.
 
 ## How it fits together
@@ -97,7 +98,7 @@ cloudflare-worker/
   migrations/        D1 schema history (apply in order)
   schema.sql         the same schema in one file, for a brand-new database
 shared/              rules used by both the site and the Worker
-scripts/             build helpers (sitemap, secret scan, stub API, Erasmus sync)
+scripts/             build helpers (sitemap, secret scan, stub API)
 docs/                architecture, deployment, accessibility conventions
 public/              static files, including `_headers` (CSP) and `_redirects`
 ```

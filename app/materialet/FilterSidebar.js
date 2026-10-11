@@ -95,7 +95,7 @@ function Section({ title: titleSq, name, options, selected, onChange, single = f
 
 /** Draft filters are edited freely and only take effect on "Apliko filtrat". */
 /**
- * `sections` limits which filters are shown (the applicants page only wants university and level);
+
  * `publicOnly` lists just the public universities, the only ones that run entrance exams.
  */
 export default function FilterSidebar({ draft, setDraft, subjects, onApply, onClear, id, sections, publicOnly = false }) {
