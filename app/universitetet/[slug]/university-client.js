@@ -17,6 +17,7 @@ import {
   sectorLabel,
 } from "../../lib/directory";
 import { useCompare } from "../../components/CompareProvider";
+import CourseList from "../../components/CourseList";
 
 const LEVEL_TONE = {
   bachelor: "bg-teal-100 text-teal-900",
@@ -72,6 +73,13 @@ function ProgrammeRow({ programme, open, onToggle }) {
         </dl>
 
         {programme.note && <p className="mt-3 text-sm text-gray-600">{programme.note}</p>}
+
+        {/* Mounted only while open, so the course data loads when someone looks. */}
+        {open && (
+          <div className="mt-4 border-t border-gray-100 pt-4">
+            <CourseList programmeId={programme.id} />
+          </div>
+        )}
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {!first && (

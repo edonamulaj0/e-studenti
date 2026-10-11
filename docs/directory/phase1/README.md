@@ -25,3 +25,7 @@ Every row has its source URL and, where the programme could be matched to the AK
 - Names are as written in the sources (Albanian or English). Merging them with the subject names students use on uploads is a later step.
 - Manual review of the flagged programmes.
 - OCR for the scanned documents; Gjakova, Prizren, Ferizaj, UP and the small colleges.
+
+## On the site
+
+`node scripts/build-curricula-data.mjs` turns these CSVs into `app/data/courses.json` (83 programmes, 3,183 courses). Opening a programme on `/universitetet/<slug>` shows its courses by year and semester, with a link to the source document; `/krahaso` shows both programmes' course lists side by side. The file loads on demand, so it does not slow the other pages. Programmes without a list say so.
