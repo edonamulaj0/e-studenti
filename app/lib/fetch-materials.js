@@ -102,3 +102,28 @@ export async function fetchMaterialBySlug(slug) {
     return null;
   }
 }
+
+/** Every subject with its published-material count, for generating pages at build time. Throws if unreadable. */
+export async function fetchSubjectsForBuild() {
+  const res = await fetch(`${WORKER_URL}/?action=subjects`, { next: { revalidate: 3600 } });
+  if (!res.ok) {
+    throw new Error(`Could not list subjects for the build: ${WORKER_URL} answered ${res.status}`);
+  }
+  const data = await res.json();
+  return Array.isArray(data.subjects) ? data.subjects : [];
+}
+
+export async function fetchSubjectBySlug(slug) {
+  try {
+    const res = await fetch(
+      `${WORKER_URL}/?action=subject-public&slug=${encodeURIComponent(slug)}`,
+      { next: { revalidate: 300 } }
+    );
+    if (!res.ok) return null;
+    const data = await res.json();
+    if (!data.subject) return null;
+    return { subject: data.subject, materials: (data.materials || []).map(sanitizeFetchedMaterial) };
+  } catch {
+    return null;
+  }
+}

@@ -2,25 +2,13 @@
 
 import { useCallback, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import {
-  FileText,
-  Download,
-  Eye,
-  Search,
-  Archive,
-} from "lucide-react";
-import ArchiveModal from "../components/ArchiveModal";
-import MaterialPreviewModal from "../components/MaterialPreviewModal";
-import ReportButton from "../components/ReportButton";
-import { FACULTIES, getFacultyName } from "../lib/material-options";
+import { FileText, Search } from "lucide-react";
+import MaterialGrid from "../components/MaterialGrid";
+import { FACULTIES } from "../lib/material-options";
 import { assignMaterialSlugs } from "../lib/material-slug";
-import { STUDY_LEVELS, getStudyLevelLabel } from "../lib/study-levels";
-import { WORKER_URL, materialDownloadUrl, materialViewUrl } from "../lib/worker-url";
-import MaterialStatsBadge from "../components/MaterialStatsBadge";
-import TrackableDownloadLink from "../components/TrackableDownloadLink";
-import { trackMaterialView } from "../lib/track-material";
-import { getFileTypeBadge, hasInBrowserView } from "../lib/file-preview";
-import { displayTeacher, normalizeMaterial, typeTone } from "../lib/material-view";
+import { STUDY_LEVELS } from "../lib/study-levels";
+import { WORKER_URL } from "../lib/worker-url";
+import { normalizeMaterial } from "../lib/material-view";
 
 const PAGE_SIZE = 24;
 
@@ -50,9 +38,6 @@ export default function MaterialsClient({ initialData = null }) {
     initialData?.typeCounts || {}
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [modalOpen, setModalOpen] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
-  const [selectedMaterial, setSelectedMaterial] = useState(null);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -166,141 +151,6 @@ export default function MaterialsClient({ initialData = null }) {
     return Array.from({ length: end - start + 1 }, (_, index) => start + index);
   }, [currentPage, totalPages]);
 
-  const isArchiveFile = (fileType) => {
-    return (
-      fileType?.toLowerCase() === "zip"
-    );
-  };
-
-  const handleViewClick = (material, e) => {
-    if (e) e.preventDefault();
-    trackMaterialView(material.id);
-    setSelectedMaterial(material);
-    if (isArchiveFile(material.fileType)) {
-      setModalOpen(true);
-    } else {
-      setPreviewOpen(true);
-    }
-  };
-
-  const renderCard = (material) => {
-    const tone = typeTone(material.type);
-    const facultyName = getFacultyName(material.faculty);
-    const fileBadge = getFileTypeBadge(material.fileType);
-    return (
-    <div
-      key={material.id}
-      className={`surface-card group flex h-full flex-col p-5 hover:-translate-y-1 hover:shadow-md md:p-6 ${tone.card}`}
-    >
-      <div className="mb-5 flex items-start justify-between gap-4">
-        <div className="flex-1 min-w-0">
-          <h3
-            className="mb-3 text-xl font-semibold leading-snug text-navy-900 transition-colors group-hover:text-burgundy-600"
-          >
-            <Link href={`/materialet/${material.slug}`} className="hover:text-burgundy-600">
-              {material.title}
-            </Link>
-          </h3>
-          <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
-            <span className="rounded-full bg-navy-100 px-3 py-1 font-semibold text-navy-800">
-              {facultyName}
-            </span>
-            <span className={`rounded-full px-3 py-1 text-sm font-semibold ${tone.chip}`}>
-              {material.type}
-            </span>
-            <span className="rounded-full bg-white px-3 py-1 text-xs font-semibold text-navy-700 ring-1 ring-navy-100">
-              {getStudyLevelLabel(material.study_level)}
-            </span>
-            <span>{material.department}</span>
-          </div>
-        </div>
-        <span className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl text-[11px] font-bold tracking-tight ${fileBadge.className}`}>
-          {fileBadge.label}
-        </span>
-      </div>
-
-      <div className="mb-6 grid gap-3 text-sm">
-        <div className="rounded-2xl bg-navy-100/40 p-4">
-          <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-            Lënda
-          </span>
-          <p className="mt-1 font-semibold text-navy-900">{material.subject}</p>
-        </div>
-        <div>
-          <div className="rounded-2xl bg-white p-4">
-            <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-              Autor/e
-            </span>
-            <p className="mt-1 font-semibold text-navy-900">
-              {displayTeacher(material)}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="mb-4 mt-auto flex items-center justify-between gap-3">
-        <div className="flex min-w-0 flex-1 flex-col gap-2">
-          <ReportButton materialId={material.id} materialTitle={material.title} materialUrl={material.r2Url} />
-          <MaterialStatsBadge
-            viewCount={material.view_count}
-            downloadCount={material.download_count}
-          />
-        </div>
-        {material.submittedBy?.name && (
-          <span className="truncate text-right text-sm text-gray-500">
-            Dërguar nga: {material.submittedBy.name}
-          </span>
-        )}
-      </div>
-
-      <div className="flex flex-col sm:flex-row gap-3 mt-auto">
-        {material.r2Url && (
-          <>
-            {/* RAR has no viewer, so it gets the download button only. */}
-            {hasInBrowserView(material.fileType) &&
-              (isArchiveFile(material.fileType) ? (
-                <button
-                  type="button"
-                  onClick={(e) => handleViewClick(material, e)}
-                  className="btn-outline flex-1 text-base"
-                >
-                  <Archive className="w-5 h-5" />
-                  Permbajtja
-                </button>
-              ) : (
-                <a
-                  href={materialViewUrl(material.id)}
-                  onClick={(e) => handleViewClick(material, e)}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-primary flex-1 text-base"
-                >
-                  <Eye className="w-5 h-5" />
-                  Shiko
-                </a>
-              ))}
-          <TrackableDownloadLink
-            materialId={material.id}
-            href={materialDownloadUrl(material.id)}
-            target="_blank"
-            rel="noopener noreferrer"
-            download={
-              material.title.replace(/[^a-z0-9]/gi, "_") +
-              "." +
-              (material.fileType || "pdf")
-            }
-            className="btn-secondary flex-1 text-base"
-          >
-            <Download className="w-5 h-5" />
-            Shkarko
-          </TrackableDownloadLink>
-          </>
-        )}
-      </div>
-    </div>
-    );
-  };
-
   if (loading && !hasLoaded) {
     return (
       <div className="page-shell" role="status" aria-busy="true">
@@ -311,9 +161,9 @@ export default function MaterialsClient({ initialData = null }) {
             <div className="h-12 w-2/3 rounded-lg bg-gray-200 motion-safe:animate-pulse" />
             <div className="h-5 w-full max-w-xl rounded-lg bg-gray-200 motion-safe:animate-pulse" />
           </div>
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {[0, 1, 2, 3, 4, 5].map((i) => (
-              <div key={i} className="h-72 rounded-3xl bg-gray-200/70 motion-safe:animate-pulse" />
+              <div key={i} className="h-36 rounded-3xl bg-gray-200/70 motion-safe:animate-pulse" />
             ))}
           </div>
         </div>
@@ -345,23 +195,22 @@ export default function MaterialsClient({ initialData = null }) {
   return (
     <div className="page-shell">
       <div className="section-shell">
-        <header className="mb-10 max-w-3xl">
-          <p className="page-kicker mb-4">Biblioteka</p>
-          <h1 className="page-title mb-4">
-            Materialet
-          </h1>
-          <p className="page-subtitle mb-5 max-w-2xl">
-            Gjeni shënime, afate dhe projekte — filtroni sipas fakultetit dhe
-            llojit, pastaj hapni ose shkarkoni materialet.
+        <header className="mb-5 max-w-3xl">
+          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">Materialet</h1>
+          <p className="page-subtitle mb-3 max-w-2xl !text-base">
+            Filtroni sipas fakultetit dhe llojit, ose shfletoni sipas{" "}
+            <Link href="/lendet" className="font-semibold text-burgundy-600 underline underline-offset-2">
+              lëndës
+            </Link>.
           </p>
           <div className="flex flex-wrap gap-3 text-sm font-semibold text-gray-600">
-            <span className="rounded-full bg-white px-4 py-2 shadow-sm">
+            <span className="rounded-full bg-white px-3 py-1 shadow-sm">
               {pagination.total} materiale
             </span>
-            <span className="rounded-full bg-burgundy-50 px-4 py-2 text-burgundy-600">
+            <span className="rounded-full bg-burgundy-50 px-3 py-1 text-burgundy-600">
               {typeOptions.length} lloje
             </span>
-            <span className="rounded-full bg-navy-100 px-4 py-2 text-navy-800">
+            <span className="rounded-full bg-navy-100 px-3 py-1 text-navy-800">
               Faqja {currentPage} / {totalPages}
             </span>
           </div>
@@ -369,7 +218,7 @@ export default function MaterialsClient({ initialData = null }) {
 
         <div
           id="material-filters"
-          className="sticky top-24 z-20 mb-8 py-3 backdrop-blur"
+          className="sticky top-24 z-20 mb-4 py-2 backdrop-blur"
         >
           <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
             <button
@@ -483,9 +332,7 @@ export default function MaterialsClient({ initialData = null }) {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
-              {filteredMaterials.map((m) => renderCard(m))}
-            </div>
+            <MaterialGrid materials={filteredMaterials} />
           )}
           {pagination.total > 0 && (
             <nav
@@ -536,17 +383,6 @@ export default function MaterialsClient({ initialData = null }) {
         </div>
       </div>
 
-      <ArchiveModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        material={selectedMaterial}
-      />
-
-      <MaterialPreviewModal
-        isOpen={previewOpen}
-        onClose={() => setPreviewOpen(false)}
-        material={selectedMaterial}
-      />
     </div>
   );
 }

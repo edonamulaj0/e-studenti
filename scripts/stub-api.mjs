@@ -43,6 +43,18 @@ const server = http.createServer((req, res) => {
     res.statusCode = found ? 200 : 404;
     return res.end(JSON.stringify(found ? { material: found } : { error: "Materiali nuk u gjet." }));
   }
+  if (action === "subjects" || action === "subject-public") {
+    const groups = [...new Set(materials.map((m) => `${m.subject.toLowerCase()}-${m.faculty.toLowerCase()}`))].map((slug) => {
+      const rows = materials.filter((m) => `${m.subject.toLowerCase()}-${m.faculty.toLowerCase()}` === slug);
+      return { slug, faculty: rows[0].faculty, name: rows[0].subject, count: rows.length, teachers: [], types: {} };
+    });
+    if (action === "subjects") return res.end(JSON.stringify({ subjects: groups }));
+    const group = groups.find((g) => g.slug === url.searchParams.get("slug"));
+    res.statusCode = group ? 200 : 404;
+    return res.end(JSON.stringify(group
+      ? { subject: group, materials: materials.filter((m) => m.subject === group.name && m.faculty === group.faculty) }
+      : { error: "Lënda nuk u gjet." }));
+  }
   if (action === "resource-links") return res.end(JSON.stringify({ links: [], ...page([]) }));
   if (action === "me") return res.end(JSON.stringify({ user: null }));
   res.end("{}");

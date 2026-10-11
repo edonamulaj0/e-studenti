@@ -6,6 +6,7 @@ CREATE TABLE IF NOT EXISTS users (
   email_verified INTEGER DEFAULT 0,
   is_moderator INTEGER NOT NULL DEFAULT 0,
   token_version INTEGER NOT NULL DEFAULT 0,
+  trust_revoked INTEGER NOT NULL DEFAULT 0,
   created_at TEXT DEFAULT (datetime('now'))
 );
 
@@ -92,7 +93,16 @@ CREATE TABLE IF NOT EXISTS reports (
   reporter_id INTEGER,
   reason TEXT NOT NULL,
   status TEXT NOT NULL DEFAULT 'pending',
+  reporter_key TEXT,
   created_at TEXT DEFAULT (datetime('now'))
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS idx_reports_one_per_reporter
+  ON reports(material_id, reporter_key) WHERE reporter_key IS NOT NULL;
+CREATE TABLE IF NOT EXISTS report_alerts (
+  material_id INTEGER PRIMARY KEY,
+  notified_at TEXT,
+  reminded_at TEXT
 );
 
 CREATE INDEX IF NOT EXISTS idx_reports_material ON reports(material_id);

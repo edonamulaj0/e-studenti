@@ -4,7 +4,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FileText } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
-import MaterialCard, { normalizeMaterial } from "../../components/MaterialCard";
+import MaterialGrid from "../../components/MaterialGrid";
+import { normalizeMaterial } from "../../lib/material-view";
 
 export default function FacultyClient({ faculty }) {
   const [materials, setMaterials] = useState([]);
@@ -88,11 +89,7 @@ export default function FacultyClient({ faculty }) {
             </Link>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 xl:grid-cols-3">
-            {materials.map((m) => (
-              <MaterialCard key={m.id} material={m} />
-            ))}
-          </div>
+          <MaterialGrid materials={materials} />
         )}
       </div>
     </div>

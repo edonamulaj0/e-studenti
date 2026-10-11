@@ -1,161 +1,170 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
-import { Download, Eye, Archive } from "lucide-react";
+import { Download, Eye, Archive, BadgeCheck } from "lucide-react";
 import { getFacultyName } from "../lib/material-options";
-import { assignMaterialSlugs } from "../lib/material-slug";
 import { getStudyLevelLabel } from "../lib/study-levels";
-import ArchiveModal from "./ArchiveModal";
-import MaterialPreviewModal from "./MaterialPreviewModal";
 import ReportButton from "./ReportButton";
-import MaterialStatsBadge from "./MaterialStatsBadge";
 import TrackableDownloadLink from "./TrackableDownloadLink";
-import { materialDownloadUrl } from "../lib/worker-url";
-import { trackMaterialView } from "../lib/track-material";
+import { formatStatCount } from "../lib/track-material";
+import { materialDownloadUrl, materialViewUrl } from "../lib/worker-url";
 import { getFileTypeBadge, hasInBrowserView } from "../lib/file-preview";
-import { displayDepartment, displayTeacher, normalizeMaterial, typeTone } from "../lib/material-view";
+import { displayTeacher, normalizeMaterial, typeTone } from "../lib/material-view";
+import { isRealSubject, subjectSlug } from "../lib/subjects";
 
 export { normalizeMaterial, typeTone };
 
-export default function MaterialCard({ material, allMaterials = [] }) {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [previewOpen, setPreviewOpen] = useState(false);
+/**
+ * One catalogue entry, kept to roughly 150px: badge + two-line title, one line
+ * of facts, one line for subject and teacher, one footer row. Opening the
+ * preview is the grid's job (`onView`), so a page of cards shares one modal.
+ */
+export default function MaterialCard({ material, onView, showSubject = true }) {
   const tone = typeTone(material.type);
-  const facultyName = getFacultyName(material.faculty);
-  const slug =
-    material.slug ||
-    assignMaterialSlugs(allMaterials.length ? allMaterials : [material])[0]?.slug;
   const isArchive = material.fileType?.toLowerCase() === "zip";
   const fileBadge = getFileTypeBadge(material.fileType);
-  const department = displayDepartment(material.department);
+  const teacher = displayTeacher(material);
+  const hasSubject = isRealSubject(material.subject);
+  const views = Number(material.view_count || 0);
+  const downloads = Number(material.download_count || 0);
+  const canView = Boolean(material.r2Url) && hasInBrowserView(material.fileType);
 
   return (
-    <>
-      <div
-        className={`surface-card group flex h-full flex-col p-4 hover:-translate-y-1 hover:shadow-md md:p-5 ${tone.card}`}
-      >
-        <div className="mb-3 flex items-start justify-between gap-3">
-          <div className="flex-1 min-w-0">
-            <h3 className="mb-2 text-lg font-semibold leading-snug text-navy-900 transition-colors group-hover:text-burgundy-600">
-              {slug ? (
-                <Link href={`/materialet/${slug}`} className="hover:text-burgundy-600">
-                  {material.title}
-                </Link>
-              ) : (
-                material.title
-              )}
-            </h3>
-            <div className="flex flex-wrap items-center gap-1.5 text-xs text-gray-600">
-              <span className="rounded-full bg-navy-100 px-2.5 py-0.5 font-semibold text-navy-800">
-                {facultyName}
-              </span>
-              <span className={`rounded-full px-2.5 py-0.5 font-semibold ${tone.chip}`}>
-                {material.type}
-              </span>
-              <span className="rounded-full bg-white px-2.5 py-0.5 font-semibold text-navy-700 ring-1 ring-navy-100">
-                {getStudyLevelLabel(material.study_level)}
-              </span>
-              {department && <span>{department}</span>}
-            </div>
-          </div>
-          <span
-            className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[10px] font-bold tracking-tight ${fileBadge.className}`}
-          >
-            {fileBadge.label}
-          </span>
-        </div>
-
-        {/* One line each: the labelled panels these replaced cost about 110px
-            of card height for two short values. */}
-        <div className="mb-3 space-y-0.5 text-sm">
-          <p className="truncate">
-            <span className="text-gray-500">Lënda:</span>{" "}
-            <span className="font-semibold text-navy-900">{material.subject}</span>
-          </p>
-          <p className="truncate">
-            <span className="text-gray-500">Autor/e:</span>{" "}
-            <span className="font-semibold text-navy-900">{displayTeacher(material)}</span>
-          </p>
-        </div>
-
-        <div className="mb-3 mt-auto flex items-start justify-between gap-3">
-          <ReportButton materialId={material.id} materialTitle={material.title} materialUrl={material.r2Url} />
-          <div className="flex min-w-0 flex-col items-end gap-1">
-            {material.submittedBy?.name && (
-              <span className="truncate text-sm text-gray-500">
-                {material.submittedBy.name}
-              </span>
+    <article
+      className={`surface-card group flex h-full flex-col gap-2.5 p-3.5 hover:shadow-md ${tone.card}`}
+    >
+      <div className="flex items-start gap-3">
+        <span
+          aria-hidden
+          className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-[10px] font-bold tracking-tight ${fileBadge.className}`}
+        >
+          {fileBadge.label}
+        </span>
+        <div className="min-w-0 flex-1">
+          <h3 className="line-clamp-2 text-base font-semibold leading-snug text-navy-900 group-hover:text-burgundy-600">
+            {material.slug ? (
+              <Link href={`/materialet/${material.slug}`}>{material.title}</Link>
+            ) : (
+              material.title
             )}
-            <MaterialStatsBadge
-              viewCount={material.view_count}
-              downloadCount={material.download_count}
-              className="justify-end"
-            />
-          </div>
+          </h3>
+          <p className="mt-1 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs text-gray-600">
+            <abbr
+              title={getFacultyName(material.faculty)}
+              className="rounded-md bg-navy-100 px-1.5 py-0.5 font-semibold text-navy-800 no-underline"
+            >
+              {material.faculty}
+            </abbr>
+            <span className={`rounded-md px-1.5 py-0.5 font-semibold ${tone.chip}`}>
+              {material.type}
+            </span>
+            <span>{getStudyLevelLabel(material.study_level)}</span>
+          </p>
+        </div>
+      </div>
+
+      {(hasSubject || teacher !== "—") && (
+        <p className="truncate text-sm text-gray-600">
+          {hasSubject &&
+            (showSubject ? (
+              <Link
+                href={`/lenda/${subjectSlug(material.faculty, material.subject)}`}
+                className="font-semibold text-navy-900 hover:text-burgundy-600 hover:underline"
+              >
+                {material.subject}
+              </Link>
+            ) : (
+              <span className="font-semibold text-navy-900">{material.subject}</span>
+            ))}
+          {hasSubject && teacher !== "—" && " · "}
+          {teacher !== "—" && teacher}
+        </p>
+      )}
+
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-gray-100 pt-2.5">
+        <div className="flex min-w-0 flex-1 items-center gap-2 text-xs text-gray-600">
+          {(views > 0 || downloads > 0) && (
+            <span className="inline-flex shrink-0 items-center gap-2 font-semibold">
+              {views > 0 && (
+                <span className="inline-flex items-center gap-1" title="Shikime">
+                  <Eye className="h-3.5 w-3.5" aria-hidden />
+                  <span className="sr-only">Shikime:</span>
+                  {formatStatCount(views)}
+                </span>
+              )}
+              {downloads > 0 && (
+                <span className="inline-flex items-center gap-1" title="Shkarkime">
+                  <Download className="h-3.5 w-3.5" aria-hidden />
+                  <span className="sr-only">Shkarkime:</span>
+                  {formatStatCount(downloads)}
+                </span>
+              )}
+            </span>
+          )}
+          {material.submittedBy?.name && (
+            <span className="inline-flex min-w-0 items-center gap-1 text-gray-500">
+              {material.uploader_trusted && (
+                <BadgeCheck
+                  className="h-3.5 w-3.5 shrink-0 text-info-text"
+                  aria-label="Kontribues i besuar"
+                  role="img"
+                />
+              )}
+              <span className="truncate">{material.submittedBy.name}</span>
+            </span>
+          )}
         </div>
 
-        <div className="flex flex-col gap-2 sm:flex-row">
+        <div className="flex shrink-0 items-center gap-1">
+          {canView &&
+            (isArchive ? (
+              <button
+                type="button"
+                onClick={() => onView?.(material)}
+                className="btn-outline min-h-[36px] px-3 py-1.5 text-sm"
+              >
+                <Archive className="h-4 w-4" aria-hidden />
+                Përmbajtja
+              </button>
+            ) : (
+              <a
+                href={materialViewUrl(material.id)}
+                onClick={(e) => {
+                  e.preventDefault();
+                  onView?.(material);
+                }}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-primary min-h-[36px] px-3 py-1.5 text-sm"
+              >
+                <Eye className="h-4 w-4" aria-hidden />
+                Shiko
+              </a>
+            ))}
           {material.r2Url && (
-            <>
-              {/* RAR has no viewer, so it gets the download button only. */}
-              {hasInBrowserView(material.fileType) &&
-                (isArchive ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      trackMaterialView(material.id);
-                      setModalOpen(true);
-                    }}
-                    className="btn-outline flex-1 text-base"
-                  >
-                    <Archive className="w-5 h-5" />
-                    Permbajtja
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      trackMaterialView(material.id);
-                      setPreviewOpen(true);
-                    }}
-                    className="btn-primary flex-1 text-base"
-                  >
-                    <Eye className="w-5 h-5" />
-                    Shiko
-                  </button>
-                ))}
             <TrackableDownloadLink
               materialId={material.id}
               href={materialDownloadUrl(material.id)}
               target="_blank"
               rel="noopener noreferrer"
               download={
-                material.title.replace(/[^a-z0-9]/gi, "_") +
-                "." +
-                (material.fileType || "pdf")
+                material.title.replace(/[^a-z0-9]/gi, "_") + "." + (material.fileType || "pdf")
               }
-              className="btn-secondary flex-1 text-base"
+              aria-label={`Shkarko: ${material.title}`}
+              title="Shkarko"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 bg-white text-navy-800 transition-colors hover:border-burgundy-600 hover:text-burgundy-600"
             >
-              <Download className="w-5 h-5" />
-              Shkarko
+              <Download className="h-4 w-4" aria-hidden />
             </TrackableDownloadLink>
-            </>
           )}
+          <ReportButton
+            compact
+            materialId={material.id}
+            materialTitle={material.title}
+            materialUrl={material.r2Url}
+          />
         </div>
       </div>
-
-      <ArchiveModal
-        isOpen={modalOpen}
-        onClose={() => setModalOpen(false)}
-        material={material}
-      />
-
-      <MaterialPreviewModal
-        isOpen={previewOpen}
-        onClose={() => setPreviewOpen(false)}
-        material={material}
-      />
-    </>
+    </article>
   );
 }

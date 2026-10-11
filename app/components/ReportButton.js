@@ -13,7 +13,7 @@ const REASONS = [
   "Tjetër",
 ];
 
-export default function ReportButton({ materialId, materialTitle, materialUrl }) {
+export default function ReportButton({ materialId, materialTitle, materialUrl, compact = false }) {
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [status, setStatus] = useState("idle");
@@ -52,10 +52,16 @@ export default function ReportButton({ materialId, materialTitle, materialUrl })
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="flex items-center gap-1.5 text-sm font-semibold text-gray-500 underline decoration-dotted underline-offset-4 transition-colors hover:text-burgundy-600"
+        aria-label={compact ? `Raporto: ${materialTitle}` : undefined}
+        title={compact ? "Raporto" : undefined}
+        className={
+          compact
+            ? "inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-burgundy-600"
+            : "flex items-center gap-1.5 text-sm font-semibold text-gray-500 underline decoration-dotted underline-offset-4 transition-colors hover:text-burgundy-600"
+        }
       >
-        <Flag className="w-4 h-4" />
-        Raporto
+        <Flag className="h-4 w-4" aria-hidden />
+        {!compact && "Raporto"}
       </button>
 
       <ModalOverlay open={open} onClose={close}>

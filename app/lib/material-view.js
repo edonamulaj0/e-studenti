@@ -79,6 +79,7 @@ export function normalizeMaterial(material) {
     view_count: Number(material.view_count || 0),
     download_count: Number(material.download_count || 0),
     is_anonymous: isAnonymous,
+    uploader_trusted: !isAnonymous && Boolean(material.uploader_trusted),
     submittedBy: displayName ? { name: displayName } : undefined,
   };
 }
