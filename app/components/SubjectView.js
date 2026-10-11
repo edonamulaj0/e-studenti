@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronRight, Users } from "lucide-react";
 import MaterialGrid from "./MaterialGrid";
+import { DEFAULT_UNIVERSITY, universityShort } from "../lib/placement";
 import { getFacultyName } from "../lib/material-options";
 import { normalizeMaterial } from "../lib/material-view";
 import { typeRank } from "../lib/subjects";
@@ -30,7 +31,7 @@ export default function SubjectView({ subject, materials }) {
         <header className="mb-6 max-w-3xl">
           <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{subject.name}</h1>
           <p className="text-gray-600">
-            {getFacultyName(subject.faculty)} · {subject.count}{" "}
+            {universityShort(subject.university || DEFAULT_UNIVERSITY)} · {getFacultyName(subject.faculty)} · {subject.count}{" "}
             {subject.count === 1 ? "material" : "materiale"}
           </p>
           {teachers.length > 0 && (

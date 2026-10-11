@@ -2,10 +2,11 @@
 
 import { useMemo, useState } from "react";
 import { ChevronDown, Search, X } from "lucide-react";
-import { FACULTIES, MATERIAL_TYPES } from "../lib/material-options";
+import { FACULTIES, FIELDS, MATERIAL_TYPES, facultiesFor } from "../lib/material-options";
+import { UNIVERSITIES, universityShort } from "../lib/placement";
 import { STUDY_LEVELS } from "../lib/study-levels";
 
-export const EMPTY_FILTERS = { levels: [], faculties: [], types: [], subjects: [] };
+export const EMPTY_FILTERS = { universities: [], levels: [], faculties: [], types: [], subjects: [] };
 
 /**
  * One collapsible filter. Whatever is selected stays visible above the options,
@@ -94,6 +95,19 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
   const [subjectQuery, setSubjectQuery] = useState("");
   const set = (key) => (value) => setDraft((d) => ({ ...d, [key]: value }));
 
+  // The faculty list follows the university: UP has faculties, every other institution study fields.
+  const university = draft.universities[0];
+  const facultyOptions = (university ? facultiesFor(university) : [...FACULTIES, ...FIELDS]).map((f) => ({
+    value: f.code,
+    label: f.name,
+    sub: university ? undefined : FACULTIES.includes(f) ? "UP" : "Fushë studimi",
+  }));
+  const setUniversity = (next) =>
+    setDraft((d) => {
+      const allowed = new Set((next[0] ? facultiesFor(next[0]) : [...FACULTIES, ...FIELDS]).map((f) => f.code));
+      return { ...d, universities: next, faculties: d.faculties.filter((code) => allowed.has(code)), subjects: [] };
+    });
+
   const subjectOptions = useMemo(() => {
     const q = subjectQuery.trim().toLowerCase();
     const picked = new Set(draft.subjects);
@@ -101,13 +115,14 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
       .filter(
         (s) =>
           picked.has(s.slug) ||
-          ((draft.faculties.length === 0 || draft.faculties.includes(s.faculty)) &&
+          ((draft.universities.length === 0 || draft.universities.includes(s.university)) &&
+            (draft.faculties.length === 0 || draft.faculties.includes(s.faculty)) &&
             (!q || s.name.toLowerCase().includes(q)))
       )
       .sort((a, b) => a.name.localeCompare(b.name, "sq"))
       .slice(0, 80)
-      .map((s) => ({ value: s.slug, label: s.name, sub: FACULTY_BY_CODE[s.faculty] || s.faculty }));
-  }, [subjects, subjectQuery, draft.subjects, draft.faculties]);
+      .map((s) => ({ value: s.slug, label: s.name, sub: `${universityShort(s.university)} · ${FACULTY_BY_CODE[s.faculty] || s.faculty}` }));
+  }, [subjects, subjectQuery, draft.subjects, draft.faculties, draft.universities]);
 
   return (
     <form
@@ -121,6 +136,15 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
     >
       <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
         <Section
+          title="Universiteti"
+          name={`${id}-university`}
+          single
+          defaultOpen
+          options={UNIVERSITIES.map((u) => ({ value: u.slug, label: u.short, sub: u.name.includes(u.short) ? undefined : u.name }))}
+          selected={draft.universities}
+          onChange={setUniversity}
+        />
+        <Section
           title="Niveli"
           name={`${id}-level`}
           single
@@ -130,10 +154,10 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
           onChange={set("levels")}
         />
         <Section
-          title="Fakulteti"
+          title="Fakulteti / fusha"
           name={`${id}-faculty`}
           single
-          options={FACULTIES.map((f) => ({ value: f.code, label: f.name }))}
+          options={facultyOptions}
           selected={draft.faculties}
           onChange={set("faculties")}
         />
@@ -179,4 +203,4 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
   );
 }
 
-const FACULTY_BY_CODE = Object.fromEntries(FACULTIES.map((f) => [f.code, f.name]));
+const FACULTY_BY_CODE = Object.fromEntries([...FACULTIES, ...FIELDS].map((f) => [f.code, f.name]));

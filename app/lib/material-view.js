@@ -4,6 +4,8 @@
  * both normalise to it).
  */
 
+import { DEFAULT_UNIVERSITY } from "../../shared/material-options.mjs";
+
 const TYPE_TONES = [
   {
     match: "ligjerata",
@@ -77,6 +79,7 @@ export function normalizeMaterial(material) {
     id: material.id,
     slug: material.slug,
     title: material.title,
+    university: material.university || DEFAULT_UNIVERSITY,
     faculty: material.faculty,
     department: material.department || "//",
     type: material.type,

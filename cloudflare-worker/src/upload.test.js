@@ -623,7 +623,7 @@ describe("material upload", () => {
     const body = await response.json();
 
     expect(response.status).toBe(400);
-    expect(body.error).toMatch(/Fakulteti/);
+    expect(body.error).toMatch(/fakulteti/);
     expect(puts).toHaveLength(0);
   });
 

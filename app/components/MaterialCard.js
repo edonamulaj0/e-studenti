@@ -11,6 +11,7 @@ import { materialDownloadUrl, materialViewUrl } from "../lib/worker-url";
 import { getFileTypeBadge, hasInBrowserView } from "../lib/file-preview";
 import { displayTeacher, levelTone, normalizeMaterial, typeTone } from "../lib/material-view";
 import { isRealSubject, subjectSlug } from "../lib/subjects";
+import { universityShort } from "../lib/placement";
 
 export { normalizeMaterial, typeTone };
 
@@ -63,7 +64,7 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
           <p className="flex flex-wrap items-center gap-x-2 gap-y-1">
             {hasSubject && (
               <Link
-                href={`/lenda/${subjectSlug(material.faculty, material.subject)}`}
+                href={`/lenda/${subjectSlug(material.faculty, material.subject, material.university)}`}
                 className="inline-flex max-w-full items-center gap-1 rounded-full bg-burgundy-50 px-2.5 py-0.5 text-xs font-semibold text-burgundy-600 hover:bg-burgundy-600 hover:text-white"
                 title={`Të gjitha materialet për ${material.subject}`}
               >
@@ -74,7 +75,9 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
             {teacher !== "—" && <span className="min-w-0 truncate">{teacher}</span>}
           </p>
         )}
-        <p className="truncate text-xs text-gray-600">{getFacultyName(material.faculty)}</p>
+        <p className="truncate text-xs text-gray-600">
+          <span className="font-semibold">{universityShort(material.university)}</span> · {getFacultyName(material.faculty)}
+        </p>
       </div>
 
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-gray-100 pt-2 text-xs text-gray-600">

@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Erasmus+",
+  title: "Erasmus+ (Universiteti i Prishtinës)",
   description:
     "Thirrje dhe mobilitete Erasmus+ nga lista e mundësive të Universitetit të Prishtinës.",
 };

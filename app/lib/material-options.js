@@ -1,9 +1,15 @@
-import { FACULTIES } from "../../shared/material-options.mjs";
+import { FACULTIES, FIELDS } from "../../shared/material-options.mjs";
 
-export { FACULTIES, MATERIAL_TYPES } from "../../shared/material-options.mjs";
+export {
+  FACULTIES,
+  FIELDS,
+  MATERIAL_TYPES,
+  DEFAULT_UNIVERSITY,
+  facultiesFor,
+} from "../../shared/material-options.mjs";
 
 const FACULTY_NAMES_BY_CODE = Object.fromEntries(
-  FACULTIES.map((faculty) => [faculty.code, faculty.name])
+  [...FACULTIES, ...FIELDS].map((faculty) => [faculty.code, faculty.name])
 );
 
 export function getFacultyName(value) {

@@ -19,7 +19,7 @@ function makeEnv() {
           return { total: 0 };
         },
         async all() {
-          if (/SELECT id, faculty, subject, type, teacher, created_at FROM materials WHERE status/.test(sql)) {
+          if (/SELECT id, university, faculty, subject, type, teacher, created_at FROM materials WHERE status/.test(sql)) {
             return { results: ROWS };
           }
           queries.push({ sql, args });
@@ -60,9 +60,9 @@ describe("catalogue filters accept lists", () => {
 
   it("filters by subject through every stored spelling of it", async () => {
     const q = await count("subjects=anatomi-med");
-    expect(q.sql).toMatch(/m\.faculty = \? AND m\.subject IN \(\?,\?\)/);
-    expect(q.args[0]).toBe("MED");
-    expect(q.args.slice(1).sort()).toEqual(["Anatomi", "anatomi"]);
+    expect(q.sql).toMatch(/m\.university = \? AND m\.faculty = \? AND m\.subject IN \(\?,\?\)/);
+    expect(q.args[1]).toBe("MED");
+    expect(q.args.slice(2).sort()).toEqual(["Anatomi", "anatomi"]);
   });
 
   it("matches nothing for an unknown subject instead of showing everything", async () => {

@@ -42,6 +42,7 @@ export default function MaterialsClient({ initialData = null }) {
     const params = new URLSearchParams(window.location.search);
     const list = (name) => (params.get(name) || "").split(",").map((v) => v.trim()).filter(Boolean);
     const initial = {
+      universities: list("university"),
       faculties: list("faculty").map((v) => v.toUpperCase()),
       types: list("type"),
       levels: list("niveli"),
@@ -77,6 +78,7 @@ export default function MaterialsClient({ initialData = null }) {
         limit: String(PAGE_SIZE),
       });
       if (searchTerm.trim()) params.set("q", searchTerm.trim());
+      if (filters.universities.length) params.set("university", filters.universities.join(","));
       if (filters.faculties.length) params.set("faculty", filters.faculties.join(","));
       if (filters.types.length) params.set("type", filters.types.join(","));
       if (filters.levels.length) params.set("niveli", filters.levels.join(","));
@@ -120,6 +122,7 @@ export default function MaterialsClient({ initialData = null }) {
 
   const syncUrl = (next) => {
     const params = new URLSearchParams();
+    if (next.universities.length) params.set("university", next.universities.join(","));
     if (next.faculties.length) params.set("faculty", next.faculties.join(","));
     if (next.types.length) params.set("type", next.types.join(","));
     if (next.levels.length) params.set("niveli", next.levels.join(","));
@@ -143,7 +146,7 @@ export default function MaterialsClient({ initialData = null }) {
   };
 
   const activeFilterCount =
-    filters.levels.length + filters.faculties.length + filters.types.length + filters.subjects.length;
+    filters.universities.length + filters.levels.length + filters.faculties.length + filters.types.length + filters.subjects.length;
 
   const runSearch = () => {
     setPage(1);
@@ -217,7 +220,7 @@ export default function MaterialsClient({ initialData = null }) {
         <header className="mb-5 max-w-3xl">
           <h1 className="page-title mb-2 !text-3xl md:!text-4xl">Materialet</h1>
           <p className="page-subtitle mb-3 max-w-2xl !text-base">
-            Filtroni sipas nivelit, fakultetit, llojit ose lëndës.
+            Filtroni sipas universitetit, nivelit, fakultetit, llojit ose lëndës.
           </p>
           <div className="flex flex-wrap gap-3 text-sm font-semibold text-gray-600">
             <span className="rounded-full bg-white px-3 py-1 shadow-sm">

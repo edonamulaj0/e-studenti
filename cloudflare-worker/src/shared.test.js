@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import worker from "./index.js";
 import { isDisposableEmail as fromApp } from "../../app/lib/disposable-email-domains.js";
 import { isDisposableEmail as fromShared, DISPOSABLE_EMAIL_DOMAINS } from "../../shared/email-domains.mjs";
-import { FACULTIES, MATERIAL_TYPES } from "../../app/lib/material-options.js";
+import { FACULTIES, FIELDS, MATERIAL_TYPES } from "../../app/lib/material-options.js";
 import { FACULTY_CODES, MATERIAL_TYPES as SHARED_TYPES } from "../../shared/material-options.mjs";
 import { assignMaterialSlugs as appSlugs } from "../../app/lib/material-slug.js";
 import { assignMaterialSlugs as workerSlugs } from "./material-slug.js";
@@ -32,7 +32,7 @@ describe("shared rules", () => {
   });
 
   it("the upload form offers exactly the faculties and types the Worker accepts", () => {
-    expect(FACULTIES.map((f) => f.code)).toEqual(FACULTY_CODES);
+    expect([...FACULTIES, ...FIELDS].map((f) => f.code)).toEqual(FACULTY_CODES);
     expect(MATERIAL_TYPES).toEqual(SHARED_TYPES);
   });
 

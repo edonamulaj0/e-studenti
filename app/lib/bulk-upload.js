@@ -1,4 +1,4 @@
-import { MATERIAL_TYPES } from "./material-options";
+import { MATERIAL_TYPES, DEFAULT_UNIVERSITY } from "./material-options";
 
 /**
  * Pure logic for the multi-file upload page: guessing metadata from file names,
@@ -100,7 +100,7 @@ export function validateRow(row, defaults) {
   else if (title.length > 200) errors.title = "Titulli është shumë i gjatë.";
   else if (/[<>]/.test(title)) errors.title = "Titulli përmban karaktere të palejuara.";
 
-  if (!fields.faculty) errors.faculty = "Zgjidhni fakultetin.";
+  if (!fields.faculty) errors.faculty = "Zgjidhni fakultetin ose fushën.";
   if (!fields.type) errors.type = "Zgjidhni llojin.";
   if (fields.type !== PRANUES) {
     const subject = String(fields.subject || "").trim();
@@ -119,6 +119,7 @@ export function buildFormData(row, defaults, contentHash) {
   const fields = effectiveFields(row, defaults);
   const form = new FormData();
   form.append("title", String(fields.title).trim());
+  form.append("university", fields.university || DEFAULT_UNIVERSITY);
   form.append("faculty", fields.faculty);
   form.append("department", String(fields.department || "").trim() || "//");
   form.append("subject", String(fields.subject || "").trim());
