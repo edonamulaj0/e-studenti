@@ -1,67 +1,113 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Search } from "lucide-react";
+import { ChevronDown, Search, X } from "lucide-react";
 import { FACULTIES, MATERIAL_TYPES } from "../lib/material-options";
 import { STUDY_LEVELS } from "../lib/study-levels";
 
 export const EMPTY_FILTERS = { levels: [], faculties: [], types: [], subjects: [] };
 
-const toggle = (list, value) =>
-  list.includes(value) ? list.filter((item) => item !== value) : [...list, value];
+/**
+ * One collapsible filter. Whatever is selected stays visible above the options,
+ * with an × on the right, even while the section is collapsed.
+ *
+ * `single` renders bullets (radio buttons: one choice); otherwise checkboxes.
+ */
+function Section({ title, name, options, selected, onChange, single = false, defaultOpen = false, children }) {
+  const [open, setOpen] = useState(defaultOpen);
+  const picked = options.filter((o) => selected.includes(o.value));
+  const rest = options.filter((o) => !selected.includes(o.value));
+  const panelId = `filter-${name}`;
 
-function CheckGroup({ legend, options, selected, onToggle, scroll = false }) {
+  const choose = (value) => onChange(single ? [value] : [...selected, value]);
+  const remove = (value) => onChange(selected.filter((v) => v !== value));
+
   return (
-    <fieldset className="min-w-0">
-      <legend className="mb-1.5 text-xs font-bold uppercase tracking-widest text-gray-600">{legend}</legend>
-      <div className={scroll ? "max-h-52 overflow-y-auto pr-1" : ""}>
-        {options.map((option) => (
-          <label
-            key={option.value}
-            className="flex cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5 text-sm text-navy-900 hover:bg-navy-100/50"
-          >
-            <input
-              type="checkbox"
-              checked={selected.includes(option.value)}
-              onChange={() => onToggle(option.value)}
-              className="h-4 w-4 shrink-0 accent-burgundy-600"
-            />
-            <span className="min-w-0 flex-1 truncate" title={option.title}>
-              {option.label}
-              {option.sub && <span className="ml-1.5 text-gray-600">{option.sub}</span>}
-            </span>
-            {option.hint && <span className="shrink-0 text-xs text-gray-600">{option.hint}</span>}
-          </label>
-        ))}
+    <div className="border-b border-gray-100 pb-3 last:border-0">
+      <button
+        type="button"
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        aria-controls={panelId}
+        className="flex w-full items-center justify-between py-1.5 text-left text-xs font-bold uppercase tracking-widest text-gray-600 hover:text-navy-900"
+      >
+        {title}
+        <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
+      </button>
+
+      {picked.length > 0 && (
+        <ul className="mb-1 space-y-1" aria-label={`${title}: të zgjedhura`}>
+          {picked.map((o) => (
+            <li
+              key={o.value}
+              className="flex items-center justify-between gap-2 rounded-lg bg-burgundy-50 px-2.5 py-1.5 text-sm font-semibold text-burgundy-600"
+            >
+              <span className="min-w-0">
+                {o.label}
+                {o.sub && <span className="block text-xs font-normal text-gray-600">{o.sub}</span>}
+              </span>
+              <button
+                type="button"
+                onClick={() => remove(o.value)}
+                aria-label={`Hiq ${o.label}`}
+                className="shrink-0 rounded-md p-1 hover:bg-burgundy-600 hover:text-white"
+              >
+                <X className="h-3.5 w-3.5" aria-hidden />
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      <div id={panelId} hidden={!open}>
+        {children}
+        <div role={single ? "radiogroup" : "group"} aria-label={title} className="max-h-60 overflow-y-auto pr-1">
+          {rest.map((o) => (
+            <label
+              key={o.value}
+              className="flex cursor-pointer items-start gap-2.5 rounded-lg px-1.5 py-1.5 text-sm text-navy-900 hover:bg-navy-100/50"
+            >
+              <input
+                type={single ? "radio" : "checkbox"}
+                name={name}
+                checked={false}
+                onChange={() => choose(o.value)}
+                className="mt-1 h-4 w-4 shrink-0 accent-burgundy-600"
+              />
+              <span className="min-w-0 flex-1">
+                {o.label}
+                {o.sub && <span className="block text-xs text-gray-600">{o.sub}</span>}
+              </span>
+            </label>
+          ))}
+          {rest.length === 0 && picked.length === 0 && (
+            <p className="px-1.5 py-2 text-sm text-gray-600">Asnjë opsion.</p>
+          )}
+        </div>
       </div>
-    </fieldset>
+    </div>
   );
 }
 
 /** Draft filters are edited freely and only take effect on "Apliko filtrat". */
 export default function FilterSidebar({ draft, setDraft, subjects, onApply, onClear, id }) {
   const [subjectQuery, setSubjectQuery] = useState("");
+  const set = (key) => (value) => setDraft((d) => ({ ...d, [key]: value }));
 
   const subjectOptions = useMemo(() => {
     const q = subjectQuery.trim().toLowerCase();
     const picked = new Set(draft.subjects);
-    const visible = subjects.filter(
-      (s) =>
-        picked.has(s.slug) ||
-        ((draft.faculties.length === 0 || draft.faculties.includes(s.faculty)) &&
-          (!q || s.name.toLowerCase().includes(q)))
-    );
-    return visible
-      .sort(
-        (a, b) =>
-          Number(picked.has(b.slug)) - Number(picked.has(a.slug)) ||
-          a.name.localeCompare(b.name, "sq")
+    return subjects
+      .filter(
+        (s) =>
+          picked.has(s.slug) ||
+          ((draft.faculties.length === 0 || draft.faculties.includes(s.faculty)) &&
+            (!q || s.name.toLowerCase().includes(q)))
       )
+      .sort((a, b) => a.name.localeCompare(b.name, "sq"))
       .slice(0, 80)
-      .map((s) => ({ value: s.slug, label: s.name, hint: s.faculty, title: `${s.name} — ${s.faculty}` }));
+      .map((s) => ({ value: s.slug, label: s.name, sub: FACULTY_BY_CODE[s.faculty] || s.faculty }));
   }, [subjects, subjectQuery, draft.subjects, draft.faculties]);
-
-  const set = (key) => (value) => setDraft((d) => ({ ...d, [key]: toggle(d[key], value) }));
 
   return (
     <form
@@ -70,35 +116,43 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
         e.preventDefault();
         onApply();
       }}
-      className="flex max-h-full flex-col"
+      className="flex min-h-0 flex-1 flex-col"
       aria-label="Filtrat"
     >
-      <div className="min-h-0 flex-1 space-y-5 overflow-y-auto pr-1">
-        <CheckGroup
-          legend="Niveli"
+      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto pr-1">
+        <Section
+          title="Niveli"
+          name={`${id}-level`}
+          single
+          defaultOpen
           options={STUDY_LEVELS.map((l) => ({ value: l.value, label: l.label }))}
           selected={draft.levels}
-          onToggle={set("levels")}
+          onChange={set("levels")}
         />
-        <CheckGroup
-          legend="Fakulteti"
-          options={FACULTIES.map((f) => ({
-            value: f.code,
-            label: f.code,
-            sub: f.name.replace(/^Fakulteti (i |e )?/, ""),
-            title: f.name,
-          }))}
+        <Section
+          title="Fakulteti"
+          name={`${id}-faculty`}
+          single
+          options={FACULTIES.map((f) => ({ value: f.code, label: f.name }))}
           selected={draft.faculties}
-          onToggle={set("faculties")}
-          scroll
+          onChange={set("faculties")}
         />
-        <CheckGroup
-          legend="Lloji"
+        <Section
+          title="Lloji"
+          name={`${id}-type`}
+          single
           options={MATERIAL_TYPES.map((t) => ({ value: t, label: t }))}
           selected={draft.types}
-          onToggle={set("types")}
+          onChange={set("types")}
         />
-        <div>
+        <Section
+          title="Lënda"
+          name={`${id}-subject`}
+          defaultOpen
+          options={subjectOptions}
+          selected={draft.subjects}
+          onChange={set("subjects")}
+        >
           <div className="relative mb-1.5">
             <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-gray-500" aria-hidden />
             <input
@@ -110,18 +164,7 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
               className="input-srh min-h-[38px] w-full pl-8 text-sm"
             />
           </div>
-          {subjectOptions.length === 0 ? (
-            <p className="px-1.5 py-2 text-sm text-gray-600">Asnjë lëndë.</p>
-          ) : (
-            <CheckGroup
-              legend="Lënda"
-              options={subjectOptions}
-              selected={draft.subjects}
-              onToggle={set("subjects")}
-              scroll
-            />
-          )}
-        </div>
+        </Section>
       </div>
 
       <div className="mt-4 flex gap-2 border-t border-gray-200 pt-3">
@@ -135,3 +178,5 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
     </form>
   );
 }
+
+const FACULTY_BY_CODE = Object.fromEntries(FACULTIES.map((f) => [f.code, f.name]));

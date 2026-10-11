@@ -10,7 +10,6 @@ const platformaLinks = [
   { href: "/", label: "Ballina" },
   { href: "/fakultetet", label: "Fakultetet" },
   { href: "/materialet", label: "Materialet" },
-  { href: "/lendet", label: "Lëndët" },
   { href: "/erasmus", label: "Erasmus+" },
   { href: "/informacione", label: "Rreth nesh" },
 ];

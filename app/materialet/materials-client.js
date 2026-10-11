@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState, useMemo, useEffect } from "react";
-import Link from "next/link";
 import { FileText, Search, SlidersHorizontal, X } from "lucide-react";
 import MaterialGrid from "../components/MaterialGrid";
 import FilterSidebar, { EMPTY_FILTERS } from "./FilterSidebar";
@@ -218,10 +217,7 @@ export default function MaterialsClient({ initialData = null }) {
         <header className="mb-5 max-w-3xl">
           <h1 className="page-title mb-2 !text-3xl md:!text-4xl">Materialet</h1>
           <p className="page-subtitle mb-3 max-w-2xl !text-base">
-            Filtroni sipas fakultetit dhe llojit, ose shfletoni sipas{" "}
-            <Link href="/lendet" className="font-semibold text-burgundy-600 underline underline-offset-2">
-              lëndës
-            </Link>.
+            Filtroni sipas nivelit, fakultetit, llojit ose lëndës.
           </p>
           <div className="flex flex-wrap gap-3 text-sm font-semibold text-gray-600">
             <span className="rounded-full bg-white px-3 py-1 shadow-sm">
@@ -266,7 +262,7 @@ export default function MaterialsClient({ initialData = null }) {
           </select>
         </div>
 
-        <div className="lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+        <div className="lg:grid lg:min-h-[calc(100vh-7rem)] lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-6">
           <aside className="hidden lg:sticky lg:top-24 lg:block lg:max-h-[calc(100vh-7rem)]">
             <div className="surface-card flex max-h-[calc(100vh-7rem)] flex-col p-4">
               <FilterSidebar

@@ -143,7 +143,7 @@ check mark on public cards (never on anonymous uploads).
 
 ## Subjects
 
-`/lenda/<slug>` and `/lendet` group materials by subject. A subject is identified
+`/lenda/<slug>` groups a subject's materials (cards and the catalogue sidebar link to it). A subject is identified
 by its normalised name per faculty, so "Anatomi", "anatomi" and "ANATOMI" merge
 automatically. Other spelling differences are merged in **Moderim → Lëndët**
 (rename), which rewrites the stored subject on every affected material. New uploads
