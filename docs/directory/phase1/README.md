@@ -1,4 +1,4 @@
-# Phase 1: course lists from UBT, Peja, Mitrovica and Biznesi
+# Phase 1: course lists from UBT, Peja, Mitrovica, Gjakova, Prizren and Ferizaj (Biznesi unavailable)
 
 First extraction run (2026-10-11). Files here:
 
@@ -20,6 +20,16 @@ Every row has its source URL and, where the programme could be matched to the AK
 
 **Biznesi:** nothing extracted. The curriculum PDFs the site links to (`/Bachelor/Materialet/PDF2/Kurrikula.pdf` and the others) return 404, and the programme and syllabus pages carry no course lists in their HTML.
 
+## Gjakova, Prizren, Ferizaj (second run)
+
+| File | Rows | Source | Quality |
+|---|---|---|---|
+| `gjakova-courses.csv`, `gjakova-documents.csv` | 715 | The faculties' "Syllabuset" pages (`/syllabuset/<n>/...`, 21 programme pages; the same pages are served by every faculty subdomain) | Year and semester headings are reliable. **Course names only**: no ECTS (each course links to its own syllabus PDF, column `syllabus`). 11 of the 21 pages match an accredited AKA programme; the rest are older or non-accredited programmes (Midwifery, Nursing, Physiotherapy, Pre-school education and others) and are kept without a link. |
+| `prizren-courses.csv`, `prizren-documents.csv` | 710 | Syllabus pages of the faculties (course list per year and semester, one syllabus PDF per course) plus the Education faculty's curriculum PDFs | Names only, no ECTS. Year and semester come from the page headings, or from the syllabus file numbering (`2.3.1` = year 2, semester 3) when a page has none. 16 of 23 documents are matched to an AKA programme. Some pages carry the Bosnian or Turkish variant of a programme and some programmes have two plan versions; the page with the most courses is used. The Faculty of Law master page and the Education master PDF could not be matched with confidence. |
+| `ferizaj-courses.csv`, `ferizaj-documents.csv` | 549 | The "Planprogrami dhe Syllabuset" page of each programme (tables with type O/Z, hours and ECTS) | Best quality of the three. 8 of the 10 accredited programmes are covered (Interior Architecture and Green Architecture have no page). Where a page holds two plan versions, the one whose mandatory ECTS is closest to the programme total is used; older "2022/2023" pages are kept but not linked. |
+
+Total on the site now: 118 programmes with course lists, 4,457 courses.
+
 ## Not done yet
 
 - Names are as written in the sources (Albanian or English). Merging them with the subject names students use on uploads is a later step.
@@ -28,4 +38,4 @@ Every row has its source URL and, where the programme could be matched to the AK
 
 ## On the site
 
-`node scripts/build-curricula-data.mjs` turns these CSVs into `app/data/courses.json` (83 programmes, 3,183 courses). Opening a programme on `/universitetet/<slug>` shows its courses by year and semester, with a link to the source document; `/krahaso` shows both programmes' course lists side by side. The file loads on demand, so it does not slow the other pages. Programmes without a list say so.
+`node scripts/build-curricula-data.mjs` turns these CSVs into `app/data/courses.json` (118 programmes, 4,457 courses). Opening a programme on `/universitetet/<slug>` shows its courses by year and semester, with a link to the source document; `/krahaso` shows both programmes' course lists side by side. The file loads on demand, so it does not slow the other pages. Programmes without a list say so.
