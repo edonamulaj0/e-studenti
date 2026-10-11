@@ -22,6 +22,26 @@ export const programmes = data.programmes;
 const universityBySlug = new Map(universities.map((u) => [u.slug, u]));
 const programmeById = new Map(programmes.map((p) => [p.id, p]));
 
+/** Faculty where the source names one (University of Prishtina), otherwise the study field. */
+export const categoryOf = (p) => p.unit || p.field;
+
+export const levelRank = (key) => {
+  const i = LEVELS.findIndex((l) => l.key === key);
+  return i === -1 ? LEVELS.length : i;
+};
+
+const fold = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase();
+
+/**
+ * Alphabetical order that is the same in Node (static build) and the browser.
+ * localeCompare("sq") differs between them, which breaks hydration.
+ */
+export const compareText = (a, b) => {
+  const x = fold(a);
+  const y = fold(b);
+  return x < y ? -1 : x > y ? 1 : 0;
+};
+
 export const getUniversity = (slug) => universityBySlug.get(slug) || null;
 export const getProgramme = (id) => programmeById.get(id) || null;
 export const programmesOf = (slug) => programmes.filter((p) => p.uni === slug);

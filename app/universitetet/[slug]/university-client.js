@@ -5,15 +5,26 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { ChevronRight, ChevronDown, Search, Scale, MapPin, ExternalLink } from "lucide-react";
 import {
-  LEVELS,
+  categoryOf,
+  compareText,
   durationLabel,
   formatDate,
   getProgramme,
   getUniversity,
+  levelLabel,
+  levelRank,
   programmesOf,
   sectorLabel,
 } from "../../lib/directory";
 import { useCompare } from "../../components/CompareProvider";
+
+const LEVEL_TONE = {
+  bachelor: "bg-teal-100 text-teal-900",
+  professional: "bg-teal-100 text-teal-900",
+  integrated: "bg-navy-100 text-navy-800",
+  master: "bg-violet-100 text-violet-900",
+  doctorate: "bg-fuchsia-100 text-fuchsia-900",
+};
 
 function ProgrammeRow({ programme, open, onToggle }) {
   const router = useRouter();
@@ -33,11 +44,12 @@ function ProgrammeRow({ programme, open, onToggle }) {
       >
         <span className="min-w-0">
           <span className="block font-semibold text-navy-900">{programme.name}</span>
-          <span className="block truncate text-sm text-gray-600">
-            {[programme.unit, programme.campus].filter(Boolean).join(" · ")}
-          </span>
+          <span className="block truncate text-sm text-gray-600">{programme.campus}</span>
         </span>
         <span className="flex shrink-0 items-center gap-2 text-sm text-gray-600">
+          <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${LEVEL_TONE[programme.level] || "bg-navy-100 text-navy-800"}`}>
+            {programme.degree}
+          </span>
           <span className="hidden sm:inline">{programme.ects} ECTS</span>
           <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
         </span>
@@ -47,6 +59,7 @@ function ProgrammeRow({ programme, open, onToggle }) {
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
           {[
             ["Titulli (anglisht)", programme.nameEn],
+            ["Niveli", levelLabel(programme.level)],
             ["Kohëzgjatja", `${durationLabel(programme.ects)} · ${programme.ects} ECTS`],
             ["Kuota", programme.quota ? `${programme.quota} studentë` : "—"],
             ["Akreditimi vlen deri më", formatDate(programme.until)],
@@ -57,6 +70,8 @@ function ProgrammeRow({ programme, open, onToggle }) {
             </div>
           ))}
         </dl>
+
+        {programme.note && <p className="mt-3 text-sm text-gray-600">{programme.note}</p>}
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
           {!first && (
@@ -102,23 +117,46 @@ function ProgrammeRow({ programme, open, onToggle }) {
 export default function UniversityClient({ slug }) {
   const university = getUniversity(slug);
   const [query, setQuery] = useState("");
-  const [unit, setUnit] = useState("");
+  const [category, setCategory] = useState("");
   const [openId, setOpenId] = useState(null);
 
+  const all = useMemo(() => programmesOf(slug), [slug]);
+
+  // Categories with their programme counts, alphabetical, "Të tjera" last.
+  const categories = useMemo(() => {
+    const counts = new Map();
+    for (const p of all) counts.set(categoryOf(p), (counts.get(categoryOf(p)) || 0) + 1);
+    return [...counts.entries()].sort(
+      (a, b) => (a[0] === "Të tjera") - (b[0] === "Të tjera") || compareText(a[0], b[0])
+    );
+  }, [all]);
+
+  // Per category: Bachelor first, then professional, integrated, Master, PhD; alphabetical within a level.
   const groups = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = programmesOf(slug).filter(
+    const list = all.filter(
       (p) =>
-        (!unit || p.unit === unit) &&
+        (!category || categoryOf(p) === category) &&
         (!q || p.name.toLowerCase().includes(q) || p.nameEn.toLowerCase().includes(q))
     );
-    return LEVELS.map((level) => ({
-      ...level,
-      items: list
-        .filter((p) => p.level === level.key)
-        .sort((a, b) => a.name.localeCompare(b.name, "sq")),
-    })).filter((g) => g.items.length > 0);
-  }, [slug, query, unit]);
+    return categories
+      .map(([name]) => ({
+        name,
+        items: list
+          .filter((p) => categoryOf(p) === name)
+          .sort((a, b) => levelRank(a.level) - levelRank(b.level) || compareText(a.name, b.name)),
+      }))
+      .filter((g) => g.items.length > 0)
+      .map((g) => {
+        const levels = [];
+        for (const p of g.items) {
+          const last = levels[levels.length - 1];
+          if (last && last.key === p.level) last.items.push(p);
+          else levels.push({ key: p.level, label: levelLabel(p.level), items: [p] });
+        }
+        return { ...g, levels };
+      });
+  }, [all, categories, category, query]);
 
   if (!university) return null;
   const name = university.name.replace(/"/g, "");
@@ -158,42 +196,55 @@ export default function UniversityClient({ slug }) {
               className="input-srh min-h-[44px] w-full pl-10 text-sm"
             />
           </div>
-          {university.units.length > 0 && (
-            <select
-              value={unit}
-              onChange={(e) => setUnit(e.target.value)}
-              aria-label="Fakulteti"
-              className="input-srh min-h-[44px] text-sm sm:w-72"
-            >
-              <option value="">Të gjitha fakultetet</option>
-              {university.units.map((u) => (
-                <option key={u} value={u}>
-                  {u}
-                </option>
-              ))}
-            </select>
-          )}
         </div>
 
+        {categories.length > 1 && (
+          <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Kategoria">
+            {[["", all.length], ...categories].map(([name, count]) => (
+              <button
+                key={name || "all"}
+                type="button"
+                aria-pressed={category === name}
+                onClick={() => setCategory(name)}
+                className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
+                  category === name
+                    ? "bg-navy-900 text-white"
+                    : "bg-white text-navy-800 ring-1 ring-gray-200 hover:ring-burgundy-600"
+                }`}
+              >
+                {name || "Të gjitha"} <span className="font-normal opacity-75">{count}</span>
+              </button>
+            ))}
+          </div>
+        )}
         {groups.length === 0 ? (
           <div className="surface-card p-8 text-center text-gray-600">Asnjë program nuk u gjet.</div>
         ) : (
           <div className="space-y-8">
-            {groups.map((g) => (
-              <section key={g.key} aria-labelledby={`lvl-${g.key}`}>
-                <h2 id={`lvl-${g.key}`} className="mb-3 text-lg font-bold text-navy-900">
-                  {g.label} <span className="font-normal text-gray-600">({g.items.length})</span>
+            {groups.map((g, gi) => (
+              <section key={g.name} aria-labelledby={`cat-${gi}`}>
+                <h2 id={`cat-${gi}`} className="mb-3 text-lg font-bold text-navy-900">
+                  {g.name} <span className="font-normal text-gray-600">({g.items.length})</span>
                 </h2>
-                <ul className="space-y-2">
-                  {g.items.map((p) => (
-                    <ProgrammeRow
-                      key={p.id}
-                      programme={p}
-                      open={openId === p.id}
-                      onToggle={() => setOpenId((id) => (id === p.id ? null : p.id))}
-                    />
+                <div className="space-y-3">
+                  {g.levels.map((lvl) => (
+                    <div key={lvl.key}>
+                      <h3 className="mb-1.5 text-xs font-bold uppercase tracking-widest text-gray-600">
+                        {lvl.label}
+                      </h3>
+                      <ul className="space-y-2">
+                        {lvl.items.map((p) => (
+                          <ProgrammeRow
+                            key={p.id}
+                            programme={p}
+                            open={openId === p.id}
+                            onToggle={() => setOpenId((id) => (id === p.id ? null : p.id))}
+                          />
+                        ))}
+                      </ul>
+                    </div>
                   ))}
-                </ul>
+                </div>
               </section>
             ))}
           </div>
