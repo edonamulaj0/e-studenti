@@ -26,6 +26,7 @@ cloudflare-worker/.env.*
 !cloudflare-worker/.env.example
 
 # Local Playwright cookies for uni-pr.edu (Cloudflare)
+erasmus-cookies.json
 
 # Build files
 *.log

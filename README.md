@@ -98,7 +98,7 @@ cloudflare-worker/
   migrations/        D1 schema history (apply in order)
   schema.sql         the same schema in one file, for a brand-new database
 shared/              rules used by both the site and the Worker
-scripts/             build helpers (sitemap, secret scan, stub API)
+scripts/             build helpers (sitemap, secret scan, stub API, Erasmus sync)
 docs/                architecture, deployment, accessibility conventions
 public/              static files, including `_headers` (CSP) and `_redirects`
 ```
