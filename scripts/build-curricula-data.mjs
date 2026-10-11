@@ -93,6 +93,17 @@ for (const inst of ["gjakova", "prizren", "ferizaj"]) {
   }
 }
 
+// Small colleges (Universum, AAB, AMECC Rezonanca): one list per page or handbook, matched to its programme.
+for (const inst of ["universum", "aab", "amecc"]) {
+  const groups = groupBy(read(`${inst}-courses.csv`).filter((r) => r.directory_ids), (r) => `${r.directory_ids}|${r.source}`);
+  for (const [, rows] of groups) {
+    for (const id of rows[0].directory_ids.split("|").filter(Boolean)) {
+      const courses = rows.filter((r) => r.name).map(compact);
+      if (courses.length) offer(id, { source: rows[0].source, courses, score: courses.length, method: inst });
+    }
+  }
+}
+
 const out = {};
 for (const [id, e] of candidates) {
   out[id] = { source: e.source, namesOnly: e.courses.every((c) => c[3] == null), courses: e.courses };

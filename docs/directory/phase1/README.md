@@ -28,14 +28,26 @@ Every row has its source URL and, where the programme could be matched to the AK
 | `prizren-courses.csv`, `prizren-documents.csv` | 710 | Syllabus pages of the faculties (course list per year and semester, one syllabus PDF per course) plus the Education faculty's curriculum PDFs | Names only, no ECTS. Year and semester come from the page headings, or from the syllabus file numbering (`2.3.1` = year 2, semester 3) when a page has none. 16 of 23 documents are matched to an AKA programme. Some pages carry the Bosnian or Turkish variant of a programme and some programmes have two plan versions; the page with the most courses is used. The Faculty of Law master page and the Education master PDF could not be matched with confidence. |
 | `ferizaj-courses.csv`, `ferizaj-documents.csv` | 549 | The "Planprogrami dhe Syllabuset" page of each programme (tables with type O/Z, hours and ECTS) | Best quality of the three. 8 of the 10 accredited programmes are covered (Interior Architecture and Green Architecture have no page). Where a page holds two plan versions, the one whose mandatory ECTS is closest to the programme total is used; older "2022/2023" pages are kept but not linked. |
 
-Total on the site now: 118 programmes with course lists, 4,457 courses.
+Total after this run: 118 programmes with course lists, 4,457 courses.
+
+## Small colleges (third run)
+
+| File | Rows | Source | Quality |
+|---|---|---|---|
+| `universum-courses.csv`, `universum-documents.csv` | 697 | Programme pages of universum-ks.org (curriculum drawer: year, semester, course, ECTS; "elective (choose N)" lines are split into one elective row each) | Good: year, semester and ECTS present. 28 of the 38 pages match an accredited AKA programme. |
+| `aab-courses.csv`, `aab-documents.csv` | 1,526 | Programme pages of aab-edu.net (accordion per year, course title with ECTS) | Year and ECTS present, semester not given. 41 of 50 programmes match an AKA programme. The "Programim.pdf" downloads return HTML (hotlink protection) and are ignored. |
+| `amecc-courses.csv`, `amecc-documents.csv` | 34 | Student handbooks of Rezonanca (MSc Pharmacy; MSc Health Management and Health Economics) | Transcribed from the semester tables; mandatory courses with ECTS, electives as one placeholder row per semester. |
+
+**Not extractable:** Tempulli (Wix, course lists load via JavaScript), Heimerer, FAMA, Pjetër Budi and IBCM (domain unknown or unreachable from here), Evolucion and RIT Kosovo (only general handbooks without per-programme course tables).
+
+Total on the site now: 181 programmes with course lists, 6,641 courses.
 
 ## Not done yet
 
 - Names are as written in the sources (Albanian or English). Merging them with the subject names students use on uploads is a later step.
 - Manual review of the flagged programmes.
-- OCR for the scanned documents; Gjakova, Prizren, Ferizaj, UP and the small colleges.
+- OCR for the scanned documents; UP (blocked by a Cloudflare challenge), Biznesi (dead links), IBCM and the colleges listed above.
 
 ## On the site
 
-`node scripts/build-curricula-data.mjs` turns these CSVs into `app/data/courses.json` (118 programmes, 4,457 courses). Opening a programme on `/universitetet/<slug>` shows its courses by year and semester, with a link to the source document; `/krahaso` shows both programmes' course lists side by side. The file loads on demand, so it does not slow the other pages. Programmes without a list say so.
+`node scripts/build-curricula-data.mjs` turns these CSVs into `app/data/courses.json` (181 programmes, 6,641 courses). Opening a programme on `/universitetet/<slug>` shows its courses by year and semester, with a link to the source document; `/krahaso` shows both programmes' course lists side by side. The file loads on demand, so it does not slow the other pages. Programmes without a list say so.
