@@ -77,3 +77,18 @@ The owner pointed to a UBT PDF (`2023-2028-BSc-Prishtine-ENG.pdf`: the 3-page st
 Consistent across institutions: the AKA accreditation decisions (PDF, one per programme or faculty) exist and are published both on akreditimi.rks-gov.net and on the institutions' quality pages; they state programme, level, ECTS and quota (which the AKA table already gives us) but not the course list.
 
 Extraction check: the UBT plan PDF parses with a simple script into course rows (number, type, name, hours, ECTS, code). Semester totals come to 30 ECTS per semester, and the course codes are reliable. Course names that wrap over several lines come out garbled, so an LLM or a manual pass is needed for those.
+
+### Crawl results for the rest (shallow crawl, up to 300 pages per site)
+
+| Institution | PDFs found | Plan-like PDFs | What they are |
+|---|---|---|---|
+| Peja (UHZ, `unhz.eu`) | 408 | ~46 | "Përmbajtja e programit të studimit" per programme (for example Menaxhim biznesi BSc/MSc, TIBE BSc), plus course syllabi |
+| Mitrovica (UMIB, `umib.net`) | 522 | ~35 | "Pasqyra e Programit" per programme (for example `Pasqyre-e-Programit-MTM-MSc-2026-2029.pdf`) |
+| Ferizaj (USHAF, `ushaf.net`) | 239 | ~19 | Syllabus PDFs per course (Master semester 1 series) |
+| Biznesi (`kolegjibiznesi.com`) | 431 | ~30 | "Struktura e programit" / "Kurrikula" per programme (Banka dhe Financa, Menaxhment dhe ekonomi, Shkenca kompjuterike) |
+| AMECC Rezonanca (`rezonanca-rks.com`) | 252 | 3 | Student handbooks per MSc programme (Pharmacy, Health management) |
+| Evolucion (`akademiaevolucion.com`) | 62 | 1 | One student handbook |
+| RIT Kosovo (`rit.edu/kosovo`) | 84 | 0-3 | Handbooks and committee documents; curricula are on RIT's own site |
+| Gjakova (UFAGJ, `uni-gjk.org`) | 2,264 | ~54 | Mostly council decisions and accreditation documents; programme documents need a targeted look |
+
+Summary: institutions that publish a per-programme PDF are **Peja, Mitrovica, Biznesi and parts of UBT**; Ferizaj publishes per-course syllabi; Universum and AAB show curricula or descriptions on web pages; Prizren, Gjakova, Heimerer, FAMA, Tempulli and others need a targeted search. These counts come from a shallow crawl and are lower bounds, not complete inventories.
