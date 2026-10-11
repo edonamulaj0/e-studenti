@@ -163,7 +163,8 @@ deleted there; they are stored in D1 whether or not `ADMIN_EMAIL` is set.
 
 Material pages are generated at build time. A material uploaded later has no
 static page, so `/materialet/<slug>` falls through to the 404 page, which loads
-it from the API and shows the normal detail view (no redeploy needed). Until
+it from the API and shows the normal detail view (no redeploy needed); a
+skeleton is shown while it loads, so the "not found" text never flashes. Until
 the next build such a page is not in the sitemap and is served with a 404
 status, which is fine for people but means search engines pick it up only after
 a rebuild.
