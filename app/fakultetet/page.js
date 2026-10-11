@@ -1,6 +1,7 @@
 "use client";
 import { BookOpen, ExternalLink } from "lucide-react";
 import Link from "next/link";
+import { useT } from "../components/Preferences";
 
 const accents = [
   "from-info-blue/10 to-surface",
@@ -10,6 +11,7 @@ const accents = [
 ];
 
 export default function Faculties() {
+  const t = useT();
   const faculties = [
     {
       name: "Fakulteti Filozofik",
@@ -172,20 +174,21 @@ export default function Faculties() {
       <div className="section-shell">
         <div className="mb-8 flex items-center gap-2 text-sm font-semibold text-gray-500">
           <Link href="/" className="hover:text-burgundy-600">
-            Ballina
+            {t("Ballina")}
           </Link>
           <span>/</span>
-          <span className="text-navy-800">Fakultetet</span>
+          <span className="text-navy-800">{t("Fakultetet")}</span>
         </div>
 
         <header className="mb-12 max-w-3xl">
-          <p className="page-kicker mb-4">Universiteti i Prishtinës</p>
+          <p className="page-kicker mb-4">{t("Universiteti i Prishtinës")}</p>
           <h1 className="page-title mb-4">
-            Fakultetet
+            {t("Fakultetet")}
           </h1>
           <p className="page-subtitle max-w-2xl">
-            Eksploroni fakultetet e Universitetit të Prishtinës — departamente,
-            lidhje zyrtare dhe materiale.
+            {t(
+              "Eksploroni fakultetet e Universitetit të Prishtinës — departamente, lidhje zyrtare dhe materiale."
+            )}
           </p>
         </header>
 
@@ -198,7 +201,7 @@ export default function Faculties() {
               <Link
                 href={`/fakultetet/${faculty.acronym.toLowerCase()}`}
                 className="absolute inset-0 z-10"
-                aria-label={`Eksploro ${faculty.name}`}
+                aria-label={t("Eksploro {name}", { name: t(faculty.name) })}
               />
               <div className="pointer-events-none relative z-20 flex min-h-0 flex-1 flex-col">
               <div className="mb-6 flex items-start justify-between gap-3">
@@ -210,39 +213,39 @@ export default function Faculties() {
                   target="_blank"
                   rel="noopener noreferrer"
                   className="pointer-events-auto relative z-30 shrink-0 rounded-xl bg-surface/70 p-2 text-burgundy-600 transition-colors hover:bg-surface"
-                  aria-label={`Faqja e ${faculty.acronym}`}
+                  aria-label={t("Faqja e {acronym}", { acronym: faculty.acronym })}
                 >
                   <ExternalLink className="w-6 h-6" />
                 </a>
               </div>
 
               <h2 className="mb-5 text-xl font-semibold leading-snug text-navy-900">
-                {faculty.name}
+                {t(faculty.name)}
               </h2>
 
               <div className="mb-5 text-base text-gray-600">
                 <div className="inline-flex items-center gap-2 rounded-full bg-surface/80 px-3 py-1.5">
                   <BookOpen className="w-5 h-5 text-success-text shrink-0" />
                   <span className="font-semibold">
-                    {faculty.departments.length} departamente
+                    {t("{n} departamente", { n: faculty.departments.length })}
                   </span>
                 </div>
               </div>
 
               <div className="mb-6">
                 <h3 className="mb-3 text-xs font-semibold uppercase tracking-widest text-gray-500">
-                  Departamentet
+                  {t("Departamentet")}
                 </h3>
                 <ul className="space-y-2 text-sm text-gray-600">
                   {faculty.departments.slice(0, 3).map((dept, idx) => (
                     <li key={idx} className="flex gap-2">
                       <span className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-burgundy-600" />
-                      <span>{dept}</span>
+                      <span>{t(dept)}</span>
                     </li>
                   ))}
                   {faculty.departments.length > 3 && (
                     <li className="font-semibold text-burgundy-600">
-                      +{faculty.departments.length - 3} më shumë
+                      {t("+{n} më shumë", { n: faculty.departments.length - 3 })}
                     </li>
                   )}
                 </ul>
@@ -251,10 +254,10 @@ export default function Faculties() {
 
               <div className="pointer-events-none relative z-20 mt-auto flex items-center justify-between border-t border-gray-200/70 pt-5">
                 <span className="text-sm font-semibold text-gray-500">
-                  {faculty.departments.length} programe
+                  {t("{n} programe", { n: faculty.departments.length })}
                 </span>
                 <span className="btn-primary min-h-[42px] px-4 py-2 group-hover:bg-burgundy-500">
-                  Eksploro
+                  {t("Eksploro")}
                   <ExternalLink className="h-4 w-4" />
                 </span>
               </div>

@@ -10,6 +10,7 @@ import {
   Award,
   ExternalLink,
 } from "lucide-react";
+import { useT } from "../components/Preferences";
 
 const WEBSITE_BY_SLUG = {
   ffz: "http://filozofiku.uni-pr.edu/",
@@ -41,6 +42,7 @@ function showYear(established) {
  * @param {{ faculty: { name: string; code: string; description?: string; established?: string; location?: string; email?: string; phone?: string; departments: { name: string; code: string; description?: string }[] }; materialsQuery: string }}
  */
 export default function FacultyDetailLayout({ faculty, materialsQuery }) {
+  const t = useT();
   const {
     name,
     code,
@@ -64,7 +66,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
           className="inline-flex items-center gap-2 text-base font-semibold text-srh-crimson hover:text-srh-navy mb-8 transition-colors"
         >
           <ArrowLeft className="w-5 h-5 shrink-0" aria-hidden />
-          Kthehu te fakultetet
+          {t("Kthehu te fakultetet")}
         </Link>
 
         <article className="bg-surface rounded-2xl shadow-sm border border-srh-cream overflow-hidden mb-8">
@@ -75,7 +77,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                   {code}
                 </span>
                 <h1 className="mt-4 font-playfair text-3xl md:text-4xl font-extrabold text-srh-navy tracking-tight leading-tight">
-                  {name}
+                  {t(name)}
                 </h1>
               </div>
               {website ? (
@@ -85,7 +87,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                   rel="noopener noreferrer"
                   className="shrink-0 inline-flex items-center gap-2 rounded-xl border-2 border-srh-navy bg-surface px-4 py-2.5 text-sm font-bold text-srh-navy hover:bg-srh-navy hover:text-white transition-colors"
                 >
-                  Faqja zyrtare
+                  {t("Faqja zyrtare")}
                   <ExternalLink className="w-4 h-4" aria-hidden />
                 </a>
               ) : null}
@@ -93,7 +95,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
 
             {description ? (
               <p className="text-base md:text-lg text-srh-navy/70 leading-relaxed mb-8 border-t border-srh-cream pt-8">
-                {description}
+                {t(description)}
               </p>
             ) : null}
 
@@ -104,7 +106,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                 </span>
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/70">
-                    Departamente
+                    {t("Departamente")}
                   </p>
                   <p className="font-extrabold text-srh-navy text-xl tabular-nums">
                     {deptCount}
@@ -118,7 +120,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                   </span>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/70">
-                      Themeluar
+                      {t("Themeluar")}
                     </p>
                     <p className="font-extrabold text-srh-navy text-xl">
                       {established}
@@ -133,7 +135,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                   </span>
                   <div>
                     <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/70">
-                      Vendndodhja
+                      {t("Vendndodhja")}
                     </p>
                     <p className="font-semibold text-srh-navy leading-snug">
                       {location}
@@ -151,7 +153,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
               <Mail className="w-6 h-6" aria-hidden />
             </span>
             <h2 className="font-playfair text-xl md:text-2xl font-extrabold text-srh-navy">
-              Kontakti
+              {t("Kontakti")}
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -185,7 +187,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                 />
                 <div>
                   <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/70">
-                    Telefon
+                    {t("Telefon")}
                   </p>
                   <p className="font-semibold text-srh-navy">{phone}</p>
                 </div>
@@ -200,7 +202,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
               <BookOpen className="w-6 h-6" aria-hidden />
             </span>
             <h2 className="font-playfair text-xl md:text-2xl font-extrabold text-srh-navy">
-              Departamentet
+              {t("Departamentet")}
             </h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -210,11 +212,11 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                 className="rounded-2xl border border-srh-cream bg-srh-paper p-5 md:p-6"
               >
                 <h3 className="font-bold text-srh-navy text-lg leading-snug mb-2">
-                  {department.name}
+                  {t(department.name)}
                 </h3>
                 {department.description ? (
                   <p className="text-sm md:text-base text-srh-navy/70 leading-relaxed line-clamp-4">
-                    {department.description}
+                    {t(department.description)}
                   </p>
                 ) : null}
               </div>
@@ -227,13 +229,13 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
             href={`/materialet?faculty=${materialsQuery}`}
             className="inline-flex items-center justify-center rounded-xl bg-srh-crimson text-white px-8 py-3.5 text-lg font-bold hover:bg-burgundy-700 transition-colors"
           >
-            Materialet për këtë fakultet
+            {t("Materialet për këtë fakultet")}
           </Link>
           <Link
             href="/fakultetet"
             className="inline-flex items-center justify-center rounded-xl border-2 border-srh-navy bg-surface px-8 py-3.5 text-lg font-bold text-srh-navy hover:bg-srh-navy hover:text-white transition-colors"
           >
-            Të gjitha fakultetet
+            {t("Të gjitha fakultetet")}
           </Link>
         </div>
       </div>
