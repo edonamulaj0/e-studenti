@@ -73,6 +73,7 @@ const RATE_LIMITS = {
   },
   report: { requests: 10, window: 3600 },
   export_account: { requests: 5, window: 3600 },
+  check_duplicates: { requests: 120, window: 3600 },
   delete_account: { requests: 3, window: 3600 },
   resource_link: { requests: 5, window: 3600 },
   track_view: { requests: 120, window: 3600 },
@@ -2032,6 +2033,48 @@ async function uploadReviewStatus(user, env) {
   return { status: "pending", queueFull: pending >= MAX_PENDING_PER_USER };
 }
 
+const CLIENT_UPLOAD_ID = /^[A-Za-z0-9-]{8,64}$/;
+const CONTENT_HASH = /^[0-9a-f]{64}$/;
+
+function normalizeClientUploadId(value) {
+  const id = String(value || "").trim();
+  return CLIENT_UPLOAD_ID.test(id) ? id : null;
+}
+
+function normalizeContentHash(value) {
+  const hash = String(value || "").trim().toLowerCase();
+  return CONTENT_HASH.test(hash) ? hash : null;
+}
+
+async function findUploadByClientId(env, userId, clientUploadId) {
+  return env.DB.prepare(
+    `SELECT id, title, faculty, department, subject, teacher, type, file_type, file_size, r2_url, status
+     FROM materials WHERE user_id = ? AND client_upload_id = ?`
+  )
+    .bind(userId, clientUploadId)
+    .first();
+}
+
+function existingUploadResponse(existing) {
+  return jsonResponse({
+    success: true,
+    duplicate: true,
+    status: existing.status,
+    material: {
+      id: existing.id,
+      title: existing.title,
+      faculty: existing.faculty,
+      department: existing.department,
+      subject: existing.subject,
+      teacher: existing.teacher,
+      type: existing.type,
+      file_type: existing.file_type,
+      file_size: existing.file_size,
+      r2_url: existing.r2_url,
+    },
+  });
+}
+
 async function handleUpload(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
 
@@ -2050,9 +2093,23 @@ async function handleUpload(request, env) {
   // Decided before the body is read, so a user whose queue is full is turned
   // away without buffering a file.
   const review = await uploadReviewStatus(user, env);
+
+  // A retry of an upload that already went through (its response was lost) gets
+  // the existing row back rather than a second copy. Checked before the queue
+  // limit so a retry is never refused for a file that is already stored. The id
+  // travels in the query string so this needs no body parsing.
+  const clientUploadId = normalizeClientUploadId(
+    new URL(request.url).searchParams.get("client_upload_id")
+  );
+  if (clientUploadId) {
+    const existing = await findUploadByClientId(env, user.id, clientUploadId);
+    if (existing) return existingUploadResponse(existing);
+  }
+
   if (review.queueFull) {
     return jsonResponse(
       {
+        code: "pending_limit",
         error: `Keni ${MAX_PENDING_PER_USER} materiale në pritje të shqyrtimit. Prisni që të aprovohen para se të ngarkoni më shumë.`,
       },
       429
@@ -2125,13 +2182,29 @@ async function handleUpload(request, env) {
   });
 
   const r2Url = keyToPublicUrl(fileKey);
-  const insert = await env.DB.prepare(
-    `INSERT INTO materials
-      (user_id, title, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level, status)
-     VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
-  )
-    .bind(user.id, title, faculty, department, subject, teacher, type, fileKey, ext, file.size, r2Url, isAnonymous, studyLevel, review.status)
-    .run();
+  let insert;
+  try {
+    insert = await env.DB.prepare(
+      `INSERT INTO materials
+        (user_id, title, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level, content_hash, client_upload_id, status)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+    )
+      .bind(
+        user.id, title, faculty, department, subject, teacher, type, fileKey, ext, file.size,
+        r2Url, isAnonymous, studyLevel, normalizeContentHash(form.get("content_hash")),
+        clientUploadId, review.status
+      )
+      .run();
+  } catch (error) {
+    // Two requests carrying the same client id raced; the other one won. Remove
+    // the object this one wrote and answer with the row that exists.
+    if (clientUploadId && String(error.message || error).includes("UNIQUE")) {
+      await env.MY_BUCKET.delete(fileKey).catch(() => {});
+      const existing = await findUploadByClientId(env, user.id, clientUploadId);
+      if (existing) return existingUploadResponse(existing);
+    }
+    throw error;
+  }
 
   // Invalidate public catalog cache after upload
   await catalogChanged(env, { publicChange: review.status === "approved" });
@@ -2152,6 +2225,59 @@ async function handleUpload(request, env) {
       r2_url: r2Url,
     },
   });
+}
+
+const MAX_HASHES_PER_CHECK = 50;
+
+/**
+ * Which of the given file hashes already exist as published materials (or as
+ * the caller's own, whatever their status). Lets the upload page warn about
+ * duplicates before anything is sent. Hashes are supplied by the browser, so the
+ * answer is a hint: it can be wrong, and it only ever reveals titles that are
+ * public or already belong to the caller.
+ */
+async function handleCheckDuplicates(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  if (request.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const limited = await checkRateLimit(request, "check_duplicates", env, `user:${user.id}`);
+  if (limited) return limited;
+
+  const body = await request.json().catch(() => ({}));
+  const hashes = [
+    ...new Set(
+      (Array.isArray(body.hashes) ? body.hashes : []).map(normalizeContentHash).filter(Boolean)
+    ),
+  ].slice(0, MAX_HASHES_PER_CHECK);
+  if (hashes.length === 0) return jsonResponse({ duplicates: [] });
+
+  const rows = await env.DB.prepare(
+    `SELECT id, title, content_hash, user_id, status
+     FROM materials
+     WHERE content_hash IN (${hashes.map(() => "?").join(",")})
+       AND (status = 'approved' OR user_id = ?)
+     ORDER BY id`
+  )
+    .bind(...hashes, user.id)
+    .all();
+
+  const slugIndex = await loadSlugIndexCached(env);
+  const seen = new Set();
+  const duplicates = [];
+  for (const row of rows.results || []) {
+    if (seen.has(row.content_hash)) continue;
+    seen.add(row.content_hash);
+    duplicates.push({
+      hash: row.content_hash,
+      id: row.id,
+      title: row.title,
+      status: row.status,
+      own: Number(row.user_id) === Number(user.id),
+      slug: slugIndex.byId.get(row.id) || null,
+    });
+  }
+  return jsonResponse({ duplicates });
 }
 
 const CONTACT_PAGE_SIZE = 50;
@@ -3168,6 +3294,7 @@ export default {
       "delete-material",
       "rekey-materials",
       "review-material",
+      "check-duplicates",
       "contact-messages",
       "delete-contact-message",
       "export-account",
@@ -3276,6 +3403,9 @@ export default {
           break;
         case "delete-material":
           response = await handleDeleteMaterial(request, env);
+          break;
+        case "check-duplicates":
+          response = await handleCheckDuplicates(request, env);
           break;
         case "contact-messages":
           response = await handleContactMessages(request, url, env);

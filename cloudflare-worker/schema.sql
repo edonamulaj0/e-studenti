@@ -50,11 +50,16 @@ CREATE TABLE IF NOT EXISTS materials (
   rejection_reason TEXT,
   reviewed_at TEXT,
   reviewed_by INTEGER,
+  content_hash TEXT,
+  client_upload_id TEXT,
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );
 
 CREATE INDEX IF NOT EXISTS idx_materials_status ON materials(status);
+CREATE INDEX IF NOT EXISTS idx_materials_content_hash ON materials(content_hash);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_materials_client_upload
+  ON materials(user_id, client_upload_id) WHERE client_upload_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_materials_user ON materials(user_id);
 CREATE INDEX IF NOT EXISTS idx_materials_faculty ON materials(faculty);
 
