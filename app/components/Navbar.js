@@ -8,7 +8,7 @@ import { useFocusTrap } from "../lib/use-focus-trap";
 import ViberIcon, { VIBER_URL } from "./ViberIcon";
 
 const navItems = [
-  { href: "/fakultetet", label: "Fakultetet" },
+  { href: "/universitetet", label: "Universitetet" },
   { href: "/per-aplikantet", label: "Për Aplikantët" },
   { href: "/materialet", label: "Materialet" },
   { href: "/erasmus", label: "Erasmus" },

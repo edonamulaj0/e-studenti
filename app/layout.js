@@ -2,6 +2,7 @@ import "./globals.css";
 import { Montserrat, Playfair_Display } from "next/font/google";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import CompareProvider, { CompareStrip } from "./components/CompareProvider";
 import { WORKER_URL } from "./lib/worker-url";
 
 const workerOrigin = new URL(WORKER_URL).origin;
@@ -78,12 +79,15 @@ export default function RootLayout({ children }) {
         >
           Kalo te përmbajtja
         </a>
+        <CompareProvider>
         <Navbar />
+        <CompareStrip />
         {/* flex-1: short pages end at the bottom of the viewport instead of
             being padded to a full screen, so the footer no longer forces a scrollbar */}
         <main id="main" tabIndex={-1} className="flex-1 outline-none">
           {children}
         </main>
+        </CompareProvider>
         <Footer />
       </body>
     </html>

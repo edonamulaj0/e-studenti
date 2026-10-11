@@ -8,6 +8,10 @@ const WORKER_URL =
   process.env.NEXT_PUBLIC_WORKER_URL ||
   "https://api.e-studenti.com";
 
+const { universities } = JSON.parse(
+  fs.readFileSync(path.join(process.cwd(), "app/data/universities.json"), "utf8")
+);
+
 const FACULTY_SLUGS = FACULTY_CODES.map((code) => code.toLowerCase());
 
 function urlEntry(loc, changefreq = "weekly", priority = "0.7") {
@@ -47,6 +51,7 @@ async function main() {
     "/materialet",
     "/burime",
     "/fakultetet",
+    "/universitetet",
     "/per-aplikantet",
     "/erasmus",
     "/informacione",
@@ -60,6 +65,7 @@ async function main() {
   const subjects = await fetchSubjects();
   const urls = [
     ...staticPaths.map((pathName) => urlEntry(`${SITE_URL}${pathName}`, "weekly", pathName === "/" ? "1.0" : "0.8")),
+    ...universities.map((u) => urlEntry(`${SITE_URL}/universitetet/${u.slug}`, "monthly", "0.7")),
     ...FACULTY_SLUGS.map((slug) =>
       urlEntry(`${SITE_URL}/fakultetet/${slug}`, "monthly", "0.7")
     ),
