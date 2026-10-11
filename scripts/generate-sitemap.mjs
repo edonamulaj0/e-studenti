@@ -35,10 +35,17 @@ async function fetchMaterials() {
   return all;
 }
 
+async function fetchSubjects() {
+  const res = await fetch(`${WORKER_URL}/?action=subjects`);
+  if (!res.ok) throw new Error(`${WORKER_URL} answered ${res.status} while listing subjects`);
+  return (await res.json()).subjects || [];
+}
+
 async function main() {
   const staticPaths = [
     "/",
     "/materialet",
+    "/lendet",
     "/burime",
     "/fakultetet",
     "/per-aplikantet",
@@ -51,11 +58,13 @@ async function main() {
   ];
 
   const materials = assignMaterialSlugs(await fetchMaterials());
+  const subjects = await fetchSubjects();
   const urls = [
     ...staticPaths.map((pathName) => urlEntry(`${SITE_URL}${pathName}`, "weekly", pathName === "/" ? "1.0" : "0.8")),
     ...FACULTY_SLUGS.map((slug) =>
       urlEntry(`${SITE_URL}/fakultetet/${slug}`, "monthly", "0.7")
     ),
+    ...subjects.map((subject) => urlEntry(`${SITE_URL}/lenda/${subject.slug}`, "weekly", "0.7")),
     ...materials.map((material) =>
       urlEntry(`${SITE_URL}/materialet/${material.slug}`, "weekly", "0.6")
     ),

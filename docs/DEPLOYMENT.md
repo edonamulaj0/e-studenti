@@ -119,13 +119,36 @@ migration before deploying the Worker**, or every catalogue query will fail:
 
 ```bash
 cd cloudflare-worker
-wrangler d1 migrations apply e-studenti-auth --remote   # applies 0011 to 0014
+wrangler d1 migrations apply e-studenti-auth --remote   # applies 0011 to 0015
 ```
 
 Existing materials are marked `approved`. The thresholds are
 `TRUSTED_APPROVED_UPLOADS` and `MAX_PENDING_PER_USER` in `src/index.js`.
 Files under review are not listed or counted, but their unguessable media URL is
 reachable by anyone who has it; only the owner and moderators are given it.
+
+## Reports and the 3-report email
+
+A report counts once per person per file (signed-in users by account, others by a
+salted hash of their IP; the IP itself is never stored). When a *published* file
+reaches **3 distinct reporters** the moderator gets one email, and at most one
+reminder digest per 24 hours while it stays flagged. The hourly cron retries a
+failed send. The file is **not** hidden automatically (that would let three people
+silence any file): **Moderim → Raportet** shows flagged files first, with
+"Hiq nga publikimi", which returns the file to the review queue. Migration
+`0015_report_alerts_and_trust.sql` must be applied **before** deploying this
+Worker (it reads `reports.reporter_key` and `users.trust_revoked`). The moderator
+can also withdraw an uploader's trusted status there; trusted uploaders show a
+check mark on public cards (never on anonymous uploads).
+
+## Subjects
+
+`/lenda/<slug>` and `/lendet` group materials by subject. A subject is identified
+by its normalised name per faculty, so "Anatomi", "anatomi" and "ANATOMI" merge
+automatically. Other spelling differences are merged in **Moderim → Lëndët**
+(rename), which rewrites the stored subject on every affected material. New uploads
+reuse an existing spelling. Subject pages are generated at build time; a subject
+created later loads client-side until the next deploy.
 
 ## Moderator access
 

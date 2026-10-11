@@ -3,6 +3,7 @@
 import { Home, RefreshCw, AlertTriangle, Loader2 } from "lucide-react";
 import { useState } from "react";
 import MaterialDetail from "./components/MaterialDetail";
+import SubjectView from "./components/SubjectView";
 import { useLateMaterial } from "./lib/use-late-material";
 
 /**
@@ -49,6 +50,9 @@ export default function NotFound() {
   const [isLoading, setIsLoading] = useState(false);
   const late = useLateMaterial();
 
+  if (late.phase === "found" && late.subject) {
+    return <SubjectView subject={late.subject.subject} materials={late.subject.materials} />;
+  }
   if (late.phase === "found") {
     return <MaterialDetail material={late.material} slug={late.slug} />;
   }

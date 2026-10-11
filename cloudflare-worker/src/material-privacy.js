@@ -41,6 +41,8 @@ export function sanitizeMaterialForPublic(material, { revealUploader = false } =
   if (anonymous && !revealUploader) {
     delete sanitized.uploader_name;
     delete sanitized.uploaderName;
+    // A "trusted contributor" mark would single out an anonymous upload.
+    delete sanitized.uploader_trusted;
   } else if (displayName) {
     sanitized.uploader_name = displayName;
   }
@@ -70,6 +72,7 @@ export function materialToPublicLegacyEntry(material, normalizeUploaderName) {
     submittedBy: displayName
       ? { name: normalizeUploaderName ? normalizeUploaderName(displayName) : displayName }
       : undefined,
+    uploader_trusted: isMaterialAnonymous(material) ? undefined : Boolean(material.uploader_trusted),
   };
 }
 

@@ -39,6 +39,14 @@ if `PAGES_DEPLOY_HOOK` is set, the hourly job asks Pages for a rebuild. Until th
 rebuild, `/materialet/<new-slug>` falls to the 404 page, which loads the material
 from the API (`app/lib/use-late-material.js`).
 
+## Reports, trust and subjects
+
+`reports` rows are deduplicated per reporter (`reporter_key`); `report_alerts`
+records which flagged files were already emailed. Subject identity and page slugs
+are computed by `shared/subjects.mjs` on both sides. The catalogue card
+(`app/components/MaterialCard.js`) is compact on purpose; `MaterialGrid` owns the
+one preview/archive modal a page of cards shares.
+
 ## Data model (D1)
 
 `users` · `verification_codes` · `materials` (+ `status`, `content_hash`,

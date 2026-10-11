@@ -19,6 +19,10 @@ import {
   Link2,
   Mail,
   PackageCheck,
+  BookOpen,
+  EyeOff,
+  ShieldOff,
+  BadgeCheck,
 } from "lucide-react";
 import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
@@ -45,6 +49,7 @@ function ModerimPage() {
     if (t === "burime") return "burime";
     if (t === "pritje") return "pritje";
     if (t === "mesazhe") return "mesazhe";
+    if (t === "lendet") return "lendet";
     return "raportet";
   });
   const [ready, setReady] = useState(false);
@@ -81,6 +86,17 @@ function ModerimPage() {
   const [messagesTotal, setMessagesTotal] = useState(0);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [confirmDeleteMessageId, setConfirmDeleteMessageId] = useState(null);
+
+  // ── Flagged files and uploader trust ───────────────────────────────────
+  const [flagThreshold, setFlagThreshold] = useState(3);
+  const [unpublishingId, setUnpublishingId] = useState(null);
+
+  // ── Subjects ───────────────────────────────────────────────────────────
+  const [subjects, setSubjects] = useState([]);
+  const [subjectsLoading, setSubjectsLoading] = useState(false);
+  const [subjectFilter, setSubjectFilter] = useState("");
+  const [renaming, setRenaming] = useState(null);
+  const [renameTo, setRenameTo] = useState("");
 
   const LIMIT = 50;
   const totalPages = Math.max(1, Math.ceil(materialsTotal / LIMIT));
@@ -230,12 +246,92 @@ function ModerimPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
       setReports(data.reports || []);
+      if (data.flag_threshold) setFlagThreshold(data.flag_threshold);
     } catch (err) {
       setGlobalError(err.message || "Ngarkimi dështoi.");
     } finally {
       setReportsLoading(false);
     }
   }, [router]);
+
+  const loadSubjects = useCallback(async () => {
+    setSubjectsLoading(true);
+    setGlobalError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=subject-admin`, { credentials: "include" });
+      if (res.status === 401) { router.push("/llogaria/hyr"); return; }
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
+      setSubjects(data.subjects || []);
+    } catch (err) {
+      setGlobalError(err.message || "Ngarkimi dështoi.");
+    } finally {
+      setSubjectsLoading(false);
+    }
+  }, [router]);
+
+  const renameSubject = async (subject) => {
+    const to = renameTo.trim();
+    if (!to) return;
+    setGlobalError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=rename-subject`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ faculty: subject.faculty, key: subject.key, to }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Riemërtimi dështoi.");
+      setRenaming(null);
+      setRenameTo("");
+      loadSubjects();
+    } catch (err) {
+      setGlobalError(err.message || "Riemërtimi dështoi.");
+    }
+  };
+
+  const unpublish = async (materialId) => {
+    setUnpublishingId(materialId);
+    setGlobalError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=unpublish-material`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: materialId }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Veprimi dështoi.");
+      setReports((prev) =>
+        prev.map((r) => (r.material_id === materialId ? { ...r, material_status: "pending" } : r))
+      );
+      loadPending();
+    } catch (err) {
+      setGlobalError(err.message || "Veprimi dështoi.");
+    } finally {
+      setUnpublishingId(null);
+    }
+  };
+
+  const setTrust = async (userId, revoked) => {
+    setGlobalError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=set-user-trust`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: userId, revoked }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Veprimi dështoi.");
+      setMaterials((prev) =>
+        prev.map((m) => (m.uploader_id === userId ? { ...m, uploader_trust_revoked: revoked ? 1 : 0 } : m))
+      );
+    } catch (err) {
+      setGlobalError(err.message || "Veprimi dështoi.");
+    }
+  };
 
   // ── Load materials when tab is active ─────────────────────────────────
   const loadMaterials = useCallback(async (p) => {
@@ -264,6 +360,7 @@ function ModerimPage() {
     if (tab === "burime") loadResourceLinks();
     if (tab === "pritje") loadPending();
     if (tab === "mesazhe") loadMessages();
+    if (tab === "lendet") loadSubjects();
   // eslint-disable-next-line react-hooks/exhaustive-deps -- each tab loads its data when it is opened; the loaders are plain functions
   }, [ready, tab]);
 
@@ -297,6 +394,13 @@ function ModerimPage() {
       setGlobalError(err.message || "Veprimi dështoi.");
     } finally {
       setResolving(null);
+    }
+  };
+
+  const resolveMaterialReports = async (items, action) => {
+    for (const report of items) {
+      // One at a time: a file has only a few reports, and the alert bookkeeping stays consistent.
+      await resolve(report.id, action);
     }
   };
 
@@ -335,6 +439,21 @@ function ModerimPage() {
       })
     : materials;
 
+  // Reports grouped by file, the most-reported first (the Worker sorts them so).
+  const reportGroups = [];
+  for (const r of reports) {
+    let group = reportGroups.find((g) => g.material_id === r.material_id);
+    if (!group) {
+      group = { material_id: r.material_id, first: r, items: [] };
+      reportGroups.push(group);
+    }
+    group.items.push(r);
+  }
+
+  const shownSubjects = subjectFilter.trim()
+    ? subjects.filter((s) => s.name.toLowerCase().includes(subjectFilter.trim().toLowerCase()))
+    : subjects;
+
   // ── Tab pill styles ────────────────────────────────────────────────────
   const tabCls = (t) =>
     `inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-colors ${
@@ -372,9 +491,9 @@ function ModerimPage() {
           <button type="button" onClick={() => setTab("raportet")} className={tabCls("raportet")}>
             <ShieldAlert className="h-4 w-4" />
             Raportet
-            {reports.length > 0 && (
+            {reportGroups.length > 0 && (
               <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-text">
-                {reports.length}
+                {reportGroups.length}
               </span>
             )}
           </button>
@@ -395,6 +514,10 @@ function ModerimPage() {
                 {messagesTotal}
               </span>
             )}
+          </button>
+          <button type="button" onClick={() => setTab("lendet")} className={tabCls("lendet")}>
+            <BookOpen className="h-4 w-4" />
+            Lëndët
           </button>
           <button type="button" onClick={() => setTab("burime")} className={tabCls("burime")}>
             <Link2 className="h-4 w-4" />
@@ -431,93 +554,194 @@ function ModerimPage() {
               </div>
             ) : (
               <div className="grid gap-4">
-                {reports.map((report) => (
-                  <article
-                    key={report.id}
-                    className="rounded-2xl border border-warning-amber/30 bg-white p-6 shadow-sm"
-                  >
-                    <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-                      <div className="min-w-0 flex-1">
-                        <div className="mb-3 flex items-center gap-2">
-                          <AlertTriangle className="h-5 w-5 shrink-0 text-warning-text" />
-                          <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-                            Raport #{report.id} · {formatDate(report.created_at)}
-                          </span>
-                        </div>
+                {reportGroups.map((group) => {
+                  const first = group.first;
+                  const people = first.open_reports;
+                  const flagged = people >= flagThreshold;
+                  const busy = group.items.some((r) => resolving === r.id);
+                  return (
+                    <article
+                      key={group.material_id}
+                      className={`rounded-2xl border bg-white p-5 shadow-sm ${
+                        flagged ? "border-burgundy-600/50 ring-1 ring-burgundy-600/20" : "border-warning-amber/30"
+                      }`}
+                    >
+                      <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                        <div className="min-w-0 flex-1">
+                          <div className="mb-3 flex flex-wrap items-center gap-2">
+                            {flagged ? (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-burgundy-600 px-2.5 py-1 text-xs font-bold text-white">
+                                <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+                                {people} persona e kanë raportuar
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-amber/20 px-2.5 py-1 text-xs font-bold text-warning-text">
+                                <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
+                                {people} {people === 1 ? "person" : "persona"} · pragu është {flagThreshold}
+                              </span>
+                            )}
+                            {first.material_status !== "approved" && (
+                              <span className="rounded-full bg-navy-100 px-2.5 py-1 text-xs font-bold text-navy-800">
+                                Nuk është i publikuar
+                              </span>
+                            )}
+                          </div>
 
-                        <div className="mb-4 rounded-xl border border-gray-100 bg-navy-100/30 p-4">
-                          <div className="flex items-start gap-3">
-                            <FileText className="mt-0.5 h-5 w-5 shrink-0 text-navy-700" />
+                          <div className="mb-3 flex items-start gap-3">
+                            <FileText className="mt-0.5 h-5 w-5 shrink-0 text-navy-700" aria-hidden />
                             <div className="min-w-0">
-                              <p className="font-bold leading-snug text-navy-900">
-                                {report.material_title}
+                              <p className="font-bold leading-snug text-navy-900">{first.material_title}</p>
+                              <p className="mt-0.5 text-sm text-gray-600">
+                                {getFacultyName(first.material_faculty)} · {first.material_subject}
                               </p>
-                              <p className="mt-1 text-sm text-gray-500">
-                                {getFacultyName(report.material_faculty)} · {report.material_subject}
-                              </p>
-                              {report.material_url && (
+                              {first.material_url && (
                                 <a
-                                  href={report.material_url}
+                                  href={first.material_url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-burgundy-600 hover:underline"
+                                  className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-burgundy-600 hover:underline"
                                 >
-                                  <ExternalLink className="h-3.5 w-3.5" />
+                                  <ExternalLink className="h-3.5 w-3.5" aria-hidden />
                                   Hap materialin
                                 </a>
                               )}
                             </div>
                           </div>
+
+                          <ul className="divide-y divide-gray-100 rounded-xl border border-gray-100 text-sm">
+                            {group.items.map((report) => (
+                              <li key={report.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 px-3 py-2">
+                                <span className="font-semibold text-navy-900">{report.reason}</span>
+                                <span className="text-xs text-gray-600">
+                                  {report.reporter_email
+                                    ? `${report.reporter_name || ""} ${report.reporter_surname || ""}`.trim() ||
+                                      report.reporter_email
+                                    : "Anonim"}{" "}
+                                  · {formatDate(report.created_at)}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
 
-                        <div className="grid gap-2 text-sm md:grid-cols-2">
-                          <div>
-                            <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-                              Arsyeja
-                            </span>
-                            <p className="mt-1 font-semibold text-navy-900">{report.reason}</p>
-                          </div>
-                          <div>
-                            <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-                              Raportues
-                            </span>
-                            <p className="mt-1 font-semibold text-navy-900">
-                              {report.reporter_email
-                                ? `${report.reporter_name || ""} ${report.reporter_surname || ""}`.trim() ||
-                                  report.reporter_email
-                                : "Anonim"}
-                            </p>
-                            {report.reporter_email && (
-                              <p className="text-xs text-gray-500">{report.reporter_email}</p>
-                            )}
-                          </div>
+                        <div className="flex shrink-0 flex-wrap gap-2 md:w-48 md:flex-col">
+                          {first.material_status === "approved" && (
+                            <button
+                              type="button"
+                              onClick={() => unpublish(group.material_id)}
+                              disabled={unpublishingId === group.material_id}
+                              className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-burgundy-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-burgundy-700 disabled:opacity-50 md:flex-none"
+                            >
+                              <EyeOff className="h-4 w-4" aria-hidden />
+                              Hiq nga publikimi
+                            </button>
+                          )}
+                          <button
+                            type="button"
+                            onClick={() => resolveMaterialReports(group.items, "resolve")}
+                            disabled={busy}
+                            className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-success-green px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50 md:flex-none"
+                          >
+                            <CheckCircle2 className="h-4 w-4" aria-hidden />
+                            Zgjidh
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => resolveMaterialReports(group.items, "dismiss")}
+                            disabled={busy}
+                            className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-600 hover:border-gray-400 disabled:opacity-50 md:flex-none"
+                          >
+                            <XCircle className="h-4 w-4" aria-hidden />
+                            Largo
+                          </button>
                         </div>
                       </div>
-
-                      <div className="flex shrink-0 gap-3 md:flex-col">
-                        <button
-                          type="button"
-                          onClick={() => resolve(report.id, "resolve")}
-                          disabled={resolving === report.id}
-                          className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-success-green px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50 md:flex-none"
-                        >
-                          <CheckCircle2 className="h-4 w-4" />
-                          Zgjidh
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => resolve(report.id, "dismiss")}
-                          disabled={resolving === report.id}
-                          className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-600 hover:border-gray-400 disabled:opacity-50 md:flex-none"
-                        >
-                          <XCircle className="h-4 w-4" />
-                          Largo
-                        </button>
-                      </div>
-                    </div>
-                  </article>
-                ))}
+                    </article>
+                  );
+                })}
               </div>
+            )}
+          </>
+        )}
+
+        {/* ── SUBJECTS TAB ──────────────────────────────────────────── */}
+        {tab === "lendet" && (
+          <>
+            <p className="mb-3 text-sm text-gray-600">
+              Lëndët shkruhen me dorë, kështu që e njëjta lëndë mund të ketë disa shkrime. Riemërto një lëndë
+              për të bashkuar të gjitha shkrimet e saj nën një emër.
+            </p>
+            <div className="relative mb-4">
+              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden />
+              <input
+                type="text"
+                value={subjectFilter}
+                onChange={(e) => setSubjectFilter(e.target.value)}
+                aria-label="Kërko lëndë"
+                placeholder="Kërko lëndë…"
+                className="input-srh pl-11"
+              />
+            </div>
+            {subjectsLoading ? (
+              <div className="h-40 animate-pulse rounded-2xl bg-white" />
+            ) : (
+              <ul className="grid gap-2">
+                {shownSubjects.map((subject) => {
+                  const id = `${subject.faculty}|${subject.key}`;
+                  const editing = renaming === id;
+                  return (
+                    <li key={id} className="rounded-2xl border border-gray-200 bg-white p-4">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="font-bold text-navy-900">
+                            {subject.name}{" "}
+                            <span className="font-normal text-gray-600">
+                              · {getFacultyName(subject.faculty)} · {subject.count}
+                            </span>
+                          </p>
+                          {subject.variants.length > 1 && (
+                            <p className="mt-0.5 text-xs text-warning-text">
+                              Shkrime: {subject.variants.map((v) => `${v.name} (${v.count})`).join(", ")}
+                            </p>
+                          )}
+                        </div>
+                        {!editing && (
+                          <button
+                            type="button"
+                            onClick={() => { setRenaming(id); setRenameTo(subject.name); }}
+                            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 border-navy-900 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-navy-900 hover:text-white"
+                          >
+                            <Pencil className="h-3.5 w-3.5" aria-hidden />
+                            Riemërto
+                          </button>
+                        )}
+                      </div>
+                      {editing && (
+                        <form
+                          className="mt-3 flex flex-col gap-2 sm:flex-row"
+                          onSubmit={(e) => { e.preventDefault(); renameSubject(subject); }}
+                        >
+                          <input
+                            value={renameTo}
+                            onChange={(e) => setRenameTo(e.target.value)}
+                            aria-label={`Emri i ri për ${subject.name}`}
+                            maxLength={200}
+                            className="input-srh min-h-[40px] flex-1 text-sm"
+                          />
+                          <button type="submit" className="btn-primary min-h-[40px] px-4 py-2 text-sm">Ruaj</button>
+                          <button
+                            type="button"
+                            onClick={() => setRenaming(null)}
+                            className="btn-outline min-h-[40px] px-4 py-2 text-sm"
+                          >
+                            Anulo
+                          </button>
+                        </form>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
             )}
           </>
         )}
@@ -616,7 +840,30 @@ function ModerimPage() {
                       </div>
 
                       {/* Actions */}
-                      <div className="flex shrink-0 items-center gap-2">
+                      <div className="flex shrink-0 flex-wrap items-center gap-2">
+                        {m.uploader_id && !m.pending_owner_email && (
+                          <button
+                            type="button"
+                            onClick={() => setTrust(m.uploader_id, !m.uploader_trust_revoked)}
+                            title={
+                              m.uploader_trust_revoked
+                                ? "Ky përdorues ka humbur besimin: çdo ngarkim shqyrtohet. Kliko për ta rikthyer."
+                                : `Ngarkime të miratuara: ${m.uploader_approved ?? 0}. Kliko për të hequr besimin.`
+                            }
+                            className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-sm font-bold ${
+                              m.uploader_trust_revoked
+                                ? "border-burgundy-600/40 text-burgundy-600 hover:bg-burgundy-50"
+                                : "border-gray-200 text-gray-600 hover:border-gray-400"
+                            }`}
+                          >
+                            {m.uploader_trust_revoked ? (
+                              <ShieldOff className="h-3.5 w-3.5" aria-hidden />
+                            ) : (
+                              <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
+                            )}
+                            {m.uploader_trust_revoked ? "Pa besim" : "Hiq besimin"}
+                          </button>
+                        )}
                         {confirmDeleteId === m.id ? (
                           <>
                             <span className="text-sm font-semibold text-gray-600">Jeni i sigurt?</span>

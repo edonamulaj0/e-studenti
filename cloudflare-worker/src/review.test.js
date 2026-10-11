@@ -25,7 +25,7 @@ async function token(sub) {
 }
 
 /** counts: { approved, pending } for the uploading user; moderator: boolean. */
-function makeEnv({ counts = { approved: 0, pending: 0 }, moderator = false, material = null, reviewChanges = 1 } = {}) {
+function makeEnv({ counts = { approved: 0, pending: 0 }, moderator = false, material = null, reviewChanges = 1, trustRevoked = 0 } = {}) {
   const inserts = [];
   const updates = [];
   const db = {
@@ -46,7 +46,7 @@ function makeEnv({ counts = { approved: 0, pending: 0 }, moderator = false, mate
         },
         async first() {
           if (/FROM users WHERE id/.test(sql)) {
-            return { id: 1, email: moderator ? "edonaamulaj@gmail.com" : "u@example.com", name: "U", token_version: 0, is_moderator: moderator ? 1 : 0 };
+            return { id: 1, email: moderator ? "edonaamulaj@gmail.com" : "u@example.com", name: "U", token_version: 0, is_moderator: moderator ? 1 : 0, trust_revoked: trustRevoked };
           }
           if (/SUM\(CASE WHEN status/.test(sql)) return counts;
           if (/FROM materials WHERE id = \?/.test(sql) || /FROM materials WHERE id=\?/.test(sql)) return material;
@@ -130,6 +130,11 @@ describe("upload review status", () => {
     const body = await (await upload(env)).json();
     expect(body.status).toBe("approved");
     expect(inserts[0].at(-1)).toBe("approved");
+  });
+
+  it("holds a trusted user's upload again once a moderator has withdrawn their trust", async () => {
+    const { env } = makeEnv({ counts: { approved: 8, pending: 0 }, trustRevoked: 1 });
+    expect((await (await upload(env)).json()).status).toBe("pending");
   });
 
   it("never holds a moderator's upload", async () => {
