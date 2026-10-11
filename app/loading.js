@@ -3,11 +3,13 @@
  * skeleton rather than a spinner: no motion for people who ask for none, and the
  * layout does not jump when the page arrives.
  */
+import { T } from "./components/Preferences";
+
 export default function Loading() {
   const bar = "rounded-lg bg-gray-200 motion-safe:animate-pulse";
   return (
     <div className="page-shell" role="status" aria-busy="true">
-      <span className="sr-only">Duke ngarkuar…</span>
+      <span className="sr-only"><T>Duke ngarkuar…</T></span>
       <div className="section-shell" aria-hidden="true">
         <div className={`${bar} mb-4 h-8 w-32 !rounded-full`} />
         <div className={`${bar} mb-4 h-12 w-2/3`} />

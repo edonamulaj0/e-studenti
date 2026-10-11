@@ -15,6 +15,7 @@ import {
   Upload,
 } from "lucide-react";
 import ViberIcon, { VIBER_URL } from "./components/ViberIcon";
+import { useT } from "./components/Preferences";
 
 const fadeUp = {
   initial: false,
@@ -24,49 +25,46 @@ const fadeUp = {
 };
 
 export default function HomeClient({ latest = [] }) {
+  const t = useT();
   return (
     <MotionConfig reducedMotion="user">
     <div className="relative bg-cream-50">
-      <section className="viewport-section relative isolate overflow-hidden bg-gradient-to-br from-cream-50 via-beige-100 to-white">
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute -right-28 top-10 h-80 w-80 bg-[url('/uplogo.svg')] bg-contain bg-center bg-no-repeat opacity-10 mix-blend-multiply sm:h-[28rem] sm:w-[28rem] lg:right-4 lg:top-16 lg:h-[34rem] lg:w-[34rem]"
-        />
+      <section className="viewport-section relative isolate overflow-hidden bg-gradient-to-br from-cream-50 via-beige-100 to-surface">
         <div className="pointer-events-none absolute left-0 top-20 h-64 w-64 rounded-full bg-burgundy-50 blur-3xl md:h-96 md:w-96" />
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <motion.div {...fadeUp} className="max-w-3xl">
             <p className="page-kicker mb-6">
-              Nga komuniteti · Për çdo student
+              {t("Nga komuniteti · Për çdo student")}
             </p>
             <h1 className="page-title mb-6">
-              Materialet e UP-së, më të qarta dhe më të lehta për t&apos;u gjetur.
+              {t("Materialet e UP-së, më të qarta dhe më të lehta për t'u gjetur.")}
             </h1>
             <p className="page-subtitle max-w-2xl text-lg md:text-xl">
-              E-Studenti mbledh shënime, afate, projekte dhe burime praktike në
-              një hapësirë të thjeshtë për studentët e Universitetit të
-              Prishtinës.
+              {t(
+                "E-Studenti mbledh shënime, afate, projekte dhe burime praktike në një hapësirë të thjeshtë për studentët e Universitetit të Prishtinës."
+              )}
             </p>
             <div className="mt-6 inline-flex rounded-full border border-warning-amber/20 bg-warning-amber/10 px-4 py-2 text-sm font-semibold text-navy-800">
-              Faqe komunitare, jo e lidhur zyrtarisht me Universitetin e Prishtinës.
+              {t("Faqe komunitare, jo e lidhur zyrtarisht me Universitetin e Prishtinës.")}
             </div>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
               <Link href="/materialet" className="btn-primary text-base">
-                Shiko materialet
+                {t("Shiko materialet")}
                 <ArrowRight className="h-5 w-5" />
               </Link>
               <Link href="/llogaria/ngarko" className="btn-outline text-base">
-                Ngarko Materialin Tënd
+                {t("Ngarko Materialin Tënd")}
               </Link>
               <a
                 href={VIBER_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Bashkohu në Viber"
+                aria-label={t("Bashkohu në Viber")}
                 className="btn-viber w-full justify-center text-base sm:w-12 sm:px-0"
               >
                 <ViberIcon className="h-6 w-6" />
-                <span className="sm:hidden">Bashkohu në Viber</span>
+                <span className="sm:hidden">{t("Bashkohu në Viber")}</span>
               </a>
             </div>
           </motion.div>
@@ -80,7 +78,7 @@ export default function HomeClient({ latest = [] }) {
               <div className="surface-card ml-auto max-w-md p-6">
                 <div className="mb-5 flex items-center justify-between">
                   <span className="rounded-full bg-navy-100 px-3 py-1 text-sm font-semibold text-navy-800">
-                    Të ngarkuarat së fundi
+                    {t("Të ngarkuarat së fundi")}
                   </span>
                   <Sparkles className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
                 </div>
@@ -89,12 +87,15 @@ export default function HomeClient({ latest = [] }) {
                     <li key={item.id}>
                       <Link
                         href={`/materialet/${item.slug}`}
-                        className="block rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-burgundy-600/40"
+                        className="block rounded-2xl border border-gray-200 bg-surface p-4 shadow-sm transition-colors hover:border-burgundy-600/40"
                       >
                         <p className="text-lg font-semibold text-navy-900">{item.title}</p>
-                        {item.subtitle && (
-                          <p className="mt-1 text-sm text-gray-600">{item.subtitle}</p>
-                        )}
+                        {(() => {
+                          const subtitle = [item.faculty && t(item.faculty), item.subject]
+                            .filter((part) => part && part !== "//")
+                            .join(" · ");
+                          return subtitle && <p className="mt-1 text-sm text-gray-600">{subtitle}</p>;
+                        })()}
                       </Link>
                     </li>
                   ))}
@@ -108,12 +109,12 @@ export default function HomeClient({ latest = [] }) {
       <section className="px-6 py-12 md:px-12 md:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl">
           <motion.div {...fadeUp} className="mx-auto mb-8 max-w-2xl text-center">
-            <p className="page-kicker mb-4">Pse ekziston</p>
+            <p className="page-kicker mb-4">{t("Pse ekziston")}</p>
             <h2 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl">
-              Pse E-Studenti?
+              {t("Pse E-Studenti?")}
             </h2>
             <p className="page-subtitle mx-auto mt-3 max-w-xl">
-              I hapur, i lexueshëm dhe i përditësuar nga komuniteti.
+              {t("I hapur, i lexueshëm dhe i përditësuar nga komuniteti.")}
             </p>
           </motion.div>
 
@@ -149,10 +150,10 @@ export default function HomeClient({ latest = [] }) {
                   <item.icon className="h-6 w-6" />
                 </span>
                 <h3 className="text-xl font-semibold text-navy-800">
-                  {item.title}
+                  {t(item.title)}
                 </h3>
                 <p className="mt-3 text-sm leading-relaxed text-gray-600">
-                  {item.text}
+                  {t(item.text)}
                 </p>
               </motion.div>
             ))}
@@ -163,12 +164,12 @@ export default function HomeClient({ latest = [] }) {
       <section className="px-6 py-12 md:px-12 md:py-14 lg:py-16">
         <div className="mx-auto max-w-7xl">
           <motion.div {...fadeUp} className="mx-auto mb-8 max-w-2xl text-center">
-            <p className="page-kicker mb-4">Eksploro</p>
+            <p className="page-kicker mb-4">{t("Eksploro")}</p>
             <h2 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl">
-              Çfarë ofron E-Studenti
+              {t("Çfarë ofron E-Studenti")}
             </h2>
             <p className="page-subtitle mx-auto mt-3 max-w-xl">
-              Shkurtore drejt pjesëve kryesore të platformës.
+              {t("Shkurtore drejt pjesëve kryesore të platformës.")}
             </p>
           </motion.div>
 
@@ -230,12 +231,12 @@ export default function HomeClient({ latest = [] }) {
                   <span className={`mb-4 flex h-12 w-12 items-center justify-center rounded-2xl ${item.tone}`}>
                     <item.icon className="h-6 w-6" />
                   </span>
-                  <h3 className="text-xl font-semibold text-navy-800">{item.title}</h3>
+                  <h3 className="text-xl font-semibold text-navy-800">{t(item.title)}</h3>
                   <p className="mt-3 flex-1 text-sm leading-relaxed text-gray-600">
-                    {item.text}
+                    {t(item.text)}
                   </p>
                   <span className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-burgundy-600">
-                    Shiko
+                    {t("Shiko")}
                     <ArrowRight className="h-4 w-4" />
                   </span>
                 </Link>
@@ -256,11 +257,10 @@ export default function HomeClient({ latest = [] }) {
             </span>
             <div>
               <h2 className="font-display text-2xl font-bold leading-tight text-white md:text-3xl">
-                Bashkohu me komunitetin në Viber
+                {t("Bashkohu me komunitetin në Viber")}
               </h2>
               <p className="mt-2 max-w-xl text-white/85">
-                Merr njoftimet, afatet dhe materialet e reja direkt në grupin
-                tonë.
+                {t("Merr njoftimet, afatet dhe materialet e reja direkt në grupin tonë.")}
               </p>
             </div>
           </div>
@@ -268,9 +268,9 @@ export default function HomeClient({ latest = [] }) {
             href={VIBER_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-semibold text-[#7360f2] transition-all duration-200 hover:-translate-y-0.5 hover:bg-white/90 focus:outline-none focus:ring-4 focus:ring-white/40"
+            className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-xl bg-surface px-6 py-3 text-sm font-semibold text-[#7360f2] transition-all duration-200 hover:-translate-y-0.5 hover:bg-surface/90 focus:outline-none focus:ring-4 focus:ring-white/40"
           >
-            Bashkohu tani
+            {t("Bashkohu tani")}
           </a>
         </motion.div>
       </section>

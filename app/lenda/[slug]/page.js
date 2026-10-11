@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { BookOpen } from "lucide-react";
+import { T } from "../../components/Preferences";
 import SubjectView from "../../components/SubjectView";
 import JsonLd, { breadcrumbJsonLd, SITE_URL } from "../../components/JsonLd";
 import { fetchSubjectBySlug, fetchSubjectsForBuild } from "../../lib/fetch-materials";
@@ -36,8 +37,8 @@ export default async function SubjectPage({ params }) {
       <div className="page-shell">
         <div className="surface-card mx-auto max-w-2xl p-10 text-center">
           <BookOpen className="mx-auto mb-5 h-16 w-16 text-gray-500" />
-          <h1 className="mb-4 font-display text-3xl font-bold text-navy-900">Lënda nuk u gjet</h1>
-          <Link href="/materialet" className="btn-primary">Kthehu te materialet</Link>
+          <h1 className="mb-4 font-display text-3xl font-bold text-navy-900"><T>Lënda nuk u gjet</T></h1>
+          <Link href="/materialet" className="btn-primary"><T>Kthehu te materialet</T></Link>
         </div>
       </div>
     );

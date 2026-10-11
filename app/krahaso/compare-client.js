@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
+import { useT } from "../components/Preferences";
 import CourseList, { loadCourses } from "../components/CourseList";
 import {
   durationLabel,
@@ -13,19 +14,19 @@ import {
   sectorLabel,
 } from "../lib/directory";
 
-function rowsFor(p) {
+function rowsFor(p, t) {
   const u = getUniversity(p.uni);
   return {
-    Universiteti: u.name.replace(/"/g, ""),
-    Lloji: sectorLabel(u.sector),
-    "Fakulteti / fusha": p.unit || p.field,
-    Niveli: `${levelLabel(p.level)} (${p.degree})`,
-    Kohëzgjatja: durationLabel(p.ects),
-    Kreditet: `${p.ects} ECTS`,
-    "Kuota e pranimit": p.quota ? `${p.quota} studentë` : "—",
-    Kampusi: p.campus,
-    "Akreditimi vlen deri më": formatDate(p.until),
-    "Titulli (anglisht)": p.nameEn,
+    [t("Universiteti")]: u.name.replace(/"/g, ""),
+    [t("Lloji")]: t(sectorLabel(u.sector)),
+    [t("Fakulteti / fusha")]: t(p.unit || p.field),
+    [t("Niveli")]: `${t(levelLabel(p.level))} (${t(p.degree)})`,
+    [t("Kohëzgjatja")]: durationLabel(p.ects, t),
+    [t("Kreditet")]: `${p.ects} ECTS`,
+    [t("Kuota e pranimit")]: p.quota ? t("{n} studentë", { n: p.quota }) : "—",
+    [t("Kampusi")]: p.campus,
+    [t("Akreditimi vlen deri më")]: formatDate(p.until, t),
+    [t("Titulli (anglisht)")]: p.nameEn,
   };
 }
 
@@ -33,6 +34,7 @@ const fold = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCa
 
 /** Lists of both programmes, plus how many course names they have in common. */
 function CoursesCompare({ a, b }) {
+  const t = useT();
   const [all, setAll] = useState(null);
   useEffect(() => {
     loadCourses().then(setAll);
@@ -47,10 +49,10 @@ function CoursesCompare({ a, b }) {
 
   return (
     <section aria-labelledby="courses-compare" className="mt-8">
-      <h2 id="courses-compare" className="mb-1 text-xl font-bold text-navy-900">Lëndët</h2>
+      <h2 id="courses-compare" className="mb-1 text-xl font-bold text-navy-900">{t("Lëndët")}</h2>
       {shared > 0 && (
         <p className="mb-4 text-sm text-gray-600">
-          {shared} lëndë kanë të njëjtin emër në të dy programet.
+          {t("{n} lëndë kanë të njëjtin emër në të dy programet.", { n: shared })}
         </p>
       )}
       <div className="grid gap-4 md:grid-cols-2">
@@ -66,6 +68,7 @@ function CoursesCompare({ a, b }) {
 }
 
 export default function CompareClient() {
+  const t = useT();
   const [pair, setPair] = useState(undefined);
 
   useEffect(() => {
@@ -80,9 +83,9 @@ export default function CompareClient() {
     return (
       <div className="page-shell">
         <div className="surface-card mx-auto max-w-xl p-8 text-center">
-          <p className="mb-4 text-gray-600">Zgjidhni dy programe për t&apos;i krahasuar.</p>
+          <p className="mb-4 text-gray-600">{t("Zgjidhni dy programe për t'i krahasuar.")}</p>
           <Link href="/universitetet" className="btn-primary">
-            Shiko universitetet
+            {t("Shiko universitetet")}
           </Link>
         </div>
       </div>
@@ -90,8 +93,8 @@ export default function CompareClient() {
   }
 
   const [a, b] = pair;
-  const ra = rowsFor(a);
-  const rb = rowsFor(b);
+  const ra = rowsFor(a, t);
+  const rb = rowsFor(b, t);
 
   return (
     <div className="page-shell">
@@ -101,13 +104,13 @@ export default function CompareClient() {
           className="mb-4 inline-flex items-center gap-1.5 text-sm font-semibold text-gray-600 hover:text-burgundy-600"
         >
           <ArrowLeft className="h-4 w-4" aria-hidden />
-          Universitetet
+          {t("Universitetet")}
         </Link>
-        <h1 className="page-title mb-6 !text-3xl md:!text-4xl">Krahasimi</h1>
+        <h1 className="page-title mb-6 !text-3xl md:!text-4xl">{t("Krahasimi")}</h1>
 
         <div className="surface-card overflow-hidden">
           <table className="w-full table-fixed text-left text-sm">
-            <caption className="sr-only">Krahasimi i dy programeve</caption>
+            <caption className="sr-only">{t("Krahasimi i dy programeve")}</caption>
             <thead>
               <tr className="border-b border-gray-200 bg-navy-100/40 align-top">
                 <th scope="col" className="w-28 p-3 sm:w-48" />
@@ -146,8 +149,9 @@ export default function CompareClient() {
         </div>
         <CoursesCompare a={a} b={b} />
         <p className="mt-3 text-xs text-gray-600">
-          Rreshtat e theksuar janë ato ku programet ndryshojnë. Burimi: lista e programeve të akredituara të
-          Agjencisë së Kosovës për Akreditim.
+          {t(
+            "Rreshtat e theksuar janë ato ku programet ndryshojnë. Burimi: lista e programeve të akredituara të Agjencisë së Kosovës për Akreditim."
+          )}
         </p>
       </div>
     </div>

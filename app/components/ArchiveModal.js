@@ -12,6 +12,7 @@ import {
 import JSZip from "jszip";
 import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
 import ModalOverlay from "./ModalOverlay";
+import { useT } from "./Preferences";
 
 /** Most a single archive entry may inflate to in the browser. */
 const MAX_ENTRY_BYTES = 50 * 1024 * 1024;
@@ -44,6 +45,7 @@ function inflateCapped(zipFile, limit) {
 }
 
 export default function ArchiveModal({ isOpen, onClose, material }) {
+  const t = useT();
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -191,7 +193,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
   return (
     <ModalOverlay open={isOpen} onClose={onClose}>
       <div
-        className="flex max-h-[80vh] w-full max-w-3xl flex-col rounded-2xl border border-srh-cream bg-white shadow-2xl"
+        className="flex max-h-[80vh] w-full max-w-3xl flex-col rounded-2xl border border-srh-cream bg-surface shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -204,14 +206,14 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
               {material?.title}
             </h2>
             <p className="text-sm text-srh-navy/70 mt-1">
-              Përmbajtja e arkivit ({material?.fileType?.toUpperCase()})
+              {t("Përmbajtja e arkivit ({type})", { type: material?.fileType?.toUpperCase() })}
             </p>
           </div>
           <button
             type="button"
             data-autofocus
             onClick={onClose}
-            aria-label="Mbyll"
+            aria-label={t("Mbyll")}
             className="p-2 hover:bg-srh-blush/20 rounded-lg transition-colors"
           >
             <X className="w-6 h-6 text-srh-navy/70" />
@@ -223,20 +225,20 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
           {loading && (
             <div className="flex flex-col items-center justify-center py-12">
               <Loader2 className="w-12 h-12 text-srh-crimson animate-spin mb-4" />
-              <p className="text-srh-navy/70">Duke ngarkuar përmbajtjen...</p>
+              <p className="text-srh-navy/70">{t("Duke ngarkuar përmbajtjen...")}</p>
             </div>
           )}
 
           {error && (
             <div className="flex flex-col items-center justify-center py-12">
               <AlertCircle className="w-12 h-12 text-srh-crimson mb-4" />
-              <p className="text-srh-navy/70 text-center">{error}</p>
+              <p className="text-srh-navy/70 text-center">{t(error)}</p>
             </div>
           )}
 
           {downloadError && (
             <p role="alert" className="mb-3 rounded-lg bg-burgundy-50 p-3 text-sm font-semibold text-burgundy-600">
-              {downloadError}
+              {t(downloadError)}
             </p>
           )}
 
@@ -257,10 +259,10 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
                         <AlertCircle className="w-5 h-5 text-srh-sage flex-shrink-0" />
                         <div>
                           <p className="font-medium text-srh-navy">
-                            {file.name}
+                            {t(file.name)}
                           </p>
                           <p className="text-sm text-srh-navy/70">
-                            {file.message}
+                            {t(file.message)}
                           </p>
                         </div>
                       </>
@@ -284,8 +286,8 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
                     <button
                       onClick={() => downloadFile(file)}
                       className="ml-3 p-2 text-srh-crimson hover:bg-srh-blush/20 rounded-lg transition-colors flex-shrink-0"
-                      title="Shkarko skedarin"
-                      aria-label={`Shkarko ${file.name}`}
+                      title={t("Shkarko skedarin")}
+                      aria-label={t("Shkarko {name}", { name: file.name })}
                     >
                       <Download className="w-4 h-4" />
                     </button>
@@ -299,7 +301,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
             <div className="flex flex-col items-center justify-center py-12">
               <FileText className="w-12 h-12 text-srh-cream mb-4" />
               <p className="text-srh-navy/70">
-                Arkivi është bosh ose nuk mund të lexohet.
+                {t("Arkivi është bosh ose nuk mund të lexohet.")}
               </p>
             </div>
           )}
@@ -316,13 +318,13 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
               className="flex-1 bg-srh-crimson text-white py-3 px-4 rounded-lg hover:bg-burgundy-700 transition-colors font-medium flex items-center justify-center"
             >
               <Download className="w-5 h-5 mr-2" />
-              Shkarko arkivin
+              {t("Shkarko arkivin")}
             </a>
             <button
               onClick={onClose}
               className="px-6 py-3 border border-srh-navy text-srh-navy rounded-lg hover:bg-srh-navy hover:text-white transition-colors font-medium"
             >
-              Mbyll
+              {t("Mbyll")}
             </button>
           </div>
         </div>

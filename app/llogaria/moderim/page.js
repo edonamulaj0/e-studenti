@@ -459,7 +459,7 @@ function ModerimPage() {
   const tabCls = (t) =>
     `inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-colors ${
       tab === t
-        ? "bg-navy-900 text-white shadow-sm"
+        ? "bg-ink text-white shadow-sm"
         : "text-gray-500 hover:bg-gray-100"
     }`;
 
@@ -479,7 +479,7 @@ function ModerimPage() {
         </header>
 
         {/* Tabs */}
-        <div className="mb-6 flex gap-2 overflow-x-auto rounded-2xl border border-gray-200 bg-white p-1.5">
+        <div className="mb-6 flex gap-2 overflow-x-auto rounded-2xl border border-gray-200 bg-surface p-1.5">
           <button type="button" onClick={() => setTab("pritje")} className={tabCls("pritje")}>
             <PackageCheck className="h-4 w-4" />
             Në pritje
@@ -544,11 +544,11 @@ function ModerimPage() {
             {reportsLoading ? (
               <div className="grid gap-4">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-36 animate-pulse rounded-2xl bg-white" />
+                  <div key={i} className="h-36 animate-pulse rounded-2xl bg-surface" />
                 ))}
               </div>
             ) : reports.length === 0 ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+              <div className="rounded-2xl border border-gray-200 bg-surface p-10 text-center">
                 <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-text" />
                 <h2 className="text-xl font-bold text-navy-900">Asnjë raport i hapur</h2>
                 <p className="mt-2 text-gray-500">Të gjitha raportet janë trajtuar.</p>
@@ -563,7 +563,7 @@ function ModerimPage() {
                   return (
                     <article
                       key={group.material_id}
-                      className={`rounded-2xl border bg-white p-5 shadow-sm ${
+                      className={`rounded-2xl border bg-surface p-5 shadow-sm ${
                         flagged ? "border-burgundy-600/50 ring-1 ring-burgundy-600/20" : "border-warning-amber/30"
                       }`}
                     >
@@ -684,14 +684,14 @@ function ModerimPage() {
               />
             </div>
             {subjectsLoading ? (
-              <div className="h-40 animate-pulse rounded-2xl bg-white" />
+              <div className="h-40 animate-pulse rounded-2xl bg-surface" />
             ) : (
               <ul className="grid gap-2">
                 {shownSubjects.map((subject) => {
                   const id = `${subject.university}|${subject.faculty}|${subject.key}`;
                   const editing = renaming === id;
                   return (
-                    <li key={id} className="rounded-2xl border border-gray-200 bg-white p-4">
+                    <li key={id} className="rounded-2xl border border-gray-200 bg-surface p-4">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="font-bold text-navy-900">
@@ -710,7 +710,7 @@ function ModerimPage() {
                           <button
                             type="button"
                             onClick={() => { setRenaming(id); setRenameTo(subject.name); }}
-                            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 border-navy-900 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-navy-900 hover:text-white"
+                            className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 border-navy-900 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-ink hover:text-white"
                           >
                             <Pencil className="h-3.5 w-3.5" aria-hidden />
                             Riemërto
@@ -765,11 +765,11 @@ function ModerimPage() {
             {materialsLoading ? (
               <div className="grid gap-3">
                 {[0, 1, 2, 3].map((i) => (
-                  <div key={i} className="h-24 animate-pulse rounded-2xl bg-white" />
+                  <div key={i} className="h-24 animate-pulse rounded-2xl bg-surface" />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+              <div className="rounded-2xl border border-gray-200 bg-surface p-10 text-center">
                 <FileText className="mx-auto mb-4 h-12 w-12 text-gray-300" />
                 <h2 className="text-xl font-bold text-navy-900">
                   {search ? "Asnjë rezultat" : "Nuk ka materiale"}
@@ -783,7 +783,7 @@ function ModerimPage() {
                 {filtered.map((m) => (
                   <article
                     key={m.id}
-                    className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm md:p-5"
+                    className="rounded-2xl border border-gray-200 bg-surface p-4 shadow-sm md:p-5"
                   >
                     <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                       {/* Info */}
@@ -888,7 +888,7 @@ function ModerimPage() {
                           <>
                             <Link
                               href={`/llogaria/ndrysho?id=${m.id}&from=moderim`}
-                              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 border-navy-900 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-navy-900 hover:text-white"
+                              className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 border-navy-900 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-ink hover:text-white"
                             >
                               <Pencil className="h-3.5 w-3.5" />
                               Ndrysho
@@ -943,11 +943,11 @@ function ModerimPage() {
             {pendingLoading ? (
               <div className="grid gap-4">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-36 animate-pulse rounded-2xl bg-white" />
+                  <div key={i} className="h-36 animate-pulse rounded-2xl bg-surface" />
                 ))}
               </div>
             ) : pending.length === 0 ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+              <div className="rounded-2xl border border-gray-200 bg-surface p-10 text-center">
                 <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-text" />
                 <h2 className="text-xl font-bold text-navy-900">Asnjë material në pritje</h2>
                 <p className="mt-2 text-gray-500">Të gjitha ngarkimet janë shqyrtuar.</p>
@@ -960,7 +960,7 @@ function ModerimPage() {
                   return (
                     <article
                       key={item.id}
-                      className="rounded-2xl border border-warning-amber/30 bg-white p-6 shadow-sm"
+                      className="rounded-2xl border border-warning-amber/30 bg-surface p-6 shadow-sm"
                     >
                       <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                         #{item.id} · {formatDate(item.created_at)} ·{" "}
@@ -1033,11 +1033,11 @@ function ModerimPage() {
             {messagesLoading ? (
               <div className="grid gap-4">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-28 animate-pulse rounded-2xl bg-white" />
+                  <div key={i} className="h-28 animate-pulse rounded-2xl bg-surface" />
                 ))}
               </div>
             ) : messages.length === 0 ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+              <div className="rounded-2xl border border-gray-200 bg-surface p-10 text-center">
                 <Mail className="mx-auto mb-4 h-12 w-12 text-gray-500" />
                 <h2 className="text-xl font-bold text-navy-900">Asnjë mesazh</h2>
                 <p className="mt-2 text-gray-500">Mesazhet nga formulari i kontaktit shfaqen këtu.</p>
@@ -1045,7 +1045,7 @@ function ModerimPage() {
             ) : (
               <div className="grid gap-4">
                 {messages.map((item) => (
-                  <article key={item.id} className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                  <article key={item.id} className="rounded-2xl border border-gray-200 bg-surface p-6 shadow-sm">
                     <p className="text-xs font-semibold uppercase tracking-widest text-gray-500">
                       #{item.id} · {formatDate(item.created_at)}
                     </p>
@@ -1094,11 +1094,11 @@ function ModerimPage() {
             {resourceLinksLoading ? (
               <div className="grid gap-4">
                 {[0, 1, 2].map((i) => (
-                  <div key={i} className="h-40 animate-pulse rounded-2xl bg-white" />
+                  <div key={i} className="h-40 animate-pulse rounded-2xl bg-surface" />
                 ))}
               </div>
             ) : resourceLinks.length === 0 ? (
-              <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center">
+              <div className="rounded-2xl border border-gray-200 bg-surface p-10 text-center">
                 <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-text" />
                 <h2 className="text-xl font-bold text-navy-900">Asnjë lidhje në pritje</h2>
                 <p className="mt-2 text-gray-500">Të gjitha dërgesat janë trajtuar.</p>
@@ -1112,7 +1112,7 @@ function ModerimPage() {
                   return (
                     <article
                       key={link.id}
-                      className={`rounded-2xl border bg-white p-6 shadow-sm ${
+                      className={`rounded-2xl border bg-surface p-6 shadow-sm ${
                         hasThreats ? "border-burgundy-600/40" : "border-gray-200"
                       }`}
                     >

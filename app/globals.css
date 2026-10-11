@@ -34,6 +34,23 @@
     --warning-amber-rgb: 245 158 11;
     --info-blue: #3b82f6;
     --info-blue-rgb: 59 130 246;
+    --ink-rgb: 26 35 50;
+    --ink-soft-rgb: 52 73 94;
+    --surface-rgb: 255 255 255;
+    --g50-rgb: 249 250 251;
+    --g100-rgb: 243 244 246;
+    --g200-rgb: 229 231 235;
+    --g300-rgb: 209 213 219;
+    --g400-rgb: 156 163 175;
+    --g500-rgb: 107 114 128;
+    --g600-rgb: 75 85 99;
+    --g700-rgb: 55 65 81;
+    --success-text-rgb: 4 120 87;
+    --warning-text-rgb: 146 64 14;
+    --info-text-rgb: 29 78 216;
+    --body-glow: rgba(232, 238, 243, 0.72);
+    --grid-line: rgba(26, 35, 50, 0.04);
+    color-scheme: light;
     --font-display: var(--font-playfair), Georgia, "Times New Roman", serif;
     --font-sans: var(--font-montserrat), -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
     --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -44,9 +61,47 @@
     --shadow-burgundy: 0 8px 16px rgba(139, 58, 58, 0.25);
   }
 
+  /* Dark theme: the same tokens, re-pointed. Text tokens (navy-*, gray-*) get light
+     values, surfaces get dark ones; ink stays dark for panels that carry white text. */
+  :root[data-theme="dark"] {
+    --navy-900: #eef2f7;
+    --navy-900-rgb: 238 242 247;
+    --navy-800-rgb: 214 222 232;
+    --navy-700-rgb: 176 188 204;
+    --navy-100-rgb: 36 48 66;
+    --burgundy-600: #c0605f;
+    --burgundy-600-rgb: 192 96 95;
+    --burgundy-500-rgb: 207 118 116;
+    --burgundy-50-rgb: 52 32 38;
+    --cream-50: #0f1520;
+    --cream-50-rgb: 15 21 32;
+    --beige-100-rgb: 21 29 43;
+    --ink-rgb: 9 14 22;
+    --ink-soft-rgb: 30 42 60;
+    --surface-rgb: 24 33 47;
+    --g50-rgb: 28 38 54;
+    --g100-rgb: 36 48 66;
+    --g200-rgb: 48 62 84;
+    --g300-rgb: 66 82 106;
+    --g400-rgb: 125 139 160;
+    --g500-rgb: 160 172 190;
+    --g600-rgb: 184 194 208;
+    --g700-rgb: 208 216 227;
+    --success-text-rgb: 52 211 153;
+    --warning-text-rgb: 251 191 36;
+    --info-text-rgb: 125 170 255;
+    --body-glow: rgba(52, 73, 94, 0.28);
+    --grid-line: rgba(238, 242, 247, 0.05);
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4);
+    --shadow-base: 0 4px 6px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 10px 15px rgba(0, 0, 0, 0.45);
+    --shadow-lg: 0 20px 25px rgba(0, 0, 0, 0.5);
+    color-scheme: dark;
+  }
+
   body {
     background:
-      radial-gradient(circle at top left, rgba(232, 238, 243, 0.72), transparent 30rem),
+      radial-gradient(circle at top left, var(--body-glow), transparent 30rem),
       var(--cream-50);
     color: var(--navy-900);
     text-rendering: optimizeLegibility;
@@ -58,7 +113,7 @@
   }
 
   ::selection {
-    background: rgba(139, 58, 58, 0.18);
+    background: rgba(139, 58, 58, 0.25);
     color: var(--navy-900);
   }
 
@@ -98,7 +153,7 @@
 
 @layer components {
   .input-srh {
-    @apply w-full min-h-[48px] rounded-xl border border-gray-200 bg-white/90 px-4 text-base text-navy-900 outline-none transition-all placeholder:text-gray-500 focus:border-burgundy-600 focus:ring-4 focus:ring-burgundy-600/15;
+    @apply w-full min-h-[48px] rounded-xl border border-gray-200 bg-surface/90 px-4 text-base text-navy-900 outline-none transition-all placeholder:text-gray-500 focus:border-burgundy-600 focus:ring-4 focus:ring-burgundy-600/15;
   }
 
   .page-shell {
@@ -158,7 +213,7 @@
   }
 
   .surface-card {
-    @apply rounded-3xl border border-gray-200/80 bg-white/90 shadow-sm backdrop-blur transition-all duration-300;
+    @apply rounded-3xl border border-gray-200/80 bg-surface/90 shadow-sm backdrop-blur transition-all duration-300;
   }
 
   .btn {
@@ -170,11 +225,11 @@
   }
 
   .btn-secondary {
-    @apply btn bg-navy-900 text-white hover:-translate-y-0.5 hover:bg-navy-700 hover:shadow-md focus:ring-navy-900/20;
+    @apply btn bg-ink text-white hover:-translate-y-0.5 hover:bg-ink-soft hover:shadow-md focus:ring-navy-900/20;
   }
 
   .btn-outline {
-    @apply btn border border-gray-200 bg-white/80 text-navy-900 hover:-translate-y-0.5 hover:border-burgundy-600 hover:text-burgundy-600 hover:shadow-sm focus:ring-burgundy-600/15;
+    @apply btn border border-gray-200 bg-surface/80 text-navy-900 hover:-translate-y-0.5 hover:border-burgundy-600 hover:text-burgundy-600 hover:shadow-sm focus:ring-burgundy-600/15;
   }
 
   .btn-viber {
@@ -183,8 +238,8 @@
 
   .soft-grid {
     background-image:
-      linear-gradient(rgba(26, 35, 50, 0.04) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(26, 35, 50, 0.04) 1px, transparent 1px);
+      linear-gradient(var(--grid-line) 1px, transparent 1px),
+      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
     background-size: 32px 32px;
   }
 }

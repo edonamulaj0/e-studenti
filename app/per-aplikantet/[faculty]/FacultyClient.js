@@ -6,8 +6,10 @@ import { FileText } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import MaterialGrid from "../../components/MaterialGrid";
 import { normalizeMaterial } from "../../lib/material-view";
+import { useT } from "../../components/Preferences";
 
 export default function FacultyClient({ faculty }) {
+  const t = useT();
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -44,7 +46,7 @@ export default function FacultyClient({ faculty }) {
             href="/per-aplikantet"
             className="hover:text-burgundy-600 transition-colors"
           >
-            Për Aplikantët
+            {t("Për Aplikantët")}
           </Link>
           <span>/</span>
           <span className="text-navy-900">{faculty.name}</span>
@@ -57,7 +59,7 @@ export default function FacultyClient({ faculty }) {
             href="/llogaria/ngarko"
             className="btn-primary shrink-0 self-start"
           >
-            Ngarko material ↑
+            {t("Ngarko material ↑")}
           </Link>
         </div>
 
@@ -74,18 +76,18 @@ export default function FacultyClient({ faculty }) {
         ) : error ? (
           <div className="surface-card mx-auto max-w-xl p-10 text-center">
             <FileText className="mx-auto mb-5 h-16 w-16 text-burgundy-600" />
-            <p className="text-gray-600">{error}</p>
+            <p className="text-gray-600">{t(error)}</p>
           </div>
         ) : materials.length === 0 ? (
           <div className="mt-8 text-center">
             <p className="text-lg font-semibold text-navy-900">
-              Asnjë material për këtë fakultet ende.
+              {t("Asnjë material për këtë fakultet ende.")}
             </p>
             <p className="mt-2 text-gray-500">
-              Bëhu i pari që ngarkon për {faculty.name}.
+              {t("Bëhu i pari që ngarkon për {name}.", { name: faculty.name })}
             </p>
             <Link href="/llogaria/ngarko" className="btn-primary mt-6 inline-flex">
-              Ngarko material →
+              {t("Ngarko material →")}
             </Link>
           </div>
         ) : (

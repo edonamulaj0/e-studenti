@@ -1,6 +1,7 @@
 "use client";
 
 import { compareText } from "../lib/directory";
+import { useT } from "../components/Preferences";
 import { useMemo, useState } from "react";
 import {
   ExternalLink,
@@ -60,6 +61,7 @@ function getMonth(iso) {
 }
 
 export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
+  const t = useT();
   const [q, setQ] = useState("");
   const [country, setCountry] = useState("");
   const [month, setMonth] = useState("");
@@ -92,23 +94,24 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
         <header className="mb-10 max-w-3xl">
           <p className="page-kicker mb-4">
             <Globe className="w-4 h-4" aria-hidden />
-            Burim zyrtar: Universiteti i Prishtinës
+            {t("Burim zyrtar: Universiteti i Prishtinës")}
           </p>
           <h1 className="page-title mb-4">
             Erasmus+
           </h1>
           <p className="page-subtitle mb-5 max-w-2xl">
-            Njoftime nga faqja e mundësive të UP që përmbajnë &quot;Erasmus&quot;.
+            {t("Njoftime nga faqja e mundësive të UP që përmbajnë \"Erasmus\".")}
           </p>
           <p
             role="note"
             className="mb-5 max-w-2xl rounded-2xl border border-info-blue/30 bg-info-blue/10 px-4 py-3 text-sm font-semibold text-info-text"
           >
-            Kjo faqe është vetëm për Universitetin e Prishtinës (UP). Thirrjet e universiteteve dhe kolegjeve
-            të tjera nuk përfshihen këtu; shihni faqet e tyre zyrtare.
+            {t(
+              "Kjo faqe është vetëm për Universitetin e Prishtinës (UP). Thirrjet e universiteteve dhe kolegjeve të tjera nuk përfshihen këtu; shihni faqet e tyre zyrtare."
+            )}
           </p>
           <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500">
-            Të dhënat e eksportuara:{" "}
+            {t("Të dhënat e eksportuara:")}{" "}
             <time dateTime={generatedAt}>{formatGeneratedAt(generatedAt)}</time>
           </p>
         </header>
@@ -121,18 +124,18 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
                 type="search"
                 value={q}
                 onChange={(e) => setQ(e.target.value)}
-                placeholder="Kërko universitet, vend, program..."
+                placeholder={t("Kërko universitet, vend, program...")}
                 className="input-srh pl-12"
               />
             </label>
             <select value={country} onChange={(e) => setCountry(e.target.value)} className="input-srh">
-              <option value="">Të gjitha vendet</option>
+              <option value="">{t("Të gjitha vendet")}</option>
               {countryOptions.map((item) => (
-                <option key={item} value={item}>{item}</option>
+                <option key={item} value={item}>{t(item)}</option>
               ))}
             </select>
             <select value={month} onChange={(e) => setMonth(e.target.value)} className="input-srh">
-              <option value="">Të gjitha</option>
+              <option value="">{t("Të gjitha")}</option>
               {monthOptions.map((item) => (
                 <option key={item} value={item}>{item}</option>
               ))}
@@ -145,7 +148,7 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
             const destination = getCountry(item);
             return (
             <li key={`${item.title}-${item.date}-${item.url}`}>
-              <article className="group flex h-full min-h-[18rem] flex-col rounded-3xl border border-gray-200 bg-white p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy-600/30 hover:shadow-md">
+              <article className="group flex h-full min-h-[18rem] flex-col rounded-3xl border border-gray-200 bg-surface p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy-600/30 hover:shadow-md">
                 <div className="mb-6 flex items-start justify-between gap-4">
                   <div className="inline-flex items-center gap-2 rounded-2xl bg-navy-100 px-3 py-2 text-navy-900">
                     <CalendarDays className="h-4 w-4 text-burgundy-600" />
@@ -155,7 +158,7 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
                   </div>
                   <span className="inline-flex items-center gap-2 rounded-full bg-burgundy-50 px-3 py-1.5 text-sm font-semibold text-burgundy-600">
                     <MapPin className="h-4 w-4" />
-                    {destination.flag} {destination.label}
+                    {destination.flag} {t(destination.label)}
                   </span>
                 </div>
                 <div className="flex h-full flex-col gap-5">
@@ -164,8 +167,7 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
                       {item.title}
                     </h2>
                     <p className="mt-3 text-sm leading-relaxed text-gray-600">
-                      Hapni njoftimin zyrtar për detajet e programit, afatet dhe
-                      dokumentet e nevojshme.
+                      {t("Hapni njoftimin zyrtar për detajet e programit, afatet dhe dokumentet e nevojshme.")}
                     </p>
                   </div>
                   <a
@@ -174,7 +176,7 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
                     rel="noopener noreferrer"
                     className="btn-primary self-start"
                   >
-                    {isListingOnlyUrl(item.url) ? "Hap listën te UP" : "Hap thirrjen"}
+                    {isListingOnlyUrl(item.url) ? t("Hap listën te UP") : t("Hap thirrjen")}
                     <ExternalLink className="w-4 h-4" />
                   </a>
                 </div>
@@ -187,9 +189,9 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
         {filtered.length === 0 && (
           <div className="surface-card mx-auto max-w-xl p-10 text-center">
             <Globe className="mx-auto mb-4 h-12 w-12 text-gray-500" />
-            <h2 className="text-2xl font-semibold text-navy-900">Nuk u gjet asgjë</h2>
+            <h2 className="text-2xl font-semibold text-navy-900">{t("Nuk u gjet asgjë")}</h2>
             <p className="mt-2 text-gray-600">
-              Provoni të ndryshoni kërkimin, vendin ose muajin.
+              {t("Provoni të ndryshoni kërkimin, vendin ose muajin.")}
             </p>
           </div>
         )}

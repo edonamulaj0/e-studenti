@@ -193,3 +193,40 @@ export function chunk(items, size) {
   for (let i = 0; i < items.length; i += size) groups.push(items.slice(i, i + size));
   return groups;
 }
+
+/**
+ * Messages built from numbers or file names (here and in the Worker) cannot be
+ * looked up as one string. Each entry maps such a message back to a dictionary
+ * key with {placeholders}, so `translateMessage` can fill in the captured parts.
+ */
+/** @type {Array<[RegExp, string]>} */
+const DYNAMIC_MESSAGES = [
+  [/^Ju lutemi prisni (\d+)s para se të dërgoni kodin përsëri\.$/, "Ju lutemi prisni {a}s para se të dërgoni kodin përsëri."],
+  [/^Keni (\d+) materiale në pritje të shqyrtimit\. Prisni që të aprovohen para se të ngarkoni më shumë\.$/, "Keni {a} materiale në pritje të shqyrtimit. Prisni që të aprovohen para se të ngarkoni më shumë."],
+  [/^Lloji i skedarit nuk lejohet\. Lejohen: (.*)$/, "Lloji i skedarit nuk lejohet. Lejohen: {a}"],
+  [/^Skedari është (.+)MB — maksimumi është 50MB\.$/, "Skedari është {a}MB — maksimumi është 50MB."],
+  [/^Ngarkimi dështoi \(kodi (\d+)\)\.$/, "Ngarkimi dështoi (kodi {a})."],
+  [/^Mund të shtoni deri në (\d+) skedarë njëherësh; u shtuan (\d+)\.$/, "Mund të shtoni deri në {a} skedarë njëherësh; u shtuan {b}."],
+  [/^ZIP përmban (\d+) skedarë — lejohen deri në (\d+)\.$/, "ZIP përmban {a} skedarë — lejohen deri në {b}."],
+  [/^ZIP përmban shteg të palejuar: (.*)$/, "ZIP përmban shteg të palejuar: {a}"],
+  [/^ZIP përmban skedar të ndaluar: \.(.*)$/, "ZIP përmban skedar të ndaluar: .{a}"],
+  [/^ZIP përmban më shumë se (\d+) skedarë\.$/, "ZIP përmban më shumë se {a} skedarë."],
+  [/^ZIP arrin (.+) pasi hapet — kufiri është (.+)\.$/, "ZIP arrin {a} pasi hapet — kufiri është {b}."],
+  [/^Skedari "(.*)" brenda ZIP është (.+) — kufiri për një skedar është (.+)\.$/, 'Skedari "{a}" brenda ZIP është {b} — kufiri për një skedar është {c}.'],
+  [/^Skedari "(.*)" përdor një metodë kompresimi që nuk mbështetet\. Krijoni ZIP-in me kompresim standard \(Deflate\)\.$/, 'Skedari "{a}" përdor një metodë kompresimi që nuk mbështetet. Krijoni ZIP-in me kompresim standard (Deflate).'],
+];
+const RETRY_SUFFIX = /^(.*) Do të vazhdojë automatikisht pas (\d+) min\.$/;
+
+/** Translates an Albanian message (client-side or from the Worker) with the `t` from useT(). */
+export function translateMessage(t, message) {
+  if (!message) return message;
+  for (const [pattern, key] of DYNAMIC_MESSAGES) {
+    const match = pattern.exec(message);
+    if (match) return t(key, { a: match[1], b: match[2], c: match[3] });
+  }
+  const retry = RETRY_SUFFIX.exec(message);
+  if (retry) {
+    return `${translateMessage(t, retry[1])} ${t("Do të vazhdojë automatikisht pas {n} min.", { n: retry[2] })}`;
+  }
+  return t(message);
+}

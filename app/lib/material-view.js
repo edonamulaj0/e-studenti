@@ -45,9 +45,9 @@ export function typeTone(type) {
 }
 
 const LEVEL_TONES = {
-  bachelor: "bg-teal-100 text-teal-900",
-  master: "bg-violet-100 text-violet-900",
-  phd: "bg-fuchsia-100 text-fuchsia-900",
+  bachelor: "bg-teal-100 text-teal-900 dark:bg-teal-400/15 dark:text-teal-200",
+  master: "bg-violet-100 text-violet-900 dark:bg-violet-400/15 dark:text-violet-200",
+  phd: "bg-fuchsia-100 text-fuchsia-900 dark:bg-fuchsia-400/15 dark:text-fuchsia-200",
 };
 
 export function levelTone(level) {

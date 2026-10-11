@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { FACULTIES } from "../lib/material-options";
 import { WORKER_URL } from "../lib/worker-url";
+import { useT } from "../components/Preferences";
 
 function FolderIcon() {
   return (
@@ -35,6 +36,7 @@ function FolderIcon() {
 }
 
 export default function PerAplikantetPage() {
+  const t = useT();
   const [counts, setCounts] = useState({});
   const [loading, setLoading] = useState(true);
   const [totalMaterials, setTotalMaterials] = useState(0);
@@ -78,18 +80,17 @@ export default function PerAplikantetPage() {
       <div className="section-shell">
         <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div className="max-w-2xl">
-            <p className="page-kicker mb-3">Apliko në UP</p>
-            <h1 className="page-title mb-3">Për Aplikantët</h1>
+            <p className="page-kicker mb-3">{t("Apliko në UP")}</p>
+            <h1 className="page-title mb-3">{t("Për Aplikantët")}</h1>
             <p className="page-subtitle">
-              Materiale nga studentët e mëparshëm për t&apos;ju ndihmuar të
-              përgatiteni për UP.
+              {t("Materiale nga studentët e mëparshëm për t'ju ndihmuar të përgatiteni për UP.")}
             </p>
           </div>
           <Link
             href="/llogaria/ngarko"
             className="btn-primary shrink-0 self-start"
           >
-            Ngarko material ↑
+            {t("Ngarko material ↑")}
           </Link>
         </div>
 
@@ -120,7 +121,7 @@ export default function PerAplikantetPage() {
                       {faculty.name}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {count === 1 ? "1 material" : `${count} materiale`}
+                      {count === 1 ? t("1 material") : t("{n} materiale", { n: count })}
                     </span>
                   </Link>
                 );
@@ -130,16 +131,16 @@ export default function PerAplikantetPage() {
             {totalMaterials === 0 && (
               <div className="mt-12 text-center">
                 <p className="text-lg font-semibold text-navy-900">
-                  Ky seksion është ende bosh.
+                  {t("Ky seksion është ende bosh.")}
                 </p>
                 <p className="mt-2 text-gray-500">
-                  Bëhu i pari që ngarkon materiale për aplikantët.
+                  {t("Bëhu i pari që ngarkon materiale për aplikantët.")}
                 </p>
                 <Link
                   href="/llogaria/ngarko"
                   className="btn-primary mt-6 inline-flex"
                 >
-                  Ngarko material →
+                  {t("Ngarko material →")}
                 </Link>
               </div>
             )}

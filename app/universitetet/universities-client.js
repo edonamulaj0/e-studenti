@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useT } from "../components/Preferences";
 import { GraduationCap, MapPin, Building2 } from "lucide-react";
 import { universities, levelCounts, sectorLabel, SOURCE } from "../lib/directory";
 
@@ -18,6 +19,7 @@ const SECTOR_TONE = {
 };
 
 export default function UniversitiesClient() {
+  const t = useT();
   const [filter, setFilter] = useState("");
   const shown = universities.filter((u) => !filter || u.sector === filter || (filter === "private" && u.sector === "other"));
 
@@ -25,14 +27,15 @@ export default function UniversitiesClient() {
     <div className="page-shell">
       <div className="section-shell">
         <header className="mb-6 max-w-3xl">
-          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">Universitetet</h1>
+          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{t("Universitetet")}</h1>
           <p className="page-subtitle !text-base">
-            Universitetet dhe kolegjet me programe të akredituara në Kosovë. Hapni një institucion për të
-            parë programet e tij, ose krahasoni dy programe.
+            {t(
+              "Universitetet dhe kolegjet me programe të akredituara në Kosovë. Hapni një institucion për të parë programet e tij, ose krahasoni dy programe."
+            )}
           </p>
         </header>
 
-        <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Lloji i institucionit">
+        <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label={t("Lloji i institucionit")}>
           {FILTERS.map((f) => (
             <button
               key={f.key || "all"}
@@ -41,11 +44,11 @@ export default function UniversitiesClient() {
               onClick={() => setFilter(f.key)}
               className={`rounded-full px-4 py-1.5 text-sm font-semibold transition-colors ${
                 filter === f.key
-                  ? "bg-navy-900 text-white"
-                  : "bg-white text-navy-800 ring-1 ring-gray-200 hover:ring-burgundy-600"
+                  ? "bg-ink text-white"
+                  : "bg-surface text-navy-800 ring-1 ring-gray-200 hover:ring-burgundy-600"
               }`}
             >
-              {f.label}
+              {t(f.label)}
             </button>
           ))}
         </div>
@@ -62,7 +65,7 @@ export default function UniversitiesClient() {
                     <GraduationCap className="h-5 w-5" aria-hidden />
                   </span>
                   <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${SECTOR_TONE[u.sector]}`}>
-                    {sectorLabel(u.sector)}
+                    {t(sectorLabel(u.sector))}
                   </span>
                 </div>
                 <h2 className="text-lg font-bold leading-snug text-navy-900 group-hover:text-burgundy-600">
@@ -75,14 +78,14 @@ export default function UniversitiesClient() {
                 {u.units.length > 0 && (
                   <p className="flex items-center gap-1.5 text-sm text-gray-600">
                     <Building2 className="h-4 w-4 shrink-0" aria-hidden />
-                    {u.units.length} fakultete
+                    {t("{n} fakultete", { n: u.units.length })}
                   </p>
                 )}
                 <div className="mt-auto border-t border-gray-100 pt-3">
-                  <p className="text-sm font-semibold text-navy-900">{u.programmeCount} programe</p>
+                  <p className="text-sm font-semibold text-navy-900">{t("{n} programe", { n: u.programmeCount })}</p>
                   <p className="mt-0.5 text-xs text-gray-600">
                     {levelCounts(u.slug)
-                      .map((l) => `${l.label} ${l.count}`)
+                      .map((l) => `${t(l.label)} ${l.count}`)
                       .join(" · ")}
                   </p>
                 </div>
@@ -91,7 +94,9 @@ export default function UniversitiesClient() {
           ))}
         </ul>
         <p className="mt-8 text-xs text-gray-600">
-          Burimi: {SOURCE}. Një program që nuk është në këtë listë nuk është i vlefshëm në Kosovë.
+          {t("Burimi: {source}. Një program që nuk është në këtë listë nuk është i vlefshëm në Kosovë.", {
+            source: SOURCE,
+          })}
         </p>
       </div>
     </div>

@@ -7,10 +7,13 @@ import FilterSidebar, { EMPTY_FILTERS } from "./FilterSidebar";
 import { assignMaterialSlugs } from "../lib/material-slug";
 import { WORKER_URL } from "../lib/worker-url";
 import { normalizeMaterial } from "../lib/material-view";
+import { useLang, useT } from "../components/Preferences";
 
 const PAGE_SIZE = 24;
 
 export default function MaterialsClient({ initialData = null }) {
+  const t = useT();
+  const lang = useLang();
   const [materials, setMaterials] = useState(() =>
     (initialData?.materials || initialData?.entries || []).map(normalizeMaterial)
   );
@@ -176,7 +179,7 @@ export default function MaterialsClient({ initialData = null }) {
   if (loading && !hasLoaded) {
     return (
       <div className="page-shell" role="status" aria-busy="true">
-        <span className="sr-only">Duke ngarkuar materialet…</span>
+        <span className="sr-only">{t("Duke ngarkuar materialet…")}</span>
         <div className="section-shell" aria-hidden="true">
           <div className="mb-10 max-w-3xl space-y-4">
             <div className="h-8 w-32 rounded-full bg-gray-200 motion-safe:animate-pulse" />
@@ -199,15 +202,15 @@ export default function MaterialsClient({ initialData = null }) {
         <div className="surface-card mx-auto max-w-2xl p-10 text-center">
           <FileText className="mx-auto mb-5 h-16 w-16 text-burgundy-600" />
           <h1 className="mb-4 font-display text-4xl font-bold text-navy-900">
-            Materialet
+            {t("Materialet")}
           </h1>
-          <p className="mb-6 text-gray-600">{error}</p>
+          <p className="mb-6 text-gray-600">{t(error)}</p>
           <button
             type="button"
             onClick={loadMaterials}
             className="btn-primary"
           >
-            Provo përsëri
+            {t("Provo përsëri")}
           </button>
         </div>
       </div>
@@ -218,16 +221,16 @@ export default function MaterialsClient({ initialData = null }) {
     <div className="page-shell">
       <div className="section-shell">
         <header className="mb-5 max-w-3xl">
-          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">Materialet</h1>
+          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{t("Materialet")}</h1>
           <p className="page-subtitle mb-3 max-w-2xl !text-base">
-            Filtroni sipas universitetit, nivelit, fakultetit, llojit ose lëndës.
+            {t("Filtroni sipas universitetit, nivelit, fakultetit, llojit ose lëndës.")}
           </p>
           <div className="flex flex-wrap gap-3 text-sm font-semibold text-gray-600">
-            <span className="rounded-full bg-white px-3 py-1 shadow-sm">
-              {pagination.total} materiale
+            <span className="rounded-full bg-surface px-3 py-1 shadow-sm">
+              {t("{n} materiale", { n: pagination.total })}
             </span>
             <span className="rounded-full bg-navy-100 px-3 py-1 text-navy-800">
-              Faqja {currentPage} / {totalPages}
+              {t("Faqja {page} / {total}", { page: currentPage, total: totalPages })}
             </span>
           </div>
         </header>
@@ -239,14 +242,14 @@ export default function MaterialsClient({ initialData = null }) {
             className="btn-outline min-h-[44px] justify-center lg:hidden"
           >
             <SlidersHorizontal className="h-4 w-4" aria-hidden />
-            Filtrat{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+            {t("Filtrat")}{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
           </button>
           <div className="relative min-w-0 flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden />
             <input
               type="text"
-              placeholder="Kërko materiale…"
-              aria-label="Kërko materiale"
+              placeholder={t("Kërko materiale…")}
+              aria-label={t("Kërko materiale")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && runSearch()}
@@ -257,11 +260,11 @@ export default function MaterialsClient({ initialData = null }) {
             value={selectedSort}
             onChange={(e) => setSelectedSort(e.target.value)}
             className="input-srh min-h-[44px] text-sm sm:w-48"
-            aria-label="Rendit sipas"
+            aria-label={t("Rendit sipas")}
           >
-            <option value="newest">Më të rejat</option>
-            <option value="views">Më të shikuarat</option>
-            <option value="downloads">Më të shkarkuarat</option>
+            <option value="newest">{t("Më të rejat")}</option>
+            <option value="views">{t("Më të shikuarat")}</option>
+            <option value="downloads">{t("Më të shkarkuarat")}</option>
           </select>
         </div>
 
@@ -280,20 +283,20 @@ export default function MaterialsClient({ initialData = null }) {
           </aside>
 
           {filtersOpen && (
-            <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filtrat">
+            <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label={t("Filtrat")}>
               <button
                 type="button"
-                aria-label="Mbyll filtrat"
-                className="absolute inset-0 bg-navy-900/50"
+                aria-label={t("Mbyll filtrat")}
+                className="absolute inset-0 bg-ink/50"
                 onClick={() => setFiltersOpen(false)}
               />
-              <div className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-white p-4 shadow-2xl">
+              <div className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-surface p-4 shadow-2xl">
                 <div className="mb-3 flex items-center justify-between">
-                  <h2 className="text-lg font-bold text-navy-900">Filtrat</h2>
+                  <h2 className="text-lg font-bold text-navy-900">{t("Filtrat")}</h2>
                   <button
                     type="button"
                     onClick={() => setFiltersOpen(false)}
-                    aria-label="Mbyll"
+                    aria-label={t("Mbyll")}
                     className="rounded-xl p-2 text-gray-600 hover:bg-gray-100"
                   >
                     <X className="h-5 w-5" aria-hidden />
@@ -314,26 +317,26 @@ export default function MaterialsClient({ initialData = null }) {
           <div className="min-w-0">
         <div id="material-results" className="scroll-mt-28">
           <p className="sr-only" role="status" aria-live="polite">
-            {loading ? "Duke përditësuar rezultatet…" : `${pagination.total} materiale u gjetën.`}
+            {loading ? t("Duke përditësuar rezultatet…") : t("{n} materiale u gjetën.", { n: pagination.total })}
           </p>
           {loading && hasLoaded && (
-            <div className="mb-6 rounded-2xl border border-gray-200 bg-white/80 p-4 text-sm font-semibold text-gray-600 shadow-sm">
-              Duke përditësuar rezultatet...
+            <div className="mb-6 rounded-2xl border border-gray-200 bg-surface/80 p-4 text-sm font-semibold text-gray-600 shadow-sm">
+              {t("Duke përditësuar rezultatet...")}
             </div>
           )}
           {error && hasLoaded && (
             <div className="mb-6 rounded-2xl border border-burgundy-600/20 bg-burgundy-50 p-4 text-sm font-semibold text-burgundy-600">
-              {error}
+              {t(error)}
             </div>
           )}
           {filteredMaterials.length === 0 ? (
             <div className="surface-card mx-auto max-w-xl p-10 text-center">
               <FileText className="mx-auto mb-6 h-16 w-16 text-gray-500" />
               <h3 className="mb-2 text-2xl font-semibold text-navy-900">
-                Nuk ka të dhëna
+                {t("Nuk ka të dhëna")}
               </h3>
               <p className="text-gray-600">
-                Provoni të ndryshoni kriteret e kërkimit.
+                {t("Provoni të ndryshoni kriteret e kërkimit.")}
               </p>
             </div>
           ) : (
@@ -342,12 +345,14 @@ export default function MaterialsClient({ initialData = null }) {
           {pagination.total > 0 && (
             <nav
               className="mt-10 flex flex-col items-center justify-between gap-4 sm:flex-row"
-              aria-label="Faqosja e materialeve"
+              aria-label={t("Faqosja e materialeve")}
             >
               <p className="text-sm font-semibold text-gray-600">
-                Shfaqen {(currentPage - 1) * PAGE_SIZE + 1}-
-                {Math.min(currentPage * PAGE_SIZE, pagination.total)} nga{" "}
-                {pagination.total} materiale
+                {t("Shfaqen {from}-{to} nga {total} materiale", {
+                  from: (currentPage - 1) * PAGE_SIZE + 1,
+                  to: Math.min(currentPage * PAGE_SIZE, pagination.total),
+                  total: pagination.total,
+                })}
               </p>
               <div className="flex flex-wrap items-center justify-center gap-2">
                 <button
@@ -356,7 +361,7 @@ export default function MaterialsClient({ initialData = null }) {
                   disabled={currentPage <= 1 || loading}
                   className="btn-outline min-h-[42px] px-4 py-2 disabled:opacity-40"
                 >
-                  Më parë
+                  {t("Më parë")}
                 </button>
                 {pageNumbers.map((item) => (
                   <button
@@ -367,7 +372,7 @@ export default function MaterialsClient({ initialData = null }) {
                     className={`min-h-[42px] min-w-[42px] rounded-xl px-3 py-2 text-sm font-semibold transition-all ${
                       item === currentPage
                         ? "bg-burgundy-600 text-white shadow-sm"
-                        : "border border-gray-200 bg-white text-navy-900 hover:border-burgundy-600 hover:text-burgundy-600"
+                        : "border border-gray-200 bg-surface text-navy-900 hover:border-burgundy-600 hover:text-burgundy-600"
                     }`}
                     aria-current={item === currentPage ? "page" : undefined}
                   >
@@ -380,7 +385,7 @@ export default function MaterialsClient({ initialData = null }) {
                   disabled={currentPage >= totalPages || loading}
                   className="btn-outline min-h-[42px] px-4 py-2 disabled:opacity-40"
                 >
-                  Tjetër
+                  {lang === "en" ? "Next" : "Tjetër"}
                 </button>
               </div>
             </nav>

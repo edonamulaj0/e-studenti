@@ -2,6 +2,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { fetchCurrentUser } from "../lib/auth";
+import { useT } from "./Preferences";
 import { VIBER_URL } from "./ViberIcon";
 
 const INSTAGRAM_URL = "https://www.instagram.com/estudenti.hub";
@@ -25,6 +26,7 @@ const headingClass =
   "text-xs font-semibold uppercase tracking-widest text-white/65";
 
 export default function Footer() {
+  const t = useT();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
   useEffect(() => {
@@ -37,18 +39,7 @@ export default function Footer() {
   }, []);
 
   return (
-    <footer className="relative overflow-hidden border-t border-white/10 bg-navy-900 text-white">
-      <img
-        src="/uplogo.svg"
-        alt=""
-        aria-hidden="true"
-        width={446}
-        height={445}
-        loading="lazy"
-        fetchPriority="low"
-        decoding="async"
-        className="pointer-events-none absolute -bottom-24 -right-16 h-64 w-64 opacity-10 mix-blend-screen md:-bottom-36 md:-right-24 md:h-96 md:w-96"
-      />
+    <footer className="relative overflow-hidden border-t border-white/10 bg-ink text-white">
       <div className="relative z-10 mx-auto max-w-7xl px-6 py-10 md:px-12">
         <div className="grid gap-8 md:grid-cols-[auto_1fr_auto] md:items-start">
           <Link
@@ -71,8 +62,7 @@ export default function Footer() {
               E-Studenti
             </Link>
             <p className="mt-3 max-w-xs text-sm leading-relaxed text-white/60">
-              Platformë komunitare për materiale studimore dhe burime të dobishme
-              për studentët e UP-së.
+              {t("Platformë komunitare për materiale studimore dhe burime të dobishme për studentët e UP-së.")}
             </p>
             <p className="mt-5 text-xs font-medium text-white/70">
               © 2026 E-Studenti.
@@ -84,13 +74,13 @@ export default function Footer() {
               <p className={headingClass}>Platforma</p>
               {platformaLinks.map((link) => (
                 <Link key={link.href} href={link.href} className={linkClass}>
-                  {link.label}
+                  {t(link.label)}
                 </Link>
               ))}
             </div>
 
             <div className="space-y-2">
-              <p className={headingClass}>Komuniteti</p>
+              <p className={headingClass}>{t("Komuniteti")}</p>
               <a
                 href={INSTAGRAM_URL}
                 target="_blank"
@@ -119,24 +109,24 @@ export default function Footer() {
 
             <div className="space-y-5">
               <div className="space-y-2">
-                <p className={headingClass}>Llogaria</p>
+                <p className={headingClass}>{t("Llogaria")}</p>
                 {accountLinks.map((link) => (
                   <Link
                     key={link.href}
                     href={isLoggedIn ? link.href : "/llogaria/regjistrohu"}
                     className={linkClass}
                   >
-                    {link.label}
+                    {t(link.label)}
                   </Link>
                 ))}
               </div>
               <div className="space-y-2">
-                <p className={headingClass}>Ligjore</p>
+                <p className={headingClass}>{t("Ligjore")}</p>
                 <Link href="/privatesia" className={linkClass}>
-                  Politika e privatësisë
+                  {t("Politika e privatësisë")}
                 </Link>
                 <Link href="/kushtet" className={linkClass}>
-                  Kushtet e shërbimit
+                  {t("Kushtet e shërbimit")}
                 </Link>
               </div>
             </div>
