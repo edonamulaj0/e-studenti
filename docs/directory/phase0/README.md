@@ -59,3 +59,21 @@ Early reading: curriculum data is easiest where an institution publishes plain H
 ## 6. First public pages
 
 `scripts/build-directory-data.mjs` turns the CSV into `app/data/universities.json`. The site shows it at `/universitetet` (cards), `/universitetet/<slug>` (programmes by level, Bachelor to PhD) and `/krahaso` (two programmes side by side). The old `/fakultetet` pages still exist but are no longer linked from the navigation.
+
+## 7. Where study plans and syllabi actually live (survey, 2026-10-11)
+
+The owner pointed to a UBT PDF (`2023-2028-BSc-Prishtine-ENG.pdf`: the 3-page study plan of BSc Management, Business and Economics, Prishtina, with every course, semester, hours, ECTS and course code). I looked for the same kind of document at every institution that was reachable. Result: **no institution publishes one such PDF per programme.** What exists is a mix.
+
+| Institution | What I found |
+|---|---|
+| UBT | 60 English programme pages. Course plans are **HTML tables** on each programme's "Curriculum structure" page (checked: Law, Computer Science), plus PDFs for only some: MBE (one PDF per campus: Prishtina, Ferizaj, Prizren, in Albanian and English), Fintech BSc/MSc ("study plan and syllabus"), Mechatronics (syllabi), and per-course syllabus PDFs for Political Science (56), Security Studies (50), Sport Science (49), Public Policy (28), Health and Physical Activity (35), Civil Engineering MSc (19). About 20 of 60 programmes have any PDF; many of those are timetables, not plans. |
+| AAB | 50 programme pages under `/fakultetet/<faculty>/programet-studimore/`: narrative (duration, ECTS, outcomes, assessment), no PDFs found. One 43-page tuition PDF. The quality-assurance office has per-programme PDFs titled "Semestri dimëror 2025/2026" that could not be downloaded (the server returned an HTML page instead). |
+| Universum | Curriculum per semester in HTML on each programme page; accreditation decision PDFs only. |
+| Prizren (UUHP) | ~1,090 PDFs, nearly all regulations, bulletins, minutes and partnership agreements. Curricula appear only as attachments to announcements (for example `Kurrikula-AB-2025-2030-Shqip.pdf`, `Kurrikula-MN-2025-2030-Shqip.pdf`) and as AKA accreditation decisions on the quality-assurance page. |
+| UP and faculties | Blocked by a Cloudflare challenge (see section 2). |
+| IBCM Mitrovica | Real domain is `ibcmitrovica.eu`; the connection is reset from here. Search shows per-programme handbook PDFs (for example "BM Handbook 2025-2026"). |
+| Others (Heimerer, FAMA, Tempulli, Pjetër Budi, AKSP, Islamic Faculty, RIT, Biznesi, Evolucion, AMECC) | Not yet surveyed, or the domain is unknown or unreachable from here. |
+
+Consistent across institutions: the AKA accreditation decisions (PDF, one per programme or faculty) exist and are published both on akreditimi.rks-gov.net and on the institutions' quality pages; they state programme, level, ECTS and quota (which the AKA table already gives us) but not the course list.
+
+Extraction check: the UBT plan PDF parses with a simple script into course rows (number, type, name, hours, ECTS, code). Semester totals come to 30 ECTS per semester, and the course codes are reliable. Course names that wrap over several lines come out garbled, so an LLM or a manual pass is needed for those.
