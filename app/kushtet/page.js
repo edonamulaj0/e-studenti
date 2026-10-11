@@ -1,3 +1,5 @@
+import { T } from "../components/Preferences";
+
 export const metadata = {
   title: "Kushtet e shërbimit",
   description:
@@ -47,11 +49,14 @@ export default function TermsPage() {
     <div className="page-shell">
       <div className="section-shell max-w-4xl">
         <header className="mb-10">
-          <p className="page-kicker mb-4">Ligjore</p>
-          <h1 className="page-title mb-4">Kushtet e shërbimit</h1>
+          <p className="page-kicker mb-4">
+            <T>Ligjore</T>
+          </p>
+          <h1 className="page-title mb-4">
+            <T>Kushtet e shërbimit</T>
+          </h1>
           <p className="page-subtitle max-w-2xl">
-            Rregullat bazë për përdorimin e E-Studenti, ngarkimin e materialeve
-            dhe dërgimin e lidhjeve burimore.
+            <T>Rregullat bazë për përdorimin e E-Studenti, ngarkimin e materialeve dhe dërgimin e lidhjeve burimore.</T>
           </p>
         </header>
 
@@ -59,9 +64,9 @@ export default function TermsPage() {
           {sections.map((section) => (
             <section key={section.title} className="surface-card p-6 md:p-7">
               <h2 className="mb-3 text-2xl font-semibold text-navy-900">
-                {section.title}
+                <T>{section.title}</T>
               </h2>
-              <p className="leading-relaxed text-gray-600">{section.text}</p>
+              <p className="leading-relaxed text-gray-600"><T>{section.text}</T></p>
             </section>
           ))}
         </div>

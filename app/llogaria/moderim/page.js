@@ -29,6 +29,7 @@ import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
 import { universityShort } from "../../lib/placement";
 import { getResourceCategoryLabel } from "../../lib/resource-options";
+import { useT } from "../../components/Preferences";
 
 function formatDate(dateStr) {
   if (!dateStr) return "—";
@@ -42,6 +43,7 @@ function formatDate(dateStr) {
 }
 
 function ModerimPage() {
+  const t = useT();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [tab, setTab] = useState(() => {
@@ -418,7 +420,7 @@ function ModerimPage() {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Fshirja dështoi.");
       setMaterials((prev) => prev.filter((m) => m.id !== id));
-      setMaterialsTotal((t) => t - 1);
+      setMaterialsTotal((n) => n - 1);
       setConfirmDeleteId(null);
     } catch (err) {
       setGlobalError(err.message || "Fshirja dështoi.");
@@ -456,9 +458,9 @@ function ModerimPage() {
     : subjects;
 
   // ── Tab pill styles ────────────────────────────────────────────────────
-  const tabCls = (t) =>
+  const tabCls = (name) =>
     `inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-colors ${
-      tab === t
+      tab === name
         ? "bg-ink text-white shadow-sm"
         : "text-gray-500 hover:bg-gray-100"
     }`;
@@ -469,12 +471,12 @@ function ModerimPage() {
 
         {/* Header */}
         <header className="mb-8">
-          <p className="page-kicker mb-3">Moderim</p>
+          <p className="page-kicker mb-3">{t("Moderim")}</p>
           <h1 className="font-display text-4xl font-bold text-navy-900 md:text-5xl">
-            Paneli i moderimit
+            {t("Paneli i moderimit")}
           </h1>
           <p className="mt-2 text-gray-600">
-            Shiko dhe menaxho raportet dhe të gjitha materialet e platformës.
+            {t("Shiko dhe menaxho raportet dhe të gjitha materialet e platformës.")}
           </p>
         </header>
 
@@ -482,7 +484,7 @@ function ModerimPage() {
         <div className="mb-6 flex gap-2 overflow-x-auto rounded-2xl border border-gray-200 bg-surface p-1.5">
           <button type="button" onClick={() => setTab("pritje")} className={tabCls("pritje")}>
             <PackageCheck className="h-4 w-4" />
-            Në pritje
+            {t("Në pritje")}
             {pending.length > 0 && (
               <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-text">
                 {pending.length}
@@ -491,7 +493,7 @@ function ModerimPage() {
           </button>
           <button type="button" onClick={() => setTab("raportet")} className={tabCls("raportet")}>
             <ShieldAlert className="h-4 w-4" />
-            Raportet
+            {t("Raportet")}
             {reportGroups.length > 0 && (
               <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-text">
                 {reportGroups.length}
@@ -500,7 +502,7 @@ function ModerimPage() {
           </button>
           <button type="button" onClick={() => setTab("materialet")} className={tabCls("materialet")}>
             <Layers className="h-4 w-4" />
-            Materialet
+            {t("Materialet")}
             {materialsTotal > 0 && (
               <span className="rounded-full bg-navy-100 px-1.5 py-0.5 text-xs font-bold text-navy-700">
                 {materialsTotal}
@@ -509,7 +511,7 @@ function ModerimPage() {
           </button>
           <button type="button" onClick={() => setTab("mesazhe")} className={tabCls("mesazhe")}>
             <Mail className="h-4 w-4" />
-            Mesazhe
+            {t("Mesazhe")}
             {messagesTotal > 0 && (
               <span className="rounded-full bg-navy-100 px-1.5 py-0.5 text-xs font-bold text-navy-700">
                 {messagesTotal}
@@ -518,11 +520,11 @@ function ModerimPage() {
           </button>
           <button type="button" onClick={() => setTab("lendet")} className={tabCls("lendet")}>
             <BookOpen className="h-4 w-4" />
-            Lëndët
+            {t("Lëndët")}
           </button>
           <button type="button" onClick={() => setTab("burime")} className={tabCls("burime")}>
             <Link2 className="h-4 w-4" />
-            Burime
+            {t("Burime")}
             {resourceLinks.length > 0 && tab !== "burime" && (
               <span className="rounded-full bg-warning-amber/20 px-1.5 py-0.5 text-xs font-bold text-warning-text">
                 {resourceLinks.length}
@@ -534,7 +536,7 @@ function ModerimPage() {
         {/* Global error */}
         {globalError && (
           <div className="mb-6 rounded-2xl border border-burgundy-600/20 bg-burgundy-50 p-4 text-sm font-semibold text-burgundy-600">
-            {globalError}
+            {t(globalError)}
           </div>
         )}
 
@@ -550,8 +552,8 @@ function ModerimPage() {
             ) : reports.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-surface p-10 text-center">
                 <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-text" />
-                <h2 className="text-xl font-bold text-navy-900">Asnjë raport i hapur</h2>
-                <p className="mt-2 text-gray-500">Të gjitha raportet janë trajtuar.</p>
+                <h2 className="text-xl font-bold text-navy-900">{t("Asnjë raport i hapur")}</h2>
+                <p className="mt-2 text-gray-500">{t("Të gjitha raportet janë trajtuar.")}</p>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -573,17 +575,19 @@ function ModerimPage() {
                             {flagged ? (
                               <span className="inline-flex items-center gap-1.5 rounded-full bg-burgundy-600 px-2.5 py-1 text-xs font-bold text-white">
                                 <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
-                                {people} persona e kanë raportuar
+                                {t("{n} persona e kanë raportuar", { n: people })}
                               </span>
                             ) : (
                               <span className="inline-flex items-center gap-1.5 rounded-full bg-warning-amber/20 px-2.5 py-1 text-xs font-bold text-warning-text">
                                 <AlertTriangle className="h-3.5 w-3.5" aria-hidden />
-                                {people} {people === 1 ? "person" : "persona"} · pragu është {flagThreshold}
+                                {people === 1
+                                  ? t("1 person · pragu është {m}", { m: flagThreshold })
+                                  : t("{n} persona · pragu është {m}", { n: people, m: flagThreshold })}
                               </span>
                             )}
                             {first.material_status !== "approved" && (
                               <span className="rounded-full bg-navy-100 px-2.5 py-1 text-xs font-bold text-navy-800">
-                                Nuk është i publikuar
+                                {t("Nuk është i publikuar")}
                               </span>
                             )}
                           </div>
@@ -603,7 +607,7 @@ function ModerimPage() {
                                   className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-burgundy-600 hover:underline"
                                 >
                                   <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-                                  Hap materialin
+                                  {t("Hap materialin")}
                                 </a>
                               )}
                             </div>
@@ -612,12 +616,12 @@ function ModerimPage() {
                           <ul className="divide-y divide-gray-100 rounded-xl border border-gray-100 text-sm">
                             {group.items.map((report) => (
                               <li key={report.id} className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-0.5 px-3 py-2">
-                                <span className="font-semibold text-navy-900">{report.reason}</span>
+                                <span className="font-semibold text-navy-900">{t(report.reason)}</span>
                                 <span className="text-xs text-gray-600">
                                   {report.reporter_email
                                     ? `${report.reporter_name || ""} ${report.reporter_surname || ""}`.trim() ||
                                       report.reporter_email
-                                    : "Anonim"}{" "}
+                                    : t("Anonim")}{" "}
                                   · {formatDate(report.created_at)}
                                 </span>
                               </li>
@@ -634,7 +638,7 @@ function ModerimPage() {
                               className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-burgundy-600 px-4 py-2.5 text-sm font-bold text-white hover:bg-burgundy-700 disabled:opacity-50 md:flex-none"
                             >
                               <EyeOff className="h-4 w-4" aria-hidden />
-                              Hiq nga publikimi
+                              {t("Hiq nga publikimi")}
                             </button>
                           )}
                           <button
@@ -644,7 +648,7 @@ function ModerimPage() {
                             className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl bg-success-green px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50 md:flex-none"
                           >
                             <CheckCircle2 className="h-4 w-4" aria-hidden />
-                            Zgjidh
+                            {t("Zgjidh")}
                           </button>
                           <button
                             type="button"
@@ -653,7 +657,7 @@ function ModerimPage() {
                             className="inline-flex min-h-[44px] flex-1 items-center justify-center gap-2 rounded-xl border-2 border-gray-200 px-4 py-2.5 text-sm font-bold text-gray-600 hover:border-gray-400 disabled:opacity-50 md:flex-none"
                           >
                             <XCircle className="h-4 w-4" aria-hidden />
-                            Largo
+                            {t("Largo")}
                           </button>
                         </div>
                       </div>
@@ -669,8 +673,7 @@ function ModerimPage() {
         {tab === "lendet" && (
           <>
             <p className="mb-3 text-sm text-gray-600">
-              Lëndët shkruhen me dorë, kështu që e njëjta lëndë mund të ketë disa shkrime. Riemërto një lëndë
-              për të bashkuar të gjitha shkrimet e saj nën një emër.
+              {t("Lëndët shkruhen me dorë, kështu që e njëjta lëndë mund të ketë disa shkrime. Riemërto një lëndë për të bashkuar të gjitha shkrimet e saj nën një emër.")}
             </p>
             <div className="relative mb-4">
               <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden />
@@ -678,8 +681,8 @@ function ModerimPage() {
                 type="text"
                 value={subjectFilter}
                 onChange={(e) => setSubjectFilter(e.target.value)}
-                aria-label="Kërko lëndë"
-                placeholder="Kërko lëndë…"
+                aria-label={t("Kërko lëndë")}
+                placeholder={t("Kërko lëndë…")}
                 className="input-srh pl-11"
               />
             </div>
@@ -702,7 +705,7 @@ function ModerimPage() {
                           </p>
                           {subject.variants.length > 1 && (
                             <p className="mt-0.5 text-xs text-warning-text">
-                              Shkrime: {subject.variants.map((v) => `${v.name} (${v.count})`).join(", ")}
+                              {t("Shkrime: {list}", { list: subject.variants.map((v) => `${v.name} (${v.count})`).join(", ") })}
                             </p>
                           )}
                         </div>
@@ -713,7 +716,7 @@ function ModerimPage() {
                             className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 border-navy-900 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-ink hover:text-white"
                           >
                             <Pencil className="h-3.5 w-3.5" aria-hidden />
-                            Riemërto
+                            {t("Riemërto")}
                           </button>
                         )}
                       </div>
@@ -725,17 +728,17 @@ function ModerimPage() {
                           <input
                             value={renameTo}
                             onChange={(e) => setRenameTo(e.target.value)}
-                            aria-label={`Emri i ri për ${subject.name}`}
+                            aria-label={t("Emri i ri për {name}", { name: subject.name })}
                             maxLength={200}
                             className="input-srh min-h-[40px] flex-1 text-sm"
                           />
-                          <button type="submit" className="btn-primary min-h-[40px] px-4 py-2 text-sm">Ruaj</button>
+                          <button type="submit" className="btn-primary min-h-[40px] px-4 py-2 text-sm">{t("Ruaj")}</button>
                           <button
                             type="button"
                             onClick={() => setRenaming(null)}
                             className="btn-outline min-h-[40px] px-4 py-2 text-sm"
                           >
-                            Anulo
+                            {t("Anulo")}
                           </button>
                         </form>
                       )}
@@ -757,7 +760,7 @@ function ModerimPage() {
                 type="text"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Kërko sipas titullit, lëndës, ose email-it..."
+                placeholder={t("Kërko sipas titullit, lëndës, ose email-it...")}
                 className="input-srh pl-11"
               />
             </div>
@@ -772,10 +775,10 @@ function ModerimPage() {
               <div className="rounded-2xl border border-gray-200 bg-surface p-10 text-center">
                 <FileText className="mx-auto mb-4 h-12 w-12 text-gray-300" />
                 <h2 className="text-xl font-bold text-navy-900">
-                  {search ? "Asnjë rezultat" : "Nuk ka materiale"}
+                  {search ? t("Asnjë rezultat") : t("Nuk ka materiale")}
                 </h2>
                 <p className="mt-2 text-gray-500">
-                  {search ? "Provoni me terma të tjerë." : "Platforma nuk ka materiale ende."}
+                  {search ? t("Provoni me terma të tjerë.") : t("Platforma nuk ka materiale ende.")}
                 </p>
               </div>
             ) : (
@@ -793,7 +796,7 @@ function ModerimPage() {
                             #{m.id}
                           </span>
                           <span className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-                            {m.type}
+                            {t(m.type)}
                           </span>
                         </div>
                         <p className="mt-1 truncate font-bold text-navy-900">{m.title}</p>
@@ -804,14 +807,14 @@ function ModerimPage() {
                         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
                           {m.pending_owner_email ? (
                             <span className="inline-flex items-center gap-1 rounded-md bg-warning-amber/15 px-2 py-0.5 font-semibold text-warning-text">
-                              Në pritje — {m.pending_owner_email}
+                              {t("Në pritje — {email}", { email: m.pending_owner_email })}
                             </span>
                           ) : (
                             <>
                               <span>
                                 {`${m.uploader_name || ""} ${m.uploader_surname || ""}`.trim() ||
                                   m.uploader_email ||
-                                  "Pa emër"}
+                                  t("Pa emër")}
                               </span>
                               {m.uploader_email && (
                                 <span className="text-gray-300">·</span>
@@ -833,7 +836,7 @@ function ModerimPage() {
                                 className="inline-flex items-center gap-1 font-semibold text-burgundy-600 hover:underline"
                               >
                                 <ExternalLink className="h-3 w-3" />
-                                Hap
+                                {t("Hap")}
                               </a>
                             </>
                           )}
@@ -848,8 +851,8 @@ function ModerimPage() {
                             onClick={() => setTrust(m.uploader_id, !m.uploader_trust_revoked)}
                             title={
                               m.uploader_trust_revoked
-                                ? "Ky përdorues ka humbur besimin: çdo ngarkim shqyrtohet. Kliko për ta rikthyer."
-                                : `Ngarkime të miratuara: ${m.uploader_approved ?? 0}. Kliko për të hequr besimin.`
+                                ? t("Ky përdorues ka humbur besimin: çdo ngarkim shqyrtohet. Kliko për ta rikthyer.")
+                                : t("Ngarkime të miratuara: {n}. Kliko për të hequr besimin.", { n: m.uploader_approved ?? 0 })
                             }
                             className={`inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 px-3 py-2 text-sm font-bold ${
                               m.uploader_trust_revoked
@@ -862,26 +865,26 @@ function ModerimPage() {
                             ) : (
                               <BadgeCheck className="h-3.5 w-3.5" aria-hidden />
                             )}
-                            {m.uploader_trust_revoked ? "Pa besim" : "Hiq besimin"}
+                            {m.uploader_trust_revoked ? t("Pa besim") : t("Hiq besimin")}
                           </button>
                         )}
                         {confirmDeleteId === m.id ? (
                           <>
-                            <span className="text-sm font-semibold text-gray-600">Jeni i sigurt?</span>
+                            <span className="text-sm font-semibold text-gray-600">{t("Jeni i sigurt?")}</span>
                             <button
                               type="button"
                               onClick={() => deleteMaterial(m.id)}
                               disabled={deletingId === m.id}
                               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl bg-burgundy-600 px-3 py-2 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50"
                             >
-                              {deletingId === m.id ? "Duke fshirë..." : "Po, fshi"}
+                              {deletingId === m.id ? t("Duke fshirë...") : t("Po, fshi")}
                             </button>
                             <button
                               type="button"
                               onClick={() => setConfirmDeleteId(null)}
                               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 border-gray-200 px-3 py-2 text-sm font-bold text-gray-600 hover:border-gray-400"
                             >
-                              Anulo
+                              {t("Anulo")}
                             </button>
                           </>
                         ) : (
@@ -891,7 +894,7 @@ function ModerimPage() {
                               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 border-navy-900 px-3 py-2 text-sm font-bold text-navy-900 hover:bg-ink hover:text-white"
                             >
                               <Pencil className="h-3.5 w-3.5" />
-                              Ndrysho
+                              {t("Ndrysho")}
                             </Link>
                             <button
                               type="button"
@@ -899,7 +902,7 @@ function ModerimPage() {
                               className="inline-flex min-h-[38px] items-center gap-1.5 rounded-xl border-2 border-burgundy-600/40 px-3 py-2 text-sm font-bold text-burgundy-600 hover:bg-burgundy-600 hover:text-white"
                             >
                               <Trash2 className="h-3.5 w-3.5" />
-                              Fshi
+                              {t("Fshi")}
                             </button>
                           </>
                         )}
@@ -922,7 +925,7 @@ function ModerimPage() {
                   <ChevronLeft className="h-4 w-4" />
                 </button>
                 <span className="text-sm font-semibold text-gray-600">
-                  Faqja {page} nga {totalPages}
+                  {t("Faqja {page} nga {total}", { page, total: totalPages })}
                 </span>
                 <button
                   type="button"
@@ -949,8 +952,8 @@ function ModerimPage() {
             ) : pending.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-surface p-10 text-center">
                 <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-text" />
-                <h2 className="text-xl font-bold text-navy-900">Asnjë material në pritje</h2>
-                <p className="mt-2 text-gray-500">Të gjitha ngarkimet janë shqyrtuar.</p>
+                <h2 className="text-xl font-bold text-navy-900">{t("Asnjë material në pritje")}</h2>
+                <p className="mt-2 text-gray-500">{t("Të gjitha ngarkimet janë shqyrtuar.")}</p>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -968,12 +971,12 @@ function ModerimPage() {
                       </p>
                       <h2 className="mt-1 font-bold leading-snug text-navy-900">{item.title}</h2>
                       <p className="mt-1 text-sm text-gray-500">
-                        {universityShort(item.university)} · {getFacultyName(item.faculty)} · {item.subject} · {item.type}
+                        {universityShort(item.university)} · {getFacultyName(item.faculty)} · {item.subject} · {t(item.type)}
                       </p>
                       <p className="mt-1 text-sm text-gray-500">
-                        Ngarkuar nga {`${item.uploader_name || ""} ${item.uploader_surname || ""}`.trim() || "—"}
+                        {t("Ngarkuar nga {name}", { name: `${item.uploader_name || ""} ${item.uploader_surname || ""}`.trim() || "—" })}
                         {item.uploader_email ? ` (${item.uploader_email})` : ""}
-                        {item.is_anonymous ? " · postim anonim" : ""}
+                        {item.is_anonymous ? t(" · postim anonim") : ""}
                       </p>
                       <a
                         href={materialViewUrl(item.id)}
@@ -982,11 +985,11 @@ function ModerimPage() {
                         className="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-burgundy-600 hover:underline"
                       >
                         <ExternalLink className="h-4 w-4" />
-                        Hap skedarin
+                        {t("Hap skedarin")}
                       </a>
                       <div className="mt-4 flex flex-col gap-3 md:flex-row md:items-center">
                         <label className="sr-only" htmlFor={`reject-reason-${item.id}`}>
-                          Arsyeja e refuzimit për {item.title}
+                          {t("Arsyeja e refuzimit për {title}", { title: item.title })}
                         </label>
                         <input
                           id={`reject-reason-${item.id}`}
@@ -995,7 +998,7 @@ function ModerimPage() {
                           onChange={(e) =>
                             setPendingReasons((current) => ({ ...current, [item.id]: e.target.value }))
                           }
-                          placeholder="Arsyeja e refuzimit (e nevojshme për të refuzuar)"
+                          placeholder={t("Arsyeja e refuzimit (e nevojshme për të refuzuar)")}
                           className="input-srh min-h-[44px] flex-1 text-sm"
                         />
                         <div className="flex gap-2">
@@ -1006,7 +1009,7 @@ function ModerimPage() {
                             className="btn-primary min-h-[44px] px-4 py-2"
                           >
                             <CheckCircle2 className="h-4 w-4" />
-                            Aprovo
+                            {t("Aprovo")}
                           </button>
                           <button
                             type="button"
@@ -1015,7 +1018,7 @@ function ModerimPage() {
                             className="btn-outline min-h-[44px] px-4 py-2"
                           >
                             <XCircle className="h-4 w-4" />
-                            Refuzo
+                            {t("Refuzo")}
                           </button>
                         </div>
                       </div>
@@ -1039,8 +1042,8 @@ function ModerimPage() {
             ) : messages.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-surface p-10 text-center">
                 <Mail className="mx-auto mb-4 h-12 w-12 text-gray-500" />
-                <h2 className="text-xl font-bold text-navy-900">Asnjë mesazh</h2>
-                <p className="mt-2 text-gray-500">Mesazhet nga formulari i kontaktit shfaqen këtu.</p>
+                <h2 className="text-xl font-bold text-navy-900">{t("Asnjë mesazh")}</h2>
+                <p className="mt-2 text-gray-500">{t("Mesazhet nga formulari i kontaktit shfaqen këtu.")}</p>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -1050,7 +1053,7 @@ function ModerimPage() {
                       #{item.id} · {formatDate(item.created_at)}
                     </p>
                     <h2 className="mt-1 font-bold leading-snug text-navy-900">{item.subject}</h2>
-                    <p className="text-sm text-gray-500">Nga {item.sender_name}</p>
+                    <p className="text-sm text-gray-500">{t("Nga {name}", { name: item.sender_name })}</p>
                     <p className="mt-3 whitespace-pre-wrap break-words text-gray-700">{item.message}</p>
                     <div className="mt-4">
                       {confirmDeleteMessageId === item.id ? (
@@ -1060,14 +1063,14 @@ function ModerimPage() {
                             onClick={() => deleteMessage(item.id)}
                             className="btn-primary min-h-[40px] px-4 py-2"
                           >
-                            Konfirmo fshirjen
+                            {t("Konfirmo fshirjen")}
                           </button>
                           <button
                             type="button"
                             onClick={() => setConfirmDeleteMessageId(null)}
                             className="btn-outline min-h-[40px] px-4 py-2"
                           >
-                            Anulo
+                            {t("Anulo")}
                           </button>
                         </span>
                       ) : (
@@ -1077,7 +1080,7 @@ function ModerimPage() {
                           className="btn-outline min-h-[40px] px-4 py-2"
                         >
                           <Trash2 className="h-4 w-4" />
-                          Fshi
+                          {t("Fshi")}
                         </button>
                       )}
                     </div>
@@ -1100,8 +1103,8 @@ function ModerimPage() {
             ) : resourceLinks.length === 0 ? (
               <div className="rounded-2xl border border-gray-200 bg-surface p-10 text-center">
                 <CheckCircle2 className="mx-auto mb-4 h-12 w-12 text-success-text" />
-                <h2 className="text-xl font-bold text-navy-900">Asnjë lidhje në pritje</h2>
-                <p className="mt-2 text-gray-500">Të gjitha dërgesat janë trajtuar.</p>
+                <h2 className="text-xl font-bold text-navy-900">{t("Asnjë lidhje në pritje")}</h2>
+                <p className="mt-2 text-gray-500">{t("Të gjitha dërgesat janë trajtuar.")}</p>
               </div>
             ) : (
               <div className="grid gap-4">
@@ -1121,32 +1124,32 @@ function ModerimPage() {
                           <div className="mb-2 flex flex-wrap items-center gap-2">
                             <h3 className="text-lg font-bold text-navy-900">{link.title}</h3>
                             <span className="rounded-full bg-navy-100 px-2.5 py-0.5 text-xs font-semibold text-navy-800">
-                              {getResourceCategoryLabel(link.category)}
+                              {t(getResourceCategoryLabel(link.category))}
                             </span>
                           </div>
                           <p className="mb-3 text-sm text-gray-600">{link.description}</p>
                           <div className="mb-3 space-y-1 text-sm">
                             <p>
-                              <span className="font-semibold text-navy-900">Origjinal:</span>{" "}
+                              <span className="font-semibold text-navy-900">{t("Origjinal:")}</span>{" "}
                               <a href={link.url} target="_blank" rel="noopener noreferrer" className="break-all text-burgundy-600 hover:underline">
                                 {link.url}
                               </a>
                             </p>
                             <p>
-                              <span className="font-semibold text-navy-900">Destinacion:</span>{" "}
+                              <span className="font-semibold text-navy-900">{t("Destinacion:")}</span>{" "}
                               <a href={link.resolved_url} target="_blank" rel="noopener noreferrer" className="break-all text-burgundy-600 hover:underline">
                                 {link.resolved_url}
                               </a>
                             </p>
                             <p className="font-mono text-xs text-gray-500">
-                              Domeni: {link.resolved_domain}
-                              {link.was_shortened ? " · URL e shkurtuar" : ""}
+                              {t("Domeni: {domain}", { domain: link.resolved_domain })}
+                              {link.was_shortened ? t(" · URL e shkurtuar") : ""}
                             </p>
                           </div>
                           <div className="flex flex-wrap gap-2 text-xs">
                             {flags.was_shortened && (
                               <span className="rounded-full bg-warning-amber/15 px-2.5 py-1 font-semibold text-warning-text">
-                                URL e shkurtuar
+                                {t("URL e shkurtuar")}
                               </span>
                             )}
                             {hasThreats && (
@@ -1156,7 +1159,7 @@ function ModerimPage() {
                             )}
                             {safeBrowsing.checked && !hasThreats && (
                               <span className="rounded-full bg-success-green/10 px-2.5 py-1 font-semibold text-success-text">
-                                Safe Browsing: pa alarme
+                                {t("Safe Browsing: pa alarme")}
                               </span>
                             )}
                           </div>
@@ -1166,13 +1169,13 @@ function ModerimPage() {
                             {" · "}
                             {link.submitter_name}
                             {link.submitter_email ? ` (${link.submitter_email})` : ""}
-                            {link.is_anonymous ? " · anonim publikisht" : ""}
+                            {link.is_anonymous ? t(" · anonim publikisht") : ""}
                             {" · "}
                             {formatDate(link.created_at)}
                           </p>
                           <input
                             type="text"
-                            placeholder="Arsye refuzimi (nëse refuzoni)"
+                            placeholder={t("Arsye refuzimi (nëse refuzoni)")}
                             value={rejectReasons[link.id] || ""}
                             onChange={(e) =>
                               setRejectReasons((current) => ({
@@ -1191,7 +1194,7 @@ function ModerimPage() {
                             className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-success-green px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 disabled:opacity-50"
                           >
                             <CheckCircle2 className="h-4 w-4" />
-                            Aprovo
+                            {t("Aprovo")}
                           </button>
                           <button
                             type="button"
@@ -1200,7 +1203,7 @@ function ModerimPage() {
                             className="inline-flex min-h-[44px] items-center gap-2 rounded-xl border-2 border-burgundy-600/40 px-4 py-2.5 text-sm font-bold text-burgundy-600 hover:bg-burgundy-600 hover:text-white disabled:opacity-50"
                           >
                             <XCircle className="h-4 w-4" />
-                            Refuzo
+                            {t("Refuzo")}
                           </button>
                         </div>
                       </div>
