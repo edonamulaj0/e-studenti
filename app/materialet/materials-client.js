@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useState, useMemo, useEffect } from "react";
-import Link from "next/link";
 import { FileText, LayoutGrid, List, Search, SlidersHorizontal, X } from "lucide-react";
 import MaterialGrid from "../components/MaterialGrid";
 import FilterSidebar, { EMPTY_FILTERS } from "./FilterSidebar";
@@ -11,14 +10,8 @@ import { normalizeMaterial } from "../lib/material-view";
 import { useLang, useT } from "../components/Preferences";
 
 const PAGE_SIZE = 24;
-const APPLICANT_TYPE = "Provime Pranuese";
-const APPLICANT_SECTIONS = ["university", "level"];
 
-/**
- * `applicants` turns the page into the entrance-exam view: only "Provime Pranuese",
- * only the university and level filters, public universities only.
- */
-export default function MaterialsClient({ initialData = null, applicants = false }) {
+export default function MaterialsClient({ initialData = null }) {
   const t = useT();
   const lang = useLang();
   const [materials, setMaterials] = useState(() =>
@@ -72,7 +65,7 @@ export default function MaterialsClient({ initialData = null, applicants = false
     const initial = {
       universities: list("university"),
       faculties: list("faculty").map((v) => v.toUpperCase()),
-      types: applicants ? [] : list("type"),
+      types: list("type"),
       levels: list("niveli"),
       subjects: list("subjects"),
     };
@@ -82,15 +75,14 @@ export default function MaterialsClient({ initialData = null, applicants = false
     setDraft(initial);
     setSelectedSort(["views", "downloads"].includes(sort) ? sort : "newest");
     if (q) setSearchTerm(q);
-  }, [applicants]);
+  }, []);
 
   useEffect(() => {
-    if (applicants) return;
     fetch(`${WORKER_URL}/?action=subjects`)
       .then((res) => (res.ok ? res.json() : { subjects: [] }))
       .then((data) => setSubjects(data.subjects || []))
       .catch(() => {});
-  }, [applicants]);
+  }, []);
 
   const materialsWithSlugs = useMemo(
     () => assignMaterialSlugs(materials),
@@ -109,8 +101,7 @@ export default function MaterialsClient({ initialData = null, applicants = false
       if (searchTerm.trim()) params.set("q", searchTerm.trim());
       if (filters.universities.length) params.set("university", filters.universities.join(","));
       if (filters.faculties.length) params.set("faculty", filters.faculties.join(","));
-      if (applicants) params.set("type", APPLICANT_TYPE);
-      else if (filters.types.length) params.set("type", filters.types.join(","));
+      if (filters.types.length) params.set("type", filters.types.join(","));
       if (filters.levels.length) params.set("niveli", filters.levels.join(","));
       if (filters.subjects.length) params.set("subjects", filters.subjects.join(","));
       if (selectedSort === "views" || selectedSort === "downloads") {
@@ -137,7 +128,7 @@ export default function MaterialsClient({ initialData = null, applicants = false
       setLoading(false);
       setHasLoaded(true);
     }
-  }, [page, searchTerm, filters, selectedSort, applicants]);
+  }, [page, searchTerm, filters, selectedSort]);
 
   useEffect(() => {
     const timeout = window.setTimeout(loadMaterials, 250);
@@ -248,13 +239,9 @@ export default function MaterialsClient({ initialData = null, applicants = false
     <div className="page-shell">
       <div className="section-shell">
         <header className="mb-5 max-w-3xl">
-          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">
-            {applicants ? t("Për Aplikantët") : t("Materialet")}
-          </h1>
+          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{t("Materialet")}</h1>
           <p className="page-subtitle mb-3 max-w-2xl !text-base">
-            {applicants
-              ? t("Provime pranuese nga studentët e mëparshëm. Filtroni sipas universitetit publik dhe nivelit.")
-              : t("Filtroni sipas universitetit, nivelit, fakultetit, llojit ose lëndës.")}
+            {t("Filtroni sipas universitetit, nivelit, fakultetit, llojit ose lëndës.")}
           </p>
           <div className="flex flex-wrap items-center gap-3 text-sm font-semibold text-gray-600">
             <span className="rounded-full bg-surface px-3 py-1 shadow-sm">
@@ -263,11 +250,6 @@ export default function MaterialsClient({ initialData = null, applicants = false
             <span className="rounded-full bg-navy-100 px-3 py-1 text-navy-800">
               {t("Faqja {page} / {total}", { page: currentPage, total: totalPages })}
             </span>
-            {applicants && (
-              <Link href="/llogaria/ngarko" className="btn-primary min-h-[36px] px-3 py-1.5 text-sm">
-                {t("Ngarko material ↑")}
-              </Link>
-            )}
           </div>
         </header>
 
@@ -284,7 +266,7 @@ export default function MaterialsClient({ initialData = null, applicants = false
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden />
             <input
               type="text"
-              placeholder={applicants ? t("Kërko provime pranuese…") : t("Kërko materiale…")}
+              placeholder={t("Kërko materiale…")}
               aria-label={t("Kërko materiale")}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -312,7 +294,7 @@ export default function MaterialsClient({ initialData = null, applicants = false
               </button>
             ))}
           </div>
-          {!applicants && <select
+          <select
             value={selectedSort}
             onChange={(e) => setSelectedSort(e.target.value)}
             className="input-srh min-h-[44px] text-sm sm:w-48"
@@ -321,7 +303,7 @@ export default function MaterialsClient({ initialData = null, applicants = false
             <option value="newest">{t("Më të rejat")}</option>
             <option value="views">{t("Më të shikuarat")}</option>
             <option value="downloads">{t("Më të shkarkuarat")}</option>
-          </select>}
+          </select>
         </div>
 
         <div className="lg:grid lg:min-h-[calc(100vh-7rem)] lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-6">
@@ -332,8 +314,6 @@ export default function MaterialsClient({ initialData = null, applicants = false
                 draft={draft}
                 setDraft={setDraft}
                 subjects={subjects}
-                sections={applicants ? APPLICANT_SECTIONS : undefined}
-                publicOnly={applicants}
                 onApply={applyFilters}
                 onClear={clearFilters}
               />
@@ -365,8 +345,6 @@ export default function MaterialsClient({ initialData = null, applicants = false
                   draft={draft}
                   setDraft={setDraft}
                   subjects={subjects}
-                  sections={applicants ? APPLICANT_SECTIONS : undefined}
-                  publicOnly={applicants}
                   onApply={applyFilters}
                   onClear={clearFilters}
                 />

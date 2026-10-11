@@ -130,42 +130,11 @@ const directory = {
   "Burimi jep vetëm emrat e lëndëve, pa kredite.": "The source gives only course names, without credits.",
   "Burimi": "Source",
 
-  // For applicants
-  "Apliko në UP": "Apply to UP",
   "Për Aplikantët": "For Applicants",
-  "Materiale nga studentët e mëparshëm për t'ju ndihmuar të përgatiteni për UP.": "Materials from previous students to help you prepare for UP.",
   "Ngarko material ↑": "Upload material ↑",
-  "Ngarko material →": "Upload material →",
   "1 material": "1 material",
   "{n} materiale": "{n} materials",
-  "Ky seksion është ende bosh.": "This section is still empty.",
-  "Bëhu i pari që ngarkon materiale për aplikantët.": "Be the first to upload materials for applicants.",
   "Nuk mund të ngarkohen materialet. Provoni përsëri.": "Materials could not be loaded. Please try again.",
-  "Asnjë material për këtë fakultet ende.": "No materials for this faculty yet.",
-  "Bëhu i pari që ngarkon për {name}.": "Be the first to upload for {name}.",
-
-  // Erasmus
-  "Burim zyrtar: Universiteti i Prishtinës": "Official source: University of Prishtina",
-  "Njoftime nga faqja e mundësive të UP që përmbajnë \"Erasmus\".": "Announcements from the UP opportunities page that mention \"Erasmus\".",
-  "Kjo faqe është vetëm për Universitetin e Prishtinës (UP). Thirrjet e universiteteve dhe kolegjeve të tjera nuk përfshihen këtu; shihni faqet e tyre zyrtare.": "This page is only for the University of Prishtina (UP). Calls from other universities and colleges are not included here; see their official websites.",
-  "Të dhënat e eksportuara:": "Data exported:",
-  "Kërko universitet, vend, program...": "Search university, country, programme...",
-  "Të gjitha vendet": "All countries",
-  "Gjermani": "Germany",
-  "Itali": "Italy",
-  "Turqi": "Turkey",
-  "Poloni": "Poland",
-  "Slloveni": "Slovenia",
-  "Spanjë": "Spain",
-  "Francë": "France",
-  "Portugali": "Portugal",
-  "Çeki": "Czechia",
-  "Kroaci": "Croatia",
-  "Hapni njoftimin zyrtar për detajet e programit, afatet dhe dokumentet e nevojshme.": "Open the official announcement for programme details, deadlines and required documents.",
-  "Hap listën te UP": "Open the list at UP",
-  "Hap thirrjen": "Open the call",
-  "Nuk u gjet asgjë": "Nothing found",
-  "Provoni të ndryshoni kërkimin, vendin ose muajin.": "Try changing the search, country or month.",
 };
 
 export default directory;

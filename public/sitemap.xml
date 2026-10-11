@@ -21,16 +21,6 @@
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://e-studenti.com/per-aplikantet</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://e-studenti.com/erasmus</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://e-studenti.com/informacione</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

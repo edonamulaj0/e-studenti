@@ -37,15 +37,15 @@ export default function HomeClient({ latest = [] }) {
               {t("Nga komuniteti · Për çdo student")}
             </p>
             <h1 className="page-title mb-6">
-              {t("Materialet e UP-së, më të qarta dhe më të lehta për t'u gjetur.")}
+              {t("Materialet e universiteteve të Kosovës, më të qarta dhe më të lehta për t'u gjetur.")}
             </h1>
             <p className="page-subtitle max-w-2xl text-lg md:text-xl">
               {t(
-                "E-Studenti mbledh shënime, afate, projekte dhe burime praktike në një hapësirë të thjeshtë për studentët e Universitetit të Prishtinës."
+                "E-Studenti mbledh shënime, afate, projekte dhe burime praktike në një hapësirë të thjeshtë për studentët e universiteteve dhe kolegjeve në Kosovë."
               )}
             </p>
             <div className="mt-6 inline-flex rounded-full border border-warning-amber/20 bg-warning-amber/10 px-4 py-2 text-sm font-semibold text-navy-800">
-              {t("Faqe komunitare, jo e lidhur zyrtarisht me Universitetin e Prishtinës.")}
+              {t("Faqe komunitare, jo e lidhur zyrtarisht me asnjë universitet.")}
             </div>
 
             <div className="mt-9 flex flex-col gap-3 sm:flex-row">
@@ -177,9 +177,9 @@ export default function HomeClient({ latest = [] }) {
             {[
               {
                 icon: GraduationCap,
-                title: "Për Aplikantët",
-                text: "Materiale nga studentët e mëparshëm për t'ju ndihmuar të përgatiteni.",
-                href: "/per-aplikantet",
+                title: "Provime pranuese",
+                text: "Provime nga studentët e mëparshëm për t'ju ndihmuar të përgatiteni.",
+                href: "/materialet?type=Provime%20Pranuese",
                 tone: "bg-warning-amber/10 text-warning-text",
               },
               {

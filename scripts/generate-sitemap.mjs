@@ -52,8 +52,6 @@ async function main() {
     "/burime",
     "/fakultetet",
     "/universitetet",
-    "/per-aplikantet",
-    "/erasmus",
     "/informacione",
     "/statistikat",
     "/rreth-nesh/pyetje-te-shpeshta",
