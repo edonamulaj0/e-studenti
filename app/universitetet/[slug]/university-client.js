@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
+import { useT } from "../../components/Preferences";
 import { ChevronRight, ChevronDown, Search, Scale, MapPin, ExternalLink } from "lucide-react";
 import {
   categoryOf,
@@ -28,6 +29,7 @@ const LEVEL_TONE = {
 };
 
 function ProgrammeRow({ programme, open, onToggle }) {
+  const t = useT();
   const router = useRouter();
   const { first, start, clear } = useCompare();
   const firstProgramme = first ? getProgramme(first) : null;
@@ -35,7 +37,7 @@ function ProgrammeRow({ programme, open, onToggle }) {
   const panelId = `prog-${programme.id.replace(/[^a-z0-9]/gi, "")}`;
 
   return (
-    <li className="rounded-2xl border border-gray-200 bg-white">
+    <li className="rounded-2xl border border-gray-200 bg-surface">
       <button
         type="button"
         onClick={onToggle}
@@ -49,7 +51,7 @@ function ProgrammeRow({ programme, open, onToggle }) {
         </span>
         <span className="flex shrink-0 items-center gap-2 text-sm text-gray-600">
           <span className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${LEVEL_TONE[programme.level] || "bg-navy-100 text-navy-800"}`}>
-            {programme.degree}
+            {t(programme.degree)}
           </span>
           <span className="hidden sm:inline">{programme.ects} ECTS</span>
           <ChevronDown className={`h-4 w-4 transition-transform ${open ? "rotate-180" : ""}`} aria-hidden />
@@ -59,11 +61,11 @@ function ProgrammeRow({ programme, open, onToggle }) {
       <div id={panelId} hidden={!open} className="border-t border-gray-100 px-4 py-4">
         <dl className="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-4">
           {[
-            ["Titulli (anglisht)", programme.nameEn],
-            ["Niveli", levelLabel(programme.level)],
-            ["Kohëzgjatja", `${durationLabel(programme.ects)} · ${programme.ects} ECTS`],
-            ["Kuota", programme.quota ? `${programme.quota} studentë` : "—"],
-            ["Akreditimi vlen deri më", formatDate(programme.until)],
+            [t("Titulli (anglisht)"), programme.nameEn],
+            [t("Niveli"), t(levelLabel(programme.level))],
+            [t("Kohëzgjatja"), `${durationLabel(programme.ects, t)} · ${programme.ects} ECTS`],
+            [t("Kuota"), programme.quota ? t("{n} studentë", { n: programme.quota }) : "—"],
+            [t("Akreditimi vlen deri më"), formatDate(programme.until, t)],
           ].map(([label, value]) => (
             <div key={label}>
               <dt className="text-xs font-semibold uppercase tracking-widest text-gray-600">{label}</dt>
@@ -72,7 +74,7 @@ function ProgrammeRow({ programme, open, onToggle }) {
           ))}
         </dl>
 
-        {programme.note && <p className="mt-3 text-sm text-gray-600">{programme.note}</p>}
+        {programme.note && <p className="mt-3 text-sm text-gray-600">{t(programme.note)}</p>}
 
         {/* Mounted only while open, so the course data loads when someone looks. */}
         {open && (
@@ -92,7 +94,7 @@ function ProgrammeRow({ programme, open, onToggle }) {
               className="btn-primary min-h-[40px] px-4 py-2 text-sm"
             >
               <Scale className="h-4 w-4" aria-hidden />
-              Krahaso
+              {t("Krahaso")}
             </button>
           )}
           {first && !isFirst && (
@@ -105,14 +107,14 @@ function ProgrammeRow({ programme, open, onToggle }) {
               className="btn-primary min-h-[40px] px-4 py-2 text-sm"
             >
               <Scale className="h-4 w-4" aria-hidden />
-              Krahaso me {firstProgramme?.name}
+              {t("Krahaso me {name}", { name: firstProgramme?.name })}
             </button>
           )}
           {isFirst && (
             <>
-              <span className="text-sm font-semibold text-burgundy-600">Zgjedhur për krahasim</span>
+              <span className="text-sm font-semibold text-burgundy-600">{t("Zgjedhur për krahasim")}</span>
               <button type="button" onClick={clear} className="btn-outline min-h-[40px] px-4 py-2 text-sm">
-                Anulo
+                {t("Anulo")}
               </button>
             </>
           )}
@@ -123,6 +125,7 @@ function ProgrammeRow({ programme, open, onToggle }) {
 }
 
 export default function UniversityClient({ slug }) {
+  const t = useT();
   const university = getUniversity(slug);
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("");
@@ -172,9 +175,9 @@ export default function UniversityClient({ slug }) {
   return (
     <div className="page-shell">
       <div className="section-shell max-w-5xl">
-        <nav aria-label="Navigimi" className="mb-4 flex items-center gap-1 text-sm text-gray-600">
+        <nav aria-label={t("Navigimi")} className="mb-4 flex items-center gap-1 text-sm text-gray-600">
           <Link href="/universitetet" className="hover:text-burgundy-600 hover:underline">
-            Universitetet
+            {t("Universitetet")}
           </Link>
           <ChevronRight className="h-4 w-4" aria-hidden />
           <span aria-current="page">{name}</span>
@@ -183,12 +186,12 @@ export default function UniversityClient({ slug }) {
         <header className="mb-6">
           <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{name}</h1>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-600">
-            <span>{sectorLabel(university.sector)}</span>
+            <span>{t(sectorLabel(university.sector))}</span>
             <span className="inline-flex items-center gap-1">
               <MapPin className="h-4 w-4" aria-hidden />
               {university.cities.join(", ")}
             </span>
-            <span>{university.programmeCount} programe të akredituara</span>
+            <span>{t("{n} programe të akredituara", { n: university.programmeCount })}</span>
           </p>
         </header>
 
@@ -199,15 +202,15 @@ export default function UniversityClient({ slug }) {
               type="text"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Kërko program…"
-              aria-label="Kërko program"
+              placeholder={t("Kërko program…")}
+              aria-label={t("Kërko program")}
               className="input-srh min-h-[44px] w-full pl-10 text-sm"
             />
           </div>
         </div>
 
         {categories.length > 1 && (
-          <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label="Kategoria">
+          <div className="mb-6 flex flex-wrap gap-2" role="group" aria-label={t("Kategoria")}>
             {[["", all.length], ...categories].map(([name, count]) => (
               <button
                 key={name || "all"}
@@ -216,29 +219,29 @@ export default function UniversityClient({ slug }) {
                 onClick={() => setCategory(name)}
                 className={`rounded-full px-3 py-1.5 text-sm font-semibold transition-colors ${
                   category === name
-                    ? "bg-navy-900 text-white"
-                    : "bg-white text-navy-800 ring-1 ring-gray-200 hover:ring-burgundy-600"
+                    ? "bg-ink text-white"
+                    : "bg-surface text-navy-800 ring-1 ring-gray-200 hover:ring-burgundy-600"
                 }`}
               >
-                {name || "Të gjitha"} <span className="font-normal opacity-75">{count}</span>
+                {t(name || "Të gjitha")} <span className="font-normal opacity-75">{count}</span>
               </button>
             ))}
           </div>
         )}
         {groups.length === 0 ? (
-          <div className="surface-card p-8 text-center text-gray-600">Asnjë program nuk u gjet.</div>
+          <div className="surface-card p-8 text-center text-gray-600">{t("Asnjë program nuk u gjet.")}</div>
         ) : (
           <div className="space-y-8">
             {groups.map((g, gi) => (
               <section key={g.name} aria-labelledby={`cat-${gi}`}>
                 <h2 id={`cat-${gi}`} className="mb-3 text-lg font-bold text-navy-900">
-                  {g.name} <span className="font-normal text-gray-600">({g.items.length})</span>
+                  {t(g.name)} <span className="font-normal text-gray-600">({g.items.length})</span>
                 </h2>
                 <div className="space-y-3">
                   {g.levels.map((lvl) => (
                     <div key={lvl.key}>
                       <h3 className="mb-1.5 text-xs font-bold uppercase tracking-widest text-gray-600">
-                        {lvl.label}
+                        {t(lvl.label)}
                       </h3>
                       <ul className="space-y-2">
                         {lvl.items.map((p) => (
@@ -260,7 +263,7 @@ export default function UniversityClient({ slug }) {
 
         <p className="mt-8 flex items-center gap-1.5 text-xs text-gray-600">
           <ExternalLink className="h-3.5 w-3.5" aria-hidden />
-          Të dhënat vijnë nga lista e programeve të akredituara të Agjencisë së Kosovës për Akreditim.
+          {t("Të dhënat vijnë nga lista e programeve të akredituara të Agjencisë së Kosovës për Akreditim.")}
         </p>
       </div>
     </div>

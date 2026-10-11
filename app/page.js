@@ -25,9 +25,8 @@ export default async function Home() {
       id: material.id,
       slug: material.slug,
       title: material.title,
-      subtitle: [getFacultyName(material.faculty), material.subject]
-        .filter((part) => part && part !== "//")
-        .join(" · "),
+      faculty: getFacultyName(material.faculty),
+      subject: material.subject,
     }));
 
   return (

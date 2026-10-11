@@ -9,6 +9,7 @@ import { fetchCurrentUser } from "../../lib/auth";
 import { DEFAULT_UNIVERSITY, MATERIAL_TYPES, facultiesFor } from "../../lib/material-options";
 import { UNIVERSITIES } from "../../lib/placement";
 import { STUDY_LEVELS } from "../../lib/study-levels";
+import { useT } from "../../components/Preferences";
 import {
   ALLOWED_EXTENSIONS,
   MAX_FILES_PER_BATCH,
@@ -24,6 +25,7 @@ import {
   summarize,
   validateFile,
   validateRow,
+  translateMessage,
 } from "../../lib/bulk-upload";
 
 const ACCEPT_ATTRIBUTE = ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(",");
@@ -89,6 +91,8 @@ function sendUpload({ form, clientUploadId, onProgress, register }) {
 
 export default function NgarkoPage() {
   const router = useRouter();
+  const t = useT();
+  const tm = (message) => translateMessage(t, message);
   const [rows, setRows] = useState([]);
   const [defaults, setDefaults] = useState(initialDefaults);
   const [paused, setPaused] = useState(true);
@@ -122,6 +126,7 @@ export default function NgarkoPage() {
     const room = MAX_FILES_PER_BATCH - rowsRef.current.length;
     const accepted = incoming.slice(0, Math.max(0, room));
     if (accepted.length < incoming.length) {
+      // Stored in Albanian and translated where it is shown, so it follows a language switch.
       setNotice(`Mund të shtoni deri në ${MAX_FILES_PER_BATCH} skedarë njëherësh; u shtuan ${accepted.length}.`);
     } else {
       setNotice("");
@@ -329,30 +334,26 @@ export default function NgarkoPage() {
     <div className="bg-srh-paper px-4 py-12">
       <div className="mx-auto max-w-4xl">
         <header className="mb-8 text-center">
-          <h1 className="font-playfair text-4xl md:text-5xl font-black text-srh-navy">Ngarko materiale</h1>
+          <h1 className="font-playfair text-4xl md:text-5xl font-black text-srh-navy">{t("Ngarko materiale")}</h1>
           <p className="mt-3 text-srh-navy/70">
-            Zgjidhni një ose më shumë skedarë, kontrolloni të dhënat dhe ngarkojini së bashku.
-            Materialet e para shqyrtohen nga moderatorët para publikimit; pasi të aprovohen disa,
-            të tjerat publikohen menjëherë.
+            {t("Zgjidhni një ose më shumë skedarë, kontrolloni të dhënat dhe ngarkojini së bashku. Materialet e para shqyrtohen nga moderatorët para publikimit; pasi të aprovohen disa, të tjerat publikohen menjëherë.")}
           </p>
         </header>
 
         <div className="mb-6 rounded-xl border border-srh-cream bg-srh-cream/60 p-4 text-sm text-srh-navy/75">
-          <p>Lejohen: PDF, Word (doc/docx), PowerPoint (ppt/pptx), Excel (xls/xlsx), ZIP</p>
+          <p>{t("Lejohen: PDF, Word (doc/docx), PowerPoint (ppt/pptx), Excel (xls/xlsx), ZIP")}</p>
           <p>
-            Deri në 50MB për skedar dhe {MAX_FILES_PER_BATCH} skedarë njëherësh. Për ZIP: deri në
-            500 skedarë brenda, secili deri në 50MB dhe 100MB gjithsej pasi hapet.
+            {t("Deri në 50MB për skedar dhe {max} skedarë njëherësh. Për ZIP: deri në 500 skedarë brenda, secili deri në 50MB dhe 100MB gjithsej pasi hapet.", { max: MAX_FILES_PER_BATCH })}
           </p>
           <p>
-            Kontrollojmë llojin, madhësinë dhe strukturën e skedarit, por nuk bëjmë skanim antivirusi.
-            Ngarkoni vetëm materiale që keni të drejtë t&apos;i ndani.
+            {t("Kontrollojmë llojin, madhësinë dhe strukturën e skedarit, por nuk bëjmë skanim antivirusi. Ngarkoni vetëm materiale që keni të drejtë t'i ndani.")}
           </p>
         </div>
 
         {/* Drop zone */}
         <div className="mb-6">
           <span id="file-label" className="mb-1.5 block text-sm font-bold text-srh-navy">
-            Skedarët
+            {t("Skedarët")}
           </span>
           <label
             onDragEnter={() => setIsDragging(true)}
@@ -369,11 +370,11 @@ export default function NgarkoPage() {
               addFiles(e.dataTransfer.files);
             }}
             className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-5 py-10 text-center focus-within:border-srh-crimson focus-within:ring-4 focus-within:ring-burgundy-600/25 hover:border-srh-crimson ${
-              isDragging ? "border-srh-crimson bg-srh-blush" : "border-srh-cream bg-white"
+              isDragging ? "border-srh-crimson bg-srh-blush" : "border-srh-cream bg-surface"
             }`}
           >
             <Upload className="mb-3 h-12 w-12 text-srh-crimson" aria-hidden="true" />
-            <span className="font-bold text-srh-navy">Klikoni ose tërhiqni skedarët këtu</span>
+            <span className="font-bold text-srh-navy">{t("Klikoni ose tërhiqni skedarët këtu")}</span>
             <span id="file-hint" className="mt-2 text-sm text-srh-navy/70">
               {ACCEPT_ATTRIBUTE.replace(/,/g, ", ")}
             </span>
@@ -396,9 +397,9 @@ export default function NgarkoPage() {
         {notice && (
           <p
             role="alert"
-            className="mb-6 rounded-xl border border-srh-cream bg-white p-4 text-sm font-semibold text-srh-crimson"
+            className="mb-6 rounded-xl border border-srh-cream bg-surface p-4 text-sm font-semibold text-srh-crimson"
           >
-            {notice}
+            {tm(notice)}
           </p>
         )}
 
@@ -407,17 +408,17 @@ export default function NgarkoPage() {
             {/* Shared details */}
             <section
               aria-labelledby="defaults-heading"
-              className="mb-6 rounded-2xl border border-srh-cream bg-white p-5 shadow-sm"
+              className="mb-6 rounded-2xl border border-srh-cream bg-surface p-5 shadow-sm"
             >
               <h2 id="defaults-heading" className="font-bold text-srh-navy">
-                Të dhënat e përbashkëta
+                {t("Të dhënat e përbashkëta")}
               </h2>
               <p className="mt-1 text-sm text-srh-navy/70">
-                Vlen për të gjithë skedarët; mund ta ndryshoni për secilin më poshtë.
+                {t("Vlen për të gjithë skedarët; mund ta ndryshoni për secilin më poshtë.")}
               </p>
               <div className="mt-4 grid gap-4 md:grid-cols-3">
                 <label className="block text-sm font-semibold text-srh-navy">
-                  Universiteti <span className="text-srh-crimson">*</span>
+                  {t("Universiteti")} <span className="text-srh-crimson">*</span>
                   <select
                     value={defaults.university}
                     onChange={(e) =>
@@ -434,23 +435,23 @@ export default function NgarkoPage() {
                   </select>
                 </label>
                 <label className="block text-sm font-semibold text-srh-navy">
-                  {defaults.university === DEFAULT_UNIVERSITY ? "Fakulteti" : "Fusha e studimit"}{" "}
+                  {defaults.university === DEFAULT_UNIVERSITY ? t("Fakulteti") : t("Fusha e studimit")}{" "}
                   <span className="text-srh-crimson">*</span>
                   <select
                     value={defaults.faculty}
                     onChange={(e) => setDefault("faculty", e.target.value)}
                     className="input-srh mt-1"
                   >
-                    <option value="">Zgjidhni</option>
+                    <option value="">{t("Zgjidhni")}</option>
                     {facultiesFor(defaults.university).map((faculty) => (
                       <option key={faculty.code} value={faculty.code}>
-                        {faculty.name}
+                        {t(faculty.name)}
                       </option>
                     ))}
                   </select>
                 </label>
                 <label className="block text-sm font-semibold text-srh-navy">
-                  Lloji i materialit
+                  {t("Lloji i materialit")}
                   <select
                     value={defaults.type}
                     onChange={(e) => {
@@ -459,14 +460,14 @@ export default function NgarkoPage() {
                     }}
                     className="input-srh mt-1"
                   >
-                    <option value="">Sipas emrit të skedarit</option>
+                    <option value="">{t("Sipas emrit të skedarit")}</option>
                     {MATERIAL_TYPES.map((type) => (
-                      <option key={type}>{type}</option>
+                      <option key={type} value={type}>{t(type)}</option>
                     ))}
                   </select>
                 </label>
                 <label className="block text-sm font-semibold text-srh-navy">
-                  Niveli i studimit
+                  {t("Niveli i studimit")}
                   <select
                     value={defaults.study_level}
                     onChange={(e) => setDefault("study_level", e.target.value)}
@@ -474,13 +475,13 @@ export default function NgarkoPage() {
                   >
                     {STUDY_LEVELS.map((level) => (
                       <option key={level.value} value={level.value}>
-                        {level.label}
+                        {t(level.label)}
                       </option>
                     ))}
                   </select>
                 </label>
                 <label className="block text-sm font-semibold text-srh-navy">
-                  Lënda
+                  {t("Lënda")}
                   <input
                     value={defaults.subject}
                     onChange={(e) => setDefault("subject", e.target.value)}
@@ -488,7 +489,7 @@ export default function NgarkoPage() {
                   />
                 </label>
                 <label className="block text-sm font-semibold text-srh-navy">
-                  Profesori
+                  {t("Profesori")}
                   <input
                     value={defaults.teacher}
                     onChange={(e) => setDefault("teacher", e.target.value)}
@@ -497,7 +498,7 @@ export default function NgarkoPage() {
                   />
                 </label>
                 <label className="block text-sm font-semibold text-srh-navy">
-                  Departamenti
+                  {t("Departamenti")}
                   <input
                     value={defaults.department}
                     onChange={(e) => setDefault("department", e.target.value)}
@@ -513,15 +514,15 @@ export default function NgarkoPage() {
                   onChange={(e) => setDefault("is_anonymous", e.target.checked)}
                   className="h-4 w-4 accent-srh-crimson"
                 />
-                Publiko si anonim
+                {t("Publiko si anonim")}
               </label>
               <p className="mt-1 pl-7 text-xs text-srh-navy/70">
-                Emri juaj nuk do të shfaqet publikisht, por mbetet i dukshëm për moderatorët në rast raportimi.
+                {t("Emri juaj nuk do të shfaqet publikisht, por mbetet i dukshëm për moderatorët në rast raportimi.")}
               </p>
             </section>
 
             {/* Files */}
-            <ul className="mb-6 space-y-3" aria-label="Skedarët për ngarkim">
+            <ul className="mb-6 space-y-3" aria-label={t("Skedarët për ngarkim")}>
               {rows.map((row) => {
                 const fields = effectiveFields(row, defaults);
                 const errors = attempted || row.status === "failed" ? validateRow(row, defaults) : {};
@@ -531,7 +532,7 @@ export default function NgarkoPage() {
                 const isPranues = fields.type === PRANUES;
                 const dupInfo = row.duplicate;
                 return (
-                  <li key={row.id} className="rounded-2xl border border-srh-cream bg-white p-4 shadow-sm">
+                  <li key={row.id} className="rounded-2xl border border-srh-cream bg-surface p-4 shadow-sm">
                     <div className="flex flex-wrap items-start justify-between gap-3">
                       <div className="min-w-0">
                         <p className="truncate font-semibold text-srh-navy">{row.file.name}</p>
@@ -541,7 +542,7 @@ export default function NgarkoPage() {
                         <StatusBadge row={row} />
                         {row.status === "uploading" && (
                           <button type="button" onClick={() => cancelRow(row.id)} className="btn-outline min-h-[36px] px-3 py-1 text-xs">
-                            Anulo
+                            {t("Anulo")}
                           </button>
                         )}
                         {row.status === "failed" && (
@@ -553,14 +554,14 @@ export default function NgarkoPage() {
                             }}
                             className="btn-outline min-h-[36px] px-3 py-1 text-xs"
                           >
-                            <RotateCw className="h-3.5 w-3.5" aria-hidden="true" /> Riprovo
+                            <RotateCw className="h-3.5 w-3.5" aria-hidden="true" /> {t("Riprovo")}
                           </button>
                         )}
                         {row.status !== "uploading" && (
                           <button
                             type="button"
                             onClick={() => removeRow(row.id)}
-                            aria-label={`Hiq ${row.file.name}`}
+                            aria-label={t("Hiq {name}", { name: row.file.name })}
                             className="rounded-lg p-2 text-srh-navy/70 hover:bg-srh-blush hover:text-srh-crimson"
                           >
                             <Trash2 className="h-4 w-4" aria-hidden="true" />
@@ -571,13 +572,13 @@ export default function NgarkoPage() {
 
                     {fileProblem && (
                       <p role="alert" className="mt-2 text-sm font-semibold text-srh-crimson">
-                        {fileProblem}
+                        {tm(fileProblem)}
                       </p>
                     )}
 
                     {editable && !fileProblem && (
                       <div className="mt-3 grid gap-3 md:grid-cols-3">
-                        <Field label="Titulli" error={errors.title}>
+                        <Field label={t("Titulli")} error={tm(errors.title)}>
                           <input
                             value={fields.title}
                             onChange={(e) => setOverride(row.id, "title", e.target.value)}
@@ -585,21 +586,21 @@ export default function NgarkoPage() {
                             className="input-srh min-h-[44px]"
                           />
                         </Field>
-                        <Field label="Lloji" error={errors.type}>
+                        <Field label={t("Lloji")} error={tm(errors.type)}>
                           <select
                             value={fields.type}
                             onChange={(e) => setOverride(row.id, "type", e.target.value)}
                             aria-invalid={Boolean(errors.type)}
                             className="input-srh min-h-[44px]"
                           >
-                            <option value="">Zgjidhni</option>
+                            <option value="">{t("Zgjidhni")}</option>
                             {MATERIAL_TYPES.map((type) => (
-                              <option key={type}>{type}</option>
+                              <option key={type} value={type}>{t(type)}</option>
                             ))}
                           </select>
                         </Field>
                         {!isPranues && (
-                          <Field label="Lënda" error={errors.subject}>
+                          <Field label={t("Lënda")} error={tm(errors.subject)}>
                             <input
                               value={fields.subject}
                               onChange={(e) => setOverride(row.id, "subject", e.target.value)}
@@ -612,7 +613,7 @@ export default function NgarkoPage() {
                     )}
                     {editable && errors.faculty && (
                       <p role="alert" className="mt-2 text-sm font-semibold text-srh-crimson">
-                        {errors.faculty}
+                        {tm(errors.faculty)}
                       </p>
                     )}
 
@@ -621,14 +622,14 @@ export default function NgarkoPage() {
                         <p className="font-semibold">
                           {dupInfo
                             ? dupInfo.own
-                              ? `Duket se e keni ngarkuar tashmë: "${dupInfo.title}".`
-                              : `Duket se ky skedar ekziston tashmë: "${dupInfo.title}".`
-                            : "Ky skedar është shtuar dy herë në këtë grup."}
+                              ? t('Duket se e keni ngarkuar tashmë: "{title}".', { title: dupInfo.title })
+                              : t('Duket se ky skedar ekziston tashmë: "{title}".', { title: dupInfo.title })
+                            : t("Ky skedar është shtuar dy herë në këtë grup.")}
                           {dupInfo?.slug && (
                             <>
                               {" "}
                               <Link href={`/materialet/${dupInfo.slug}`} target="_blank" className="underline">
-                                Shiko
+                                {t("Shiko")}
                               </Link>
                             </>
                           )}
@@ -640,7 +641,7 @@ export default function NgarkoPage() {
                             onChange={(e) => patchRow(row.id, { keepDuplicate: e.target.checked })}
                             className="h-4 w-4 accent-srh-crimson"
                           />
-                          Ngarko gjithsesi (përndryshe kapërcehet)
+                          {t("Ngarko gjithsesi (përndryshe kapërcehet)")}
                         </label>
                       </div>
                     )}
@@ -648,7 +649,7 @@ export default function NgarkoPage() {
                     {row.status === "uploading" && (
                       <div
                         role="progressbar"
-                        aria-label={`Ngarkimi i ${row.file.name}`}
+                        aria-label={t("Ngarkimi i {name}", { name: row.file.name })}
                         aria-valuemin={0}
                         aria-valuemax={100}
                         aria-valuenow={Math.round(row.progress * 100)}
@@ -662,7 +663,7 @@ export default function NgarkoPage() {
                     )}
                     {row.error && (
                       <p role="alert" className="mt-2 text-sm font-semibold text-srh-crimson">
-                        {row.error}
+                        {tm(row.error)}
                       </p>
                     )}
                   </li>
@@ -671,23 +672,23 @@ export default function NgarkoPage() {
             </ul>
 
             {/* Controls */}
-            <div className="sticky bottom-4 z-10 rounded-2xl border border-srh-cream bg-white/95 p-4 shadow-lg backdrop-blur">
+            <div className="sticky bottom-4 z-10 rounded-2xl border border-srh-cream bg-surface/95 p-4 shadow-lg backdrop-blur">
               <p aria-live="polite" className="mb-3 text-sm font-semibold text-srh-navy">
-                {summary.done} nga {summary.total} u ngarkuan
-                {summary.failed > 0 && ` · ${summary.failed} dështuan`}
-                {summary.skipped > 0 && ` · ${summary.skipped} u kapërcyen`}
-                {summary.active > 0 && ` · ${summary.active} në radhë`}
+                {t("{done} nga {total} u ngarkuan", { done: summary.done, total: summary.total })}
+                {summary.failed > 0 && ` · ${t("{n} dështuan", { n: summary.failed })}`}
+                {summary.skipped > 0 && ` · ${t("{n} u kapërcyen", { n: summary.skipped })}`}
+                {summary.active > 0 && ` · ${t("{n} në radhë", { n: summary.active })}`}
               </p>
               <div className="flex flex-wrap gap-2">
                 {readyCount > 0 && (
                   <button type="button" onClick={startAll} className="btn-primary">
                     <Upload className="h-4 w-4" aria-hidden="true" />
-                    Ngarko {readyCount === 1 ? "skedarin" : `${readyCount} skedarët`}
+                    {readyCount === 1 ? t("Ngarko skedarin") : t("Ngarko {n} skedarët", { n: readyCount })}
                   </button>
                 )}
                 {summary.active > 0 && !paused && (
                   <button type="button" onClick={() => setPaused(true)} className="btn-outline">
-                    <Pause className="h-4 w-4" aria-hidden="true" /> Pauzë
+                    <Pause className="h-4 w-4" aria-hidden="true" /> {t("Pauzë")}
                   </button>
                 )}
                 {summary.queued > 0 && paused && (
@@ -699,17 +700,17 @@ export default function NgarkoPage() {
                     }}
                     className="btn-outline"
                   >
-                    <Play className="h-4 w-4" aria-hidden="true" /> Vazhdo
+                    <Play className="h-4 w-4" aria-hidden="true" /> {t("Vazhdo")}
                   </button>
                 )}
                 {summary.failed > 0 && (
                   <button type="button" onClick={retryFailed} className="btn-outline">
-                    <RotateCw className="h-4 w-4" aria-hidden="true" /> Riprovo të dështuarit
+                    <RotateCw className="h-4 w-4" aria-hidden="true" /> {t("Riprovo të dështuarit")}
                   </button>
                 )}
                 {summary.finished > 0 && (
                   <button type="button" onClick={clearFinished} className="btn-outline">
-                    Pastro të përfunduarit
+                    {t("Pastro të përfunduarit")}
                   </button>
                 )}
               </div>
@@ -718,22 +719,22 @@ export default function NgarkoPage() {
         )}
 
         {allDone && (
-          <div className="mt-6 rounded-2xl border border-srh-cream bg-white p-8 text-center shadow-sm">
+          <div className="mt-6 rounded-2xl border border-srh-cream bg-surface p-8 text-center shadow-sm">
             <CheckCircle2 className="mx-auto mb-4 h-14 w-14 text-srh-sage" aria-hidden="true" />
             <h2 className="font-playfair text-2xl font-bold text-srh-navy">
-              {pendingCount > 0 ? "Materialet u dërguan" : "Materialet u ngarkuan me sukses!"}
+              {pendingCount > 0 ? t("Materialet u dërguan") : t("Materialet u ngarkuan me sukses!")}
             </h2>
             <p className="mt-2 text-srh-navy/70">
-              {publishedCount > 0 && `${publishedCount} u publikuan. `}
+              {publishedCount > 0 && `${t("{n} u publikuan.", { n: publishedCount })} `}
               {pendingCount > 0 &&
-                `${pendingCount} presin shqyrtimin e një moderatori — do t'ju njoftojmë me email.`}
+                t("{n} presin shqyrtimin e një moderatori — do t'ju njoftojmë me email.", { n: pendingCount })}
             </p>
             <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
               <Link href="/llogaria/materiale-e-mia" className="btn-primary">
-                Materialet e mia
+                {t("Materialet e mia")}
               </Link>
               <Link href="/materialet" className="btn-outline">
-                Shiko materialet
+                {t("Shiko materialet")}
               </Link>
             </div>
           </div>
@@ -763,12 +764,13 @@ const STATUS_LABELS = {
 };
 
 function StatusBadge({ row }) {
+  const t = useT();
   let label = STATUS_LABELS[row.status] || STATUS_LABELS.ready;
   if (row.status === "ready" && row.hashing) label = { text: "Duke kontrolluar…", className: label.className };
   if (row.status === "done" && row.resultStatus === "pending") {
     label = { text: "Në pritje të shqyrtimit", className: "bg-warning-amber/15 text-warning-text" };
   }
   return (
-    <span className={`rounded-full px-3 py-1 text-xs font-bold ${label.className}`}>{label.text}</span>
+    <span className={`rounded-full px-3 py-1 text-xs font-bold ${label.className}`}>{t(label.text)}</span>
   );
 }

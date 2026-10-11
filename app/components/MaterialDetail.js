@@ -1,3 +1,5 @@
+"use client";
+
 import { DEFAULT_UNIVERSITY, universityShort } from "../lib/placement";
 import Link from "next/link";
 import ReportButton from "./ReportButton";
@@ -8,6 +10,7 @@ import MaterialDownloadButton from "./MaterialDownloadButton";
 import { materialDownloadUrl } from "../lib/worker-url";
 import { getFacultyName } from "../lib/material-options";
 import { getStudyLevelLabel } from "../lib/study-levels";
+import { useT } from "./Preferences";
 
 function displayTeacher(teacher) {
   const value = String(teacher || "").trim();
@@ -21,9 +24,10 @@ function displayTeacher(teacher) {
  * server-only code.
  */
 export default function MaterialDetail({ material, slug }) {
-  const facultyName = getFacultyName(material.faculty);
+  const t = useT();
+  const facultyName = t(getFacultyName(material.faculty));
   const universityName = universityShort(material.university || DEFAULT_UNIVERSITY);
-  const studyLevelLabel = getStudyLevelLabel(material.study_level || "bachelor");
+  const studyLevelLabel = t(getStudyLevelLabel(material.study_level || "bachelor"));
 
   return (
     <div className="page-shell">
@@ -31,11 +35,11 @@ export default function MaterialDetail({ material, slug }) {
       <div className="section-shell max-w-4xl">
         <nav className="mb-6 text-sm text-gray-500">
           <Link href="/" className="hover:text-burgundy-600">
-            Ballina
+            {t("Ballina")}
           </Link>
           <span className="mx-2">/</span>
           <Link href="/materialet" className="hover:text-burgundy-600">
-            Materialet
+            {t("Materialet")}
           </Link>
           <span className="mx-2">/</span>
           <span className="text-navy-900">{material.title}</span>
@@ -47,9 +51,9 @@ export default function MaterialDetail({ material, slug }) {
               {universityName} · {facultyName}
             </span>
             <span className="rounded-full bg-burgundy-50 px-3 py-1 text-sm font-semibold text-burgundy-600">
-              {material.type}
+              {t(material.type)}
             </span>
-            <span className="rounded-full bg-white px-3 py-1 text-sm font-semibold text-navy-700 ring-1 ring-navy-100">
+            <span className="rounded-full bg-surface px-3 py-1 text-sm font-semibold text-navy-700 ring-1 ring-navy-100">
               {studyLevelLabel}
             </span>
           </div>
@@ -67,29 +71,29 @@ export default function MaterialDetail({ material, slug }) {
           <dl className="mb-8 grid gap-4 sm:grid-cols-2">
             <div className="rounded-2xl bg-navy-100/40 p-4">
               <dt className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-                Lënda
+                {t("Lënda")}
               </dt>
               <dd className="mt-1 font-semibold text-navy-900">{material.subject}</dd>
             </div>
-            <div className="rounded-2xl bg-white p-4 ring-1 ring-gray-100">
+            <div className="rounded-2xl bg-surface p-4 ring-1 ring-gray-100">
               <dt className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-                Profesor/i
+                {t("Profesor/i")}
               </dt>
               <dd className="mt-1 font-semibold text-navy-900">
                 {displayTeacher(material.teacher)}
               </dd>
             </div>
-            <div className="rounded-2xl bg-white p-4 ring-1 ring-gray-100">
+            <div className="rounded-2xl bg-surface p-4 ring-1 ring-gray-100">
               <dt className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-                Ngarkuar nga
+                {t("Ngarkuar nga")}
               </dt>
               <dd className="mt-1 font-semibold text-navy-900">
-                {material.display_uploader}
+                {t(material.display_uploader)}
               </dd>
             </div>
-            <div className="rounded-2xl bg-white p-4 ring-1 ring-gray-100">
+            <div className="rounded-2xl bg-surface p-4 ring-1 ring-gray-100">
               <dt className="text-xs font-semibold uppercase tracking-widest text-gray-500">
-                Formati
+                {t("Formati")}
               </dt>
               <dd className="mt-1 font-semibold uppercase text-navy-900">
                 {material.file_type || material.fileType || "PDF"}

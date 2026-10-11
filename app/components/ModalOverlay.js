@@ -50,7 +50,7 @@ export default function ModalOverlay({
   return createPortal(
     <div
       ref={overlayRef}
-      className={`fixed inset-0 z-[200] flex justify-center bg-navy-900/65 p-4 backdrop-blur-md ${alignClass} ${className}`}
+      className={`fixed inset-0 z-[200] flex justify-center bg-ink/65 p-4 backdrop-blur-md ${alignClass} ${className}`}
       onClick={onClose}
       role="presentation"
     >

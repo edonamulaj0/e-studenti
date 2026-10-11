@@ -18,12 +18,14 @@ import {
   getPreviewKind,
   sanitizePreviewLinks,
 } from "../lib/file-preview";
+import { useT } from "./Preferences";
 
 function proxyUrl(fileUrl) {
   return `${WORKER_URL}/?action=proxy&url=${encodeURIComponent(fileUrl)}`;
 }
 
 export default function MaterialPreviewModal({ isOpen, onClose, material }) {
+  const t = useT();
   const [status, setStatus] = useState("idle"); // idle | loading | ready | error | unsupported
   const [sheetNames, setSheetNames] = useState([]);
   const [activeSheet, setActiveSheet] = useState("");
@@ -178,7 +180,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
   return (
     <ModalOverlay open={isOpen} onClose={onClose} className="!p-0 sm:!p-4">
       <div
-        className="preview-modal-height flex w-full max-w-[1600px] flex-col overflow-hidden border border-srh-cream bg-white shadow-2xl sm:rounded-2xl"
+        className="preview-modal-height flex w-full max-w-[1600px] flex-col overflow-hidden border border-srh-cream bg-surface shadow-2xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
@@ -203,8 +205,8 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg p-2 text-srh-navy/70 transition-colors hover:bg-srh-blush/20 hover:text-srh-navy"
-              title="Hap në skedë të re"
-              aria-label="Hap në skedë të re"
+              title={t("Hap në skedë të re")}
+              aria-label={t("Hap në skedë të re")}
             >
               <ExternalLink className="h-5 w-5" />
             </a>
@@ -214,8 +216,8 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
               rel="noopener noreferrer"
               download
               className="rounded-lg p-2 text-srh-navy/70 transition-colors hover:bg-srh-blush/20 hover:text-srh-navy"
-              title="Shkarko"
-              aria-label="Shkarko"
+              title={t("Shkarko")}
+              aria-label={t("Shkarko")}
             >
               <Download className="h-5 w-5" />
             </a>
@@ -224,8 +226,8 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
               data-autofocus
               onClick={onClose}
               className="rounded-lg p-2 text-srh-navy/70 transition-colors hover:bg-srh-blush/20 hover:text-srh-navy"
-              title="Mbyll"
-              aria-label="Mbyll"
+              title={t("Mbyll")}
+              aria-label={t("Mbyll")}
             >
               <X className="h-6 w-6" />
             </button>
@@ -240,7 +242,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
           {showSpinner && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-srh-paper">
               <Loader2 className="mb-4 h-10 w-10 animate-spin text-srh-crimson" />
-              <p className="text-srh-navy/70">Duke ngarkuar parapamjen...</p>
+              <p className="text-srh-navy/70">{t("Duke ngarkuar parapamjen...")}</p>
             </div>
           )}
 
@@ -248,8 +250,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
             <div className="flex h-full flex-col items-center justify-center p-8 text-center">
               <AlertCircle className="mb-4 h-12 w-12 text-srh-crimson" />
               <p className="max-w-md text-srh-navy/70">
-                Nuk mund të shfaqet parapamja e këtij skedari. Provoni ta hapni në
-                skedë të re ose ta shkarkoni.
+                {t("Nuk mund të shfaqet parapamja e këtij skedari. Provoni ta hapni në skedë të re ose ta shkarkoni.")}
               </p>
             </div>
           )}
@@ -258,8 +259,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
             <div className="flex h-full flex-col items-center justify-center p-8 text-center">
               <FileText className="mb-4 h-12 w-12 text-srh-navy/70" />
               <p className="max-w-md text-srh-navy/70">
-                Ky format skedari nuk mund të shfaqet online. Ju lutemi hapeni në
-                skedë të re ose shkarkojeni për ta parë.
+                {t("Ky format skedari nuk mund të shfaqet online. Ju lutemi hapeni në skedë të re ose shkarkojeni për ta parë.")}
               </p>
             </div>
           )}
@@ -280,7 +280,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
           {kind === "sheet" && status === "ready" && (
             <div className="flex h-full flex-col">
               {sheetNames.length > 1 && (
-                <div className="flex flex-wrap gap-1 border-b border-srh-cream bg-white px-3 py-2">
+                <div className="flex flex-wrap gap-1 border-b border-srh-cream bg-surface px-3 py-2">
                   {sheetNames.map((name) => (
                     <button
                       key={name}
@@ -298,7 +298,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
                 </div>
               )}
               <div
-                className="sheet-preview flex-1 overflow-auto bg-white p-4"
+                className="sheet-preview flex-1 overflow-auto bg-surface p-4"
                 dangerouslySetInnerHTML={{ __html: sheetHtml }}
               />
             </div>

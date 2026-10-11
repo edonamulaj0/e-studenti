@@ -12,6 +12,7 @@ import { getFileTypeBadge, hasInBrowserView } from "../lib/file-preview";
 import { displayTeacher, levelTone, normalizeMaterial, typeTone } from "../lib/material-view";
 import { isRealSubject, subjectSlug } from "../lib/subjects";
 import { universityShort } from "../lib/placement";
+import { useT } from "./Preferences";
 
 export { normalizeMaterial, typeTone };
 
@@ -22,6 +23,7 @@ export { normalizeMaterial, typeTone };
  * preview is the grid's job (`onView`), so a page of cards shares one modal.
  */
 export default function MaterialCard({ material, onView, showSubject = true }) {
+  const t = useT();
   const tone = typeTone(material.type);
   const isArchive = material.fileType?.toLowerCase() === "zip";
   const fileBadge = getFileTypeBadge(material.fileType);
@@ -51,9 +53,9 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
             )}
           </h3>
           <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs">
-            <span className={`rounded-full px-2.5 py-1 font-semibold ${tone.chip}`}>{material.type}</span>
+            <span className={`rounded-full px-2.5 py-1 font-semibold ${tone.chip}`}>{t(material.type)}</span>
             <span className={`rounded-full px-2.5 py-1 font-semibold ${levelTone(material.study_level)}`}>
-              {getStudyLevelLabel(material.study_level)}
+              {t(getStudyLevelLabel(material.study_level))}
             </span>
           </p>
         </div>
@@ -66,7 +68,7 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
               <Link
                 href={`/lenda/${subjectSlug(material.faculty, material.subject, material.university)}`}
                 className="inline-flex max-w-full items-center gap-1 rounded-full bg-burgundy-50 px-2.5 py-0.5 text-xs font-semibold text-burgundy-600 hover:bg-burgundy-600 hover:text-white"
-                title={`Të gjitha materialet për ${material.subject}`}
+                title={t("Të gjitha materialet për {subject}", { subject: material.subject })}
               >
                 <Tag className="h-3 w-3 shrink-0" aria-hidden />
                 <span className="truncate">{material.subject}</span>
@@ -76,20 +78,20 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
           </p>
         )}
         <p className="truncate text-xs text-gray-600">
-          <span className="font-semibold">{universityShort(material.university)}</span> · {getFacultyName(material.faculty)}
+          <span className="font-semibold">{universityShort(material.university)}</span> · {t(getFacultyName(material.faculty))}
         </p>
       </div>
 
       <div className="mt-auto flex items-center justify-between gap-3 border-t border-gray-100 pt-2 text-xs text-gray-600">
         <span className="inline-flex shrink-0 items-center gap-3 font-semibold">
-          <span className="inline-flex items-center gap-1" title="Shikime">
+          <span className="inline-flex items-center gap-1" title={t("Shikime")}>
             <Eye className="h-3.5 w-3.5" aria-hidden />
-            <span className="sr-only">Shikime:</span>
+            <span className="sr-only">{t("Shikime:")}</span>
             {formatStatCount(views)}
           </span>
-          <span className="inline-flex items-center gap-1" title="Shkarkime">
+          <span className="inline-flex items-center gap-1" title={t("Shkarkime")}>
             <Download className="h-3.5 w-3.5" aria-hidden />
-            <span className="sr-only">Shkarkime:</span>
+            <span className="sr-only">{t("Shkarkime:")}</span>
             {formatStatCount(downloads)}
           </span>
         </span>
@@ -98,11 +100,11 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
             {material.uploader_trusted && (
               <BadgeCheck
                 className="h-3.5 w-3.5 shrink-0 text-info-text"
-                aria-label="Kontribues i besuar"
+                aria-label={t("Kontribues i besuar")}
                 role="img"
               />
             )}
-            <span className="truncate">{material.submittedBy.name}</span>
+            <span className="truncate">{t(material.submittedBy.name)}</span>
           </span>
         )}
       </div>
@@ -116,7 +118,7 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
               className="btn-outline min-h-[40px] flex-1 px-3 py-1.5 text-sm"
             >
               <Archive className="h-4 w-4" aria-hidden />
-              Përmbajtja
+              {t("Përmbajtja")}
             </button>
           ) : (
             <a
@@ -130,7 +132,7 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
               className="btn-primary min-h-[40px] flex-1 px-3 py-1.5 text-sm"
             >
               <Eye className="h-4 w-4" aria-hidden />
-              Shiko
+              {t("Shiko")}
             </a>
           ))}
         {material.r2Url && (
@@ -143,7 +145,7 @@ export default function MaterialCard({ material, onView, showSubject = true }) {
             className="btn-secondary min-h-[40px] flex-1 px-3 py-1.5 text-sm"
           >
             <Download className="h-4 w-4" aria-hidden />
-            Shkarko
+            {t("Shkarko")}
           </TrackableDownloadLink>
         )}
         <ReportButton

@@ -3,10 +3,10 @@ import { BookOpen, ExternalLink } from "lucide-react";
 import Link from "next/link";
 
 const accents = [
-  "from-info-blue/10 to-white",
-  "from-burgundy-50 to-white",
-  "from-success-green/10 to-white",
-  "from-warning-amber/10 to-white",
+  "from-info-blue/10 to-surface",
+  "from-burgundy-50 to-surface",
+  "from-success-green/10 to-surface",
+  "from-warning-amber/10 to-surface",
 ];
 
 export default function Faculties() {
@@ -202,14 +202,14 @@ export default function Faculties() {
               />
               <div className="pointer-events-none relative z-20 flex min-h-0 flex-1 flex-col">
               <div className="mb-6 flex items-start justify-between gap-3">
-                <span className="rounded-full bg-white px-4 py-2 text-sm font-bold tracking-wide text-burgundy-600 shadow-sm">
+                <span className="rounded-full bg-surface px-4 py-2 text-sm font-bold tracking-wide text-burgundy-600 shadow-sm">
                   {faculty.acronym}
                 </span>
                 <a
                   href={faculty.website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="pointer-events-auto relative z-30 shrink-0 rounded-xl bg-white/70 p-2 text-burgundy-600 transition-colors hover:bg-white"
+                  className="pointer-events-auto relative z-30 shrink-0 rounded-xl bg-surface/70 p-2 text-burgundy-600 transition-colors hover:bg-surface"
                   aria-label={`Faqja e ${faculty.acronym}`}
                 >
                   <ExternalLink className="w-6 h-6" />
@@ -221,7 +221,7 @@ export default function Faculties() {
               </h2>
 
               <div className="mb-5 text-base text-gray-600">
-                <div className="inline-flex items-center gap-2 rounded-full bg-white/80 px-3 py-1.5">
+                <div className="inline-flex items-center gap-2 rounded-full bg-surface/80 px-3 py-1.5">
                   <BookOpen className="w-5 h-5 text-success-text shrink-0" />
                   <span className="font-semibold">
                     {faculty.departments.length} departamente

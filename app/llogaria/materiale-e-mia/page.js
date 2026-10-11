@@ -9,6 +9,8 @@ import { fetchCurrentUser, logout, setUser as setSessionUser } from "../../lib/a
 import ModalOverlay from "../../components/ModalOverlay";
 import { getFacultyName } from "../../lib/material-options";
 import { formatStatCount } from "../../lib/track-material";
+import { useT } from "../../components/Preferences";
+import { translateMessage } from "../../lib/bulk-upload";
 
 function normalizeMaterial(material) {
   return {
@@ -40,6 +42,7 @@ const STATUS_BADGES = {
 
 function MaterialeEMiaPage() {
   const router = useRouter();
+  const t = useT();
   const searchParams = useSearchParams();
   const linkedCount = Number(searchParams.get("linked") || "0");
   const [user, setUser] = useState(null);
@@ -153,10 +156,10 @@ function MaterialeEMiaPage() {
         <header className="mb-8 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <h1 className="font-playfair text-4xl md:text-5xl font-black text-srh-navy">
-              Mirësevini, {user?.name || "student"}!
+              {t("Mirësevini, {name}!", { name: user?.name || t("student") })}
             </h1>
             <p className="mt-2 text-srh-navy/70">
-              Këtu mund t’i shihni dhe ndryshoni materialet që keni ngarkuar.
+              {t("Këtu mund t’i shihni dhe ndryshoni materialet që keni ngarkuar.")}
             </p>
           </div>
           <div className="flex flex-wrap gap-3">
@@ -166,7 +169,7 @@ function MaterialeEMiaPage() {
                 className="inline-flex items-center gap-2 rounded-xl border-2 border-warning-amber/60 px-5 py-3 font-bold text-warning-text hover:bg-warning-amber/10"
               >
                 <ShieldAlert className="h-5 w-5" />
-                Moderim
+                {t("Moderim")}
               </Link>
             )}
             <Link
@@ -174,7 +177,7 @@ function MaterialeEMiaPage() {
               className="inline-flex items-center gap-2 rounded-xl bg-srh-crimson px-5 py-3 font-bold text-white hover:bg-burgundy-700"
             >
               <Plus className="h-5 w-5" />
-              Shto material të ri
+              {t("Shto material të ri")}
             </Link>
             <button
               type="button"
@@ -182,7 +185,7 @@ function MaterialeEMiaPage() {
               className="inline-flex items-center gap-2 rounded-xl border-2 border-srh-navy px-5 py-3 font-bold text-srh-navy hover:bg-srh-navy hover:text-white"
             >
               <LogOut className="h-5 w-5" />
-              Dil
+              {t("Dil")}
             </button>
           </div>
         </header>
@@ -191,8 +194,9 @@ function MaterialeEMiaPage() {
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-success-green/30 bg-success-green/10 p-4">
             <PackageCheck className="mt-0.5 h-5 w-5 shrink-0 text-success-text" />
             <p className="text-sm font-semibold text-success-text">
-              Kemi gjetur {linkedCount} {linkedCount === 1 ? "material" : "materiale"} që keni ndarë më parë —{" "}
-              tani {linkedCount === 1 ? "është" : "janë"} në llogarinë tuaj.
+              {linkedCount === 1
+                ? t("Kemi gjetur {n} material që keni ndarë më parë — tani është në llogarinë tuaj.", { n: linkedCount })
+                : t("Kemi gjetur {n} materiale që keni ndarë më parë — tani janë në llogarinë tuaj.", { n: linkedCount })}
             </p>
           </div>
         )}
@@ -206,19 +210,19 @@ function MaterialeEMiaPage() {
         )}
 
         {!loading && error && (
-          <div className="rounded-2xl border border-srh-cream bg-white p-6 text-srh-crimson">
-            {error}
+          <div className="rounded-2xl border border-srh-cream bg-surface p-6 text-srh-crimson">
+            {translateMessage(t, error)}
           </div>
         )}
 
         {!loading && !error && materials.length === 0 && (
-          <div className="rounded-2xl border border-srh-cream bg-white p-8 text-center">
+          <div className="rounded-2xl border border-srh-cream bg-surface p-8 text-center">
             <FileText className="mx-auto mb-4 h-12 w-12 text-srh-crimson" />
             <h2 className="font-playfair text-2xl font-bold text-srh-navy">
-              Ende nuk keni materiale
+              {t("Ende nuk keni materiale")}
             </h2>
             <p className="mt-2 text-srh-navy/70">
-              Ngarkoni materialin e parë për ta ndarë me komunitetin.
+              {t("Ngarkoni materialin e parë për ta ndarë me komunitetin.")}
             </p>
           </div>
         )}
@@ -228,7 +232,7 @@ function MaterialeEMiaPage() {
             {materials.map((material) => (
               <article
                 key={material.id}
-                className="rounded-2xl border border-srh-cream bg-white p-6 shadow-sm"
+                className="rounded-2xl border border-srh-cream bg-surface p-6 shadow-sm"
               >
                 <FileText className="mb-4 h-9 w-9 text-srh-crimson" />
                 {STATUS_BADGES[material.status] && (
@@ -237,32 +241,31 @@ function MaterialeEMiaPage() {
                       STATUS_BADGES[material.status].className
                     }`}
                   >
-                    {STATUS_BADGES[material.status].label}
+                    {t(STATUS_BADGES[material.status].label)}
                   </p>
                 )}
                 <h2 className="text-xl font-bold text-srh-navy">{material.title}</h2>
                 {material.status === "rejected" && (
                   <p className="mt-2 text-sm text-srh-navy/75">
-                    <span className="font-semibold">Arsyeja:</span>{" "}
-                    {material.rejectionReason || "—"}. Ndryshojeni materialin për ta
-                    ridërguar për shqyrtim.
+                    <span className="font-semibold">{t("Arsyeja:")}</span>{" "}
+                    {material.rejectionReason || "—"}. {t("Ndryshojeni materialin për ta ridërguar për shqyrtim.")}
                   </p>
                 )}
                 <p className="mt-2 text-sm text-srh-navy/70">
-                  {getFacultyName(material.faculty)} · {material.subject} · {material.type}
+                  {getFacultyName(material.faculty)} · {material.subject} · {t(material.type)}
                 </p>
                 {(material.view_count > 0 || material.download_count > 0) && (
                   <p className="mt-3 flex flex-wrap gap-3 text-xs font-semibold text-srh-navy/70">
                     {material.view_count > 0 && (
                       <span className="inline-flex items-center gap-1">
                         <Eye className="h-3.5 w-3.5" aria-hidden />
-                        {formatStatCount(material.view_count)} shikime
+                        {formatStatCount(material.view_count)} {t("shikime")}
                       </span>
                     )}
                     {material.download_count > 0 && (
                       <span className="inline-flex items-center gap-1">
                         <Download className="h-3.5 w-3.5" aria-hidden />
-                        {formatStatCount(material.download_count)} shkarkime
+                        {formatStatCount(material.download_count)} {t("shkarkime")}
                       </span>
                     )}
                   </p>
@@ -272,7 +275,7 @@ function MaterialeEMiaPage() {
                     href={`/llogaria/ndrysho?id=${material.id}`}
                     className="rounded-xl bg-srh-crimson px-4 py-2 font-bold text-white hover:bg-burgundy-700"
                   >
-                    Ndrysho
+                    {t("Ndrysho")}
                   </Link>
                   {material.r2Url && (
                     <a
@@ -281,7 +284,7 @@ function MaterialeEMiaPage() {
                       rel="noopener noreferrer"
                       className="rounded-xl border-2 border-srh-navy px-4 py-2 font-bold text-srh-navy hover:bg-srh-navy hover:text-white"
                     >
-                      Shiko
+                      {t("Shiko")}
                     </a>
                   )}
                 </div>
@@ -293,14 +296,13 @@ function MaterialeEMiaPage() {
         {!loading && user && (
           <section
             aria-labelledby="account-heading"
-            className="mt-12 rounded-2xl border border-srh-cream bg-white p-6"
+            className="mt-12 rounded-2xl border border-srh-cream bg-surface p-6"
           >
             <h2 id="account-heading" className="text-xl font-bold text-srh-navy">
-              Të dhënat e llogarisë
+              {t("Të dhënat e llogarisë")}
             </h2>
             <p className="mt-2 text-sm text-srh-navy/70">
-              Mund të shkarkoni një kopje të të dhënave që mbajmë për ju: profili, materialet dhe
-              lidhjet që keni dërguar, dhe raportet që keni bërë.
+              {t("Mund të shkarkoni një kopje të të dhënave që mbajmë për ju: profili, materialet dhe lidhjet që keni dërguar, dhe raportet që keni bërë.")}
             </p>
             <div className="mt-4 flex flex-wrap gap-3">
               <button
@@ -309,7 +311,7 @@ function MaterialeEMiaPage() {
                 disabled={exporting}
                 className="btn-outline"
               >
-                {exporting ? "Duke përgatitur…" : "Shkarko të dhënat e mia"}
+                {exporting ? t("Duke përgatitur…") : t("Shkarko të dhënat e mia")}
               </button>
               {!user.is_moderator && (
                 <button
@@ -321,13 +323,13 @@ function MaterialeEMiaPage() {
                   }}
                   className="btn-outline text-burgundy-600"
                 >
-                  Fshi llogarinë
+                  {t("Fshi llogarinë")}
                 </button>
               )}
             </div>
             {accountMessage && (
               <p role="alert" className="mt-3 text-sm font-semibold text-burgundy-600">
-                {accountMessage}
+                {translateMessage(t, accountMessage)}
               </p>
             )}
           </section>
@@ -341,22 +343,22 @@ function MaterialeEMiaPage() {
           aria-labelledby="delete-account-title"
           onClick={(e) => e.stopPropagation()}
           onSubmit={deleteAccount}
-          className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+          className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl"
         >
           <h2 id="delete-account-title" className="text-lg font-bold text-srh-navy">
-            Fshi llogarinë
+            {t("Fshi llogarinë")}
           </h2>
           <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-srh-navy/75">
-            <li>Emri, mbiemri dhe emaili juaj fshihen dhe nuk mund të hyni më.</li>
+            <li>{t("Emri, mbiemri dhe emaili juaj fshihen dhe nuk mund të hyni më.")}</li>
             <li>
-              Materialet e publikuara <strong>mbeten</strong> si &quot;Anonim&quot; dhe nuk mund t&apos;i
-              ndryshoni ose fshini më (vetëm një moderator mund t&apos;i heqë).
+              {t("Materialet e publikuara")} <strong>{t("mbeten")}</strong>{" "}
+              {t("si \"Anonim\" dhe nuk mund t'i ndryshoni ose fshini më (vetëm një moderator mund t'i heqë).")}
             </li>
-            <li>Materialet në pritje ose të refuzuara fshihen përgjithmonë.</li>
-            <li>Ky veprim nuk kthehet mbrapsht.</li>
+            <li>{t("Materialet në pritje ose të refuzuara fshihen përgjithmonë.")}</li>
+            <li>{t("Ky veprim nuk kthehet mbrapsht.")}</li>
           </ul>
           <label htmlFor="confirm-email" className="mt-4 block text-sm font-semibold text-srh-navy">
-            Shkruani emailin tuaj ({user?.email}) për ta konfirmuar
+            {t("Shkruani emailin tuaj ({email}) për ta konfirmuar", { email: user?.email || "" })}
           </label>
           <input
             id="confirm-email"
@@ -369,7 +371,7 @@ function MaterialeEMiaPage() {
           />
           {deleteError && (
             <p role="alert" className="mt-3 text-sm font-semibold text-burgundy-600">
-              {deleteError}
+              {translateMessage(t, deleteError)}
             </p>
           )}
           <div className="mt-5 flex gap-3">
@@ -378,7 +380,7 @@ function MaterialeEMiaPage() {
               disabled={deleting || confirmEmail.trim().toLowerCase() !== (user?.email || "").toLowerCase()}
               className="btn-primary flex-1"
             >
-              {deleting ? "Duke fshirë…" : "Fshi llogarinë"}
+              {deleting ? t("Duke fshirë…") : t("Fshi llogarinë")}
             </button>
             <button
               type="button"
@@ -387,7 +389,7 @@ function MaterialeEMiaPage() {
               onClick={() => setDeleteOpen(false)}
               className="btn-outline flex-1"
             >
-              Anulo
+              {t("Anulo")}
             </button>
           </div>
         </form>

@@ -5,6 +5,7 @@ import { useState } from "react";
 import MaterialDetail from "./components/MaterialDetail";
 import SubjectView from "./components/SubjectView";
 import { useLateMaterial } from "./lib/use-late-material";
+import { useT } from "./components/Preferences";
 
 /**
  * Stands in for the page while we find out whether this address is a material
@@ -12,13 +13,14 @@ import { useLateMaterial } from "./lib/use-late-material";
  * the "not found" text is never painted first and then replaced.
  */
 function PageSkeleton() {
+  const t = useT();
   const bar = "rounded-lg bg-gray-200 motion-safe:animate-pulse";
   return (
     <div className="page-shell" role="status" aria-busy="true">
-      <span className="sr-only">Duke ngarkuar…</span>
+      <span className="sr-only">{t("Duke ngarkuar…")}</span>
       <noscript>
         <p className="mb-6 text-center text-lg font-semibold text-navy-900">
-          Faqja nuk u gjet. Aktivizoni JavaScript për të parë materialet e shtuara së fundi.
+          {t("Faqja nuk u gjet. Aktivizoni JavaScript për të parë materialet e shtuara së fundi.")}
         </p>
       </noscript>
       <div className="section-shell max-w-4xl" aria-hidden="true">
@@ -47,6 +49,7 @@ function PageSkeleton() {
 }
 
 export default function NotFound() {
+  const t = useT();
   const [isLoading, setIsLoading] = useState(false);
   const late = useLateMaterial();
 
@@ -85,19 +88,18 @@ export default function NotFound() {
             </div>
           </div>
 
-          <div className="bg-white rounded-2xl border border-srh-cream shadow-sm p-8 mb-8">
+          <div className="bg-surface rounded-2xl border border-srh-cream shadow-sm p-8 mb-8">
             <h2 className="font-playfair text-3xl font-bold text-srh-navy mb-4">
-              Faqja nuk u gjet!
+              {t("Faqja nuk u gjet!")}
             </h2>
             <p className="text-srh-navy/70 text-lg mb-6">
-              Faqja që po kërkoni nuk ekziston ose po punojmë në të për ta
-              përmirësuar.
+              {t("Faqja që po kërkoni nuk ekziston ose po punojmë në të për ta përmirësuar.")}
             </p>
 
             <div className="flex items-center justify-center space-x-2 mb-6 p-4 bg-srh-cream/50 rounded-lg border border-srh-cream">
               <RefreshCw className="w-5 h-5 text-srh-sage" />
               <span className="text-srh-navy font-medium">
-                Po punojmë në përmirësime...
+                {t("Po punojmë në përmirësime...")}
               </span>
             </div>
           </div>
@@ -109,7 +111,7 @@ export default function NotFound() {
               className="flex items-center justify-center px-6 py-3 bg-srh-crimson text-white rounded-lg hover:bg-burgundy-700 transition-colors font-medium"
             >
               <Home className="w-5 h-5 mr-2" />
-              Kthehu mbrapa
+              {t("Kthehu mbrapa")}
             </button>
 
             <button
@@ -121,7 +123,7 @@ export default function NotFound() {
               <RefreshCw
                 className={`w-5 h-5 mr-2 ${isLoading ? "animate-spin" : ""}`}
               />
-              {isLoading ? "Po rifresko..." : "Rifresko faqen"}
+              {isLoading ? t("Po rifresko...") : t("Rifresko faqen")}
             </button>
           </div>
         </div>

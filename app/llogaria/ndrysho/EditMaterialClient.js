@@ -6,6 +6,8 @@ import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
 import { DEFAULT_UNIVERSITY, MATERIAL_TYPES, facultiesFor } from "../../lib/material-options";
 import { UNIVERSITIES } from "../../lib/placement";
+import { useT } from "../../components/Preferences";
+import { translateMessage } from "../../lib/bulk-upload";
 
 const emptyForm = {
   title: "",
@@ -19,6 +21,7 @@ const emptyForm = {
 
 export default function EditMaterialClient({ id }) {
   const router = useRouter();
+  const t = useT();
   const searchParams = useSearchParams();
   const returnTo = searchParams.get("from") === "moderim" ? "/llogaria/moderim?tab=materialet" : "/llogaria/materiale-e-mia";
   const [form, setForm] = useState(emptyForm);
@@ -101,10 +104,10 @@ export default function EditMaterialClient({ id }) {
       <div className="mx-auto max-w-3xl">
         <header className="mb-8 text-center">
           <h1 className="font-playfair text-4xl md:text-5xl font-black text-srh-navy">
-            Ndrysho materialin
+            {t("Ndrysho materialin")}
           </h1>
           <p className="mt-3 text-srh-navy/70">
-            Skedari nuk mund të ndryshohet, vetëm metadatat.
+            {t("Skedari nuk mund të ndryshohet, vetëm metadatat.")}
           </p>
         </header>
 
@@ -113,13 +116,13 @@ export default function EditMaterialClient({ id }) {
         ) : (
           <form
             onSubmit={submit}
-            className="space-y-5 rounded-2xl border border-srh-cream bg-white p-6 md:p-8 shadow-sm"
+            className="space-y-5 rounded-2xl border border-srh-cream bg-surface p-6 md:p-8 shadow-sm"
           >
             <div className="grid gap-5 md:grid-cols-2">
               {/* Title — always visible; tooltip shown for Provime Pranuese */}
               <label className="block">
                 <span className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-srh-navy">
-                  Titulli
+                  {t("Titulli")}
                   <span className="text-srh-crimson"> *</span>
                   {isPranues && (
                     <span className="relative">
@@ -131,19 +134,19 @@ export default function EditMaterialClient({ id }) {
                         onFocus={() => setTitleTooltip(true)}
                         onBlur={() => setTitleTooltip(false)}
                         onClick={() => setTitleTooltip((v) => !v)}
-                        aria-label="Ndihmë"
+                        aria-label={t("Ndihmë")}
                       >
                         ?
                       </button>
                       {titleTooltip && (
                         <span
                           role="tooltip"
-                          className="absolute left-0 top-6 z-30 w-80 rounded-xl border border-srh-cream bg-white p-3 text-xs font-normal leading-relaxed text-srh-navy/75 shadow-lg"
+                          className="absolute left-0 top-6 z-30 w-80 rounded-xl border border-srh-cream bg-surface p-3 text-xs font-normal leading-relaxed text-srh-navy/75 shadow-lg"
                         >
-                          Shkruaj emrin e departamentit dhe llojin e materialit.
-                          Shembuj: &quot;Stomatologji - Provimi pranues 2024&quot;,
-                          &quot;Matematikë - Libër përgatitor&quot;,
-                          &quot;Informatikë - Teste të vjetra&quot;
+                          {t("Shkruaj emrin e departamentit dhe llojin e materialit.")}{" "}
+                          {t("Shembuj:")} &quot;{t("Stomatologji - Provimi pranues 2024")}&quot;,{" "}
+                          &quot;{t("Matematikë - Libër përgatitor")}&quot;,{" "}
+                          &quot;{t("Informatikë - Teste të vjetra")}&quot;
                         </span>
                       )}
                     </span>
@@ -180,10 +183,10 @@ export default function EditMaterialClient({ id }) {
                   onChange={(e) => setField("faculty", e.target.value)}
                   className="input-srh"
                 >
-                  <option value="">Zgjidhni</option>
+                  <option value="">{t("Zgjidhni")}</option>
                   {facultiesFor(form.university).map((faculty) => (
                     <option key={faculty.code} value={faculty.code}>
-                      {faculty.name}
+                      {t(faculty.name)}
                     </option>
                   ))}
                 </select>
@@ -232,16 +235,16 @@ export default function EditMaterialClient({ id }) {
                   onChange={(e) => setField("type", e.target.value)}
                   className="input-srh"
                 >
-                  <option value="">Zgjidhni</option>
+                  <option value="">{t("Zgjidhni")}</option>
                   {MATERIAL_TYPES.map((type) => (
-                    <option key={type}>{type}</option>
+                    <option key={type} value={type}>{t(type)}</option>
                   ))}
                 </select>
               </Field>
             </div>
             {error && (
               <p className="rounded-xl border border-srh-cream bg-srh-paper p-4 text-sm font-semibold text-srh-crimson">
-                {error}
+                {translateMessage(t, error)}
               </p>
             )}
             <button
@@ -249,7 +252,7 @@ export default function EditMaterialClient({ id }) {
               disabled={saving}
               className="w-full rounded-xl bg-srh-crimson py-4 text-lg font-bold text-white hover:bg-burgundy-700 disabled:opacity-60"
             >
-              {saving ? "Duke ruajtur..." : "Ruaj ndryshimet"}
+              {saving ? t("Duke ruajtur...") : t("Ruaj ndryshimet")}
             </button>
           </form>
         )}
@@ -259,10 +262,11 @@ export default function EditMaterialClient({ id }) {
 }
 
 function Field({ label, required, children }) {
+  const t = useT();
   return (
     <label className="block">
       <span className="mb-1.5 block text-sm font-bold text-srh-navy">
-        {label}
+        {t(label)}
         {required && <span className="text-srh-crimson"> *</span>}
       </span>
       {children}

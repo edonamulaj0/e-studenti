@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { FileText } from "lucide-react";
+import { T } from "../../components/Preferences";
 import MaterialDetail from "../../components/MaterialDetail";
 import JsonLd, {
   breadcrumbJsonLd,
@@ -67,10 +68,10 @@ export default async function MaterialDetailPage({ params }) {
         <div className="surface-card mx-auto max-w-2xl p-10 text-center">
           <FileText className="mx-auto mb-5 h-16 w-16 text-gray-500" />
           <h1 className="mb-4 font-display text-3xl font-bold text-navy-900">
-            Materiali nuk u gjet
+            <T>Materiali nuk u gjet</T>
           </h1>
           <Link href="/materialet" className="btn-primary">
-            Kthehu te materialet
+            <T>Kthehu te materialet</T>
           </Link>
         </div>
       </div>

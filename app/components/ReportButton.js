@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Flag, X, ExternalLink } from "lucide-react";
 import { WORKER_URL } from "../lib/worker-url";
 import ModalOverlay from "./ModalOverlay";
+import { useT } from "./Preferences";
 
 const REASONS = [
   "Përmbajtje e papërshtatshme",
@@ -14,6 +15,7 @@ const REASONS = [
 ];
 
 export default function ReportButton({ materialId, materialTitle, materialUrl, compact = false }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
   const [status, setStatus] = useState("idle");
@@ -52,8 +54,8 @@ export default function ReportButton({ materialId, materialTitle, materialUrl, c
       <button
         type="button"
         onClick={() => setOpen(true)}
-        aria-label={compact ? `Raporto: ${materialTitle}` : undefined}
-        title={compact ? "Raporto" : undefined}
+        aria-label={compact ? t("Raporto: {title}", { title: materialTitle }) : undefined}
+        title={compact ? t("Raporto") : undefined}
         className={
           compact
             ? "inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-burgundy-600"
@@ -61,12 +63,12 @@ export default function ReportButton({ materialId, materialTitle, materialUrl, c
         }
       >
         <Flag className="h-4 w-4" aria-hidden />
-        {!compact && "Raporto"}
+        {!compact && t("Raporto")}
       </button>
 
       <ModalOverlay open={open} onClose={close}>
         <div
-          className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+          className="w-full max-w-md rounded-2xl bg-surface p-6 shadow-2xl"
           onClick={(e) => e.stopPropagation()}
           role="dialog"
           aria-modal="true"
@@ -75,7 +77,7 @@ export default function ReportButton({ materialId, materialTitle, materialUrl, c
             <div className="mb-5 flex items-start justify-between gap-4">
               <div className="min-w-0">
                 <p className="mb-1 text-xs font-semibold uppercase tracking-widest text-gray-500">
-                  Raporto material
+                  {t("Raporto material")}
                 </p>
                 <h2 id="report-modal-title" className="truncate text-lg font-bold leading-snug text-navy-900">
                   {materialTitle}
@@ -85,7 +87,7 @@ export default function ReportButton({ materialId, materialTitle, materialUrl, c
                 type="button"
                 onClick={close}
                 className="shrink-0 rounded-xl p-2 text-gray-500 transition-colors hover:bg-gray-100 hover:text-gray-600"
-                aria-label="Mbyll"
+                aria-label={t("Mbyll")}
               >
                 <X className="h-5 w-5" />
               </button>
@@ -106,14 +108,14 @@ export default function ReportButton({ materialId, materialTitle, materialUrl, c
             {status === "done" ? (
               <div className="rounded-xl bg-success-green/10 p-5 text-center">
                 <p className="font-bold text-success-text">
-                  Faleminderit! Raporti u dërgua.
+                  {t("Faleminderit! Raporti u dërgua.")}
                 </p>
                 <button
                   type="button"
                   onClick={close}
                   className="mt-3 text-sm font-semibold text-gray-500 hover:underline"
                 >
-                  Mbyll
+                  {t("Mbyll")}
                 </button>
               </div>
             ) : (
@@ -123,7 +125,7 @@ export default function ReportButton({ materialId, materialTitle, materialUrl, c
                     htmlFor="report-reason"
                     className="mb-1.5 block text-sm font-semibold text-navy-900"
                   >
-                    Arsyeja e raportimit
+                    {t("Arsyeja e raportimit")}
                   </label>
                   <select
                     id="report-reason"
@@ -132,17 +134,17 @@ export default function ReportButton({ materialId, materialTitle, materialUrl, c
                     onChange={(e) => setReason(e.target.value)}
                     className="input-srh text-sm"
                   >
-                    <option value="">Zgjidhni arsyen…</option>
+                    <option value="">{t("Zgjidhni arsyen…")}</option>
                     {REASONS.map((r) => (
                       <option key={r} value={r}>
-                        {r}
+                        {t(r)}
                       </option>
                     ))}
                   </select>
                 </div>
                 {error && (
                   <p role="alert" className="text-sm font-semibold text-burgundy-600">
-                    {error}
+                    {t(error)}
                   </p>
                 )}
                 <div className="flex gap-3 pt-1">
@@ -151,14 +153,14 @@ export default function ReportButton({ materialId, materialTitle, materialUrl, c
                     disabled={!reason || status === "loading"}
                     className="flex-1 rounded-xl bg-burgundy-600 py-2.5 text-sm font-bold text-white hover:bg-burgundy-700 disabled:opacity-50"
                   >
-                    {status === "loading" ? "Duke dërguar…" : "Dërgo raportin"}
+                    {status === "loading" ? t("Duke dërguar…") : t("Dërgo raportin")}
                   </button>
                   <button
                     type="button"
                     onClick={close}
                     className="rounded-xl border border-gray-200 px-4 py-2.5 text-sm font-semibold text-gray-600 hover:bg-gray-50"
                   >
-                    Anulo
+                    {t("Anulo")}
                   </button>
                 </div>
               </form>

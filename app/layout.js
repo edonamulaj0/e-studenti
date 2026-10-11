@@ -2,6 +2,7 @@ import "./globals.css";
 import { Montserrat, Playfair_Display } from "next/font/google";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
+import PreferencesProvider, { PREFERENCES_SCRIPT } from "./components/Preferences";
 import CompareProvider, { CompareStrip } from "./components/CompareProvider";
 import { WORKER_URL } from "./lib/worker-url";
 
@@ -62,8 +63,10 @@ export default function RootLayout({ children }) {
     <html
       lang="sq"
       className={`${montserrat.variable} ${playfair.variable} scroll-smooth`}
+      suppressHydrationWarning
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: PREFERENCES_SCRIPT }} />
         <link rel="preconnect" href={workerOrigin} crossOrigin="anonymous" />
         <link rel="dns-prefetch" href={workerOrigin} />
         <link
@@ -75,10 +78,11 @@ export default function RootLayout({ children }) {
       <body className="flex min-h-dvh flex-col font-montserrat text-base antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:rounded-xl focus:bg-navy-900 focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:rounded-xl focus:bg-ink focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
         >
           Kalo te përmbajtja
         </a>
+        <PreferencesProvider>
         <CompareProvider>
         <Navbar />
         <CompareStrip />
@@ -89,6 +93,7 @@ export default function RootLayout({ children }) {
         </main>
         </CompareProvider>
         <Footer />
+        </PreferencesProvider>
       </body>
     </html>
   );

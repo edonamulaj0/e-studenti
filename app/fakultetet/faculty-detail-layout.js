@@ -67,7 +67,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
           Kthehu te fakultetet
         </Link>
 
-        <article className="bg-white rounded-2xl shadow-sm border border-srh-cream overflow-hidden mb-8">
+        <article className="bg-surface rounded-2xl shadow-sm border border-srh-cream overflow-hidden mb-8">
           <div className="p-6 md:p-10">
             <div className="flex flex-wrap items-start justify-between gap-4 mb-6">
               <div className="min-w-0">
@@ -83,7 +83,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                   href={website}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="shrink-0 inline-flex items-center gap-2 rounded-xl border-2 border-srh-navy bg-white px-4 py-2.5 text-sm font-bold text-srh-navy hover:bg-srh-navy hover:text-white transition-colors"
+                  className="shrink-0 inline-flex items-center gap-2 rounded-xl border-2 border-srh-navy bg-surface px-4 py-2.5 text-sm font-bold text-srh-navy hover:bg-srh-navy hover:text-white transition-colors"
                 >
                   Faqja zyrtare
                   <ExternalLink className="w-4 h-4" aria-hidden />
@@ -145,7 +145,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
           </div>
         </article>
 
-        <section className="bg-white rounded-2xl shadow-sm border border-srh-cream p-6 md:p-8 mb-8">
+        <section className="bg-surface rounded-2xl shadow-sm border border-srh-cream p-6 md:p-8 mb-8">
           <div className="flex items-center gap-3 mb-6">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-srh-cream text-srh-crimson">
               <Mail className="w-6 h-6" aria-hidden />
@@ -194,7 +194,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
           </div>
         </section>
 
-        <section className="bg-white rounded-2xl shadow-sm border border-srh-cream p-6 md:p-8 mb-10">
+        <section className="bg-surface rounded-2xl shadow-sm border border-srh-cream p-6 md:p-8 mb-10">
           <div className="flex items-center gap-3 mb-6">
             <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-srh-cream text-srh-crimson">
               <BookOpen className="w-6 h-6" aria-hidden />
@@ -231,7 +231,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
           </Link>
           <Link
             href="/fakultetet"
-            className="inline-flex items-center justify-center rounded-xl border-2 border-srh-navy bg-white px-8 py-3.5 text-lg font-bold text-srh-navy hover:bg-srh-navy hover:text-white transition-colors"
+            className="inline-flex items-center justify-center rounded-xl border-2 border-srh-navy bg-surface px-8 py-3.5 text-lg font-bold text-srh-navy hover:bg-srh-navy hover:text-white transition-colors"
           >
             Të gjitha fakultetet
           </Link>

@@ -5,6 +5,8 @@ import { usePathname } from "next/navigation";
 import { Menu, X } from "lucide-react";
 import { fetchCurrentUser } from "../lib/auth";
 import { useFocusTrap } from "../lib/use-focus-trap";
+import PreferenceControls from "./PreferenceControls";
+import { useT } from "./Preferences";
 import ViberIcon, { VIBER_URL } from "./ViberIcon";
 
 const navItems = [
@@ -18,6 +20,7 @@ const navItems = [
 const mobileNavItems = [{ href: "/", label: "Ballina" }, ...navItems];
 
 export default function Navbar() {
+  const t = useT();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
@@ -78,15 +81,15 @@ export default function Navbar() {
       isActive(href)
         ? mobile
           ? "bg-burgundy-50 text-burgundy-600"
-          : "bg-white text-burgundy-600 shadow-sm"
+          : "bg-surface text-burgundy-600 shadow-sm"
         : mobile
           ? "text-navy-900 hover:bg-navy-100"
-          : "text-navy-900/72 hover:bg-white/80 hover:text-navy-900",
+          : "text-navy-900/72 hover:bg-surface/80 hover:text-navy-900",
     ].join(" ");
 
   return (
     <nav
-      aria-label="Kryesore"
+      aria-label={t("Kryesore")}
       className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
         isScrolled
           ? "border-gray-200/80 bg-cream-50/88 shadow-sm backdrop-blur-xl"
@@ -106,14 +109,14 @@ export default function Navbar() {
               aria-hidden="true"
               width={8268}
               height={11693}
-              className="h-10 w-10 md:h-12 md:w-12 shrink-0"
+              className="h-10 w-10 md:h-12 md:w-12 shrink-0 dark:brightness-0 dark:invert"
             />
             <span>
               <span className="block font-display text-2xl md:text-3xl font-bold tracking-tight">
                 E-Studenti
               </span>
               <span className="hidden md:block text-[10px] font-semibold tracking-widest text-gray-500">
-                NGA KOMUNITETI, PËR ÇDO STUDENT.
+                {t("NGA KOMUNITETI, PËR ÇDO STUDENT.")}
               </span>
             </span>
           </Link>
@@ -122,21 +125,22 @@ export default function Navbar() {
           <div className="hidden md:flex items-center gap-1 lg:gap-2">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={linkClass(item.href)}>
-                {item.label}
+                {t(item.label)}
               </Link>
             ))}
+            <PreferenceControls className="ml-2" />
             <Link
               href={isLoggedIn ? "/llogaria/materiale-e-mia" : "/llogaria/regjistrohu"}
               className="btn-primary ml-2 min-h-[44px] px-4 py-2"
             >
-              {isLoggedIn ? "Llogaria ime" : "Hyr / Regjistrohu"}
+              {isLoggedIn ? t("Llogaria ime") : t("Hyr / Regjistrohu")}
             </Link>
             {!isLoggedIn && (
               <a
                 href={VIBER_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Bashkohu në Viber"
+                aria-label={t("Bashkohu në Viber")}
                 className="btn-viber min-h-[44px] w-11 px-0"
               >
                 <ViberIcon className="h-5 w-5" />
@@ -147,7 +151,7 @@ export default function Navbar() {
                 href="/llogaria/ngarko"
                 className="btn-outline min-h-[44px] px-4 py-2"
               >
-                Ngarko ↑
+                {t("Ngarko ↑")}
               </Link>
             )}
           </div>
@@ -155,8 +159,8 @@ export default function Navbar() {
           {/* mobile menu hamburger */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="absolute right-0 top-1/2 z-[80] -translate-y-1/2 rounded-xl p-2.5 text-navy-900 transition-colors hover:bg-white focus:outline-none focus:ring-4 focus:ring-burgundy-600/15 md:hidden"
-            aria-label={isOpen ? "Mbyll menunë" : "Hap menunë"}
+            className="absolute right-0 top-1/2 z-[80] -translate-y-1/2 rounded-xl p-2.5 text-navy-900 transition-colors hover:bg-surface focus:outline-none focus:ring-4 focus:ring-burgundy-600/15 md:hidden"
+            aria-label={isOpen ? t("Mbyll menunë") : t("Hap menunë")}
             aria-expanded={isOpen}
             aria-controls="mobile-navigation"
           >
@@ -168,16 +172,17 @@ export default function Navbar() {
         <div
           id="mobile-navigation"
           ref={menuRef}
-          className="fixed inset-0 z-[70] flex h-dvh items-end bg-navy-900/30 px-4 pb-4 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[70] flex h-dvh items-end bg-ink/30 px-4 pb-4 backdrop-blur-sm md:hidden"
         >
           <div
             role="dialog"
             aria-modal="true"
-            aria-label="Menyja"
+            aria-label={t("Menyja")}
             className="mx-auto w-full max-w-md rounded-[1.75rem] border border-gray-200 bg-cream-50 p-4 shadow-xl"
           >
             <div className="mx-auto mb-4 h-1.5 w-12 rounded-full bg-gray-200" />
             <div className="flex flex-col gap-2">
+            <PreferenceControls className="justify-center pb-1" />
             {mobileNavItems.map((item) => (
               <Link
                 key={item.href}
@@ -185,7 +190,7 @@ export default function Navbar() {
                 className={linkClass(item.href, true)}
                 onClick={handleLinkClick}
               >
-                {item.label}
+                {t(item.label)}
               </Link>
             ))}
             <Link
@@ -193,19 +198,19 @@ export default function Navbar() {
               className="btn-primary mt-2 w-full"
               onClick={handleLinkClick}
             >
-              {isLoggedIn ? "Llogaria ime" : "Hyr / Regjistrohu"}
+              {isLoggedIn ? t("Llogaria ime") : t("Hyr / Regjistrohu")}
             </Link>
             {!isLoggedIn && (
               <a
                 href={VIBER_URL}
                 target="_blank"
                 rel="noopener noreferrer"
-                aria-label="Bashkohu në Viber"
+                aria-label={t("Bashkohu në Viber")}
                 className="btn-viber w-full justify-center"
                 onClick={handleLinkClick}
               >
                 <ViberIcon className="h-5 w-5" />
-                Bashkohu në Viber
+                {t("Bashkohu në Viber")}
               </a>
             )}
             {isLoggedIn && (
@@ -214,7 +219,7 @@ export default function Navbar() {
                 className="btn-outline w-full"
                 onClick={handleLinkClick}
               >
-                Ngarko ↑
+                {t("Ngarko ↑")}
               </Link>
             )}
             </div>
