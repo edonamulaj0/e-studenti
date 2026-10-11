@@ -119,7 +119,7 @@ migration before deploying the Worker**, or every catalogue query will fail:
 
 ```bash
 cd cloudflare-worker
-wrangler d1 migrations apply e-studenti-auth --remote   # applies 0011, 0012 and 0013
+wrangler d1 migrations apply e-studenti-auth --remote   # applies 0011 to 0014
 ```
 
 Existing materials are marked `approved`. The thresholds are
@@ -187,3 +187,28 @@ this:
    API and renders the normal detail view. The HTTP status of that response is
    404 (Cloudflare chooses it before any page code runs), so search engines see
    the page only after the rebuild above.
+
+## Multi-file upload
+
+`/llogaria/ngarko` takes up to 50 files at once. Each file becomes an editable
+row (title and type are guessed from the file name; faculty, subject and the rest
+are shared and can be overridden per file). While the user fills the form the
+browser hashes each file (SHA-256) and asks `check-duplicates` whether it already
+exists, so likely duplicates are flagged before anything is sent and skipped
+unless the user opts in.
+
+Uploads go out two at a time, never more than 64MB in flight (the Worker holds
+each upload in memory), through the existing `upload` action, with per-file
+progress, pause/resume, cancel and retry. Each file carries a `client_upload_id`;
+if a response is lost and the file is retried, the Worker returns the row that
+already exists instead of storing a second copy. When the pending-review limit
+or a rate limit is hit, the queue pauses (rate limits resume by themselves) and
+nothing is lost.
+
+Migration `0014_add_upload_dedup.sql` adds `content_hash` and
+`client_upload_id`. The hash is computed in the browser and is only a hint for
+duplicate warnings, never used for security.
+
+Not included: the queue does not survive a page reload (the browser asks before
+leaving while uploads are active), and files still pass through the Worker
+rather than going straight to R2.
