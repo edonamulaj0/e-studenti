@@ -35,9 +35,23 @@ UP's sites answer our requests with a Cloudflare "Just a moment" challenge (HTTP
 
 Early reading: curriculum data is easiest where an institution publishes plain HTML (Universum). Fees and syllabi were not found on the pages sampled, so those need a dedicated search per institution and, probably, direct requests.
 
-## 3. Still to do
+## 3. Fees (pilot)
 
-- Full source inventory for the 21 institutions (programme page, plan, fees, syllabi per programme).
-- Fees and syllabi search for the three pilot institutions.
-- End-to-end extraction of a few programmes with checks against the source.
-- Cost estimate and recommendation.
+- **Public universities:** Prizren's page says student tariffs are set by the Ministry of Education (MEST) and reviewed yearly (administrative instruction), e.g. 25 EUR per semester for regular bachelor students, 150 EUR per semester for scientific master studies, first year free. If that holds for all public universities, public fees are one national table, not 7 separate data sets. To confirm against the MEST instruction itself.
+- **AAB:** publishes a 43-page PDF, one block per programme (`aab-edu.net/wp-content/uploads/2025/12/Tuition-fees-AAB-College.pdf`), parsed cleanly into 43 programme/fee pairs (e.g. Public Administration BA 825, Computer Science and Software Engineering BSc 1,250, Nursing BSc 1,900, Dentistry 875). Problems: the PDF says fees are "per semester" in the intro but never states the unit per programme, so it must be confirmed with AAB; only 21 of 49 AKA programme names match exactly (typos such as "Busienss", "Journalsim", renamed programmes, and AKA programmes with no fee block, e.g. Logopedics), so matching needs fuzzy match plus a human check.
+- **UBT, Universum:** no fee figures found on the pages read or through search (UBT's rules say tuition is set by its board without stating amounts). Likely needs the admissions office.
+- **UP:** not reachable (see above).
+
+## 4. Findings so far
+
+1. The registry is solved and authoritative (426 rows).
+2. Curriculum quality differs a lot by institution; Universum is machine-readable, UBT and AAB need deeper digging.
+3. Fees exist as documents at some institutions (AAB) and as a national tariff for public ones, but not everywhere, and units are ambiguous. Every price will need source, date and unit, and some will stay "not published".
+4. Matching AKA names to institution pages is a real task: free-text names, typos, renames.
+5. UP (the largest public university, 146 of 426 programmes) is blocked by a bot challenge and needs a permission or manual route.
+
+## 5. Still to do
+
+- UBT and Universum fees by contacting admissions; check the MEST instruction for the public tariff.
+- Source inventory for the remaining institutions.
+- An end-to-end extraction of 2-3 programmes with source checks, then the cost estimate and recommendation.
