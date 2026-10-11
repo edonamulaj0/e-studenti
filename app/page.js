@@ -1,4 +1,6 @@
 import HomeClient from "./home-client";
+import { fetchMaterialsPage } from "./lib/fetch-materials";
+import { getFacultyName } from "./lib/material-options";
 import JsonLd, { organizationJsonLd, websiteJsonLd } from "./components/JsonLd";
 
 export const metadata = {
@@ -13,12 +15,26 @@ export const metadata = {
   },
 };
 
-export default function Home() {
+export default async function Home() {
+  // Real, recent uploads for the hero card; if the API is unreachable at build
+  // time the card is simply omitted.
+  const data = await fetchMaterialsPage({ page: 1, limit: 3 });
+  const latest = (data?.materials || [])
+    .filter((material) => material.slug)
+    .map((material) => ({
+      id: material.id,
+      slug: material.slug,
+      title: material.title,
+      subtitle: [getFacultyName(material.faculty), material.subject]
+        .filter((part) => part && part !== "//")
+        .join(" · "),
+    }));
+
   return (
     <>
       <JsonLd data={organizationJsonLd()} />
       <JsonLd data={websiteJsonLd()} />
-      <HomeClient />
+      <HomeClient latest={latest} />
     </>
   );
 }

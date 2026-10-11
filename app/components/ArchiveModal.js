@@ -13,11 +13,42 @@ import JSZip from "jszip";
 import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
 import ModalOverlay from "./ModalOverlay";
 
+/** Most a single archive entry may inflate to in the browser. */
+const MAX_ENTRY_BYTES = 50 * 1024 * 1024;
+
+/**
+ * Inflates one ZIP entry, giving up once it exceeds `limit`. The sizes listed in
+ * an archive are declared by whoever made it and are not trusted, so a small
+ * entry that expands enormously is stopped here instead of exhausting memory.
+ */
+function inflateCapped(zipFile, limit) {
+  return new Promise((resolve, reject) => {
+    const chunks = [];
+    let total = 0;
+    const stream = zipFile.internalStream("uint8array");
+    stream
+      .on("data", (chunk) => {
+        total += chunk.length;
+        if (total > limit) {
+          stream.pause();
+          chunks.length = 0;
+          reject(new Error("entry-too-large"));
+          return;
+        }
+        chunks.push(chunk);
+      })
+      .on("error", reject)
+      .on("end", () => resolve(new Blob(chunks)));
+    stream.resume();
+  });
+}
+
 export default function ArchiveModal({ isOpen, onClose, material }) {
   const [files, setFiles] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [zipObject, setZipObject] = useState(null);
+  const [downloadError, setDownloadError] = useState("");
 
   useEffect(() => {
     if (isOpen && material) {
@@ -30,6 +61,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
     setError(null);
     setFiles([]);
     setZipObject(null);
+    setDownloadError("");
 
     try {
       const fileType = material.fileType?.toLowerCase();
@@ -115,7 +147,8 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
         return;
       }
 
-      const content = await zipFile.async("blob");
+      setDownloadError("");
+      const content = await inflateCapped(zipFile, MAX_ENTRY_BYTES);
       const url = URL.createObjectURL(content);
       const link = document.createElement("a");
       link.href = url;
@@ -126,6 +159,11 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
       URL.revokeObjectURL(url);
     } catch (err) {
       console.error("Gabim gjatë shkarkimit:", err);
+      setDownloadError(
+        err?.message === "entry-too-large"
+          ? "Ky skedar është shumë i madh për t'u hapur këtu. Shkarkoni arkivin e plotë."
+          : "Skedari nuk mund të shkarkohej nga arkivi."
+      );
     }
   };
 
@@ -193,6 +231,12 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
               <AlertCircle className="w-12 h-12 text-srh-crimson mb-4" />
               <p className="text-srh-navy/70 text-center">{error}</p>
             </div>
+          )}
+
+          {downloadError && (
+            <p role="alert" className="mb-3 rounded-lg bg-burgundy-50 p-3 text-sm font-semibold text-burgundy-600">
+              {downloadError}
+            </p>
           )}
 
           {!loading && !error && files.length > 0 && (

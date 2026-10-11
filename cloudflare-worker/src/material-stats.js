@@ -20,7 +20,7 @@ function utcWeekKey(date = new Date()) {
 
 export async function hashVisitorIdentity(ip, _sessionId, secret) {
   // Ignore client-supplied session ids — they were rotatable and inflated stats.
-  const data = new TextEncoder().encode(`${ip}:${secret || "stats"}`);
+  const data = new TextEncoder().encode(`visitor:${ip}:${secret || "stats"}`);
   const digest = await crypto.subtle.digest("SHA-256", data);
   return Array.from(new Uint8Array(digest))
     .map((byte) => byte.toString(16).padStart(2, "0"))
@@ -34,7 +34,11 @@ export function buildDedupeKey(eventType, materialId, visitorHash, date = new Da
   return `${eventType}:${materialId}:${visitorHash}:${bucket}`;
 }
 
+let statEventsTableChecked = false;
+
 export async function ensureMaterialStatEventsTable(env) {
+  if (statEventsTableChecked) return;
+  statEventsTableChecked = true;
   await env.DB.prepare(
     `CREATE TABLE IF NOT EXISTS material_stat_events (
       dedupe_key TEXT PRIMARY KEY,
@@ -102,7 +106,7 @@ export async function trackMaterialEventById(request, env, eventType, materialId
   }
 
   const ip = visitorClientIp(request);
-  const visitorHash = await hashVisitorIdentity(ip, sessionId, env.JWT_SECRET);
+  const visitorHash = await hashVisitorIdentity(ip, sessionId, env.HASH_SECRET || env.JWT_SECRET);
   const dedupeKey = buildDedupeKey(eventType, materialId, visitorHash);
   const inserted = await recordMaterialStatEvent(env, {
     eventType,

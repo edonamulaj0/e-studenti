@@ -94,11 +94,20 @@ export function materialMatchesPublic(material, { faculty, type, q, studyLevel }
     .some((value) => String(value).toLowerCase().includes(needle));
 }
 
+/**
+ * LIKE pattern matching `q` as plain text. `%` and `_` in the search term are
+ * escaped so they match themselves instead of acting as wildcards (a lone "%"
+ * would otherwise match every row).
+ */
+export function likePattern(q) {
+  return `%${String(q).replace(/[\\%_]/g, "\\$&")}%`;
+}
+
 export function buildPublicSearchClause(q) {
   if (!q) return { clause: null, params: [] };
   return {
     clause:
-      "(m.title LIKE ? OR m.subject LIKE ? OR m.teacher LIKE ? OR (COALESCE(m.is_anonymous, 0) = 0 AND (u.name LIKE ? OR COALESCE(u.surname, '') LIKE ?)))",
-    params: [`%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`, `%${q}%`],
+      "(m.title LIKE ? ESCAPE '\\' OR m.subject LIKE ? ESCAPE '\\' OR m.teacher LIKE ? ESCAPE '\\' OR (COALESCE(m.is_anonymous, 0) = 0 AND (u.name LIKE ? ESCAPE '\\' OR COALESCE(u.surname, '') LIKE ? ESCAPE '\\')))",
+    params: Array(5).fill(likePattern(q)),
   };
 }

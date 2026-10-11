@@ -118,3 +118,37 @@ export function blockUnsafeLinkClick(event) {
     event.stopPropagation();
   }
 }
+
+const SHEET_TAGS = new Set(["TABLE", "THEAD", "TBODY", "TFOOT", "TR", "TD", "TH"]);
+
+/**
+ * Rebuilds SheetJS's HTML output from an allowlist: table elements only, with
+ * just numeric colspan/rowspan carried over and every cell's content reduced to
+ * plain text. Nothing from the uploaded workbook (links, attributes, markup)
+ * reaches the page as HTML. Returns a serialized string safe to inject.
+ */
+export function cleanSheetHtml(html) {
+  const source = new DOMParser().parseFromString(String(html ?? ""), "text/html");
+  const out = document.implementation.createHTMLDocument("");
+
+  const copy = (node) => {
+    const el = out.createElement(node.tagName.toLowerCase());
+    if (node.tagName === "TD" || node.tagName === "TH") {
+      for (const attr of ["colspan", "rowspan"]) {
+        const value = Number.parseInt(node.getAttribute(attr) ?? "", 10);
+        if (value > 1 && value <= 1000) el.setAttribute(attr, String(value));
+      }
+      el.textContent = node.textContent;
+      return el;
+    }
+    for (const child of node.children) {
+      if (SHEET_TAGS.has(child.tagName)) el.appendChild(copy(child));
+    }
+    return el;
+  };
+
+  const tables = Array.from(source.body.querySelectorAll("table")).map(copy);
+  const holder = out.createElement("div");
+  tables.forEach((table) => holder.appendChild(table));
+  return holder.innerHTML;
+}

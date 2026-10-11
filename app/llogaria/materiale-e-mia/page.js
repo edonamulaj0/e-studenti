@@ -61,16 +61,22 @@ function MaterialeEMiaPage() {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch(`${WORKER_URL}/?action=materials&user=me`, {
-        credentials: "include",
-      });
-      if (res.status === 401) {
-        router.push("/llogaria/hyr");
-        return;
+      // The API returns at most 100 per page; follow it so nothing is hidden.
+      const all = [];
+      for (let page = 1; page <= 50; page += 1) {
+        const res = await fetch(
+          `${WORKER_URL}/?action=materials&user=me&limit=100&page=${page}`,
+          { credentials: "include" }
+        );
+        if (res.status === 401) {
+          router.push("/llogaria/hyr");
+          return;
+        }
+        const data = await res.json().catch(() => ({}));
+        if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
+        all.push(...(data.materials || []).map(normalizeMaterial));
+        if (!data.pagination?.hasNextPage) break;
       }
-      const data = await res.json().catch(() => ({}));
-      if (!res.ok) throw new Error(data.error || "Ngarkimi dështoi.");
-      const all = (data.materials || []).map(normalizeMaterial);
       const mine = currentUser
         ? all.filter((m) => String(m.userId) === String(currentUser.id))
         : all;

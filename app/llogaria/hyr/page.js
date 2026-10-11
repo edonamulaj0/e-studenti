@@ -103,7 +103,7 @@ export default function HyrPage() {
             </div>
             <div className="rounded-3xl bg-white/10 p-6 backdrop-blur">
               <Users className="mb-3 h-6 w-6 text-burgundy-50" />
-              <p className="text-lg font-semibold">500+ studentë aktiv</p>
+              <p className="text-lg font-semibold">Nga komuniteti, për çdo student</p>
               <p className="mt-2 text-sm leading-relaxed text-white/65">
                 Shfleto, ruaj dhe menaxho materialet që ndihmojnë komunitetin.
               </p>

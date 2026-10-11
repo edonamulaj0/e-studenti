@@ -23,7 +23,7 @@ const fadeUp = {
   transition: { duration: 0.5, ease: [0.22, 1, 0.36, 1] },
 };
 
-export default function HomeClient() {
+export default function HomeClient({ latest = [] }) {
   return (
     <div className="relative bg-cream-50">
       <section className="viewport-section relative isolate overflow-hidden bg-gradient-to-br from-cream-50 via-beige-100 to-white">
@@ -70,35 +70,37 @@ export default function HomeClient() {
             </div>
           </motion.div>
 
-          <motion.div
-            {...fadeUp}
-            transition={{ ...fadeUp.transition, delay: 0.1 }}
-            className="relative hidden lg:block"
-          >
-            <div className="surface-card ml-auto max-w-md p-6">
-              <div className="mb-5 flex items-center justify-between">
-                <span className="rounded-full bg-navy-100 px-3 py-1 text-sm font-semibold text-navy-800">
-                  Semestri aktiv
-                </span>
-                <Sparkles className="h-5 w-5 text-burgundy-600" />
+          {latest.length > 0 && (
+            <motion.div
+              {...fadeUp}
+              transition={{ ...fadeUp.transition, delay: 0.1 }}
+              className="relative hidden lg:block"
+            >
+              <div className="surface-card ml-auto max-w-md p-6">
+                <div className="mb-5 flex items-center justify-between">
+                  <span className="rounded-full bg-navy-100 px-3 py-1 text-sm font-semibold text-navy-800">
+                    Të ngarkuarat së fundi
+                  </span>
+                  <Sparkles className="h-5 w-5 text-burgundy-600" aria-hidden="true" />
+                </div>
+                <ul className="space-y-3">
+                  {latest.map((item) => (
+                    <li key={item.id}>
+                      <Link
+                        href={`/materialet/${item.slug}`}
+                        className="block rounded-2xl border border-gray-200 bg-white p-4 shadow-sm transition-colors hover:border-burgundy-600/40"
+                      >
+                        <p className="text-lg font-semibold text-navy-900">{item.title}</p>
+                        {item.subtitle && (
+                          <p className="mt-1 text-sm text-gray-600">{item.subtitle}</p>
+                        )}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
               </div>
-              <div className="space-y-3">
-                {["Algoritme", "Financa", "Psikologji"].map((item, index) => (
-                  <div
-                    key={item}
-                    className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
-                  >
-                    <p className="text-xs font-semibold uppercase tracking-widest text-gray-400">
-                      Material #{index + 1}
-                    </p>
-                    <p className="mt-1 text-lg font-semibold text-navy-900">
-                      {item}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </motion.div>
+            </motion.div>
+          )}
         </div>
       </section>
 
