@@ -61,7 +61,7 @@ export default async function MaterialDetailPage({ params }) {
     return (
       <div className="page-shell">
         <div className="surface-card mx-auto max-w-2xl p-10 text-center">
-          <FileText className="mx-auto mb-5 h-16 w-16 text-gray-400" />
+          <FileText className="mx-auto mb-5 h-16 w-16 text-gray-500" />
           <h1 className="mb-4 font-display text-3xl font-bold text-navy-900">
             Materiali nuk u gjet
           </h1>

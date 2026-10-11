@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { MotionConfig, motion } from "framer-motion";
 import {
   Shield,
   Sparkles,
@@ -25,6 +25,7 @@ const fadeUp = {
 
 export default function HomeClient({ latest = [] }) {
   return (
+    <MotionConfig reducedMotion="user">
     <div className="relative bg-cream-50">
       <section className="viewport-section relative isolate overflow-hidden bg-gradient-to-br from-cream-50 via-beige-100 to-white">
         <div
@@ -122,19 +123,19 @@ export default function HomeClient({ latest = [] }) {
                 icon: Shield,
                 title: "Transparencë",
                 text: "Kodi është i hapët; shihni si funksionon platforma.",
-                tone: "bg-info-blue/10 text-info-blue",
+                tone: "bg-info-blue/10 text-info-text",
               },
               {
                 icon: Sparkles,
                 title: "Pa gjurmë personale",
                 text: "Nuk kërkojmë llogari për të shfletuar materialet.",
-                tone: "bg-success-green/10 text-success-green",
+                tone: "bg-success-green/10 text-success-text",
               },
               {
                 icon: Users,
                 title: "Për autorët",
                 text: "Kërkesat për heqje të përmbajtjes trajtohen seriozisht.",
-                tone: "bg-warning-amber/10 text-warning-amber",
+                tone: "bg-warning-amber/10 text-warning-text",
               },
             ].map((item, i) => (
               <motion.div
@@ -178,21 +179,21 @@ export default function HomeClient({ latest = [] }) {
                 title: "Për Aplikantët",
                 text: "Materiale nga studentët e mëparshëm për t'ju ndihmuar të përgatiteni.",
                 href: "/per-aplikantet",
-                tone: "bg-warning-amber/10 text-warning-amber",
+                tone: "bg-warning-amber/10 text-warning-text",
               },
               {
                 icon: Building2,
                 title: "Fakultetet",
                 text: "Informacion dhe materiale sipas fakultetit.",
                 href: "/fakultetet",
-                tone: "bg-info-blue/10 text-info-blue",
+                tone: "bg-info-blue/10 text-info-text",
               },
               {
                 icon: BookOpen,
                 title: "Materialet",
                 text: "Katalog i plotë i shënimeve, afateve dhe projekteve.",
                 href: "/materialet",
-                tone: "bg-success-green/10 text-success-green",
+                tone: "bg-success-green/10 text-success-text",
               },
               {
                 icon: Link2,
@@ -274,5 +275,6 @@ export default function HomeClient({ latest = [] }) {
         </motion.div>
       </section>
     </div>
+    </MotionConfig>
   );
 }

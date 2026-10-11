@@ -146,7 +146,7 @@ export default function RegjistrohuPage() {
                 className={`rounded-2xl border p-3 text-sm font-semibold ${
                   active || done
                     ? "border-burgundy-600/20 bg-burgundy-50 text-burgundy-600"
-                    : "border-gray-200 bg-white text-gray-400"
+                    : "border-gray-200 bg-white text-gray-500"
                 }`}
               >
                 <span className="mb-2 flex h-7 w-7 items-center justify-center rounded-full bg-white">
@@ -164,6 +164,7 @@ export default function RegjistrohuPage() {
               <Field label="Emri" icon={User}>
                 <input
                   required
+                  autoComplete="given-name"
                   value={form.name}
                   onChange={(e) => update("name", e.target.value)}
                   className="input-srh pl-12"
@@ -172,6 +173,7 @@ export default function RegjistrohuPage() {
               <Field label="Mbiemri" icon={User}>
                 <input
                   required
+                  autoComplete="family-name"
                   value={form.surname}
                   onChange={(e) => update("surname", e.target.value)}
                   className="input-srh pl-12"
@@ -181,6 +183,7 @@ export default function RegjistrohuPage() {
                 <input
                   required
                   type="email"
+                  autoComplete="email"
                   value={form.email}
                   onChange={(e) => update("email", e.target.value)}
                   className="input-srh pl-12"
@@ -211,6 +214,7 @@ export default function RegjistrohuPage() {
                 <input
                   required
                   inputMode="numeric"
+                  autoComplete="one-time-code"
                   maxLength={6}
                   value={code}
                   onChange={(e) =>
@@ -252,7 +256,7 @@ function Field({ label, icon: Icon, children }) {
       <span className="mb-1.5 block text-sm font-semibold text-navy-900">{label}</span>
       <span className="relative block">
         {Icon ? (
-          <Icon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+          <Icon className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
         ) : null}
         {children}
       </span>
@@ -261,7 +265,7 @@ function Field({ label, icon: Icon, children }) {
 }
 
 function Status({ error, message }) {
-  if (error) return <p className="rounded-2xl bg-burgundy-50 p-4 text-sm font-semibold text-burgundy-600">{error}</p>;
-  if (message) return <p className="rounded-2xl bg-success-green/10 p-4 text-sm font-semibold text-success-green">{message}</p>;
+  if (error) return <p role="alert" className="rounded-2xl bg-burgundy-50 p-4 text-sm font-semibold text-burgundy-600">{error}</p>;
+  if (message) return <p role="status" className="rounded-2xl bg-success-green/10 p-4 text-sm font-semibold text-success-text">{message}</p>;
   return null;
 }

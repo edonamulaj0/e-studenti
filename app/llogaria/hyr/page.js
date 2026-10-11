@@ -129,10 +129,11 @@ export default function HyrPage() {
                   Email
                 </span>
                 <span className="relative block">
-                  <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Mail className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
                 <input
                   required
                   type="email"
+                  autoComplete="email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="input-srh pl-12"
@@ -168,10 +169,11 @@ export default function HyrPage() {
                   Kodi 6-shifror
                 </span>
                 <span className="relative block">
-                  <KeyRound className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <KeyRound className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
                 <input
                   required
                   inputMode="numeric"
+                  autoComplete="one-time-code"
                   maxLength={6}
                   value={code}
                   onChange={(e) =>
@@ -209,7 +211,7 @@ export default function HyrPage() {
 }
 
 function Status({ error, message }) {
-  if (error) return <p className="rounded-2xl bg-burgundy-50 p-4 text-sm font-semibold text-burgundy-600">{error}</p>;
-  if (message) return <p className="rounded-2xl bg-success-green/10 p-4 text-sm font-semibold text-success-green">{message}</p>;
+  if (error) return <p role="alert" className="rounded-2xl bg-burgundy-50 p-4 text-sm font-semibold text-burgundy-600">{error}</p>;
+  if (message) return <p role="status" className="rounded-2xl bg-success-green/10 p-4 text-sm font-semibold text-success-text">{message}</p>;
   return null;
 }

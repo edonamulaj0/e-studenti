@@ -64,7 +64,7 @@ export default function NotFound() {
   };
 
   return (
-    <div className="pt-16 min-h-screen bg-srh-paper flex items-center justify-center">
+    <div className="pt-16 min-h-[70vh] bg-srh-paper flex items-center justify-center">
       <div
         className="container mx-auto px-4"
         style={{
@@ -73,7 +73,7 @@ export default function NotFound() {
       >
         <div className="max-w-2xl mx-auto text-center">
           <div className="mb-8">
-            <h1 className="font-playfair text-9xl font-bold text-srh-crimson mb-4 animate-pulse">
+            <h1 className="font-playfair text-9xl font-bold text-srh-crimson mb-4">
               404
             </h1>
             <div className="flex justify-center mb-6">
@@ -102,7 +102,7 @@ export default function NotFound() {
             <button
               type="button"
               onClick={() => window.history.back()}
-              className="flex items-center justify-center px-6 py-3 bg-srh-crimson text-white rounded-lg hover:bg-[#5e1621] transition-colors font-medium"
+              className="flex items-center justify-center px-6 py-3 bg-srh-crimson text-white rounded-lg hover:bg-burgundy-700 transition-colors font-medium"
             >
               <Home className="w-5 h-5 mr-2" />
               Kthehu mbrapa

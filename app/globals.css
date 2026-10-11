@@ -65,15 +65,43 @@
   a, button, input, select, textarea {
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* Keyboard focus must always be visible. Components that draw their own ring
+     (inputs, .btn) override this with a utility class. */
+  :focus-visible {
+    outline: 2px solid var(--burgundy-600);
+    outline-offset: 2px;
+  }
+}
+
+/* Honour the OS "reduce motion" setting: no smooth scrolling, no hover lifts,
+   no looping pulses. Essential state changes still happen, just instantly. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .hover\:-translate-y-0\.5:hover,
+  .hover\:-translate-y-1:hover {
+    transform: none !important;
+  }
 }
 
 @layer components {
   .input-srh {
-    @apply w-full min-h-[48px] rounded-xl border border-gray-200 bg-white/90 px-4 text-base text-navy-900 outline-none transition-all placeholder:text-gray-400 focus:border-burgundy-600 focus:ring-4 focus:ring-burgundy-600/15;
+    @apply w-full min-h-[48px] rounded-xl border border-gray-200 bg-white/90 px-4 text-base text-navy-900 outline-none transition-all placeholder:text-gray-500 focus:border-burgundy-600 focus:ring-4 focus:ring-burgundy-600/15;
   }
 
   .page-shell {
-    min-height: calc(100dvh - 4.25rem);
     @apply bg-cream-50 px-6 py-14 md:px-12 md:py-20;
   }
 
@@ -92,10 +120,6 @@
   }
 
   @media (min-width: 768px) {
-    .page-shell {
-      min-height: calc(100dvh - 5rem);
-    }
-
     .viewport-section,
     .viewport-section-start {
       min-height: calc(100dvh - 5rem);

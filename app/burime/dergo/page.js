@@ -70,7 +70,7 @@ export default function DergoBurimPage() {
 
         {status === "success" ? (
           <div className="surface-card p-8 text-center">
-            <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-success-green" />
+            <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-success-text" />
             <h2 className="mb-3 text-2xl font-bold text-navy-900">
               Lidhja u dërgua për moderim
             </h2>

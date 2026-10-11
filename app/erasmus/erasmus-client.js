@@ -104,7 +104,7 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
           <p className="page-subtitle mb-5 max-w-2xl">
             Njoftime nga faqja e mundësive të UP që përmbajnë &quot;Erasmus&quot;.
           </p>
-          <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-400">
+          <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500">
             Të dhënat e eksportuara:{" "}
             <time dateTime={generatedAt}>{formatGeneratedAt(generatedAt)}</time>
           </p>
@@ -113,7 +113,7 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
         <div className="mb-10">
           <div className="grid gap-3 md:grid-cols-[1.4fr_0.8fr_0.8fr]">
             <label className="relative">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
               <input
                 type="search"
                 value={q}
@@ -183,7 +183,7 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
 
         {filtered.length === 0 && (
           <div className="surface-card mx-auto max-w-xl p-10 text-center">
-            <Globe className="mx-auto mb-4 h-12 w-12 text-gray-400" />
+            <Globe className="mx-auto mb-4 h-12 w-12 text-gray-500" />
             <h2 className="text-2xl font-semibold text-navy-900">Nuk u gjet asgjë</h2>
             <p className="mt-2 text-gray-600">
               Provoni të ndryshoni kërkimin, vendin ose muajin.

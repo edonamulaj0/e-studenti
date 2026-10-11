@@ -19,20 +19,20 @@ const TYPE_TONES = [
   {
     match: "ligjerata",
     card: "border-info-blue/35 hover:border-info-blue/60",
-    icon: "bg-info-blue/10 text-info-blue",
-    chip: "bg-info-blue/10 text-info-blue",
+    icon: "bg-info-blue/10 text-info-text",
+    chip: "bg-info-blue/10 text-info-text",
   },
   {
     match: "afat",
     card: "border-warning-amber/45 hover:border-warning-amber/70",
-    icon: "bg-warning-amber/10 text-warning-amber",
-    chip: "bg-warning-amber/10 text-warning-amber",
+    icon: "bg-warning-amber/10 text-warning-text",
+    chip: "bg-warning-amber/10 text-warning-text",
   },
   {
     match: "projekt",
     card: "border-success-green/35 hover:border-success-green/60",
-    icon: "bg-success-green/10 text-success-green",
-    chip: "bg-success-green/10 text-success-green",
+    icon: "bg-success-green/10 text-success-text",
+    chip: "bg-success-green/10 text-success-text",
   },
   {
     match: "lib",
@@ -146,11 +146,11 @@ export default function MaterialCard({ material, allMaterials = [] }) {
             of card height for two short values. */}
         <div className="mb-3 space-y-0.5 text-sm">
           <p className="truncate">
-            <span className="text-gray-400">Lënda:</span>{" "}
+            <span className="text-gray-500">Lënda:</span>{" "}
             <span className="font-semibold text-navy-900">{material.subject}</span>
           </p>
           <p className="truncate">
-            <span className="text-gray-400">Autor/e:</span>{" "}
+            <span className="text-gray-500">Autor/e:</span>{" "}
             <span className="font-semibold text-navy-900">{displayTeacher(material)}</span>
           </p>
         </div>
@@ -159,7 +159,7 @@ export default function MaterialCard({ material, allMaterials = [] }) {
           <ReportButton materialId={material.id} materialTitle={material.title} materialUrl={material.r2Url} />
           <div className="flex min-w-0 flex-col items-end gap-1">
             {material.submittedBy?.name && (
-              <span className="truncate text-sm text-gray-400">
+              <span className="truncate text-sm text-gray-500">
                 {material.submittedBy.name}
               </span>
             )}

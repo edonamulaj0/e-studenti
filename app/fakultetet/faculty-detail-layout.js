@@ -57,7 +57,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
   const deptCount = departments.length;
 
   return (
-    <div className="pt-16 min-h-screen bg-srh-paper pb-20">
+    <div className="pt-16 bg-srh-paper pb-20">
       <div className="container mx-auto px-4 max-w-4xl py-8 md:py-10">
         <Link
           href="/fakultetet"
@@ -103,7 +103,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                   <BookOpen className="w-5 h-5" aria-hidden />
                 </span>
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/50">
+                  <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/70">
                     Departamente
                   </p>
                   <p className="font-extrabold text-srh-navy text-xl tabular-nums">
@@ -117,7 +117,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                     <Award className="w-5 h-5" aria-hidden />
                   </span>
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/50">
+                    <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/70">
                       Themeluar
                     </p>
                     <p className="font-extrabold text-srh-navy text-xl">
@@ -132,7 +132,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                     <MapPin className="w-5 h-5" aria-hidden />
                   </span>
                   <div>
-                    <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/50">
+                    <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/70">
                       Vendndodhja
                     </p>
                     <p className="font-semibold text-srh-navy leading-snug">
@@ -165,7 +165,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                   aria-hidden
                 />
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/50">
+                  <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/70">
                     Email
                   </p>
                   <p className="font-semibold text-srh-crimson break-all">
@@ -184,7 +184,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                   aria-hidden
                 />
                 <div>
-                  <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/50">
+                  <p className="text-xs font-bold uppercase tracking-wide text-srh-navy/70">
                     Telefon
                   </p>
                   <p className="font-semibold text-srh-navy">{phone}</p>
@@ -225,7 +225,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link
             href={`/materialet?faculty=${materialsQuery}`}
-            className="inline-flex items-center justify-center rounded-xl bg-srh-crimson text-white px-8 py-3.5 text-lg font-bold hover:bg-[#5e1621] transition-colors"
+            className="inline-flex items-center justify-center rounded-xl bg-srh-crimson text-white px-8 py-3.5 text-lg font-bold hover:bg-burgundy-700 transition-colors"
           >
             Materialet për këtë fakultet
           </Link>

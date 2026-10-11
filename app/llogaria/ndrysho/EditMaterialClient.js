@@ -94,7 +94,7 @@ export default function EditMaterialClient({ id }) {
   };
 
   return (
-    <div className="min-h-screen bg-srh-paper px-4 py-12">
+    <div className="bg-srh-paper px-4 py-12">
       <div className="mx-auto max-w-3xl">
         <header className="mb-8 text-center">
           <h1 className="font-playfair text-4xl md:text-5xl font-black text-srh-navy">
@@ -122,7 +122,7 @@ export default function EditMaterialClient({ id }) {
                     <span className="relative">
                       <button
                         type="button"
-                        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-srh-navy/15 text-[10px] font-bold text-srh-navy/60 hover:bg-srh-navy/25 focus:outline-none"
+                        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-srh-navy/15 text-[10px] font-bold text-srh-navy/70 hover:bg-srh-navy/25 focus:outline-none"
                         onMouseEnter={() => setTitleTooltip(true)}
                         onMouseLeave={() => setTitleTooltip(false)}
                         onFocus={() => setTitleTooltip(true)}
@@ -229,7 +229,7 @@ export default function EditMaterialClient({ id }) {
             <button
               type="submit"
               disabled={saving}
-              className="w-full rounded-xl bg-srh-crimson py-4 text-lg font-bold text-white hover:bg-[#5e1621] disabled:opacity-60"
+              className="w-full rounded-xl bg-srh-crimson py-4 text-lg font-bold text-white hover:bg-burgundy-700 disabled:opacity-60"
             >
               {saving ? "Duke ruajtur..." : "Ruaj ndryshimet"}
             </button>
