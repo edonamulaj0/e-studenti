@@ -6,7 +6,8 @@ import { useRouter } from "next/navigation";
 import { CheckCircle2, Pause, Play, RotateCw, Trash2, Upload } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
-import { FACULTIES, MATERIAL_TYPES } from "../../lib/material-options";
+import { DEFAULT_UNIVERSITY, MATERIAL_TYPES, facultiesFor } from "../../lib/material-options";
+import { UNIVERSITIES } from "../../lib/placement";
 import { STUDY_LEVELS } from "../../lib/study-levels";
 import {
   ALLOWED_EXTENSIONS,
@@ -33,6 +34,7 @@ const NETWORK_ERROR =
   "Lidhja me serverin u ndërpre gjatë ngarkimit. Kontrolloni internetin dhe provoni përsëri.";
 
 const initialDefaults = {
+  university: DEFAULT_UNIVERSITY,
   faculty: "",
   department: "",
   subject: "",
@@ -415,14 +417,32 @@ export default function NgarkoPage() {
               </p>
               <div className="mt-4 grid gap-4 md:grid-cols-3">
                 <label className="block text-sm font-semibold text-srh-navy">
-                  Fakulteti <span className="text-srh-crimson">*</span>
+                  Universiteti <span className="text-srh-crimson">*</span>
+                  <select
+                    value={defaults.university}
+                    onChange={(e) =>
+                      // A different university has a different list, so the old choice no longer applies.
+                      setDefaults((current) => ({ ...current, university: e.target.value, faculty: "" }))
+                    }
+                    className="input-srh mt-1"
+                  >
+                    {UNIVERSITIES.map((university) => (
+                      <option key={university.slug} value={university.slug}>
+                        {university.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-semibold text-srh-navy">
+                  {defaults.university === DEFAULT_UNIVERSITY ? "Fakulteti" : "Fusha e studimit"}{" "}
+                  <span className="text-srh-crimson">*</span>
                   <select
                     value={defaults.faculty}
                     onChange={(e) => setDefault("faculty", e.target.value)}
                     className="input-srh mt-1"
                   >
                     <option value="">Zgjidhni</option>
-                    {FACULTIES.map((faculty) => (
+                    {facultiesFor(defaults.university).map((faculty) => (
                       <option key={faculty.code} value={faculty.code}>
                         {faculty.name}
                       </option>

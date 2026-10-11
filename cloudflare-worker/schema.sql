@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS materials (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id),
   title TEXT NOT NULL,
+  university TEXT NOT NULL DEFAULT 'universiteti-i-prishtines-hasan-prishtina',
   faculty TEXT NOT NULL,
   department TEXT DEFAULT '//',
   subject TEXT NOT NULL,
@@ -63,6 +64,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_materials_client_upload
   ON materials(user_id, client_upload_id) WHERE client_upload_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_materials_user ON materials(user_id);
 CREATE INDEX IF NOT EXISTS idx_materials_faculty ON materials(faculty);
+CREATE INDEX IF NOT EXISTS idx_materials_university ON materials(university);
 
 CREATE TABLE IF NOT EXISTS material_stat_events (
   dedupe_key TEXT PRIMARY KEY,

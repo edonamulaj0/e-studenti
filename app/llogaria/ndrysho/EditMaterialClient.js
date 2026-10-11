@@ -4,10 +4,12 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
-import { FACULTIES, MATERIAL_TYPES } from "../../lib/material-options";
+import { DEFAULT_UNIVERSITY, MATERIAL_TYPES, facultiesFor } from "../../lib/material-options";
+import { UNIVERSITIES } from "../../lib/placement";
 
 const emptyForm = {
   title: "",
+  university: DEFAULT_UNIVERSITY,
   faculty: "",
   department: "",
   subject: "",
@@ -45,6 +47,7 @@ export default function EditMaterialClient({ id }) {
         const material = data.material;
         setForm({
           title: material.title || "",
+          university: material.university || DEFAULT_UNIVERSITY,
           faculty: material.faculty || "",
           department: material.department || "",
           subject: material.subject || "",
@@ -154,8 +157,23 @@ export default function EditMaterialClient({ id }) {
                 />
               </label>
 
-              {/* Faculty — always visible */}
-              <Field label="Fakulteti" required>
+              <Field label="Universiteti" required>
+                <select
+                  required
+                  value={form.university}
+                  onChange={(e) => setForm((current) => ({ ...current, university: e.target.value, faculty: "" }))}
+                  className="input-srh"
+                >
+                  {UNIVERSITIES.map((university) => (
+                    <option key={university.slug} value={university.slug}>
+                      {university.name}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+
+              {/* Faculty (University of Prishtina) or study field — always visible */}
+              <Field label={form.university === DEFAULT_UNIVERSITY ? "Fakulteti" : "Fusha e studimit"} required>
                 <select
                   required
                   value={form.faculty}
@@ -163,7 +181,7 @@ export default function EditMaterialClient({ id }) {
                   className="input-srh"
                 >
                   <option value="">Zgjidhni</option>
-                  {FACULTIES.map((faculty) => (
+                  {facultiesFor(form.university).map((faculty) => (
                     <option key={faculty.code} value={faculty.code}>
                       {faculty.name}
                     </option>

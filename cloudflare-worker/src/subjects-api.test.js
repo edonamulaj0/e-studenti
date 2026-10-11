@@ -32,7 +32,7 @@ function makeEnv({ email = "student@example.com", rows = ROWS.map((r) => ({ ...r
         bind: (...a) => ((args = a), st),
         async run() {
           if (/UPDATE materials SET subject/.test(sql)) {
-            const [target, faculty, ...spellings] = args;
+            const [target, , faculty, ...spellings] = args;
             let n = 0;
             for (const r of rows) if (r.faculty === faculty && spellings.includes(r.subject)) { r.subject = target; n += 1; }
             log.updates.push({ target, faculty, spellings });
@@ -45,15 +45,15 @@ function makeEnv({ email = "student@example.com", rows = ROWS.map((r) => ({ ...r
           return null;
         },
         async all() {
-          if (/FROM materials WHERE status = 'approved'/.test(sql) && /SELECT id, faculty, subject/.test(sql)) {
+          if (/FROM materials WHERE status = 'approved'/.test(sql) && /SELECT id, university, faculty, subject/.test(sql)) {
             return { results: rows.filter((r) => r.status === "approved") };
           }
           if (/SELECT id, title, faculty FROM materials WHERE status/.test(sql)) {
             return { results: rows.filter((r) => r.status === "approved") };
           }
-          if (/SELECT id, faculty, subject, type, teacher FROM materials/.test(sql)) return { results: rows };
-          if (/SELECT DISTINCT subject FROM materials WHERE faculty/.test(sql)) {
-            return { results: [...new Set(rows.filter((r) => r.faculty === args[0]).map((r) => r.subject))].map((subject) => ({ subject })) };
+          if (/SELECT id, university, faculty, subject, type, teacher FROM materials/.test(sql)) return { results: rows };
+          if (/SELECT DISTINCT subject FROM materials WHERE university = \? AND faculty/.test(sql)) {
+            return { results: [...new Set(rows.filter((r) => r.faculty === args[1]).map((r) => r.subject))].map((subject) => ({ subject })) };
           }
           if (/FROM materials m LEFT JOIN users u/.test(sql) && /m\.id IN/.test(sql)) {
             return { results: rows.filter((r) => args.includes(r.id) && r.status === "approved").map((r) => ({ ...r, uploader_name: "Ana Beri", uploader_trusted: 1, is_anonymous: r.id === 3 ? 1 : 0 })) };

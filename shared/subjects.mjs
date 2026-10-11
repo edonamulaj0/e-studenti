@@ -1,4 +1,5 @@
 import { facultySlug, slugify } from "./material-slug.mjs";
+import { DEFAULT_UNIVERSITY, universityTag } from "./placement.mjs";
 
 /**
  * Subjects ("Lënda") are typed by hand on upload, so the same course arrives
@@ -27,9 +28,13 @@ export function subjectKey(value) {
   return slugify(normalizeSubjectName(value));
 }
 
-/** URL slug of a subject page: the key plus the faculty, e.g. "anatomi-med". */
-export function subjectSlug(faculty, subject) {
-  return `${subjectKey(subject)}-${facultySlug(faculty)}`;
+/**
+ * URL slug of a subject page: the key plus the faculty, e.g. "anatomi-med". Other
+ * universities than the default add their own tag, e.g. "algoritme-inf-ubt".
+ */
+export function subjectSlug(faculty, subject, university) {
+  const tag = universityTag(university);
+  return `${subjectKey(subject)}-${facultySlug(faculty)}${tag ? `-${tag}` : ""}`;
 }
 
 /** Order in which material types appear on a subject page: exams first. */
@@ -42,8 +47,8 @@ export function typeRank(type) {
 
 /**
  * Groups material rows into subjects.
- * @param {{ id?: number, faculty: string, subject: string, type?: string, teacher?: string, created_at?: string }[]} rows
- * @returns {{ slug: string, faculty: string, key: string, name: string, count: number,
+ * @param {{ id?: number, university?: string, faculty: string, subject: string, type?: string, teacher?: string, created_at?: string }[]} rows
+ * @returns {{ slug: string, university: string, faculty: string, key: string, name: string, count: number,
  *             variants: { name: string, count: number }[], teachers: string[],
  *             types: Record<string, number>, ids: number[] }[]}
  */
@@ -54,11 +59,13 @@ export function groupSubjects(rows) {
     const key = subjectKey(row.subject);
     if (!key) continue;
     const faculty = String(row.faculty || "").toUpperCase();
-    const id = `${faculty}|${key}`;
+    const university = row.university || DEFAULT_UNIVERSITY;
+    const id = `${university}|${faculty}|${key}`;
     let group = groups.get(id);
     if (!group) {
       group = {
-        slug: subjectSlug(faculty, row.subject),
+        slug: subjectSlug(faculty, row.subject, university),
+        university,
         faculty,
         key,
         name: "",
@@ -93,6 +100,7 @@ export function groupSubjects(rows) {
         );
       return {
         slug: group.slug,
+        university: group.university,
         faculty: group.faculty,
         key: group.key,
         name: variants[0].name,

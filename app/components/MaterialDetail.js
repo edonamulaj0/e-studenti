@@ -1,3 +1,4 @@
+import { DEFAULT_UNIVERSITY, universityShort } from "../lib/placement";
 import Link from "next/link";
 import ReportButton from "./ReportButton";
 import MaterialViewTracker from "./MaterialViewTracker";
@@ -21,6 +22,7 @@ function displayTeacher(teacher) {
  */
 export default function MaterialDetail({ material, slug }) {
   const facultyName = getFacultyName(material.faculty);
+  const universityName = universityShort(material.university || DEFAULT_UNIVERSITY);
   const studyLevelLabel = getStudyLevelLabel(material.study_level || "bachelor");
 
   return (
@@ -42,7 +44,7 @@ export default function MaterialDetail({ material, slug }) {
         <article className="surface-card p-6 md:p-10">
           <div className="mb-6 flex flex-wrap gap-2">
             <span className="rounded-full bg-navy-100 px-3 py-1 text-sm font-semibold text-navy-800">
-              {facultyName}
+              {universityName} · {facultyName}
             </span>
             <span className="rounded-full bg-burgundy-50 px-3 py-1 text-sm font-semibold text-burgundy-600">
               {material.type}

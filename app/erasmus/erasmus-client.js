@@ -1,5 +1,6 @@
 "use client";
 
+import { compareText } from "../lib/directory";
 import { useMemo, useState } from "react";
 import {
   ExternalLink,
@@ -17,15 +18,10 @@ function formatDate(iso) {
 }
 
 function formatGeneratedAt(iso) {
-  if (!iso) return "";
-  try {
-    return new Intl.DateTimeFormat("sq-AL", {
-      dateStyle: "medium",
-      timeStyle: "short",
-    }).format(new Date(iso));
-  } catch {
-    return iso;
-  }
+  // Fixed format: Intl's "sq-AL" output differs between the static build (Node) and the
+  // browser, which made React reject the server HTML.
+  const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(iso || "");
+  return m ? `${m[3]}.${m[2]}.${m[1]}` : iso || "";
 }
 
 function isListingOnlyUrl(href) {
@@ -70,7 +66,7 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
 
   const countryOptions = useMemo(() => {
     const set = new Set(calls.map((item) => getCountry(item).label));
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "sq"));
+    return Array.from(set).sort(compareText);
   }, [calls]);
 
   const monthOptions = useMemo(() => {
@@ -103,6 +99,13 @@ export default function ErasmusClient({ calls, sourceUrl, generatedAt }) {
           </h1>
           <p className="page-subtitle mb-5 max-w-2xl">
             Njoftime nga faqja e mundësive të UP që përmbajnë &quot;Erasmus&quot;.
+          </p>
+          <p
+            role="note"
+            className="mb-5 max-w-2xl rounded-2xl border border-info-blue/30 bg-info-blue/10 px-4 py-3 text-sm font-semibold text-info-text"
+          >
+            Kjo faqe është vetëm për Universitetin e Prishtinës (UP). Thirrjet e universiteteve dhe kolegjeve
+            të tjera nuk përfshihen këtu; shihni faqet e tyre zyrtare.
           </p>
           <p className="flex flex-wrap items-center gap-2 text-sm font-medium text-gray-500">
             Të dhënat e eksportuara:{" "}

@@ -25,7 +25,8 @@ import {
   ALWAYS_ALLOWED_DOMAINS as ALWAYS_ALLOWED_EMAIL_DOMAINS,
   isDisposableEmail,
 } from "../../shared/email-domains.mjs";
-import { FACULTY_CODES, MATERIAL_TYPES, STUDY_LEVEL_VALUES } from "../../shared/material-options.mjs";
+import { MATERIAL_TYPES, STUDY_LEVEL_VALUES } from "../../shared/material-options.mjs";
+import { DEFAULT_UNIVERSITY, isValidPlacement } from "../../shared/placement.mjs";
 import {
   MAX_SUBJECT_LENGTH,
   groupSubjects,
@@ -1935,6 +1936,7 @@ async function handleMaterials(request, url, env) {
   const types = listParam(url, "type");
   const levels = listParam(url, "niveli").concat(listParam(url, "study_level"));
   const subjectSlugs = listParam(url, "subjects");
+  const universities = listParam(url, "university");
   const q = capSearchTerm(url.searchParams.get("q") || url.searchParams.get("search"));
   const userFilter = url.searchParams.get("user");
   const sortParam = url.searchParams.get("sort") || "newest";
@@ -1972,6 +1974,10 @@ async function handleMaterials(request, url, env) {
     baseWhere.push(`m.faculty IN (${faculties.map(() => "?").join(",")})`);
     baseParams.push(...faculties);
   }
+  if (universities.length) {
+    baseWhere.push(`m.university IN (${universities.map(() => "?").join(",")})`);
+    baseParams.push(...universities);
+  }
   if (subjectSlugs.length) {
     // A subject is a faculty plus every spelling stored for it.
     const groups = (await loadSubjectGroupsCached(env)).filter((g) => subjectSlugs.includes(g.slug));
@@ -1979,8 +1985,8 @@ async function handleMaterials(request, url, env) {
     const bound = [];
     for (const group of groups) {
       const names = group.variants.map((v) => v.name).slice(0, 20);
-      clauses.push(`(m.faculty = ? AND m.subject IN (${names.map(() => "?").join(",")}))`);
-      bound.push(group.faculty, ...names);
+      clauses.push(`(m.university = ? AND m.faculty = ? AND m.subject IN (${names.map(() => "?").join(",")}))`);
+      bound.push(group.university, group.faculty, ...names);
     }
     // Unknown slugs match nothing, rather than silently showing everything.
     baseWhere.push(clauses.length && bound.length <= 40 ? `(${clauses.join(" OR ")})` : "0 = 1");
@@ -2295,6 +2301,7 @@ async function handleUpload(request, env) {
   if (!departmentCheck.ok) return jsonResponse({ error: departmentCheck.error }, 400);
 
   const title = titleCheck.value;
+  const university = String(form.get("university") || DEFAULT_UNIVERSITY).trim();
   const faculty = String(form.get("faculty") || "").trim().toUpperCase();
   const department = departmentCheck.value || "//";
   let subject = subjectCheck.value;
@@ -2310,14 +2317,14 @@ async function handleUpload(request, env) {
   if (!title || !faculty || !subject || !type || !file || typeof file === "string") {
     return jsonResponse({ error: "Plotësoni të gjitha fushat e detyrueshme." }, 400);
   }
-  if (!FACULTY_CODES.includes(faculty)) {
-    return jsonResponse({ error: "Fakulteti nuk njihet." }, 400);
+  if (!isValidPlacement(university, faculty)) {
+    return jsonResponse({ error: "Universiteti ose fakulteti nuk njihet." }, 400);
   }
   if (!MATERIAL_TYPES.includes(type)) {
     return jsonResponse({ error: "Lloji i materialit nuk njihet." }, 400);
   }
   // Reuse the spelling already in use for this subject, if there is one.
-  subject = await canonicalSubject(env, faculty, subject);
+  subject = await canonicalSubject(env, faculty, subject, university);
 
   const ext = extFromFilename(file.name);
   const validation = await validateFile(file, ext);
@@ -2341,11 +2348,11 @@ async function handleUpload(request, env) {
   try {
     insert = await env.DB.prepare(
       `INSERT INTO materials
-        (user_id, title, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level, content_hash, client_upload_id, status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        (user_id, title, university, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level, content_hash, client_upload_id, status)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
       .bind(
-        user.id, title, faculty, department, subject, teacher, type, fileKey, ext, file.size,
+        user.id, title, university, faculty, department, subject, teacher, type, fileKey, ext, file.size,
         r2Url, isAnonymous, studyLevel, normalizeContentHash(form.get("content_hash")),
         clientUploadId, review.status
       )
@@ -2389,7 +2396,7 @@ async function loadSubjectGroupsCached(env) {
     return subjectGroupsCache.groups;
   }
   const result = await env.DB.prepare(
-    "SELECT id, faculty, subject, type, teacher, created_at FROM materials WHERE status = 'approved'"
+    "SELECT id, university, faculty, subject, type, teacher, created_at FROM materials WHERE status = 'approved'"
   ).all();
   const groups = groupSubjects(result.results || []);
   subjectGroupsCache = { at: now, groups };
@@ -2401,13 +2408,13 @@ async function loadSubjectGroupsCached(env) {
  * subject (ignoring case, accents and punctuation) its existing name is reused,
  * so new uploads stop adding variants.
  */
-async function canonicalSubject(env, faculty, typed) {
+async function canonicalSubject(env, faculty, typed, university = DEFAULT_UNIVERSITY) {
   const name = normalizeSubjectName(typed);
   if (!isRealSubject(name)) return name || typed;
   try {
     const key = subjectKey(name);
     const match = (await loadSubjectGroupsCached(env)).find(
-      (group) => group.faculty === faculty && group.key === key
+      (group) => group.university === university && group.faculty === faculty && group.key === key
     );
     return match ? match.name : name;
   } catch {
@@ -2419,11 +2426,19 @@ async function canonicalSubject(env, faculty, typed) {
 async function handleSubjects(url, env) {
   if (!env.DB) return jsonResponse({ subjects: [] });
   const faculty = String(url.searchParams.get("faculty") || "").toUpperCase();
+  const university = String(url.searchParams.get("university") || "");
   const groups = await loadSubjectGroupsCached(env);
   return jsonResponse({
     subjects: groups
-      .filter((group) => !faculty || group.faculty === faculty)
-      .map(({ slug, faculty: code, name, count, types }) => ({ slug, faculty: code, name, count, types })),
+      .filter((group) => (!faculty || group.faculty === faculty) && (!university || group.university === university))
+      .map(({ slug, university: uni, faculty: code, name, count, types }) => ({
+        slug,
+        university: uni,
+        faculty: code,
+        name,
+        count,
+        types,
+      })),
   });
 }
 
@@ -2467,6 +2482,7 @@ async function handleSubjectPublic(url, env) {
   return jsonResponse({
     subject: {
       slug: group.slug,
+      university: group.university,
       faculty: group.faculty,
       name: group.name,
       count: group.count,
@@ -2483,10 +2499,10 @@ async function handleSubjectAdmin(request, env) {
   const user = await getUserFromRequest(request, env);
   if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
   const result = await env.DB.prepare(
-    "SELECT id, faculty, subject, type, teacher FROM materials"
+    "SELECT id, university, faculty, subject, type, teacher FROM materials"
   ).all();
   const groups = groupSubjects(result.results || []).map(
-    ({ slug, faculty, key, name, count, variants }) => ({ slug, faculty, key, name, count, variants })
+    ({ slug, university, faculty, key, name, count, variants }) => ({ slug, university, faculty, key, name, count, variants })
   );
   return jsonResponse({ subjects: groups });
 }
@@ -2502,9 +2518,10 @@ async function handleRenameSubject(request, env) {
   if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const body = await request.json().catch(() => ({}));
+  const university = String(body.university || DEFAULT_UNIVERSITY).trim();
   const faculty = String(body.faculty || "").trim().toUpperCase();
   const key = String(body.key || "").trim();
-  if (!FACULTY_CODES.includes(faculty) || !key) {
+  if (!isValidPlacement(university, faculty) || !key) {
     return jsonResponse({ error: "Fakulteti ose lënda nuk është e vlefshme." }, 400);
   }
   const check = validateMaterialTextField(body.to, "Emri i lëndës", { maxLen: MAX_SUBJECT_LENGTH });
@@ -2515,7 +2532,9 @@ async function handleRenameSubject(request, env) {
 
   const spellings = (
     (
-      await env.DB.prepare("SELECT DISTINCT subject FROM materials WHERE faculty = ?").bind(faculty).all()
+      await env.DB.prepare("SELECT DISTINCT subject FROM materials WHERE university = ? AND faculty = ?")
+        .bind(university, faculty)
+        .all()
     ).results || []
   )
     .map((row) => row.subject)
@@ -2524,9 +2543,9 @@ async function handleRenameSubject(request, env) {
 
   const result = await env.DB.prepare(
     `UPDATE materials SET subject = ?, updated_at = datetime('now')
-     WHERE faculty = ? AND subject IN (${spellings.map(() => "?").join(",")})`
+     WHERE university = ? AND faculty = ? AND subject IN (${spellings.map(() => "?").join(",")})`
   )
-    .bind(target, faculty, ...spellings)
+    .bind(target, university, faculty, ...spellings)
     .run();
   await catalogChanged(env);
   return jsonResponse({ success: true, updated: Number(result.meta?.changes || 0) });
@@ -2921,6 +2940,7 @@ async function handleEdit(request, url, env) {
   if (!departmentCheck.ok) return jsonResponse({ error: departmentCheck.error }, 400);
 
   const title = titleCheck.value;
+  const university = String(body.university || material.university || DEFAULT_UNIVERSITY).trim();
   const faculty = String(body.faculty || "").trim().toUpperCase();
   const department = departmentCheck.value || "//";
   let subject = subjectCheck.value;
@@ -2937,13 +2957,13 @@ async function handleEdit(request, url, env) {
     return jsonResponse({ error: "Plotësoni të gjitha fushat e detyrueshme." }, 400);
   }
   // Same allowlists as upload: faculty and type feed public filters and slugs.
-  if (!FACULTY_CODES.includes(faculty)) {
-    return jsonResponse({ error: "Fakulteti nuk njihet." }, 400);
+  if (!isValidPlacement(university, faculty)) {
+    return jsonResponse({ error: "Universiteti ose fakulteti nuk njihet." }, 400);
   }
   if (!MATERIAL_TYPES.includes(type)) {
     return jsonResponse({ error: "Lloji i materialit nuk njihet." }, 400);
   }
-  subject = await canonicalSubject(env, faculty, subject);
+  subject = await canonicalSubject(env, faculty, subject, university);
 
   // An owner who edits a rejected material is resubmitting it for review.
   const resubmit =
@@ -2953,12 +2973,12 @@ async function handleEdit(request, url, env) {
 
   await env.DB.prepare(
     `UPDATE materials
-     SET title=?, faculty=?, department=?, subject=?, teacher=?, type=?, study_level=?, updated_at=datetime('now'),
+     SET title=?, university=?, faculty=?, department=?, subject=?, teacher=?, type=?, study_level=?, updated_at=datetime('now'),
          status = CASE WHEN ? THEN 'pending' ELSE status END,
          rejection_reason = CASE WHEN ? THEN NULL ELSE rejection_reason END
      WHERE id=?`
   )
-    .bind(title, faculty, department, subject, teacher, type, studyLevel, resubmit ? 1 : 0, resubmit ? 1 : 0, id)
+    .bind(title, university, faculty, department, subject, teacher, type, studyLevel, resubmit ? 1 : 0, resubmit ? 1 : 0, id)
     .run();
 
   await catalogChanged(env);
