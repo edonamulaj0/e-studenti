@@ -147,3 +147,13 @@ export function cleanSheetHtml(html) {
   tables.forEach((table) => holder.appendChild(table));
   return holder.innerHTML;
 }
+
+/** 1536 -> "1.5 KB". Zero or missing sizes give an empty string. */
+export function formatFileSize(bytes) {
+  const n = Number(bytes);
+  if (!n) return "";
+  const units = ["B", "KB", "MB", "GB"];
+  const i = Math.min(units.length - 1, Math.floor(Math.log(n) / Math.log(1024)));
+  const value = n / 1024 ** i;
+  return `${i === 0 ? value : value.toFixed(value < 10 ? 1 : 0).replace(/\.0$/, "")} ${units[i]}`;
+}
