@@ -1,4 +1,5 @@
 import StatisticsClient from "./statistics-client";
+import { T } from "../components/Preferences";
 
 export const metadata = {
   title: "Statistikat",
@@ -14,11 +15,10 @@ export default function StatisticsPage() {
     <div className="page-shell">
       <div className="section-shell max-w-6xl">
         <header className="mb-10">
-          <p className="page-kicker mb-4">Platforma</p>
-          <h1 className="page-title mb-4">Statistikat</h1>
+          <p className="page-kicker mb-4"><T>Platforma</T></p>
+          <h1 className="page-title mb-4"><T>Statistikat</T></h1>
           <p className="page-subtitle max-w-2xl">
-            Një pasqyrë e agreguar e aktivitetit në platformë — pa të dhëna
-            identifikuese për përdorues individualë.
+            <T>Një pasqyrë e agreguar e aktivitetit në platformë — pa të dhëna identifikuese për përdorues individualë.</T>
           </p>
         </header>
 

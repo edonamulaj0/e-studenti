@@ -1,57 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { CheckCircle2, Upload } from "lucide-react";
+import { CheckCircle2, Pause, Play, RotateCw, Trash2, Upload } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
-import { FACULTIES, MATERIAL_TYPES } from "../../lib/material-options";
+import { DEFAULT_UNIVERSITY, MATERIAL_TYPES, facultiesFor } from "../../lib/material-options";
+import { UNIVERSITIES } from "../../lib/placement";
 import { STUDY_LEVELS } from "../../lib/study-levels";
+import { useT } from "../../components/Preferences";
+import SubjectInput from "../../components/SubjectInput";
+import {
+  ALLOWED_EXTENSIONS,
+  MAX_FILES_PER_BATCH,
+  PRANUES,
+  buildFormData,
+  chunk,
+  effectiveFields,
+  findBatchDuplicates,
+  formatMegabytes,
+  inferMetadata,
+  planUploads,
+  sha256Hex,
+  summarize,
+  validateFile,
+  validateRow,
+  translateMessage,
+} from "../../lib/bulk-upload";
 
-const initialForm = {
-  title: "",
+const ACCEPT_ATTRIBUTE = ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(",");
+/** Longest an automatic wait after a rate limit may be. */
+const MAX_AUTO_WAIT_SECONDS = 15 * 60;
+
+const NETWORK_ERROR =
+  "Lidhja me serverin u ndërpre gjatë ngarkimit. Kontrolloni internetin dhe provoni përsëri.";
+
+const initialDefaults = {
+  university: DEFAULT_UNIVERSITY,
   faculty: "",
   department: "",
   subject: "",
   teacher: "",
   type: "",
+  typeLocked: false,
   study_level: "bachelor",
-  file: null,
+  is_anonymous: false,
 };
-
-/** Must stay in sync with the worker's own limits (MAX_FILE_SIZE, ALLOWED_EXTENSIONS). */
-const MAX_FILE_SIZE = 50 * 1024 * 1024;
-/**
- * ZIP rules the worker enforces after the 50MB check passes. They are shown on
- * the form because an archive that clears 50MB can still be rejected for what
- * is inside it, and the user cannot guess which file to remove.
- */
-const MAX_ZIP_FILES = 500;
-const MAX_DECOMPRESSED_SIZE = 100 * 1024 * 1024;
-const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "zip"];
-const ACCEPT_ATTRIBUTE = ALLOWED_EXTENSIONS.map((ext) => `.${ext}`).join(",");
-
-const NETWORK_ERROR =
-  "Lidhja me serverin u ndërpre gjatë ngarkimit. Kontrolloni internetin dhe provoni përsëri — skedarët e mëdhenj kërkojnë lidhje të qëndrueshme.";
-
-function formatMegabytes(bytes) {
-  return (bytes / (1024 * 1024)).toFixed(1).replace(/\.0$/, "");
-}
-
-/** Local check so oversized or unsupported files fail instantly, before a doomed upload. */
-function validateFile(file) {
-  if (!file) return "Zgjidhni një skedar për ngarkim.";
-  if (file.size === 0) return "Skedari është bosh.";
-  const ext = file.name.split(".").pop()?.toLowerCase() || "";
-  if (!ALLOWED_EXTENSIONS.includes(ext)) {
-    return `Lloji i skedarit nuk lejohet. Lejohen: ${ALLOWED_EXTENSIONS.join(", ")}`;
-  }
-  if (file.size > MAX_FILE_SIZE) {
-    return `Skedari është ${formatMegabytes(file.size)}MB — madhësia maksimale është 50MB. Zvogëloni ose ndajeni skedarin.`;
-  }
-  return "";
-}
 
 function errorForStatus(status) {
   if (status === 401) return "Sesioni juaj ka skaduar. Hyni përsëri dhe provoni sërish.";
@@ -62,14 +57,19 @@ function errorForStatus(status) {
 }
 
 /**
- * XMLHttpRequest instead of fetch: it reports real upload progress, and it lets
- * transport failures be told apart from HTTP errors so a dropped connection does
- * not surface as the browser's bare "Failed to fetch".
+ * XMLHttpRequest rather than fetch: it reports real upload progress and tells a
+ * dropped connection apart from an HTTP error. `register` receives the request
+ * so the caller can abort it. The per-file client id makes a retry safe: if the
+ * first attempt actually reached the server, the retry gets that row back.
  */
-function uploadMaterial(formData, onProgress) {
-  return new Promise((resolve, reject) => {
+function sendUpload({ form, clientUploadId, onProgress, register }) {
+  return new Promise((resolve) => {
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", `${WORKER_URL}/?action=upload`);
+    register(xhr);
+    xhr.open(
+      "POST",
+      `${WORKER_URL}/?action=upload&client_upload_id=${encodeURIComponent(clientUploadId)}`
+    );
     xhr.withCredentials = true;
     xhr.upload.onprogress = (event) => {
       if (event.lengthComputable) onProgress(event.loaded / event.total);
@@ -81,29 +81,32 @@ function uploadMaterial(formData, onProgress) {
       } catch {
         // Error pages from the edge are not JSON; errorForStatus covers them.
       }
-      if (xhr.status >= 200 && xhr.status < 300) {
-        resolve(data);
-        return;
-      }
-      reject(new Error(data.error || errorForStatus(xhr.status)));
+      resolve({ ok: xhr.status >= 200 && xhr.status < 300, status: xhr.status, data });
     };
-    xhr.onerror = () => reject(new Error(NETWORK_ERROR));
-    xhr.ontimeout = () => reject(new Error(NETWORK_ERROR));
-    xhr.onabort = () => reject(new Error("Ngarkimi u ndërpre."));
-    xhr.send(formData);
+    xhr.onerror = () => resolve({ ok: false, status: 0, data: {}, network: true });
+    xhr.ontimeout = () => resolve({ ok: false, status: 0, data: {}, network: true });
+    xhr.onabort = () => resolve({ ok: false, status: 0, data: {}, aborted: true });
+    xhr.send(form);
   });
 }
 
 export default function NgarkoPage() {
   const router = useRouter();
-  const [form, setForm] = useState(initialForm);
-  const [isAnonymous, setIsAnonymous] = useState(false);
-  const [status, setStatus] = useState("idle");
-  const [error, setError] = useState("");
-  const [progress, setProgress] = useState(0);
-  const [titleTooltip, setTitleTooltip] = useState(false);
+  const t = useT();
+  const tm = (message) => translateMessage(t, message);
+  const [rows, setRows] = useState([]);
+  const [defaults, setDefaults] = useState(initialDefaults);
+  const [paused, setPaused] = useState(true);
+  const [notice, setNotice] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+  const [attempted, setAttempted] = useState(false);
 
-  const isPranues = form.type === "Provime Pranuese";
+  const rowsRef = useRef(rows);
+  rowsRef.current = rows;
+  const defaultsRef = useRef(defaults);
+  defaultsRef.current = defaults;
+  const requests = useRef(new Map());
+  const resumeTimer = useRef(null);
 
   useEffect(() => {
     fetchCurrentUser().then((user) => {
@@ -111,308 +114,666 @@ export default function NgarkoPage() {
     });
   }, [router]);
 
-  const setField = (field, value) => {
-    setForm((current) => ({ ...current, [field]: value }));
-  };
+  const patchRow = useCallback((id, patch) => {
+    setRows((current) => current.map((row) => (row.id === id ? { ...row, ...patch } : row)));
+  }, []);
 
-  const selectFile = (file) => {
-    setField("file", file);
-    setError(file ? validateFile(file) : "");
-  };
+  const summary = summarize(rows);
 
-  const submit = async (event) => {
-    event.preventDefault();
-    const fileError = validateFile(form.file);
-    if (fileError) {
-      setStatus("error");
-      setError(fileError);
-      return;
+  // ── Intake ──────────────────────────────────────────────────────────────
+  const addFiles = (fileList) => {
+    const incoming = Array.from(fileList || []);
+    if (incoming.length === 0) return;
+    const room = MAX_FILES_PER_BATCH - rowsRef.current.length;
+    const accepted = incoming.slice(0, Math.max(0, room));
+    if (accepted.length < incoming.length) {
+      // Stored in Albanian and translated where it is shown, so it follows a language switch.
+      setNotice(`Mund të shtoni deri në ${MAX_FILES_PER_BATCH} skedarë njëherësh; u shtuan ${accepted.length}.`);
+    } else {
+      setNotice("");
     }
+    setRows((current) => [
+      ...current,
+      ...accepted.map((file) => ({
+        id: crypto.randomUUID(),
+        clientUploadId: crypto.randomUUID(),
+        file,
+        status: "ready",
+        progress: 0,
+        error: "",
+        inferred: inferMetadata(file.name),
+        overrides: {},
+        hash: "",
+        hashing: false,
+        hashFailed: false,
+        checked: false,
+        duplicate: null,
+        keepDuplicate: false,
+        resultStatus: "",
+      })),
+    ]);
+  };
 
-    setStatus("uploading");
-    setError("");
-    setProgress(0);
-    try {
-      const fd = new FormData();
-      for (const [key, value] of Object.entries(form)) {
-        if (isPranues && ["department", "subject", "teacher"].includes(key)) {
-          fd.append(key, "//");
-        } else if (value) {
-          fd.append(key, value);
+  // Hash files one at a time while the user fills in the form.
+  useEffect(() => {
+    if (rows.some((row) => row.hashing)) return;
+    const next = rows.find(
+      (row) => !row.hash && !row.hashFailed && row.status === "ready" && !validateFile(row.file)
+    );
+    if (!next) return;
+    patchRow(next.id, { hashing: true });
+    sha256Hex(next.file)
+      .then((hash) => patchRow(next.id, { hash, hashing: false }))
+      .catch(() => patchRow(next.id, { hashFailed: true, hashing: false }));
+  }, [rows, patchRow]);
+
+  // Ask the server which of the hashed files already exist. Hashes finish one
+  // by one, so wait a moment and send what has accumulated as a single request.
+  useEffect(() => {
+    if (!rows.some((row) => row.hash && !row.checked)) return undefined;
+    const timer = setTimeout(async () => {
+      const pending = rowsRef.current.filter((row) => row.hash && !row.checked);
+      if (pending.length === 0) return;
+      const ids = new Set(pending.map((row) => row.id));
+      setRows((current) => current.map((row) => (ids.has(row.id) ? { ...row, checked: true } : row)));
+      for (const group of chunk(pending, 50)) {
+        try {
+          const res = await fetch(`${WORKER_URL}/?action=check-duplicates`, {
+            method: "POST",
+            credentials: "include",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ hashes: group.map((row) => row.hash) }),
+          });
+          if (!res.ok) continue;
+          const { duplicates = [] } = await res.json();
+          const byHash = new Map(duplicates.map((d) => [d.hash, d]));
+          const inGroup = new Set(group.map((row) => row.id));
+          setRows((current) =>
+            current.map((row) =>
+              inGroup.has(row.id) && byHash.has(row.hash) ? { ...row, duplicate: byHash.get(row.hash) } : row
+            )
+          );
+        } catch {
+          // The check is a courtesy; uploading still works without it.
         }
       }
-      fd.append("is_anonymous", isAnonymous ? "1" : "0");
-      await uploadMaterial(fd, setProgress);
-      setStatus("success");
-      setForm(initialForm);
-      setIsAnonymous(false);
-    } catch (err) {
-      setStatus("error");
-      setError(err.message || "Ngarkimi dështoi.");
-    } finally {
-      setProgress(0);
-    }
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [rows]);
+
+  const batchDuplicates = findBatchDuplicates(rows);
+  const isDuplicate = (row) => Boolean(row.duplicate || batchDuplicates.has(row.id));
+
+  // ── Queue ───────────────────────────────────────────────────────────────
+  const finishRow = useCallback(
+    (id, result) => {
+      requests.current.delete(id);
+      if (result.ok) {
+        patchRow(id, { status: "done", progress: 1, error: "", resultStatus: result.data.status || "approved" });
+        return;
+      }
+      if (result.aborted) {
+        patchRow(id, { status: "failed", progress: 0, error: "Ngarkimi u anulua." });
+        return;
+      }
+      if (result.status === 429 && result.data.code === "pending_limit") {
+        // Not this file's fault: put it back and stop until some are reviewed.
+        patchRow(id, { status: "queued", progress: 0, error: "" });
+        setPaused(true);
+        setNotice(result.data.error);
+        return;
+      }
+      if (result.status === 429) {
+        patchRow(id, { status: "queued", progress: 0, error: "" });
+        setPaused(true);
+        const wait = Math.min(Number(result.data.retryAfter) || 60, MAX_AUTO_WAIT_SECONDS);
+        setNotice(`${result.data.error || errorForStatus(429)} Do të vazhdojë automatikisht pas ${Math.ceil(wait / 60)} min.`);
+        clearTimeout(resumeTimer.current);
+        resumeTimer.current = setTimeout(() => {
+          setNotice("");
+          setPaused(false);
+        }, wait * 1000);
+        return;
+      }
+      if (result.status === 401) {
+        patchRow(id, { status: "failed", progress: 0, error: errorForStatus(401) });
+        setPaused(true);
+        setNotice(errorForStatus(401));
+        return;
+      }
+      patchRow(id, {
+        status: "failed",
+        progress: 0,
+        error: result.network ? NETWORK_ERROR : result.data.error || errorForStatus(result.status),
+      });
+    },
+    [patchRow]
+  );
+
+  const startUpload = useCallback(
+    async (id) => {
+      const row = rowsRef.current.find((r) => r.id === id);
+      if (!row || requests.current.has(id)) return;
+      requests.current.set(id, null);
+      patchRow(id, { status: "uploading", progress: 0, error: "" });
+      const result = await sendUpload({
+        form: buildFormData(row, defaultsRef.current, row.hash),
+        clientUploadId: row.clientUploadId,
+        onProgress: (fraction) => patchRow(id, { progress: fraction }),
+        register: (xhr) => requests.current.set(id, xhr),
+      });
+      finishRow(id, result);
+    },
+    [patchRow, finishRow]
+  );
+
+  useEffect(() => {
+    for (const id of planUploads(rows, { paused })) startUpload(id);
+  }, [rows, paused, startUpload]);
+
+  useEffect(() => () => clearTimeout(resumeTimer.current), []);
+
+  // Leaving mid-upload would silently lose the rest of the batch.
+  useEffect(() => {
+    if (summary.active === 0) return undefined;
+    const warn = (event) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [summary.active]);
+
+  const startAll = () => {
+    setAttempted(true);
+    setNotice("");
+    setRows((current) =>
+      current.map((row) => {
+        if (row.status !== "ready") return row;
+        if (isDuplicate(row) && !row.keepDuplicate) return { ...row, status: "skipped" };
+        if (Object.keys(validateRow(row, defaultsRef.current)).length > 0) return row;
+        return { ...row, status: "queued" };
+      })
+    );
+    setPaused(false);
   };
 
+  const retryFailed = () => {
+    setNotice("");
+    setRows((current) =>
+      current.map((row) => (row.status === "failed" ? { ...row, status: "queued", error: "" } : row))
+    );
+    setPaused(false);
+  };
+
+  const removeRow = (id) => {
+    requests.current.get(id)?.abort();
+    requests.current.delete(id);
+    setRows((current) => current.filter((row) => row.id !== id));
+  };
+
+  const cancelRow = (id) => requests.current.get(id)?.abort();
+
+  const clearFinished = () =>
+    setRows((current) => current.filter((row) => row.status !== "done" && row.status !== "skipped"));
+
+  const setOverride = (id, field, value) =>
+    setRows((current) =>
+      current.map((row) =>
+        row.id === id ? { ...row, overrides: { ...row.overrides, [field]: value } } : row
+      )
+    );
+
+  const setDefault = (field, value) => setDefaults((current) => ({ ...current, [field]: value }));
+
+  const readyCount = rows.filter((row) => row.status === "ready").length;
+  const allDone = summary.total > 0 && summary.done + summary.skipped === summary.total;
+  const publishedCount = rows.filter((r) => r.status === "done" && r.resultStatus === "approved").length;
+  const pendingCount = rows.filter((r) => r.status === "done" && r.resultStatus === "pending").length;
+
   return (
-    <div className="min-h-screen bg-srh-paper px-4 py-12">
-      <div className="mx-auto max-w-3xl">
+    <div className="bg-srh-paper px-4 py-12">
+      <div className="mx-auto max-w-4xl">
         <header className="mb-8 text-center">
-          <h1 className="font-playfair text-4xl md:text-5xl font-black text-srh-navy">
-            Ngarko material
-          </h1>
+          <h1 className="font-playfair text-4xl md:text-5xl font-black text-srh-navy">{t("Ngarko materiale")}</h1>
           <p className="mt-3 text-srh-navy/70">
-            Materiali do të publikohet menjëherë në emrin tuaj.
+            {t("Zgjidhni një ose më shumë skedarë, kontrolloni të dhënat dhe ngarkojini së bashku. Materialet e para shqyrtohen nga moderatorët para publikimit; pasi të aprovohen disa, të tjerat publikohen menjëherë.")}
           </p>
         </header>
 
-        {status === "success" ? (
-          <div className="rounded-2xl border border-srh-cream bg-white p-8 text-center shadow-sm">
-            <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-srh-sage" />
-            <h2 className="font-playfair text-3xl font-bold text-srh-navy">
-              Materiali u ngarkua me sukses!
-            </h2>
-            <div className="mt-6 flex flex-col justify-center gap-3 sm:flex-row">
-              <Link
-                href="/materialet"
-                className="rounded-xl bg-srh-crimson px-6 py-3 font-bold text-white hover:bg-[#5e1621]"
-              >
-                Shiko materialet
-              </Link>
-              <button
-                type="button"
-                onClick={() => setStatus("idle")}
-                className="rounded-xl border-2 border-srh-navy px-6 py-3 font-bold text-srh-navy hover:bg-srh-navy hover:text-white"
-              >
-                Ngarko tjetër
-              </button>
-            </div>
-          </div>
-        ) : (
-          <form
-            onSubmit={submit}
-            className="space-y-5 rounded-2xl border border-srh-cream bg-white p-6 md:p-8 shadow-sm"
+        <div className="mb-6 rounded-xl border border-srh-cream bg-srh-cream/60 p-4 text-sm text-srh-navy/75">
+          <p>{t("Lejohen: PDF, Word (doc/docx), PowerPoint (ppt/pptx), Excel (xls/xlsx), ZIP")}</p>
+          <p>
+            {t("Deri në 50MB për skedar dhe {max} skedarë njëherësh. Për ZIP: deri në 500 skedarë brenda, secili deri në 50MB dhe 100MB gjithsej pasi hapet.", { max: MAX_FILES_PER_BATCH })}
+          </p>
+          <p>
+            {t("Kontrollojmë llojin, madhësinë dhe strukturën e skedarit, por nuk bëjmë skanim antivirusi. Ngarkoni vetëm materiale që keni të drejtë t'i ndani.")}
+          </p>
+        </div>
+
+        {/* Drop zone */}
+        <div className="mb-6">
+          <span id="file-label" className="mb-1.5 block text-sm font-bold text-srh-navy">
+            {t("Skedarët")}
+          </span>
+          <label
+            onDragEnter={() => setIsDragging(true)}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={(e) => {
+              if (!e.currentTarget.contains(e.relatedTarget)) setIsDragging(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              setIsDragging(false);
+              addFiles(e.dataTransfer.files);
+            }}
+            className={`flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed px-5 py-10 text-center focus-within:border-srh-crimson focus-within:ring-4 focus-within:ring-burgundy-600/25 hover:border-srh-crimson ${
+              isDragging ? "border-srh-crimson bg-srh-blush" : "border-srh-cream bg-surface"
+            }`}
           >
-            <div className="rounded-xl border border-srh-cream bg-srh-cream/60 p-4 text-sm text-srh-navy/75">
-              <p>Lejohen: PDF, Word (doc/docx), PowerPoint (ppt/pptx), Excel (xls/xlsx), ZIP</p>
-              <p>Madhësia maksimale: 50MB</p>
-              <p>
-                Për ZIP: deri në {MAX_ZIP_FILES} skedarë brenda, secili deri në 50MB dhe
-                deri në {formatMegabytes(MAX_DECOMPRESSED_SIZE)}MB gjithsej pasi hapet.
+            <Upload className="mb-3 h-12 w-12 text-srh-crimson" aria-hidden="true" />
+            <span className="font-bold text-srh-navy">{t("Klikoni ose tërhiqni skedarët këtu")}</span>
+            <span id="file-hint" className="mt-2 text-sm text-srh-navy/70">
+              {ACCEPT_ATTRIBUTE.replace(/,/g, ", ")}
+            </span>
+            {/* Visually hidden, not display:none, so it stays in the tab order. */}
+            <input
+              type="file"
+              multiple
+              accept={ACCEPT_ATTRIBUTE}
+              className="sr-only"
+              aria-labelledby="file-label"
+              aria-describedby="file-hint"
+              onChange={(e) => {
+                addFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </label>
+        </div>
+
+        {notice && (
+          <p
+            role="alert"
+            className="mb-6 rounded-xl border border-srh-cream bg-surface p-4 text-sm font-semibold text-srh-crimson"
+          >
+            {tm(notice)}
+          </p>
+        )}
+
+        {rows.length > 0 && (
+          <>
+            {/* Shared details */}
+            <section
+              aria-labelledby="defaults-heading"
+              className="mb-6 rounded-2xl border border-srh-cream bg-surface p-5 shadow-sm"
+            >
+              <h2 id="defaults-heading" className="font-bold text-srh-navy">
+                {t("Të dhënat e përbashkëta")}
+              </h2>
+              <p className="mt-1 text-sm text-srh-navy/70">
+                {t("Vlen për të gjithë skedarët; mund ta ndryshoni për secilin më poshtë.")}
               </p>
-              <p>Skedarët skanohen automatikisht para ngarkimit.</p>
-            </div>
-
-            <div className="grid gap-5 md:grid-cols-2">
-              {/* Title — always visible; tooltip shown for Provime Pranuese */}
-              <label className="block">
-                <span className="mb-1.5 flex items-center gap-1.5 text-sm font-bold text-srh-navy">
-                  Titulli i materialit
-                  <span className="text-srh-crimson"> *</span>
-                  {isPranues && (
-                    <span className="relative">
-                      <button
-                        type="button"
-                        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-srh-navy/15 text-[10px] font-bold text-srh-navy/60 hover:bg-srh-navy/25 focus:outline-none"
-                        onMouseEnter={() => setTitleTooltip(true)}
-                        onMouseLeave={() => setTitleTooltip(false)}
-                        onFocus={() => setTitleTooltip(true)}
-                        onBlur={() => setTitleTooltip(false)}
-                        onClick={() => setTitleTooltip((v) => !v)}
-                        aria-label="Ndihmë"
-                      >
-                        ?
-                      </button>
-                      {titleTooltip && (
-                        <span
-                          role="tooltip"
-                          className="absolute left-0 top-6 z-30 w-80 rounded-xl border border-srh-cream bg-white p-3 text-xs font-normal leading-relaxed text-srh-navy/75 shadow-lg"
-                        >
-                          Shkruaj emrin e departamentit dhe llojin e materialit.
-                          Shembuj: &quot;Stomatologji - Provimi pranues 2024&quot;,
-                          &quot;Matematikë - Libër përgatitor&quot;,
-                          &quot;Informatikë - Teste të vjetra&quot;
-                        </span>
-                      )}
-                    </span>
-                  )}
-                </span>
-                <input
-                  required
-                  value={form.title}
-                  onChange={(e) => setField("title", e.target.value)}
-                  className="input-srh"
-                />
-              </label>
-
-              {/* Faculty — always visible */}
-              <Field label="Fakulteti" required>
-                <select
-                  required
-                  value={form.faculty}
-                  onChange={(e) => setField("faculty", e.target.value)}
-                  className="input-srh"
-                >
-                  <option value="">
-                    {isPranues ? "Zgjidh fakultetin" : "Zgjidhni"}
-                  </option>
-                  {FACULTIES.map((faculty) => (
-                    <option key={faculty.code} value={faculty.code}>
-                      {faculty.name}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-
-              {/* Department — hidden for Provime Pranuese */}
-              {!isPranues && (
-                <Field label="Departamenti">
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                <label className="block text-sm font-semibold text-srh-navy">
+                  {t("Universiteti")} <span className="text-srh-crimson">*</span>
+                  <select
+                    value={defaults.university}
+                    onChange={(e) =>
+                      // A different university has a different list, so the old choice no longer applies.
+                      setDefaults((current) => ({ ...current, university: e.target.value, faculty: "" }))
+                    }
+                    className="input-srh mt-1"
+                  >
+                    {UNIVERSITIES.map((university) => (
+                      <option key={university.slug} value={university.slug}>
+                        {university.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-semibold text-srh-navy">
+                  {defaults.university === DEFAULT_UNIVERSITY ? t("Fakulteti") : t("Fusha e studimit")}{" "}
+                  <span className="text-srh-crimson">*</span>
+                  <select
+                    value={defaults.faculty}
+                    onChange={(e) => setDefault("faculty", e.target.value)}
+                    className="input-srh mt-1"
+                  >
+                    <option value="">{t("Zgjidhni")}</option>
+                    {facultiesFor(defaults.university).map((faculty) => (
+                      <option key={faculty.code} value={faculty.code}>
+                        {t(faculty.name)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-semibold text-srh-navy">
+                  {t("Lloji i materialit")}
+                  <select
+                    value={defaults.type}
+                    onChange={(e) => {
+                      setDefault("type", e.target.value);
+                      setDefault("typeLocked", Boolean(e.target.value));
+                    }}
+                    className="input-srh mt-1"
+                  >
+                    <option value="">{t("Sipas emrit të skedarit")}</option>
+                    {MATERIAL_TYPES.map((type) => (
+                      <option key={type} value={type}>{t(type)}</option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-semibold text-srh-navy">
+                  {t("Niveli i studimit")}
+                  <select
+                    value={defaults.study_level}
+                    onChange={(e) => setDefault("study_level", e.target.value)}
+                    className="input-srh mt-1"
+                  >
+                    {STUDY_LEVELS.map((level) => (
+                      <option key={level.value} value={level.value}>
+                        {t(level.label)}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="block text-sm font-semibold text-srh-navy">
+                  {t("Lënda")}
+                  <SubjectInput
+                    value={defaults.subject}
+                    onChange={(value) => setDefault("subject", value)}
+                    university={defaults.university}
+                    className="input-srh mt-1"
+                  />
+                </label>
+                <label className="block text-sm font-semibold text-srh-navy">
+                  {t("Profesori")}
                   <input
-                    value={form.department}
-                    onChange={(e) => setField("department", e.target.value)}
+                    value={defaults.teacher}
+                    onChange={(e) => setDefault("teacher", e.target.value)}
                     placeholder="//"
-                    className="input-srh"
+                    className="input-srh mt-1"
                   />
-                </Field>
-              )}
-
-              {/* Subject — hidden for Provime Pranuese */}
-              {!isPranues && (
-                <Field label="Lënda" required>
+                </label>
+                <label className="block text-sm font-semibold text-srh-navy">
+                  {t("Departamenti")}
                   <input
-                    required
-                    value={form.subject}
-                    onChange={(e) => setField("subject", e.target.value)}
-                    className="input-srh"
-                  />
-                </Field>
-              )}
-
-              {/* Teacher — hidden for Provime Pranuese */}
-              {!isPranues && (
-                <Field label="Profesori">
-                  <input
-                    value={form.teacher}
-                    onChange={(e) => setField("teacher", e.target.value)}
+                    value={defaults.department}
+                    onChange={(e) => setDefault("department", e.target.value)}
                     placeholder="//"
-                    className="input-srh"
+                    className="input-srh mt-1"
                   />
-                </Field>
-              )}
-
-              <Field label="Lloji i materialit" required>
-                <select
-                  required
-                  value={form.type}
-                  onChange={(e) => setField("type", e.target.value)}
-                  className="input-srh"
-                >
-                  <option value="">Zgjidhni</option>
-                  {MATERIAL_TYPES.map((type) => (
-                    <option key={type}>{type}</option>
-                  ))}
-                </select>
-              </Field>
-
-              <Field label="Niveli i studimit" required>
-                <select
-                  required
-                  value={form.study_level}
-                  onChange={(e) => setField("study_level", e.target.value)}
-                  className="input-srh"
-                >
-                  {STUDY_LEVELS.map((level) => (
-                    <option key={level.value} value={level.value}>
-                      {level.label}
-                    </option>
-                  ))}
-                </select>
-              </Field>
-            </div>
-
-            <Field label="Skedari" required>
-              <label
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={(e) => {
-                  e.preventDefault();
-                  selectFile(e.dataTransfer.files?.[0] || null);
-                }}
-                className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-srh-cream bg-srh-paper px-5 py-10 text-center hover:border-srh-crimson"
-              >
-                <Upload className="mb-3 h-12 w-12 text-srh-crimson" />
-                <span className="font-bold text-srh-navy">
-                  {form.file ? form.file.name : "Klikoni ose tërhiqni skedarin këtu"}
-                </span>
-                <span className="mt-2 text-sm text-srh-navy/60">
-                  {form.file
-                    ? `${formatMegabytes(form.file.size)}MB nga 50MB të lejuara`
-                    : ACCEPT_ATTRIBUTE.replace(/,/g, ", ")}
-                </span>
-                <input
-                  type="file"
-                  accept={ACCEPT_ATTRIBUTE}
-                  className="hidden"
-                  onChange={(e) => selectFile(e.target.files?.[0] || null)}
-                />
-              </label>
-            </Field>
-
-            {status === "uploading" && (
-              <div>
-                <div className="h-2 overflow-hidden rounded-full bg-srh-cream">
-                  <div
-                    className="h-full rounded-full bg-srh-crimson transition-all duration-200"
-                    style={{ width: `${Math.max(3, Math.round(progress * 100))}%` }}
-                  />
-                </div>
-                <p className="mt-2 text-center text-sm text-srh-navy/60">
-                  {progress < 1
-                    ? `Duke ngarkuar... ${Math.round(progress * 100)}%`
-                    : "Duke përpunuar skedarin..."}
-                </p>
+                </label>
               </div>
-            )}
-            {error && (
-              <p className="rounded-xl border border-srh-cream bg-srh-paper p-4 text-sm font-semibold text-srh-crimson">
-                {error}
-              </p>
-            )}
-            <div className="rounded-xl border border-srh-cream bg-srh-cream/40 p-4">
-              <label className="flex cursor-pointer items-center gap-3 text-sm font-semibold text-srh-navy">
+              <label className="mt-4 flex cursor-pointer items-center gap-3 text-sm font-semibold text-srh-navy">
                 <input
                   type="checkbox"
-                  checked={isAnonymous}
-                  onChange={(e) => setIsAnonymous(e.target.checked)}
+                  checked={defaults.is_anonymous}
+                  onChange={(e) => setDefault("is_anonymous", e.target.checked)}
                   className="h-4 w-4 accent-srh-crimson"
                 />
-                Publiko si anonim
+                {t("Publiko si anonim")}
               </label>
-              <p className="mt-1.5 pl-7 text-xs text-srh-navy/60">
-                Emri juaj nuk do të shfaqet publikisht, por mbetet i dukshëm për moderatorët në rast raportimi.
+              <p className="mt-1 pl-7 text-xs text-srh-navy/70">
+                {t("Emri juaj nuk do të shfaqet publikisht, por mbetet i dukshëm për moderatorët në rast raportimi.")}
               </p>
+            </section>
+
+            {/* Files */}
+            <ul className="mb-6 space-y-3" aria-label={t("Skedarët për ngarkim")}>
+              {rows.map((row) => {
+                const fields = effectiveFields(row, defaults);
+                const errors = attempted || row.status === "failed" ? validateRow(row, defaults) : {};
+                const fileProblem = validateFile(row.file);
+                const duplicate = isDuplicate(row);
+                const editable = row.status === "ready" || row.status === "failed";
+                const isPranues = fields.type === PRANUES;
+                const dupInfo = row.duplicate;
+                return (
+                  <li key={row.id} className="rounded-2xl border border-srh-cream bg-surface p-4 shadow-sm">
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold text-srh-navy">{row.file.name}</p>
+                        <p className="text-xs text-srh-navy/70">{formatMegabytes(row.file.size)}MB</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <StatusBadge row={row} />
+                        {row.status === "uploading" && (
+                          <button type="button" onClick={() => cancelRow(row.id)} className="btn-outline min-h-[36px] px-3 py-1 text-xs">
+                            {t("Anulo")}
+                          </button>
+                        )}
+                        {row.status === "failed" && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              patchRow(row.id, { status: "queued", error: "" });
+                              setPaused(false);
+                            }}
+                            className="btn-outline min-h-[36px] px-3 py-1 text-xs"
+                          >
+                            <RotateCw className="h-3.5 w-3.5" aria-hidden="true" /> {t("Riprovo")}
+                          </button>
+                        )}
+                        {row.status !== "uploading" && (
+                          <button
+                            type="button"
+                            onClick={() => removeRow(row.id)}
+                            aria-label={t("Hiq {name}", { name: row.file.name })}
+                            className="rounded-lg p-2 text-srh-navy/70 hover:bg-srh-blush hover:text-srh-crimson"
+                          >
+                            <Trash2 className="h-4 w-4" aria-hidden="true" />
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {fileProblem && (
+                      <p role="alert" className="mt-2 text-sm font-semibold text-srh-crimson">
+                        {tm(fileProblem)}
+                      </p>
+                    )}
+
+                    {editable && !fileProblem && (
+                      <div className="mt-3 grid gap-3 md:grid-cols-3">
+                        <Field label={t("Titulli")} error={tm(errors.title)}>
+                          <input
+                            value={fields.title}
+                            onChange={(e) => setOverride(row.id, "title", e.target.value)}
+                            aria-invalid={Boolean(errors.title)}
+                            className="input-srh min-h-[44px]"
+                          />
+                        </Field>
+                        <Field label={t("Lloji")} error={tm(errors.type)}>
+                          <select
+                            value={fields.type}
+                            onChange={(e) => setOverride(row.id, "type", e.target.value)}
+                            aria-invalid={Boolean(errors.type)}
+                            className="input-srh min-h-[44px]"
+                          >
+                            <option value="">{t("Zgjidhni")}</option>
+                            {MATERIAL_TYPES.map((type) => (
+                              <option key={type} value={type}>{t(type)}</option>
+                            ))}
+                          </select>
+                        </Field>
+                        {!isPranues && (
+                          <Field label={t("Lënda")} error={tm(errors.subject)}>
+                            <SubjectInput
+                              value={fields.subject}
+                              onChange={(value) => setOverride(row.id, "subject", value)}
+                              university={defaults.university}
+                              aria-invalid={Boolean(errors.subject)}
+                              className="input-srh min-h-[44px]"
+                            />
+                          </Field>
+                        )}
+                      </div>
+                    )}
+                    {editable && errors.faculty && (
+                      <p role="alert" className="mt-2 text-sm font-semibold text-srh-crimson">
+                        {tm(errors.faculty)}
+                      </p>
+                    )}
+
+                    {duplicate && row.status === "ready" && (
+                      <div className="mt-3 rounded-xl bg-warning-amber/10 p-3 text-sm text-srh-navy">
+                        <p className="font-semibold">
+                          {dupInfo
+                            ? dupInfo.own
+                              ? t('Duket se e keni ngarkuar tashmë: "{title}".', { title: dupInfo.title })
+                              : t('Duket se ky skedar ekziston tashmë: "{title}".', { title: dupInfo.title })
+                            : t("Ky skedar është shtuar dy herë në këtë grup.")}
+                          {dupInfo?.slug && (
+                            <>
+                              {" "}
+                              <Link href={`/materialet/${dupInfo.slug}`} target="_blank" className="underline">
+                                {t("Shiko")}
+                              </Link>
+                            </>
+                          )}
+                        </p>
+                        <label className="mt-2 flex cursor-pointer items-center gap-2">
+                          <input
+                            type="checkbox"
+                            checked={row.keepDuplicate}
+                            onChange={(e) => patchRow(row.id, { keepDuplicate: e.target.checked })}
+                            className="h-4 w-4 accent-srh-crimson"
+                          />
+                          {t("Ngarko gjithsesi (përndryshe kapërcehet)")}
+                        </label>
+                      </div>
+                    )}
+
+                    {row.status === "uploading" && (
+                      <div
+                        role="progressbar"
+                        aria-label={t("Ngarkimi i {name}", { name: row.file.name })}
+                        aria-valuemin={0}
+                        aria-valuemax={100}
+                        aria-valuenow={Math.round(row.progress * 100)}
+                        className="mt-3 h-2 overflow-hidden rounded-full bg-srh-cream"
+                      >
+                        <div
+                          className="h-full rounded-full bg-srh-crimson transition-all duration-200"
+                          style={{ width: `${Math.max(3, Math.round(row.progress * 100))}%` }}
+                        />
+                      </div>
+                    )}
+                    {row.error && (
+                      <p role="alert" className="mt-2 text-sm font-semibold text-srh-crimson">
+                        {tm(row.error)}
+                      </p>
+                    )}
+                  </li>
+                );
+              })}
+            </ul>
+
+            {/* Controls */}
+            <div className="sticky bottom-4 z-10 rounded-2xl border border-srh-cream bg-surface/95 p-4 shadow-lg backdrop-blur">
+              <p aria-live="polite" className="mb-3 text-sm font-semibold text-srh-navy">
+                {t("{done} nga {total} u ngarkuan", { done: summary.done, total: summary.total })}
+                {summary.failed > 0 && ` · ${t("{n} dështuan", { n: summary.failed })}`}
+                {summary.skipped > 0 && ` · ${t("{n} u kapërcyen", { n: summary.skipped })}`}
+                {summary.active > 0 && ` · ${t("{n} në radhë", { n: summary.active })}`}
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {readyCount > 0 && (
+                  <button type="button" onClick={startAll} className="btn-primary">
+                    <Upload className="h-4 w-4" aria-hidden="true" />
+                    {readyCount === 1 ? t("Ngarko skedarin") : t("Ngarko {n} skedarët", { n: readyCount })}
+                  </button>
+                )}
+                {summary.active > 0 && !paused && (
+                  <button type="button" onClick={() => setPaused(true)} className="btn-outline">
+                    <Pause className="h-4 w-4" aria-hidden="true" /> {t("Pauzë")}
+                  </button>
+                )}
+                {summary.queued > 0 && paused && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setNotice("");
+                      setPaused(false);
+                    }}
+                    className="btn-outline"
+                  >
+                    <Play className="h-4 w-4" aria-hidden="true" /> {t("Vazhdo")}
+                  </button>
+                )}
+                {summary.failed > 0 && (
+                  <button type="button" onClick={retryFailed} className="btn-outline">
+                    <RotateCw className="h-4 w-4" aria-hidden="true" /> {t("Riprovo të dështuarit")}
+                  </button>
+                )}
+                {summary.finished > 0 && (
+                  <button type="button" onClick={clearFinished} className="btn-outline">
+                    {t("Pastro të përfunduarit")}
+                  </button>
+                )}
+              </div>
             </div>
-            <button
-              type="submit"
-              disabled={status === "uploading"}
-              className="w-full rounded-xl bg-srh-crimson py-4 text-lg font-bold text-white hover:bg-[#5e1621] disabled:opacity-60"
-            >
-              {status === "uploading" ? "Duke ngarkuar..." : "Ngarko materialin"}
-            </button>
-          </form>
+          </>
+        )}
+
+        {allDone && (
+          <div className="mt-6 rounded-2xl border border-srh-cream bg-surface p-8 text-center shadow-sm">
+            <CheckCircle2 className="mx-auto mb-4 h-14 w-14 text-srh-sage" aria-hidden="true" />
+            <h2 className="font-playfair text-2xl font-bold text-srh-navy">
+              {pendingCount > 0 ? t("Materialet u dërguan") : t("Materialet u ngarkuan me sukses!")}
+            </h2>
+            <p className="mt-2 text-srh-navy/70">
+              {publishedCount > 0 && `${t("{n} u publikuan.", { n: publishedCount })} `}
+              {pendingCount > 0 &&
+                t("{n} presin shqyrtimin e një moderatori — do t'ju njoftojmë me email.", { n: pendingCount })}
+            </p>
+            <div className="mt-5 flex flex-col justify-center gap-3 sm:flex-row">
+              <Link href="/llogaria/materiale-e-mia" className="btn-primary">
+                {t("Materialet e mia")}
+              </Link>
+              <Link href="/materialet" className="btn-outline">
+                {t("Shiko materialet")}
+              </Link>
+            </div>
+          </div>
         )}
       </div>
     </div>
   );
 }
 
-function Field({ label, required, children }) {
+function Field({ label, error, children }) {
   return (
-    <label className="block">
-      <span className="mb-1.5 block text-sm font-bold text-srh-navy">
-        {label}
-        {required && <span className="text-srh-crimson"> *</span>}
-      </span>
-      {children}
+    <label className="block text-sm font-semibold text-srh-navy">
+      {label}
+      <div className="mt-1">{children}</div>
+      {error && <span className="mt-1 block text-xs font-semibold text-srh-crimson">{error}</span>}
     </label>
+  );
+}
+
+const STATUS_LABELS = {
+  ready: { text: "Gati", className: "bg-srh-cream text-srh-navy" },
+  queued: { text: "Në radhë", className: "bg-info-blue/10 text-info-text" },
+  uploading: { text: "Duke u ngarkuar", className: "bg-info-blue/10 text-info-text" },
+  done: { text: "U ngarkua", className: "bg-success-green/10 text-success-text" },
+  failed: { text: "Dështoi", className: "bg-burgundy-50 text-burgundy-600" },
+  skipped: { text: "U kapërcye", className: "bg-srh-cream text-srh-navy/70" },
+};
+
+function StatusBadge({ row }) {
+  const t = useT();
+  let label = STATUS_LABELS[row.status] || STATUS_LABELS.ready;
+  if (row.status === "ready" && row.hashing) label = { text: "Duke kontrolluar…", className: label.className };
+  if (row.status === "done" && row.resultStatus === "pending") {
+    label = { text: "Në pritje të shqyrtimit", className: "bg-warning-amber/15 text-warning-text" };
+  }
+  return (
+    <span className={`rounded-full px-3 py-1 text-xs font-bold ${label.className}`}>{t(label.text)}</span>
   );
 }

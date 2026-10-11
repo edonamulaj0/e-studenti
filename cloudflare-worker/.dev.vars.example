@@ -1,0 +1,13 @@
+# Copy to .dev.vars (git-ignored) for `npm run dev:worker`. These override the
+# production values in wrangler.toml, but only for the local Worker.
+
+# Anything other than "production" turns on development behaviour: sign-in codes
+# are printed in the Worker's console instead of being emailed, and
+# http://localhost:3000 is an allowed origin.
+ENVIRONMENT=development
+
+# Any long random string.
+JWT_SECRET=local-dev-secret-local-dev-secret-local-dev-secret
+
+# Optional. Without it, emails are printed instead of sent.
+# RESEND_API_KEY=re_...

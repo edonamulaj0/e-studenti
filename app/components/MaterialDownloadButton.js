@@ -2,8 +2,10 @@
 
 import { Download } from "lucide-react";
 import TrackableDownloadLink from "./TrackableDownloadLink";
+import { useT } from "./Preferences";
 
 export default function MaterialDownloadButton({ materialId, href, fileName }) {
+  const t = useT();
   return (
     <TrackableDownloadLink
       materialId={materialId}
@@ -14,7 +16,7 @@ export default function MaterialDownloadButton({ materialId, href, fileName }) {
       className="btn-secondary flex-1"
     >
       <Download className="h-5 w-5" />
-      Shkarko
+      {t("Shkarko")}
     </TrackableDownloadLink>
   );
 }

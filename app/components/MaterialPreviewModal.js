@@ -12,13 +12,20 @@ import {
 import ModalOverlay from "./ModalOverlay";
 import PdfCanvasViewer from "./PdfCanvasViewer";
 import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
-import { getPreviewKind } from "../lib/file-preview";
+import {
+  blockUnsafeLinkClick,
+  cleanSheetHtml,
+  getPreviewKind,
+  sanitizePreviewLinks,
+} from "../lib/file-preview";
+import { useT } from "./Preferences";
 
 function proxyUrl(fileUrl) {
   return `${WORKER_URL}/?action=proxy&url=${encodeURIComponent(fileUrl)}`;
 }
 
 export default function MaterialPreviewModal({ isOpen, onClose, material }) {
+  const t = useT();
   const [status, setStatus] = useState("idle"); // idle | loading | ready | error | unsupported
   const [sheetNames, setSheetNames] = useState([]);
   const [activeSheet, setActiveSheet] = useState("");
@@ -105,6 +112,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
             breakPages: true,
             ignoreLastRenderedPageBreak: false,
           });
+          sanitizePreviewLinks(containerRef.current);
         } else if (kind === "sheet") {
           const XLSX = await import("xlsx");
           if (cancelled) return;
@@ -121,6 +129,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
           await PptxViewer.open(buffer, containerRef.current, {
             listOptions: { windowed: true },
           });
+          sanitizePreviewLinks(containerRef.current);
         }
 
         if (!cancelled) {
@@ -138,6 +147,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
     return () => {
       cancelled = true;
     };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the material id, not the object, so a re-render with the same material does not re-fetch the file
   }, [isOpen, material?.id, kind, fileUrl, applyFitToWidth]);
 
   // Re-fit documents/slides when the viewport (modal) width changes.
@@ -157,7 +167,9 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
     }
     const sheet = workbookRef.current.Sheets[activeSheet];
     if (sheet) {
-      setSheetHtml(xlsxRef.current.utils.sheet_to_html(sheet));
+      // The workbook is user-supplied, so only an allowlisted rebuild of its
+      // table (plain-text cells, no links or attributes) is ever injected.
+      setSheetHtml(cleanSheetHtml(xlsxRef.current.utils.sheet_to_html(sheet)));
     }
   }, [activeSheet, kind]);
 
@@ -168,18 +180,22 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
   return (
     <ModalOverlay open={isOpen} onClose={onClose} className="!p-0 sm:!p-4">
       <div
-        className="preview-modal-height flex w-full max-w-[1600px] flex-col overflow-hidden border border-srh-cream bg-white shadow-2xl sm:rounded-2xl"
+        className="preview-modal-height flex w-full max-w-[1600px] flex-col overflow-hidden border border-srh-cream bg-surface shadow-2xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
+        aria-labelledby="preview-modal-title"
       >
         {/* Header */}
         <div className="flex items-center justify-between gap-3 border-b border-srh-cream px-4 py-3 sm:px-5">
           <div className="min-w-0">
-            <h2 className="truncate font-playfair text-lg font-bold text-srh-navy sm:text-xl">
+            <h2
+              id="preview-modal-title"
+              className="truncate font-playfair text-lg font-bold text-srh-navy sm:text-xl"
+            >
               {material.title}
             </h2>
-            <p className="mt-0.5 text-xs text-srh-navy/60">
+            <p className="mt-0.5 text-xs text-srh-navy/70">
               {material.fileType?.toUpperCase() || "PDF"}
             </p>
           </div>
@@ -189,8 +205,8 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
               target="_blank"
               rel="noopener noreferrer"
               className="rounded-lg p-2 text-srh-navy/70 transition-colors hover:bg-srh-blush/20 hover:text-srh-navy"
-              title="Hap në skedë të re"
-              aria-label="Hap në skedë të re"
+              title={t("Hap në skedë të re")}
+              aria-label={t("Hap në skedë të re")}
             >
               <ExternalLink className="h-5 w-5" />
             </a>
@@ -200,16 +216,18 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
               rel="noopener noreferrer"
               download
               className="rounded-lg p-2 text-srh-navy/70 transition-colors hover:bg-srh-blush/20 hover:text-srh-navy"
-              title="Shkarko"
-              aria-label="Shkarko"
+              title={t("Shkarko")}
+              aria-label={t("Shkarko")}
             >
               <Download className="h-5 w-5" />
             </a>
             <button
+              type="button"
+              data-autofocus
               onClick={onClose}
               className="rounded-lg p-2 text-srh-navy/70 transition-colors hover:bg-srh-blush/20 hover:text-srh-navy"
-              title="Mbyll"
-              aria-label="Mbyll"
+              title={t("Mbyll")}
+              aria-label={t("Mbyll")}
             >
               <X className="h-6 w-6" />
             </button>
@@ -217,11 +235,14 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
         </div>
 
         {/* Body */}
-        <div className="relative flex-1 overflow-hidden bg-srh-paper">
+        <div
+          className="relative flex-1 overflow-hidden bg-srh-paper"
+          onClickCapture={blockUnsafeLinkClick}
+        >
           {showSpinner && (
             <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-srh-paper">
               <Loader2 className="mb-4 h-10 w-10 animate-spin text-srh-crimson" />
-              <p className="text-srh-navy/70">Duke ngarkuar parapamjen...</p>
+              <p className="text-srh-navy/70">{t("Duke ngarkuar parapamjen...")}</p>
             </div>
           )}
 
@@ -229,18 +250,16 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
             <div className="flex h-full flex-col items-center justify-center p-8 text-center">
               <AlertCircle className="mb-4 h-12 w-12 text-srh-crimson" />
               <p className="max-w-md text-srh-navy/70">
-                Nuk mund të shfaqet parapamja e këtij skedari. Provoni ta hapni në
-                skedë të re ose ta shkarkoni.
+                {t("Nuk mund të shfaqet parapamja e këtij skedari. Provoni ta hapni në skedë të re ose ta shkarkoni.")}
               </p>
             </div>
           )}
 
           {status === "unsupported" && (
             <div className="flex h-full flex-col items-center justify-center p-8 text-center">
-              <FileText className="mb-4 h-12 w-12 text-srh-navy/40" />
+              <FileText className="mb-4 h-12 w-12 text-srh-navy/70" />
               <p className="max-w-md text-srh-navy/70">
-                Ky format skedari nuk mund të shfaqet online. Ju lutemi hapeni në
-                skedë të re ose shkarkojeni për ta parë.
+                {t("Ky format skedari nuk mund të shfaqet online. Ju lutemi hapeni në skedë të re ose shkarkojeni për ta parë.")}
               </p>
             </div>
           )}
@@ -261,7 +280,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
           {kind === "sheet" && status === "ready" && (
             <div className="flex h-full flex-col">
               {sheetNames.length > 1 && (
-                <div className="flex flex-wrap gap-1 border-b border-srh-cream bg-white px-3 py-2">
+                <div className="flex flex-wrap gap-1 border-b border-srh-cream bg-surface px-3 py-2">
                   {sheetNames.map((name) => (
                     <button
                       key={name}
@@ -279,7 +298,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
                 </div>
               )}
               <div
-                className="sheet-preview flex-1 overflow-auto bg-white p-4"
+                className="sheet-preview flex-1 overflow-auto bg-surface p-4"
                 dangerouslySetInnerHTML={{ __html: sheetHtml }}
               />
             </div>

@@ -1,8 +1,8 @@
 export const FAQ_ITEMS = [
   {
-    question: "Çfarë është E-Studenti dhe a është i lidhur zyrtarisht me UP-në?",
+    question: "Çfarë është E-Studenti dhe a është i lidhur zyrtarisht me universitetet?",
     answer:
-      "E-Studenti është një platformë komunitare e krijuar nga studentë, për studentë. Nuk është faqe zyrtare e Universitetit të Prishtinës — materialet ngarkohen vullnetarisht nga përdoruesit e regjistruar.",
+      "E-Studenti është një platformë komunitare e krijuar nga studentë, për studentë. Nuk është faqe zyrtare e asnjë universiteti — materialet ngarkohen vullnetarisht nga përdoruesit e regjistruar.",
   },
   {
     question: "Si mund të ngarkoj materiale?",

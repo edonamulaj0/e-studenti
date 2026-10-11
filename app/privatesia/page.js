@@ -1,3 +1,5 @@
+import { T } from "../components/Preferences";
+
 export const metadata = {
   title: "Politika e privatësisë",
   description:
@@ -10,7 +12,7 @@ export const metadata = {
 const sections = [
   {
     title: "Kush jemi",
-    text: "E-Studenti është një platformë komunitare e ndërtuar nga studentë — shërbim jozyrtar i Universitetit të Prishtinës dhe iniciativë jofitimprurëse.",
+    text: "E-Studenti është një platformë komunitare e ndërtuar nga studentë — shërbim jozyrtar, i palidhur me asnjë universitet, dhe iniciativë jofitimprurëse.",
   },
   {
     title: "Çfarë mbledhim",
@@ -29,8 +31,8 @@ const sections = [
     text: "Përdorim Cloudflare (Workers, D1, R2, Pages) për hostim, ruajtje skedarësh dhe siguri. Email-et e verifikimit dërgohen përmes Resend. Nëse është konfiguruar, Google Safe Browsing mund të kontrollojë URL-të e dërguara për alarme sigurie — vetëm si flamur moderimi, jo bllokim automatik. Statistika të përgjithshme hostimi (vizita, lloji shfletuesi) mund të përdoren për mirëmbajtje.",
   },
   {
-    title: "Ruajtja dhe fshirja",
-    text: "Të dhënat e llogarisë dhe përmbajtja e ngarkuar ruhen derisa të kërkoni fshirje ose derisa të hiqen për shkelje/kërkesë heqjeje. Për fshirje llogarie ose materialesh, na kontaktoni përmes formularit të kontaktit (subjekti \"Problem teknik\" ose \"Tjetër\") ose në Instagram @estudenti.hub.",
+    title: "Ruajtja, shkarkimi dhe fshirja",
+    text: "Te \"Materiale të mia\" mund të shkarkoni një kopje të të dhënave tuaja (profili, materialet dhe lidhjet që keni dërguar, raportet që keni bërë) dhe ta fshini llogarinë vetë. Fshirja heq emrin, mbiemrin dhe emailin tuaj dhe fshin përgjithmonë çdo material ose lidhje që nuk është publikuar. Materialet dhe lidhjet e publikuara mbeten të dukshme si \"Anonim\" dhe nuk mund të ndryshohen ose fshihen më nga ju — vetëm një moderator mund t'i heqë; për heqje shkruani në formularin e kontaktit ose Instagram @estudenti.hub.",
   },
   {
     title: "Pa monetizim / pa shitje të dhënash",
@@ -51,11 +53,14 @@ export default function PrivacyPage() {
     <div className="page-shell">
       <div className="section-shell max-w-4xl">
         <header className="mb-10">
-          <p className="page-kicker mb-4">Ligjore</p>
-          <h1 className="page-title mb-4">Politika e privatësisë</h1>
+          <p className="page-kicker mb-4">
+            <T>Ligjore</T>
+          </p>
+          <h1 className="page-title mb-4">
+            <T>Politika e privatësisë</T>
+          </h1>
           <p className="page-subtitle max-w-2xl">
-            Si trajtojmë të dhënat tuaja në E-Studenti — thjesht, transparent
-            dhe vetëm për funksionimin e platformës.
+            <T>Si trajtojmë të dhënat tuaja në E-Studenti — thjesht, transparent dhe vetëm për funksionimin e platformës.</T>
           </p>
         </header>
 
@@ -63,9 +68,9 @@ export default function PrivacyPage() {
           {sections.map((section) => (
             <section key={section.title} className="surface-card p-6 md:p-7">
               <h2 className="mb-3 text-2xl font-semibold text-navy-900">
-                {section.title}
+                <T>{section.title}</T>
               </h2>
-              <p className="leading-relaxed text-gray-600">{section.text}</p>
+              <p className="leading-relaxed text-gray-600"><T>{section.text}</T></p>
             </section>
           ))}
         </div>

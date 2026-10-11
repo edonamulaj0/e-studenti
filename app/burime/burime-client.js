@@ -7,6 +7,7 @@ import ExternalLinkGate from "../components/ExternalLinkGate";
 import { FACULTIES, getFacultyName } from "../lib/material-options";
 import { RESOURCE_CATEGORIES, getResourceCategoryLabel } from "../lib/resource-options";
 import { WORKER_URL } from "../lib/worker-url";
+import { useT } from "../components/Preferences";
 
 const PAGE_SIZE = 24;
 
@@ -20,6 +21,7 @@ function normalizeLink(link) {
 }
 
 export default function BurimeClient({ initialData = null }) {
+  const t = useT();
   const [links, setLinks] = useState(() =>
     (initialData?.links || []).map(normalizeLink)
   );
@@ -119,19 +121,18 @@ export default function BurimeClient({ initialData = null }) {
     <div className="page-shell">
       <div className="section-shell">
         <header className="mb-10 max-w-3xl">
-          <p className="page-kicker mb-4">Lidhje të dobishme</p>
-          <h1 className="page-title mb-4">Burime shtesë</h1>
+          <p className="page-kicker mb-4">{t("Lidhje të dobishme")}</p>
+          <h1 className="page-title mb-4">{t("Burime shtesë")}</h1>
           <p className="page-subtitle mb-5 max-w-2xl">
-            Faqe kursi, dosje Drive, MEGA dhe burime të tjera — të dërguara nga
-            komuniteti dhe të aprovuara nga moderatorët para publikimit.
+            {t("Faqe kursi, dosje Drive, MEGA dhe burime të tjera — të dërguara nga komuniteti dhe të aprovuara nga moderatorët para publikimit.")}
           </p>
           <div className="flex flex-wrap gap-3">
             <Link href="/burime/dergo" className="btn-primary">
               <Plus className="h-5 w-5" />
-              Dërgo lidhje
+              {t("Dërgo lidhje")}
             </Link>
-            <span className="rounded-full bg-white px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm">
-              {pagination.total} lidhje të aprovuara
+            <span className="rounded-full bg-surface px-4 py-2 text-sm font-semibold text-gray-600 shadow-sm">
+              {t("{n} lidhje të aprovuara", { n: pagination.total })}
             </span>
           </div>
         </header>
@@ -139,10 +140,10 @@ export default function BurimeClient({ initialData = null }) {
         <div className="sticky top-24 z-20 mb-8 py-3 backdrop-blur">
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
             <div className="relative md:col-span-2 xl:col-span-2">
-              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+              <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
               <input
                 type="text"
-                placeholder="Kërko titull, përshkrim, domen…"
+                placeholder={t("Kërko titull, përshkrim, domen…")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="input-srh min-h-[44px] pl-12 text-sm"
@@ -153,7 +154,7 @@ export default function BurimeClient({ initialData = null }) {
               onChange={(e) => setSelectedFaculty(e.target.value)}
               className="input-srh hidden min-h-[44px] text-sm md:block"
             >
-              <option value="">Të gjitha fakultetet</option>
+              <option value="">{t("Të gjitha fakultetet")}</option>
               {FACULTIES.map((faculty) => (
                 <option key={faculty.code} value={faculty.code}>
                   {faculty.name}
@@ -165,10 +166,10 @@ export default function BurimeClient({ initialData = null }) {
               onChange={(e) => setSelectedCategory(e.target.value)}
               className="input-srh hidden min-h-[44px] text-sm md:block"
             >
-              <option value="">Të gjitha kategoritë</option>
+              <option value="">{t("Të gjitha kategoritë")}</option>
               {RESOURCE_CATEGORIES.map((category) => (
                 <option key={category.value} value={category.value}>
-                  {category.label}
+                  {t(category.label)}
                 </option>
               ))}
             </select>
@@ -178,33 +179,33 @@ export default function BurimeClient({ initialData = null }) {
               className="btn-primary hidden min-h-[44px] w-full py-2 text-sm md:inline-flex"
             >
               <Filter className="w-5 h-5" />
-              Pastro filtrat
+              {t("Pastro filtrat")}
             </button>
           </div>
         </div>
 
         {loading && hasLoaded && (
-          <div className="mb-6 rounded-2xl border border-gray-200 bg-white/80 p-4 text-sm font-semibold text-gray-600">
-            Duke përditësuar rezultatet...
+          <div className="mb-6 rounded-2xl border border-gray-200 bg-surface/80 p-4 text-sm font-semibold text-gray-600">
+            {t("Duke përditësuar rezultatet...")}
           </div>
         )}
         {error && (
           <div className="mb-6 rounded-2xl border border-burgundy-600/20 bg-burgundy-50 p-4 text-sm font-semibold text-burgundy-600">
-            {error}
+            {t(error)}
           </div>
         )}
 
         {links.length === 0 ? (
           <div className="surface-card mx-auto max-w-xl p-10 text-center">
-            <Link2 className="mx-auto mb-6 h-16 w-16 text-gray-400" />
+            <Link2 className="mx-auto mb-6 h-16 w-16 text-gray-500" />
             <h3 className="mb-2 text-2xl font-semibold text-navy-900">
-              Nuk ka lidhje të aprovuara
+              {t("Nuk ka lidhje të aprovuara")}
             </h3>
             <p className="mb-6 text-gray-600">
-              Provoni filtra të tjerë ose dërgoni një lidhje të re për moderim.
+              {t("Provoni filtra të tjerë ose dërgoni një lidhje të re për moderim.")}
             </p>
             <Link href="/burime/dergo" className="btn-primary">
-              Dërgo lidhje
+              {t("Dërgo lidhje")}
             </Link>
           </div>
         ) : (
@@ -216,7 +217,7 @@ export default function BurimeClient({ initialData = null }) {
                     {getFacultyName(link.faculty)}
                   </span>
                   <span className="rounded-full bg-burgundy-50 px-3 py-1 text-xs font-semibold text-burgundy-600">
-                    {getResourceCategoryLabel(link.category)}
+                    {t(getResourceCategoryLabel(link.category))}
                   </span>
                 </div>
                 <h2 className="mb-2 text-xl font-semibold text-navy-900">{link.title}</h2>
@@ -224,15 +225,15 @@ export default function BurimeClient({ initialData = null }) {
                   {link.description}
                 </p>
                 {link.subject && link.subject !== "//" && (
-                  <p className="mb-3 text-sm text-gray-500">Lënda: {link.subject}</p>
+                  <p className="mb-3 text-sm text-gray-500">{t("Lënda:")} {link.subject}</p>
                 )}
                 <div className="mb-4 flex items-center justify-between gap-3 text-sm">
                   <span className="rounded-lg bg-navy-100/50 px-3 py-1.5 font-mono text-xs font-semibold text-navy-800">
                     {link.resolved_domain}
                   </span>
                   {link.submitter_name && (
-                    <span className="truncate text-gray-400">
-                      nga {link.submitter_name}
+                    <span className="truncate text-gray-500">
+                      {t("nga")} {link.submitter_name === "Anonim" ? t("Anonim") : link.submitter_name}
                     </span>
                   )}
                 </div>
@@ -242,7 +243,7 @@ export default function BurimeClient({ initialData = null }) {
                   className="btn-primary w-full text-base"
                 >
                   <ExternalLink className="h-5 w-5" />
-                  Hap lidhjen
+                  {t("Hap lidhjen")}
                 </ExternalLinkGate>
               </article>
             ))}

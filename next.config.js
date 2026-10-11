@@ -8,38 +8,8 @@ const nextConfig = {
   experimental: {
     optimizeCss: true,
   },
-  async headers() {
-    return [
-      {
-        source: "/:path*",
-        headers: [
-          {
-            key: "Content-Security-Policy",
-            value: [
-              "default-src 'self'",
-              "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
-              "style-src 'self' 'unsafe-inline'",
-              "img-src 'self' data: https: blob:",
-              "font-src 'self' data:",
-              "connect-src 'self' https://api.e-studenti.com https://media.e-studenti.com https://cloudflareinsights.com https://*.cloudflareinsights.com",
-              "frame-src 'self' https://media.e-studenti.com blob:",
-              "worker-src 'self' blob:",
-              "object-src 'none'",
-              "base-uri 'self'",
-              "frame-ancestors 'none'",
-            ].join("; "),
-          },
-          { key: "X-Content-Type-Options", value: "nosniff" },
-          { key: "X-Frame-Options", value: "DENY" },
-          { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
-          {
-            key: "Permissions-Policy",
-            value: "camera=(), microphone=(), geolocation=()",
-          },
-        ],
-      },
-    ];
-  },
+  // Security headers (CSP etc.) live in public/_headers. `headers()` is ignored
+  // by `output: "export"`, so a second copy here would only drift.
 };
 
 module.exports = nextConfig;

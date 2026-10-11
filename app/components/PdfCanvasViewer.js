@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle, Loader2 } from "lucide-react";
+import { useT } from "./Preferences";
 
 /** Pixels above and below the viewport kept rasterised, so scrolling stays ahead. */
 const OVERSCAN_PX = 600;
@@ -13,6 +14,9 @@ const OVERSCAN_PX = 600;
 const MAX_PIXEL_RATIO = 2;
 /** A4 portrait (width / height), used to size placeholders before page 1 loads. */
 const DEFAULT_ASPECT = 1 / 1.414;
+
+/** Upper bound on text kept in the page for assistive technology. */
+const MAX_ACCESSIBLE_CHARS = 400_000;
 
 let pdfjsPromise = null;
 
@@ -50,7 +54,45 @@ function loadPdfjs() {
  * browser, and pages outside the viewport are freed so long documents stay
  * within a phone's memory budget.
  */
+/**
+ * The pages are drawn on canvases, which a screen reader cannot read. The text
+ * of each page is pulled out in the background and placed in a visually hidden
+ * region beside its canvas (also what search-in-page and "read aloud" see). A
+ * scanned PDF has no text layer, and says so.
+ */
+async function extractPageText(doc, isStale, scannedMessage) {
+  let budget = MAX_ACCESSIBLE_CHARS;
+  let anyText = false;
+  for (let index = 0; index < doc.numPages; index += 1) {
+    if (isStale()) return;
+    try {
+      const page = await doc.getPage(index + 1);
+      const content = await page.getTextContent();
+      if (isStale()) return;
+      const text = content.items.map((item) => item.str).join(" ").replace(/\s+/g, " ").trim();
+      const region = document.querySelector(`[data-pdf-page-text="${index}"]`);
+      if (!region) continue;
+      if (text && budget > 0) {
+        region.textContent = text.slice(0, budget);
+        budget -= text.length;
+        anyText = true;
+      }
+    } catch {
+      // A page whose text cannot be read is simply left without it.
+    }
+  }
+  if (!anyText && !isStale()) {
+    const first = document.querySelector('[data-pdf-page-text="0"]');
+    if (first) {
+      first.textContent = scannedMessage();
+    }
+  }
+}
+
 export default function PdfCanvasViewer({ url, title }) {
+  const t = useT();
+  const tRef = useRef(t);
+  tRef.current = t;
   const scrollRef = useRef(null);
   const hostsRef = useRef([]);
   const pagesRef = useRef([]);
@@ -178,6 +220,11 @@ export default function PdfCanvasViewer({ url, title }) {
         pagesRef.current = new Array(doc.numPages).fill(null);
         setPageCount(doc.numPages);
         setStatus("ready");
+        extractPageText(
+          doc,
+          () => cancelled || docRef.current !== doc,
+          () => tRef.current("Ky dokument nuk ka tekst të lexueshëm (ndoshta është skanuar). Shkarkojeni për ta parë.")
+        );
       } catch (error) {
         console.error("PDF render error:", error);
         if (!cancelled) setStatus("error");
@@ -228,7 +275,7 @@ export default function PdfCanvasViewer({ url, title }) {
       {status === "loading" && (
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-srh-paper">
           <Loader2 className="mb-4 h-10 w-10 animate-spin text-srh-crimson" />
-          <p className="text-srh-navy/70">Duke ngarkuar parapamjen...</p>
+          <p className="text-srh-navy/70">{t("Duke ngarkuar parapamjen...")}</p>
         </div>
       )}
 
@@ -236,8 +283,7 @@ export default function PdfCanvasViewer({ url, title }) {
         <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-srh-paper p-8 text-center">
           <AlertCircle className="mb-4 h-12 w-12 text-srh-crimson" />
           <p className="max-w-md text-srh-navy/70">
-            Nuk mund të shfaqet parapamja e këtij skedari. Provoni ta hapni në skedë
-            të re ose ta shkarkoni.
+            {t("Nuk mund të shfaqet parapamja e këtij skedari. Provoni ta hapni në skedë të re ose ta shkarkoni.")}
           </p>
         </div>
       )}
@@ -253,13 +299,15 @@ export default function PdfCanvasViewer({ url, title }) {
               ref={(el) => {
                 hostsRef.current[index] = el;
               }}
-              className="w-full bg-white shadow-sm"
+              className="w-full bg-surface shadow-sm"
               style={{ aspectRatio: String(aspect) }}
             >
               <canvas
                 className="block h-full w-full"
-                aria-label={`${title || "Dokument"} — faqja ${index + 1}`}
+                role="img"
+                aria-label={t("{title} — faqja {page}", { title: title || t("Dokument"), page: index + 1 })}
               />
+              <div className="sr-only" data-pdf-page-text={index} lang="sq" />
             </div>
           ))}
         </div>

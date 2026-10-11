@@ -3,10 +3,12 @@
 import { useState } from "react";
 import { ExternalLink, AlertTriangle } from "lucide-react";
 import ModalOverlay from "./ModalOverlay";
+import { useT } from "./Preferences";
 
 export default function ExternalLinkGate({ href, domain, children, className = "" }) {
+  const t = useT();
   const [open, setOpen] = useState(false);
-  const targetDomain = domain || safeDomain(href);
+  const targetDomain = domain || safeDomain(href, t);
 
   const close = () => setOpen(false);
 
@@ -27,17 +29,17 @@ export default function ExternalLinkGate({ href, domain, children, className = "
           onClick={(e) => e.stopPropagation()}
         >
           <div className="mb-4 flex items-start gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-warning-amber/15 text-warning-amber">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-warning-amber/15 text-warning-text">
               <AlertTriangle className="h-5 w-5" />
             </span>
             <div>
               <h2 id="external-link-title" className="text-lg font-semibold text-navy-900">
-                Po dilni nga E-Studenti
+                {t("Po dilni nga E-Studenti")}
               </h2>
               <p className="mt-2 text-sm leading-relaxed text-gray-600">
-                Po hapni një faqe të jashtme:{" "}
+                {t("Po hapni një faqe të jashtme:")}{" "}
                 <span className="font-semibold text-navy-900">{targetDomain}</span>.
-                Ne nuk e kontrollojmë përmbajtjen e faqeve të jashtme — hapeni me kujdes.
+                {t("Ne nuk e kontrollojmë përmbajtjen e faqeve të jashtme — hapeni me kujdes.")}
               </p>
             </div>
           </div>
@@ -50,10 +52,10 @@ export default function ExternalLinkGate({ href, domain, children, className = "
               onClick={close}
             >
               <ExternalLink className="h-4 w-4" />
-              Vazhdo te {targetDomain}
+              {t("Vazhdo te {domain}", { domain: targetDomain })}
             </a>
-            <button type="button" onClick={close} className="btn-outline flex-1">
-              Anulo
+            <button type="button" data-autofocus onClick={close} className="btn-outline flex-1">
+              {t("Anulo")}
             </button>
           </div>
         </div>
@@ -62,10 +64,10 @@ export default function ExternalLinkGate({ href, domain, children, className = "
   );
 }
 
-function safeDomain(url) {
+function safeDomain(url, t) {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
   } catch {
-    return "faqja e jashtme";
+    return t("faqja e jashtme");
   }
 }
