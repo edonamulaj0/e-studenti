@@ -1,0 +1,427 @@
+institution,unit_or_branch,sector,program_sq,program_en,campus,level,ects,quota,accredited_until,source_page,level_norm
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Antropologji dhe trashëgimi kulturore, BA","Anthropology and cultural heritage, BA",Prishtinë,BA,180,40,2029-09-30,1,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Psikologji, BA","Psychology, BA",Prishtinë,BA,180,80,2029-09-30,1,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Trashëgimi Kulturore, MA","Cultural Heritage, MA",Prishtinë,MA,120,40,2029-09-30,1,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Filozofi, BA","Philosophy, BA",Prishtinë,BA,180,100,2027-09-30,1,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Histori, BA","History, BA",Prishtinë,BA,180,100,2027-09-30,1,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Sociologji, BA","Sociology, BA",Prishtinë,BA,180,100,2027-09-30,1,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Punë Sociale, BA","Social Work, BA",Prishtinë,BA,180,40,2029-09-30,1,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Shkencë Politike: a) Marrëdhënie Ndërkombëtare dhe Diplomaci b) Administrim Publik, BA","Political Science: a) International Relations and Diplomacy b) Public Administration, BA",Prishtinë,BA,180,100,2029-09-30,1,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Psikologji Klinike dhe Komuniteti, MA","Clinical and community psychology, MA",Prishtinë,MA,120,20,2029-09-30,1,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Psikologji Shkollore dhe Këshillim, MA","School Psychology and Counseling, MA",Prishtinë,MA,120,20,2029-09-30,1,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Filozofi Politike, MA","Political Philosophy, MA",Prishtinë,MA,120,40,2027-09-30,1,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Histori Koha e Re, MA","History of Modern Time, MA",Prishtinë,MA,120,45,2027-09-30,1,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Arkivistika, MA","Archivistic, MA",Prishtinë,MA,60,20,2029-09-30,1,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Sociologji, MA","Sociology, MA",Prishtinë,MA,120,50,2029-09-30,1,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Filozofik,public,"Marredhenie Nderkombetare dhe Diplomaci, MA","International Relations and Diplomacy, MA",Prishtinë,MA,120,30,2027-09-30,1,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Matematikë, BSc","Mathematics, BSc",Prishtinë,BSc,180,60,2030-09-30,1,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Biologji molekulare, BSc","Molecular Biology, BSc",Prishtinë,BSc,180,30,2029-09-30,1,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Biologji, BSc","Biology, BSc",Prishtinë,BSc,180,45,2027-09-30,1,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Ekologji dhe Mbrojtje e Mjedisit, BSc","Ecology and Environment Protection, BSc",Prishtinë,BSc,180,50,2027-09-30,1,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Kimi Inxhinierike, BSc","Chemistry of Engineering, BSc",Prishtinë,BSc,180,60,2027-09-30,1,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Kimi Ushqimore, BSc","Food Chemistry, BSc",Prishtinë,BSc,180,30,2027-09-30,2,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Matematikë Financiare në Banka dhe Sigurime, BSc","Financial Mathematics for Banking and Insurances, BSc",Prishtinë,BSc,180,45,2027-09-30,2,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Shkencë Kompjuterike, BSc","Computer Sciences, BSc",Prishtinë,BSc,180,60,2027-09-30,2,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Fizikë, BSc","Physics, BSc",Prishtinë,BSc,180,80,2027-09-30,2,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Gjeografi, BSc","Geography, BSc",Prishtinë,BSc,180,70,2027-09-30,2,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Kimi, BSc","Chemistry, BSc",Prishtinë,BSc,180,60,2029-09-30,2,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Biologji, MSc (me 2 specializime 1. Botanikë 2. Zoologji)","Biology, MSc (with 2 specializations: 1. Botany, 2. Zoology)",Prishtinë,MSc,120,30,2030-09-30,2,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Shkencë Kompjuterike, MSc","Computer Sciences, MSc",Prishtinë,MSc,120,30,2028-09-30,2,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Matematikë me zbatime, MSc","Mathematics with applications, MSc",Prishtinë,MSc,120,40,2029-09-30,2,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Ekologji dhe Mbrojtje e Mjedisit, MSc","Ecology and Environment Protection, MSc",Prishtinë,MSc,120,30,2027-09-30,2,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Shkenca e Materialeve, MSc","Material Science, MSc",Prishtinë,MSc,120,10,2027-09-30,2,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Fizikë, MSc","Physics, MSc",Prishtinë,MSc,120,20,2027-09-30,2,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Gjeografi, MSc","Geography, MSc",Prishtinë,MSc,120,20,2027-09-30,2,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Kimi Analitike dhe Kimi Mjedisore, MSc","Analytical Chemistry & Environmental Chemistry, MSc",Prishtinë,MSc,120,15,2029-09-30,2,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Kimi Organike, MSc","Organic Chemistry, MSc",Prishtinë,MSc,120,15,2029-09-30,2,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Shkencave Matematike Natyrore,public,"Kimi, PhD","Chemistry , PhD",Prishtinë,PhD,180,5,2027-09-30,2,PhD
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Letërsi Shqipe, BA","Albanian Literature, BA",Prishtinë,BA,240,60,2027-09-30,2,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhë dhe Letërsi Angleze, BA","English Language and Literature, BA",Prishtinë,BA,240,120,2031-09-30,2,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhë dhe Letërsi Frënge, BA","French Language and Literature, BA",Prishtinë,BA,240,35,2029-09-30,2,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhë dhe Letërsi Gjermane, BA","German Language and Literature, BA",Prishtinë,BA,240,120,2029-09-30,2,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gazetari, BA","Journalism, BA",Prishtinë,BA,180,100,2031-09-30,2,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhë Shqipe, BA","Albanian Language, BA",Prishtinë,BA,240,60,2027-09-30,2,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Orientalistike, BA","Orientalistics, BA",Prishtinë,BA,240,30,2029-09-30,2,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhe dhe Letersi Turke, BA","Turkish Language and Literature, BA",Prishtinë,BA,240,35,2029-09-30,2,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,Ballkanistikë,Balkanistics,Prishtinë,BA,180,30,2029-09-30,2,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gazetari dhe Marrëdhënie me Publikun, MA","​Journalism and Public Relations, MA",Prishtinë,MA,120,25,2029-09-30,2,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhë dhe Letërsi Frënge, MA","French Language and Literature, MA",Prishtinë,MA,60,20,2028-09-30,3,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhë dhe Letërsi Turke, MA","Turkish Language and Literature, MA",Prishtinë,MA,60,15,2030-09-30,3,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhë Shqipe, MA","Albanian Language, MA",Prishtinë,MA,60,30,2027-09-30,3,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Letërsi Shqipe, MA","Albanian Literature, MA",Prishtinë,MA,60,25,2027-09-30,3,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Studime Kulturore Orientale, MA","Oriental Cultural Studies, MA",Prishtinë,MA,60,15,2027-09-30,3,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhë dhe Letërsi Gjermane, MA","German Language and Literature, MA",Prishtinë,MA,60,20,2029-09-30,3,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjermanishtja si Gjuhë e Huaj, MA","German as a Foreign Language, MA",Prishtinë,MA,60,15,2029-09-30,3,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Letërsi Angleze, MA","English Literature, MA",Prishtinë,MA,60,20,2029-09-30,3,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhë angleze (Program i Integruar i Gjuhësisë), MA","English Language (Integrated programme in Linguistics), MA",Prishtinë,MA,60,20,2029-09-30,3,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Gjuhesi, PhD","Linguistics, PhD",Prishtinë,PhD,180,5,2027-09-30,3,PhD
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Filologjisë,public,"Letërsi, PhD","Literature, PhD",Prishtinë,PhD,180,5,2027-09-30,3,PhD
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Juridik,public,"Juridik, LLB","Law, LLB",Prishtinë,LLB,240,600,2028-09-30,3,LLB
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Juridik,public,"E Drejta Civile dhe Pronësore, LLM","Civil and Property Law, LLM",Prishtinë,LLM,60,40,2029-09-30,3,LLM
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Juridik,public,"E Drejta Ndërkombëtare, LLM","International Law, LLM",Prishtinë,LLM,60,35,2029-09-30,3,LLM
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Juridik,public,"E Drejta Kushtetuese Administrative, LLM","Constitutional and Administrative Law, LLM",Prishtinë,LLM,60,35,2029-09-30,3,LLM
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Juridik,public,"E Drejta Penale, LLM","Penal Law, LLM",Prishtinë,LLM,60,40,2029-09-30,3,LLM
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Juridik,public,"Të Drejtat e Njeriut, E Drejtë Penale Ndërkombëtare dhe Drejtësi Tranzicionale, LLM","Human Rights, International Criminal Law and Transitional Justice, LLM",Prishtinë,LLM,60,40,2031-09-30,3,LLM
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Juridik,public,"E Drejta Financiare, LLM","Financial Law, LLM",Prishtinë,LLM,60,35,2028-09-30,3,LLM
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Juridik,public,"Kontrata dhe e Drejta Komerciale, LLM","Contracts and Commercial Law, LLM",Prishtinë,LLM,60,40,2028-09-30,3,LLM
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Juridik,public,"Studime të Avancuara Evropiane, LLM","Advanced European Studies, LLM",Prishtinë,LLM,60,25,2028-09-30,3,LLM
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Ekonomi e Aplikuar dhe Menaxhment (në Gjuhën Angleze), BSc","Applied Economics and Management (in English Language), BSc",Prishtinë,BSc,180,50,2030-09-30,3,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Banka dhe Financa, BSc","Banking and Accounting, BSc",Prishtinë,BSc,180,300,2029-09-30,3,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Ekonomiks, BSc","Economics, BSc",Prishtinë,BSc,180,150,2031-09-30,3,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Kontabilitet, BSc","Accounting, BSc",Prishtinë,BSc,180,220,2031-09-30,3,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Marketing, BSc","Marketing, BSc",Prishtinë,BSc,180,150,2029-09-30,3,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Menaxhment, BSc","Management, BSc",Prishtinë,BSc,180,250,2027-09-30,3,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Banka dhe Financa, MSc","Banking and Accounting, MSc",Prishtinë,MSc,120,100,2029-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Ekonomiks, MSc","Economics, MSc",Prishtinë,MSc,120,80,2031-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Kontabilitet, MSc","Accounting, MSc",Prishtinë,MSc,120,80,2031-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Marketing, MSc","Marketing, MSc",Prishtinë,MSc,120,60,2027-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti Ekonomik,public,"Menaxhment, MSc","Management, MSc",Prishtinë,MSc,120,120,2027-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinerisë Ndërtimore,public,"Gjeodezi, BSc","Geodesy, BSc",Prishtinë,BSc,180,50,2031-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinerisë Ndërtimore,public,"Inxhinieria e Ambientit, BSc","Environmental Engineering, BSc",Prishtinë,BSc,180,40,2027-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinerisë Ndërtimore,public,"Konstruktiv, BSc","Construction, BSc",Prishtinë,BSc,180,120,2029-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinerisë Ndërtimore,public,"Hidroteknike, BSc","Hydrotechnics, BSc",Prishtinë,BSc,180,40,2027-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinerisë Ndërtimore,public,"Menaxhimi i Integruar i Resurseve Ujore, MSc","Integrated Water Resource Management, MSc",Prishtinë,MSc,120,20,2031-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinerisë Ndërtimore,public,"Gjeodezi, MSc","Geodesy, MSc",Prishtinë,MSc,120,20,2027-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinerisë Ndërtimore,public,"Konstruktiv, MSc","Construction, MSc",Prishtinë,MSc,120,40,2027-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike,public,"Elektroenergjetikë, BSc","Power Systems, BSc",Prishtinë,BSc,180,60,2028-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike,public,"Elektronikё, Automatikё dhe Robotikë, BSc","Electronics, Automation and Robotics, BSc",Prishtinë,BSc,180,120,2027-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike,public,"Inxhineri Kompjuterike dhe Softuerike, BSc","Computer and Software Engineering, BSc",Prishtinë,BSc,180,250,2027-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike,public,"Teknologjitë e Informacionit dhe Komunikimit, BSc","Information and Communication Technologies, BSc",Prishtinë,BSc,180,80,2027-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike,public,"Elektroenergjetika dhe Menaxhimi i Energjisë, MSc","Power Systems and Energy Management, MSc",Prishtinë,Msc,120,30,2028-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike,public,"Elektronikё, Automatikё dhe Robotikë, MSc","Electronics, Automation and Robotics, MSc",Prishtinë,MSc,120,30,2027-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike,public,"Inxhineri Kompjuterike dhe Softuerike, MSc","Computer and Software Engineering, MSc",Prishtinë,MSc,120,50,2027-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike,public,"Teknologjitë e Informacionit dhe Komunikimit, MSc","Information and Communication Technologies, MSc",Prishtinë,Msc,120,20,2027-09-30,4,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Elektrike dhe Kompjuterike,public,"Inxhinieri Elektrike dhe Kompjuterike, PhD",Doctoral studies in Electrical and Computer Engineering,Prishtinë,PhD,180,12,2028-09-30,4,PhD
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Mekanike,public,"Prodhimtari dhe Inxhinieri Industriale me Menaxhment, BSc","Manufacturing and Industrial Engineering with Management, BSc",Prishtinë,BSc,180,50,2030-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Mekanike,public,"Mekatronikë, BSc","Mechatronics, BSc",Prishtinë,BSc,180,80,2029-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Mekanike,public,"Termoenergjetika dhe Energjia e Ripërtërishme, BSc","Thermoenergetics and Renewable Energy, BSc",Prishtinë,BSc,180,60,2027-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Mekanike,public,"Dizajn Inxhinierik dhe Automjete, BSc","Engineering Design and Vehicles, BSc",Prishtinë,Bsc,180,70,2028-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Mekanike,public,"Komunikacion dhe Transport, BSc","Traffic and Transport, BSc",Prishtinë,BSc,180,80,2028-09-30,4,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Mekanike,public,"Dizajn Inxhinierik dhe Automjete, MSc","Engineering Design and Vehicles, MSc",Prishtinë,MSc,120,20,2030-09-30,5,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Mekanike,public,"Mekatronikë, MSc","Mechatronics, MSc",Prishtinë,MSc,120,20,2029-09-30,5,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Mekanike,public,"Komunikacion Rrugor, MSc","Road Traffic, MSc",Prishtinë,MSc,120,30,2029-09-30,5,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Inxhinierisë Mekanike,public,"Termoenergjetika dhe Energjia e Ripërtërishme, MSc (me 2 specializime)","Thermoenergetics and Renewable Energy, MSc (with 2 specializations)",Prishtinë,MSc,120,30,2029-09-30,5,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Mjekësisë,public,"Infermieri, BSc","Nursing, BSc",Prishtinë,BSc,180,100,2028-09-30,5,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Mjekësisë,public,"Fizioterapi dhe rehabilitim, BSc","Physiotherapy and Rehabilitation, Bsc",Prishtinë,BSc,240,32,2028-09-30,5,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Mjekësisë,public,"Stomatologji, Dr. Dent","Dentistry, Dr. Dent",Prishtinë,Dr. Dent,360,80,2030-09-30,5,Dr. Dent
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Mjekësisë,public,"Mjekësi e Përgjithshme, Dr. Med","General Medicine, Dr. Med",Prishtinë,Dr. Med,360,200,2027-09-30,5,Dr. Med
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Mjekësisë,public,Farmaci MPh.,Pharmacy MPh.,Prishtinë,MPh,300,50,2028-09-30,5,MPh
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Mjekësisë,public,"Fizioterapi, MSc","Physiotherapy, MSc",Prishtinë,MSc,120,30,2027-09-30,5,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Mjekësisë,public,"Shëndet Publik, PhD","Public Health, PhD",Prishtinë,PhD,180,4,2029-09-30,5,PhD
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Mjekësisë,public,"Mjekësi Paraklinike, PhD","Preclinical Medicine, PhD",Prishtinë,PhD,180,10,2031-09-30,5,PhD
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Mjekësisë,public,"Mjekësi Klinike, PhD","Clinical Medicine, PhD",Prishtinë,PhD,180,10,2027-09-30,5,PhD
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Mjekësisë,public,"Stomatologji, PhD","Stomatology, PhD",Prishtinë,PhD,180,5,2028-09-30,5,PhD
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arteve,public,"Bachelor i Muzikës në Performim, BMus (me 5 specializime)","Bachelor of Music in Performance, BMus (with 5 specializations)",Prishtinë,BMus,240,50,2029-09-30,5,BMus
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arteve,public,"Artet Vizuale, BA (me 6 specializime)","Visual Arts, BA (with 6 specializations)",Prishtinë,BA,240,100,2030-09-30,5,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arteve,public,"Artet Vizuale, MA (me 6 specializime)","Visual Arts, MA (with 6 specializations)",Prishtinë,MA,60,100,2030-09-30,5,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arteve,public,Master i Muzikës në Performim (me 5 specializime),"Master of Music in Performance (with 5 specializations), Mmus",Prishtinë,MMus,60,25,2028-09-30,5,MMus
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arteve,public,"Master i Muzikës në Kompozim (me specializim në Kompozim), MMus","Master of Music in Composition (with specialization in Composition), Mmus",Prishtinë,MMus,120,4,2028-09-30,5,MMus
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arteve,public,"Bachelor i Muzikës (me specializim në Kompozim), BMus","Bachelor of Music (with specialization in Composition), BMus",Prishtinë,BMus,240,25,2028-09-30,5,BMus
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arteve,public,"Artet Dramatike (me 7 specializime), MA","Dramatic Arts, MA (with 7 specializations)",Prishtinë,MA,60,85,2030-09-30,5,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arteve,public,"Artet Dramatike (me 7 specializime), BA","Dramatic Arts, BA (with 7 specializations)",Prishtinë,BA,240,85,2030-09-30,5,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arteve,public,"Master i Muzikes ne Edukim, MMus","Master of Music in Ediucation, MMus",Prishtinë,MMus,120,20,2027-09-30,5,MMus
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Ekonomi e Bujqësisë, BSc","Agriculture Economics, BSc",Prishtinë,BSc,180,40,2028-09-30,5,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Prodhim Shtazor, BSc","Animal Production, BSc",Prishtinë,BSc,180,40,2028-09-30,5,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Teknologji Ushqimore me Bioteknologji, BSc","Food Technology and Biotechnology, BSc",Prishtinë,BSc,180,70,2028-09-30,5,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Prodhim Bimor, BSc","Plant Production, BSc",Prishtinë,BSc,180,40,2028-09-30,6,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Mjekësi Veterinare, DMV","Veterinary Medicine, DVM",Prishtinë,DMV,300,50,2028-09-30,6,DMV
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Shkenca Bimore, MSc","Plant Sciences, Msc",Prishtinë,MSc,120,10,2029-09-30,6,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Ekonomia e Bujqësisë dhe Ushqimit, MSc","Agriculture and Food Economics, MSc",Prishtinë,MSc,120,15,2028-09-30,6,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Shkencat e Aplikuara në Zootekni, MSc","Applied Animal Sciences, MSc",Prishtinë,MSc,120,10,2028-09-30,6,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Shkencat e Ushqimit, MSc","Food Science, MSc",Prishtinë,MSc,120,20,2028-09-30,6,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Pemëtari-Vreshtari, MSc","Pomology and Viticulture, MSc",Prishtinë,MSc,120,10,2028-09-30,6,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Bujqësisë dhe Veterinarisë,public,"Mbrojtje e Bimëve, Fitomedicine, MSc","Plant Protection-Fitomedicine, MSc",Prishtinë,MSc,120,10,2028-09-30,6,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit Fizik dhe i Sportit,public,"Edukimi Fizik dhe Sport, BA","Physical Education and Sport, BA",Prishtinë,BA,240,100,2027-09-30,6,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit Fizik dhe i Sportit,public,"Edukimi Fizik dhe Sport, MA","Physical Education and Sport, MA",Prishtinë,MA,60,37,2031-09-30,6,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit Fizik dhe i Sportit,public,"Trajner Sportiv, MA","Sport Coaching, MA",Prishtinë,MA,60,30,2027-09-30,6,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit,public,"Edukimi në Fëmijëri të Hershme, BA","Early Childhood Education, BA",Prishtinë,BA,240,60,2027-09-30,6,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit,public,"Edukimi Fillor, BA","Primary Education, BA",Prishtinë,BA,240,120,2029-09-30,6,BA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit,public,"Teknologjia Arsimore, BSc","Education Technology, BSc",Prishtinë,BSc,180,40,2029-09-30,6,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit,public,Master i Edukimit për STEAM,Master of Education for STEAM,Prishtinë,MA,120,20,2031-09-30,6,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit,public,Master në Inovacion dhe Cilësi në Edukim,Master of Innovation and Quality in Education,Prishtinë,MA,120,50,2027-09-30,6,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit,public,Master i Shkencave të Edukimit (me 4 specializime),Master in Educational Sciences (with 4 specialisations),Prishtinë,MA,120,160 (40 per specializim),2027-09-30,6,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit,public,Master i Mësimdhënies Lëndore (me 7 specializime),Master in Subject Teaching (with 7 specializations),Prishtinë,MA,120,175 (25 per specializim),2027-09-30,6,MA
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Edukimit,public,Doktoratë në Shkencat e Edukimit (Program i përbashkët/ Doktoratë e dyfishtë),Doctoral for Educational Sciences (Double degree),Prishtinë,PhD,180,5,2031-09-30,6,PhD
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arkitekturës,public,"Arkitekturë, BSc","Architecture, BSc",Prishtinë,BSc,180,150,2027-09-30,6,BSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arkitekturës,public,"Efiçiencë e Energjisë, MSc","Energy Efficiency, MSc",Prishtinë,MSc,120,25,2029-09-30,6,MSc
+"Universiteti i Prishtinës ""Hasan Prishtina""",Fakulteti i Arkitekturës,public,"Arkitekturë, MSc (5 specializime)","Architecture, MSc (5 specializations)",Prishtinë,MSc,120,75,2027-09-30,6,MSc
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Gjuhë dhe Letërsi Angleze, BA","English Language and Literature, BA",Prizren,BA,240,100,2031-09-30,6,BA
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Gjuhë dhe Letërsi Gjermane, BA","German Language and Literature, BA",Prizren,BA,180,100,2029-09-30,6,BA
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Gjuhë dhe Letërsi Shqipe, BA","Albanian Language and Literature, BA",Prizren,BA,240,40,2029-09-30,6,BA
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Programi Fillor, BA (në Gjuhën Shqipe, Boshnjake dhe Turke)","Primary Education, BA (in Albanian, Bosnian and Turkish)",Prizren,BA,240,100,2028-09-30,6,BA
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Dizajn Softueri, Bachelor Profesional","Software Design, Bachelor Professional",Prizren,Bachelor profesional,180,180,2027-09-30,7,Bachelor profesional
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Administrim Biznesi, BSc","Business Administration, BSc",Prizren,BSc,180,150,2030-09-30,7,BSc
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Menaxhment Nderkombëtar, BSc","International Management, BSc",Prizren,BSc,180,150,2030-09-30,7,BSc
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Shkencat e Pyjeve dhe të Mjedisit, BSc","Forest and Environmental Sciences, BSc.",Prizren,BSc,180,50,2027-09-30,7,BSc
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Teknologjitë e Informacionit dhe Telekomunikim (në gjuhën shqipe, turke dhe boshnjake), BSc","Information Technologies and Telecommunication (in Albanian, Turkish and Bosnian Language), BSc",Prizren,BSc,180,180,2027-09-30,7,BSc
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Agrobiznes, BSc",Agribusiness. BSc,Prizren,BSc,180,80,2029-09-30,7,BSc
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Juridik i Përgjithshëm, LLB","General Law, LLB",Prizren,LLB,240,180,2027-09-30,7,LLB
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Qeverisje Demokratike dhe Sundim i Ligjit, LLM","Democratic Governence and Rule of Law, LLM",Prizren,LLM,60,40,2027-09-30,7,LLM
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Legjislacion dhe Institucionet e Bashkimit Europian, LLM","European Union Legislation and Institutions, LLM",Prizren,LLM,60,20,2029-09-30,7,LLM
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Shkencat e Edukimit, specializimi Mesimdhenie dhe Kurrikule, MA","Education Sciences, profile Teaching and Curriculum, MA",Prizren,MA,120,70,2027-09-30,7,MA
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Edukim dhe Mësimdhënie në Matematikë në Gjuhën Turke, MA","Education and Teaching in Mathematics in the Turkish Language, MA",Prizren,MA,60,10,2029-09-30,7,MA
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Gjuhësi Aplikative, MA","Applied Linguistics, MA",Prizren,MA,60,20,2029-09-30,7,MA
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Administrim Biznesi, MSc","Business Administration, MSc",Prizren,Msc,120,70,2029-09-30,7,MSc
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Shkenca Kompjuterike dhe Teknologji Komunikim, MSc","Computer Science and Communication Technologies, MSc",Prizren,Msc,120,45,2027-09-30,7,MSc
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Menaxhim në Agrobiznes, MSc","Agribusiness Management, MSc",Prizren,MSc,120,15,2029-09-30,7,MSc
+"Universiteti ""Ukshin Hoti"", Prizren",,public,"Shkencat Pyjore dhe Ekologji Pyjore, MSc","Forest Science and Forest Ecology, MSc",Prizren,MSc,120,15,2029-09-30,7,MSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Art Performues, BA","Performing Arts, BA",Pejë,BA,240,20,2030-09-30,7,BA
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Arti Muzikor, BA","Music Art, BA",Pejë,BA,240,20,2029-09-30,7,BA
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Ekologji e Aplikuar ne Agrobiznes, BSc","Applied Ecology in Agribusiness, BSc",Pejë,BSc,180,40,2028-09-30,7,BSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Menaxhim në Turizëm dhe Hotelieri (Gjuhë Shqipe dhe Gjuhë Boshnjake), BSc","Management in Tourism and Hospitality (in Albanian language and Bosnian Language), BSc",Pejë,BSc,180,105,2028-09-30,7,BSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Teknologji e Prodhimit Bimor, BSc","Plant Production Technology, BSc",Pejë,BSc,180,40,2028-09-30,7,BSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Teknologji Ushqimore, BSc","Food Technology, BSc",Pejë,BSc,180,50,2030-09-30,7,BSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Menaxhim Biznesi, (në Gjuhën Shqipe dhe Boshnjake), BSc, me specializim ne 1. Banka dhe Financa dhe 2. Administrim Biznesi","Business Management, (in Albanian and Bosnian Language), BSc, with specialization in 1. Banking and Finance and 2. Business Administration",Pejë,BSc,180,200,2027-09-30,7,BSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Teknologji Informacioni në Biznes dhe Ekonomi, BSc","Information Technology in Business and Economy, BSc",Pejë,Bsc,180,150,2031-09-30,7,BSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Juridik i Përgjithshëm, LLB","General Law, LLB",Pejë,LLB,240,100,2031-09-30,7,LLB
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"E Drejta Civile dhe Biznesore, LLM","Civil and Business Law, LLM",Pejë,LLM,60,25,2027-09-30,7,LLM
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"E Drejta dhe Siguria, LLM","Law and Security, LLM",Pejë,LLM,120,25,2029-09-30,7,LLM
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Art Performues, MA","Performing Arts, MA",Pejë,MA,60,10,2028-09-30,7,MA
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Edukim Muzikor, MA","Music Education, MA",Pejë,MA,60,5,2027-09-30,7,MA
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Menaxhim Biznesi (në Gjuhën Shqipe dhe Boshnjake), MSc, 2 specializime: 1. Menaxhim Biznesi, 2. Banka dhe Financa","Business Management (in Albanian Language and Bosnian Language), MSc, 2 specializations: 1. Business Management 2. Banking and Finance",Pejë,Msc,120,120,2030-09-30,8,MSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Sistemet e Qëndrueshme të Prodhimit Ushqimor, MSc","Sustainable Food Production Systems, MSc",Pejë,MSc,120,25,2027-09-30,8,MSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Menaxhimi i Riskut dhe Sigurimet, MSc","Insurance and Risk Management, MSc",Pejë,Msc,120,25,2027-09-30,8,MSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Menaxhment dhe Turizëm te Qëndrueshëm, MSc","Management and Sustainable Turism, MSc",Pejë,Msc,120,25,2027-09-30,8,MSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Menaxhim Mjedisi, MSc","Environmental Management, MSc",Pejë,MSc,120,20,2029-09-30,8,MSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Menaxhimi i Marketingut Turistik (gjuhe shqipe dhe gjuhe boshnjake), MSc","Tourism, Marketing Management (in Albanian language and Bosnian Language), MSc",Pejë,MSc,120,45,2028-09-30,8,MSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Menaxhim i Burimeve Njerëzore, MSc","Human Resource Management, MSc",Pejë,MSc,120,80,2029-09-30,8,MSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Informatikë në Biznes, MSc","Business Informatics, MSc",Pejë,MSc,120,60,2029-09-30,8,MSc
+"Universiteti ""Haxhi Zeka"", Pejë",,public,"Biznes dhe Ekonomi, PhD","Business and Economics, PhD",Pejë,PhD,180,9,2028-09-30,8,PhD
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Biznes dhe Menaxhment, Bsc (Me specializime 1. Banka,","Business and Management, Bsc (With specializations 1. Banks,",Mitrovicë,BA,180,120,2028-09-30,8,BA
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Inxhinieri dhe Tekonologji Ushqimore, BSc","Food Engineering and Technology, BSc",Mitrovicë,Bsc,180,60,2030-09-30,8,BSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Teknologji, BSc (Me specializime 1. Inxhinieri Mjedisore dhe 2. Inxhinieri Kimike)","Technology, BSc (With specializations 1. Environmental Engineering and Chemical Engineering)",Mitrovicë,Bsc,180,40,2028-09-30,8,BSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Inxhinieri Ekonomike, BSc","Economics Engineering, BSc",Mitrovicë,Bsc,180,150,2027-09-30,8,BSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Gjeologji, BSc","Geology, BSc",Mitrovicë,Bsc,180,60,2029-09-30,8,BSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Materiale dhe Metalurgji, BSc","Materials and Metalurgy, BSc",Mitrovicë,BSc,180,20,2027-09-30,8,BSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Inxhinieri Mekanike, BSc","Mechanical Engineering, BSc",Mitrovicë,BSc,180,70,2027-09-30,8,BSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Shkenca Kompjuterike dhe Inxhinieri, BSc","Computer Sciences and Engineering, BSc",Mitrovicë,BSc,180,160,2031-09-30,8,BSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Inxhinieria Minerare, BSc","Mining Engineering, BSc",Mitrovicë,BSc,240,20,2028-09-30,8,BSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Juridik, LLB","Law, LLB",Mitrovicë,LLB,240,80,2027-09-30,8,LLB
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Teknologji, MSc (me specializim Inxhinieri e Mbrojtjes Mjedisore)","Technology, (with specialization in Environmental Protection Engeeniering), MSc",Mitrovicë,Msc,120,20,2028-09-30,8,MSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Vendburimet Minerale, MSc","Mineral Deposits, MSc",Mitrovicë,Msc,120,10,2028-09-30,8,MSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Hidrogjeologji dhe Gjeologji Inxhinierike, MSc","Hydrogeology and Engineering Geology, MSc",Mitrovicë,Msc,120,15,2027-09-30,8,MSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Zhvillimi i Qëndrueshëm i Minierave, MSc","Sustainable Mining Development, MSc",Mitrovicë,Msc,60,10,2028-09-30,8,MSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Materiale dhe Metalurgji, MSc","Materials and Metalurgy, MSc",Mitrovicë,Msc,120,10,2027-09-30,8,MSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Inxhinieri dhe Tekonologji Ushqimore, MSc","Engineering and Food Technology, MSc",Mitrovicë,MSc,120,30,2029-09-30,8,MSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Cloud and Edge Computing, MSc","Cloud and Edge Computing, MSc",Mitrovicë,MSc,120,35,2029-09-30,8,MSc
+"Universiteti ""Isa Boletini"", Mitrovicë",,public,"Teknologji Prodhuese dhe Menaxhment, MSc","Manufacturing Technology and Management, MSc",Mitrovicë,MSc,120,35,2029-09-30,8,MSc
+Universiteti i Shkencave të Aplikuara Ferizaj,,public,"Dizajn Grafik dhe Multimedia, Bachelor Profesional","Graphic Design and Multimedia, Bachelor Professional",Ferizaj,Bachelor profesional,180,50,2027-09-30,8,Bachelor profesional
+Universiteti i Shkencave të Aplikuara Ferizaj,,public,"Informatika e Aplikuar, BSc","Applied Informatics, BSc",Ferizaj,BSc,180,100,2027-09-30,8,BSc
+Universiteti i Shkencave të Aplikuara Ferizaj,,public,"Menaxhimi i Biznesit dhe Ndermarresia, BSc","Business Management and Entrepreneurship, BSc",Ferizaj,BSc,180,120,2030-09-30,9,BSc
+Universiteti i Shkencave të Aplikuara Ferizaj,,public,"Inxhinieria Industriale me Informatikë, BSc","Industrial Engineering with Informatics, BSc",Ferizaj,BSc,180,100,2027-09-30,9,BSc
+Universiteti i Shkencave të Aplikuara Ferizaj,,public,"Arkitekturë e Interierit dhe Dizajni i Mobilieve, BSc","Interior Architecture and Furniture Design, BSc",Ferizaj,BSc,180,100,2031-09-30,9,BSc
+Universiteti i Shkencave të Aplikuara Ferizaj,,public,"Menaxhment i Hotelierisë dhe Turizmit, BSc","Management of Tourism and Hospitality, BSc",Ferizaj,BSc,180,80,2029-09-30,9,BSc
+Universiteti i Shkencave të Aplikuara Ferizaj,,public,"Menaxhimi dhe Inovacioni ne Turizëm, MSc","Management and Innovation in Tourism, MSc",Ferizaj,MSc,120,40,2030-09-30,9,MSc
+Universiteti i Shkencave të Aplikuara Ferizaj,,public,"Inxhinieria dhe Menaxhimi i Prodhimit, MSc","Engineering and Production Management, MSc",Ferizaj,MSc,120,50,2027-09-30,9,MSc
+Universiteti i Shkencave të Aplikuara Ferizaj,,public,"Arkitektura e Gjelber dhe Dizajni i Interierit, MSc","Green Architecture and Interior Design, MSc",Ferizaj,MSc,120,40,2027-09-30,9,MSc
+Universiteti i Shkencave të Aplikuara Ferizaj,,public,"Menaxhimi i Ndërmarrësisë dhe Inovacionit, MSc","Entrepreneurship and Innovation Management, MSc",Ferizaj,MSc,120,70,2027-09-30,9,MSc
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Marrëdhënie Ndërkombëtare dhe Studime Europiane, BA","International Relations and European Studies, BA",Gjilan,BA,180,50,2027-09-30,9,BA
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Arsimi Parashkollor, BA","Preschool Education, BA",Gjilan,BA,240,35,2027-09-30,9,BA
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Edukim Fillor, BA","Primary Education, BA",Gjilan,BA,240,50,2029-09-30,9,BA
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Shkenca Kompjuterike, BSc","Computer Sciences, BSc",Gjilan,BSc,180,200,2031-09-30,9,BSc
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Financë dhe Kontabilitet i Aplikuar, BSc","Finance and Applied Accounting, BSc",Gjilan,Bsc,180,100,2027-09-30,9,BSc
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Marketing dhe Menaxhim i Shitjes, BSc","Marketing and Sales Management, BSc",Gjilan,BSc,180,75,2027-09-30,9,BSc
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Juridik Penal, LLM","Criminal Law, LLM",Gjilan,LLM,60,25,2029-09-30,9,LLM
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Mësimdhënie dhe Kurrikula në Programin Fillor, MA","Teaching and Curriculum in Primary Education, MA",Gjilan,MA,60,30,2027-09-30,9,MA
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Mësimdhënie e Gjuhës dhe Letërsisë Shqipe, MA","Teaching in Albanian Language and Literature, MA",Gjilan,MA,60,20,2027-09-30,9,MA
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Mësimdhënie e Gjuhës Angleze, MA","English Language Teaching, MA",Gjilan,MA,60,40,2028-09-30,9,MA
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Analizat Ekonomika dhe Politikat Zhvillimore, MSc","Economic Analysis and Development Policy, MSc",Gjilan,Msc,120,30,2028-09-30,9,MSc
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"E-Qeverisja, MSc","E-Governance, MSc",Gjilan,MSc,120,30,2027-09-30,9,MSc
+"Universiteti ""Kadri Zeka"", Gjilan",,public,"Sistemet e Kontrollit dhe Inteligjenca Artificiale, MSc","Control Systems and Artificial Intelligence, MSc",Gjilan,MSc,120,30,2027-09-30,9,MSc
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Gjuhë Angleze – Përkthim dhe Interpretim, BA","English Language – Translation and Interpretation, BA",Gjakovë,BA,180,60,2029-09-30,9,BA
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Gjuhe Shqipe dhe Letersi, BA","Albanian Language and Literature, BA",Gjakovë,BA,240,40,2028-09-30,9,BA
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Kujdesi dhe Mireqenia Sociale, BA","Social care and Welfare, BA",Gjakovë,BA,180,70,2027-09-30,9,BA
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Edukim Fillor, BA","Primary Education, BA",Gjakovë,BA,240,70,2029-09-30,9,BA
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Kujdesi Shëndetësor në Komunitet, BSc","Community Health Care, BSc",Gjakovë,BSc,180,50,2029-09-30,9,BSc
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Shkencat Shëndetësore në Sport dhe Turizëm, BSc","Health Sciences in Sport and Tourism, BSc",Gjakovë,BSc,180,40,2029-09-30,10,BSc
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Shëndeti Publik, BSc","Public Health, BSc",Gjakovë,BSc,180,60,2027-09-30,10,BSc
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Informatikë Inxhinierike, BSc","Informatics Engineering, BSc",Gjakovë,BSc,180,30,2028-09-30,10,BSc
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Gjuhë Shqipe, MA","Albanian Language, MA",Gjakovë,MA,120,40,2027-09-30,10,MA
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Studime Letrare, MA","Literary Studies, MA",Gjakovë,MA,60,20,2028-09-30,10,MA
+"Universiteti ""Fehmi Agani"", Gjakovë",,public,"Menaxhimi Shëndetsor, MA","Health Management, MA",Gjakovë,MA,120,30,2027-09-30,10,MA
+Akademia e Kosovës për Siguri Publike,,public,"Siguri Publike, BSc","Public Safety, BSc",Vushtrri,BSc,180,55,2029-09-30,10,BSc
+Fakulteti i Studimeve Islame,,private_or_other,"Teologji Islame, BA","Islamic Theology, BA",Prishtinë,BA,240,90,2031-09-30,10,BA
+Fakulteti i Studimeve Islame,,private_or_other,"Teologji Islame, MA","Islamic Theology, MA",Prishtinë,MA,60,30,2028-09-30,10,MA
+Kolegji IBCM,,private_or_other,"Administratë Publike, BA","Public Administration, BA",Mitrovicë,BA,180,60,2028-09-30,10,BA
+Kolegji IBCM,,private_or_other,"Menaxhim i Biznesit, BA","Business Management, BA",Mitrovicë,BA,180,100,2030-09-30,10,BA
+Kolegji IBCM,,private_or_other,"Menaxhimi i Mjedisit dhe Teknologji, BSc","Environment Management and Technology, BSc",Mitrovicë,BSc,180,60,2030-09-30,10,BSc
+Kolegji IBCM,,private_or_other,"Psikologji, BSc","Psychology, BSc",Mitrovicë,BSc,180,40,2029-12-31,10,BSc
+Kolegji IBCM,,private_or_other,"Menaxhim Ndërkombëtar dhe Qëndrueshmëri, MSc (me 3 specializime)","International Management and Sustainability, MSc (with 3 specializations)",Mitrovicë,MSc,180,90,2030-12-31,10,MSc
+Kolegji UBT,,private_or_other,"Muzika Moderne, Prodhimi Digjital dhe Menaxhimi, BA","Modern Music, Digital Production and Management BA",Prishtinë,BA,180,30,2027-09-30,10,BA
+Kolegji UBT,,private_or_other,"Gjuhë Angleze, BA","English Language, BA",Prishtinë,BA,180,100,2029-09-30,10,BA
+Kolegji UBT,,private_or_other,"Media dhe Komunikim, BA","Media and Communication, BA",Prishtinë,BA,180,50,2029-09-30,10,BA
+Kolegji UBT,,private_or_other,"Menaxhimi i Patundshmërive dhe Infrastrukturës, BA","Real Estate and Infrastructure Management, BA",Prishtinë,BA,180,80,2028-09-30,10,BA
+Kolegji UBT,,private_or_other,"Shkenca Politike, BA","Political Sciences, BA",Prishtinë,BA,180,50,2029-09-30,10,BA
+Kolegji UBT,,private_or_other,"Turizëm, BA","Tourism, BA",Prishtinë,BA,180,70,2027-09-30,10,BA
+Kolegji UBT,,private_or_other,"Arte Dramatike, Bachelor profesional","Dramatic Arts, Bachelor Professional",Prishtinë,Bachelor profesional,180,30,2028-09-30,10,Bachelor profesional
+Kolegji UBT,,private_or_other,"Dizajn i Modës, Bachelor Professional","Fashion Design, Bachelor Professional",Prishtinë,Bachelor profesional,180,25,2028-09-30,10,Bachelor profesional
+Kolegji UBT,,private_or_other,"Dizajn, Bachelor Professional","Design, Bachelor Professional",Prishtinë,Bachelor profesional,180,50,2028-09-30,10,Bachelor profesional
+Kolegji UBT,,private_or_other,"Arkitekturë dhe Planifikim Hapsinor, BSc","Architecture and Spatial Planning, BSc",Prishtinë,BSc,180,280,2029-09-30,10,BSc
+Kolegji UBT,,private_or_other,"Arte dhe Media Digjitale, BA","Arts and Digital Media, BA",Prishtinë,BSc,180,50,2027-09-30,10,BSc
+Kolegji UBT,,private_or_other,"Biokimi Mjekësore, BSc","Medical Biochemistry, BSc",Prishtinë,BSc,180,50,2028-09-30,10,BSc
+Kolegji UBT,,private_or_other,"Fintech dhe Analitika e Biznesit, BSc","Fintech and Business Analytics, BSc",Prishtinë,BSc,180,100,2029-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Inxhineri Ndërtimore (Ndërtimtari) dhe Infrastrukture, BSc","Civil Engineerind and Infrastructure, BSc",Prishtinë,BSc,180,200,2027-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Inxhinieri e Agrikulturës dhe Mjedisit, BSc","Agriculture and Environmental Engineering, BSc",Prishtinë,BSc,180,70,2028-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Inxhinieri e Energjisë, BSc","Energy Engineering, BSc",Prishtinë,BSc,180,100,2027-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Inxhinieri e Mekatronikës, BSc","Mechatronics Engineering, BSc",Prishtinë,BSc,180,200,2030-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Inxhinieri Mjedisore dhe Infrastrukturë e Qëndrueshme, BSc","Environmental Engineering and Sustainable Infrastructure, BSc",Prishtinë,BSc,180,60,2029-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Menaxhment, Biznes dhe Ekonomi, BSc","Management, Business and Economics, BSc",Prishtinë,BSc,180,250,2028-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Psikologji, BSc","Psychology, BSc",Prishtinë,BSc,180,100,2031-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Shendet Publik dhe Shkenca Mjekesore, BSc","Public Health and Medical Sciences, BSc",Prishtinë,BSc,180,70,2028-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Shkenca Kompjuterike dhe Inxhinieri, BSc","Computer Science and Engineering, BSc",Prishtinë,BSc,180,550,2027-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Shkencat e Sportit dhe Lëvizjes, BSc","Sports Science and Movement, BSc",Prishtinë,BSc,180,60,2030-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Shkencat e Ushqimit dhe Bioteknologji, BSc, me specializimet: 1. Teknologjia e Uhqimit, 2. Nutricion","Food Science and Biotechnology, BSc, with specializations: 1. Food Technology, 2. Nutrition",Prishtinë,BSc,180,100,2027-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Sistemet e informacionit, BSc","Information Systems, BSc",Prishtinë,BSc,180,250,2031-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Studime t137 Sigurisë, BSc","Security Studies, BSc",Prishtinë,BSc,180,70,2029-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Teknik Dentar, BSc","Dental Technician, BSc",Prishtinë,BSc,180,40,2029-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Teknik i Radiologjisë, BSc","Radiology Technician, BSc",Prishtinë,BSc,180,40,2028-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Estetikë dhe Kozmetologji, BSc","Aesthetics and Cosmetology, BSc",Prishtinë,BSc,180,50,2029-09-30,11,BSc
+Kolegji UBT,,private_or_other,Inxhinieri e Ndërtimit dhe Infrastrukturës MSc,"Civil Engineerind and Infrastructure, MSc",Prishtinë,BSc,120,150,2030-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Inxhinieri Mekanike, BSc","Mechanical Engineering, BSc",Prishtinë,BSc,180,70,2029-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Kimi Aplikative, BSc","Applied Chemistry, BSc",Prishtinë,BSc,180,30,2028-09-30,11,BSc
+Kolegji UBT,,private_or_other,"Stomatologji, Dr. Dent","Stomatology, Dr. Dent",Prishtinë,Dr. Dent,360,35,2030-09-30,11,Dr. Dent
+Kolegji UBT,,private_or_other,"Juridik, LLB","Law, LLB",Prishtinë,LLB,240,100,2029-09-30,11,LLB
+Kolegji UBT,,private_or_other,"E Drejta Civile dhe e Pronës, LLM","Civil Law and Property Rights, LLM",Prishtinë,LLM,60,50,2027-09-30,11,LLM
+Kolegji UBT,,private_or_other,"E Drejta Komerciale, LLM","Commercial Law, LLM",Prishtinë,LLM,60,30,2028-09-30,11,LLM
+Kolegji UBT,,private_or_other,"E Drejta Penale, LLM","Criminal Law, LLM",Prishtinë,LLM,120,40,2029-09-30,11,LLM
+Kolegji UBT,,private_or_other,"Gjuhë, Media dhe Komunikim, MA","Language, Media and Communication, MA",Prishtinë,MA,120,30,2027-09-30,11,MA
+Kolegji UBT,,private_or_other,"Politika Publike dhe Menaxhment, MA","Public Policy and Management, MA",Prishtinë,MA,120,50,2027-09-30,12,MA
+Kolegji UBT,,private_or_other,"Shkenca Politike, MA","Political Science, MA",Prishtinë,MA,120,50,2028-09-30,12,MA
+Kolegji UBT,,private_or_other,"Studime të Sigurisë, MA","Security Studies, MA",Prishtinë,MA,120,50,2028-09-30,12,MA
+Kolegji UBT,,private_or_other,"Farmaci, MPh",Pharmacy MPh.,Prishtinë,MPh,300,50,2027-09-30,12,MPh
+Kolegji UBT,,private_or_other,"Agrikulturë dhe Mjedis, MSc","Agriculture and Environmental, MSc",Prishtinë,MSc,120,60,2027-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Arkitekturë dhe Planifikim Hapsinor, MSc","Architecture and Spatial Planning, MSc",Prishtinë,MSc,120,120,2029-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Biokimi, MSc","Biochemistry, MSc",Prishtinë,MSc,120,50,2029-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Fintech dhe Menaxhimi i Inovacionit, MSc","Fintech and Innovation Management, MSc",Prishtinë,MSc,120,30,2029-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Inxhinieri e Energjisë dhe Mjedisit, MSc","Energy Engineering and Environment, MSc",Prishtinë,MSc,120,80,2027-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Inxhinieri e Mekatronikës, MSc","Mechatronics Engineering, MSc",Prishtinë,MSc,120,50,2028-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Menaxhment, Biznes dhe Ekonomi, MSc","Management, Business and Economics, MSc",Prishtinë,MSc,120,200,2028-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Psikologji, MSc","Psychology, MSc",Prishtinë,MSc,120,30,2028-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Shëndeti dhe Aktiviteti Fizik, MSc","Health and Physical Activity, MSc",Prishtinë,MSc,120,50,2030-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Shëndeti Publik dhe Menaxhment, MSc","Public Health and Management, MSc",Prishtinë,MSc,120,50,2029-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Shkenca dhe Teknologji e Ushqimit, MSc","Food Science and Technology, MSc",Prishtinë,MSc,120,100,2028-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Shkenca Kompjuterike dhe Inxhinieri, MSc","Computer Science and Engineering, MSc",Prishtinë,MSc,120,100,2027-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Shkenca Paramjekësore, MSc","Paramedical Science, MSc",Prishtinë,MSc,120,40,2028-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Sistemet e Informacionit dhe Menaxhment, MSc","Information Systems and Management, MSc",Prishtinë,MSc,120,150,2031-09-30,12,MSc
+Kolegji UBT,,private_or_other,"Trafiku dhe Inxhinieria e Transportit, MSc","Traffic and Transport Engineering, MSc",Prishtinë,MSc,120,35,2028-09-30,12,MSc
+Kolegji UBT,Kolegji UBT dega në Ferizaj,private_or_other,"Menaxhment, Biznes dhe Ekonomi, BSc","Management, Business and Economics, BSc",Ferizaj,BSc,180,90,2030-09-30,12,BSc
+Kolegji UBT,Kolegji UBT dega në Ferizaj,private_or_other,"Arkitekturë dhe Planifikim Hapsinor, BSc","Architecture and Spatial Planning, BSc",Ferizaj,BSc,180,40,2027-09-30,12,BSc
+Kolegji UBT,Kolegji UBT dega në Ferizaj,private_or_other,"Shkenca Kompjuterike dhe Inxhinieri, BSc","Computer Sciences and Engineering, BSc",Ferizaj,BSc,180,50,2027-09-30,12,BSc
+Kolegji UBT,Kolegji UBT dega në Prizren,private_or_other,"Dizajn, Bachelor Professional","Design, Bachelor Professional",Prizren,Bachelor profesional,180,30,2028-09-30,12,Bachelor profesional
+Kolegji UBT,Kolegji UBT dega në Prizren,private_or_other,"Shkenca Kompjuterike dhe Inxhinieri, BSc","Computer Science and Engineering, BSc",Prizren,BSc,180,150,2027-09-30,12,BSc
+Kolegji UBT,Kolegji UBT dega në Prizren,private_or_other,"Shkencat e Ushqimit dhe Bioteknologji, BSc (me 2 specializime)","Food Science and Biotechnology, BSc (with 2 specializations)",Prizren,BSc,180,40,2027-09-30,12,BSc
+Kolegji UBT,Kolegji UBT dega në Prizren,private_or_other,"Arkitekturë dhe Planifikim Hapsinor, BSc","Architecture and Spatial Planning, BSc",Prizren,BSc,180,80,2027-09-30,12,BSc
+Kolegji UBT,Kolegji UBT dega në Prizren,private_or_other,"Menaxhment, Biznes dhe Ekonomi, BSc","Management, Business and Economics, BSc",Prizren,BSc,180,80,2027-09-30,12,BSc
+Kolegji UBT,Kolegji UBT dega në Prizren,private_or_other,"Juridik, LLB","Law, LLB",Prizren,LLB,240,50,2029-09-30,13,LLB
+Kolegji AAB,,private_or_other,"Dizajn Grafik dhe Arte Vizuele, BA","Graphic Design and Visual Arts, BA",Prishtinë,BA,180,140,2028-09-30,13,BA
+Kolegji AAB,,private_or_other,"Administratë Publike (me dy specializime), BA","Public Administration (2 specialisaions), BA",Prishtinë,BA,180,200,2027-09-30,13,BA
+Kolegji AAB,,private_or_other,"Arkitekturë, BA","Architecture, BA",Prishtinë,BA,180,150,2028-09-30,13,BA
+Kolegji AAB,,private_or_other,"Arte Aplikative ne Dizajnimin e Hapesirave te Brendshme, BA","Applied Arts in Spatial Design, BA",Prishtinë,BA,180,110,2028-09-30,13,BA
+Kolegji AAB,,private_or_other,"Dizajn i Modës, BA","Fashion Design, BA",Prishtinë,BA,180,100,2029-09-30,13,BA
+Kolegji AAB,,private_or_other,"Gjuhe Angleze, BA","English Language, BA",Prishtinë,BA,180,250,2030-09-30,13,BA
+Kolegji AAB,,private_or_other,"Komunikim Masiv dhe Gazetari, BA","Mass Communication and Journalism, BA",Prishtinë,BA,180,150,2027-09-30,13,BA
+Kolegji AAB,,private_or_other,"Kulturë Fizike dhe Sport, BA","Physical Education and Sports, BA",Prishtinë,BA,240,100,2028-09-30,13,BA
+Kolegji AAB,,private_or_other,"Marketing dhe Biznes, BA","Marketing and Business, BA",Prishtinë,BA,180,200,2031-09-30,13,BA
+Kolegji AAB,,private_or_other,"Menaxhment, BA","Management, BA",Prishtinë,BA,180,240,2031-09-30,13,BA
+Kolegji AAB,,private_or_other,"Perkujdesje dhe Mirëqenie e Fëmijëve, BA","Child Care and Welfare, BA",Prishtinë,BA,240,300,2027-09-30,13,BA
+Kolegji AAB,,private_or_other,"Pikture dhe Arte Vizuele, BA","Painting and Visual Arts, BA",Prishtinë,BA,180,25,2028-09-30,13,BA
+Kolegji AAB,,private_or_other,"Psikologji, BA","Psychology, BA",Prishtinë,BA,180,300,2027-09-30,13,BA
+Kolegji AAB,,private_or_other,"Biznes Digjital (me dy specializime), Bachelor profesional","Digital Business, (2 specializations), Bachelor Professional",Prishtinë,Bachelor profesional,180,120,2027-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Dizajn Grafik, Bachelor profesional","Graphic Design, Bachelor Professional",Prishtinë,Bachelor profesional,180,70,2029-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Gjuhë Gjermane, Përkthim dhe Interpretim, Bachelor Profesional","German Language, Translation and Interpretation, Bachelor Professional",Prishtinë,Bachelor profesional,180,80,2027-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Logopedi, Bachelor Profesional","Logopedics, Bachelor Professional",Prishtinë,Bachelor profesional,180,50,2029-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Marketing Digjital dhe Inteligjencë Artificiale, Bachelor Profesional","Digital Marketing and Artificial Intelligence, Bachelor Professional",Prishtinë,Bachelor profesional,180,130,2029-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Produksion Medial, Bachelor profesional","Media Production, Bachelor Professional",Prishtinë,Bachelor profesional,180,50,2028-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Programim dhe Intelegjencë Artificiale, Bachelor professional","Programming and Artificial Intelligence, Bachelor professional",Prishtinë,Bachelor profesional,180,125,2028-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Programim dhe Multimedia, Bachelor profesional","Programing and Multimedia, Bachelor Professional",Prishtinë,Bachelor profesional,180,65,2027-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Programim i Lojërave Kompjuterike, Bachelor profesional","Computer Games Programing, Bachelor Professional",Prishtinë,Bachelor profesional,180,100,2027-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Programim, Bachelor profesional","Programming, Bachelor professional",Prishtinë,Bachelor profesional,180,100,2027-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Siguri Kibernetike, Bachelor Profesional","Cyber Security, Bachelor Professional",Prishtinë,Bachelor profesional,180,70,2027-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Teknik i Radiologjisë, Bachelor profesional","Radiology Technician, Bachelor Professional",Prishtinë,Bachelor profesional,180,100,2028-09-30,13,Bachelor profesional
+Kolegji AAB,,private_or_other,"Infermieri, BSc","Nursing, BSc",Prishtinë,BSc,180,280,2029-09-30,14,BSc
+Kolegji AAB,,private_or_other,"Teknik Dentar, BSc","Dental Technician, BSc",Prishtinë,BSc,180,50,2029-09-30,14,BSc
+Kolegji AAB,,private_or_other,"Banka, Financa dhe Kontabilitet, BSc","Banking, Finance and Accounting, BSc",Prishtinë,BSc,180,150,2027-09-30,14,BSc
+Kolegji AAB,,private_or_other,"Estetikë dhe Kozmetologji, BSc","Aesthetics and Cosmetology, BSc",Prishtinë,BSc,180,75,2028-09-30,14,BSc
+Kolegji AAB,,private_or_other,"Kompjuterikë dhe FinTech, BSc (me 2 specializime)","Computer Science and FinTech, BSc (with 2 specializations)",Prishtinë,BSc,180,130,2029-09-30,14,BSc
+Kolegji AAB,,private_or_other,"Shkenca Kompjuterike dhe Inxhinieri Softuerike, BSc","Computer Science and Software Engineering, BSc",Prishtinë,BSc,180,275,2028-09-30,14,BSc
+Kolegji AAB,,private_or_other,"Teknik i Laboratorit, BSc","Laboratory Technician, BSc",Prishtinë,BSc,180,80,2029-09-30,14,BSc
+Kolegji AAB,,private_or_other,"Stomatologji, Dr. Dent","Dentistry, Dr. Dent",Prishtinë,Dr. Dent,360,45,2030-09-30,14,Dr. Dent
+Kolegji AAB,,private_or_other,"Juridik i Përgjithshëm, LLB","General Law, LLB",Prishtinë,LLB,240,250,2030-09-30,14,LLB
+Kolegji AAB,,private_or_other,"Juridik Civil, LLM","Civil Law, LLM",Prishtinë,LLM,60,35,2030-09-30,14,LLM
+Kolegji AAB,,private_or_other,"Juridik Penal, LLM","Criminal Law, LLM",Prishtinë,LLM,60,35,2030-09-30,14,LLM
+Kolegji AAB,,private_or_other,"Administratë Publike, MA","Public Administration, MA",Prishtinë,MA,120,120,2027-09-30,14,MA
+Kolegji AAB,,private_or_other,"Arkitekturë, MA","Architecture, MA",Prishtinë,MA,120,60,2029-09-30,14,MA
+Kolegji AAB,,private_or_other,"Dizajn Grafik, MA","Graphic Design, MA",Prishtinë,MA,120,60,2028-09-30,14,MA
+Kolegji AAB,,private_or_other,"Gjuhë Angleze, MA","English Language, MA",Prishtinë,MA,120,200,2028-09-30,14,MA
+Kolegji AAB,,private_or_other,"Komunikim Masiv dhe Gazetari, MA","Mass Communication and Journalism, MA",Prishtinë,MA,120,60,2027-09-30,14,MA
+Kolegji AAB,,private_or_other,"Kontabilitet dhe Auditim, MA","Accounting and Auditing, MA",Prishtinë,MA,120,80,2027-09-30,14,MA
+Kolegji AAB,,private_or_other,"Kulturë Fizike dhe Sport, MA","Physical Education and Sports, MA",Prishtinë,MA,60,40,2028-09-30,14,MA
+Kolegji AAB,,private_or_other,"Marketing dhe Menaxhimi i Biznesit, MA","Marketing and Business Management, MA",Prishtinë,MA,120,100,2028-09-30,14,MA
+Kolegji AAB,,private_or_other,"Menaxhment, MA","Management, MA",Prishtinë,MA,120,200,2028-09-30,14,MA
+Kolegji AAB,,private_or_other,Perkujdesje dhe Mirëqenie e Fëmijeve MA,"Child Care and Welfare, MA",Prishtinë,MA,60,50,2027-09-30,14,MA
+Kolegji AAB,,private_or_other,"Menaxhment Shëndetësor, MSc","Health Management, MSc",Prishtinë,MSc,120,100,2028-09-30,14,MSc
+Kolegji AAB,,private_or_other,"Shëndeti Mendor, MSc","Mental Health, MSc",Prishtinë,MSc,120,60,2029-09-30,14,MSc
+Kolegji AAB,,private_or_other,"Shkenca Kompjuterike, MSc","Computer Science, MSc",Prishtinë,MSc,120,80,2027-09-30,14,MSc
+Kolegji RIT Kosovo (A.U.K.),,private_or_other,"Informatikë dhe Teknologjitë Informative, BSc","Computing and Information Technologies, BSc",Prishtinë,BSc,252,100,2029-09-30,14,BSc
+Kolegji RIT Kosovo (A.U.K.),,private_or_other,"Program i Individualizuar, BSc","Individualized Program, BSc",Prishtinë,BSc,240,150,2029-09-30,14,BSc
+Kolegji RIT Kosovo (A.U.K.),,private_or_other,"Teknologjitë e Inxhinierisë Elektrike, BSc","Electrical Engineering Technology, BSc",Prishtinë,BSc,254,25,2029-09-30,15,BSc
+Kolegji RIT Kosovo (A.U.K.),,private_or_other,"Studime profesionale, MSc","Professional Studies, MSc",Prishtinë,MSc,66,50,2029-09-30,15,MSc
+Kolegji Universum,,private_or_other,"Biznes dhe Menaxhment, BA","Business and Management, BA",Prishtinë,BA,180,200,2030-09-30,15,BA
+Kolegji Universum,,private_or_other,"Gjuhë Angleze me Specializim në Gjuhë Gjermane, BA","English Language with Specialization in Germanistic, BA",Prishtinë,BA,180,120,2027-09-30,15,BA
+Kolegji Universum,,private_or_other,"Dizajn Enterieri, Bachelor Profesional","Interior Design, Bachelor profesional",Prishtinë,Bachelor profesional,180,75,2027-09-30,15,Bachelor profesional
+Kolegji Universum,,private_or_other,"Dizajn Grafik, Bachelor Profesional","Graphic Design, Bachelor profesional",Prishtinë,Bachelor profesional,180,80,2027-09-30,15,Bachelor profesional
+Kolegji Universum,,private_or_other,"Gazetari Digjitale, Bachelor Profesional","Digital Journalism, Bachelor profesional",Prishtinë,Bachelor profesional,180,80,2027-09-30,15,Bachelor profesional
+Kolegji Universum,,private_or_other,"Higjiene Dentare, Bachelor Profesional","Dental Hygiene, Bachelor profesional",Prishtinë,Bachelor profesional,180,40,2027-09-30,15,Bachelor profesional
+Kolegji Universum,,private_or_other,"Inteligjenca Artificiale në Biznes, Bachelor Profesional","Artificial Intelligence in Business, Bachelor Professional",Prishtinë,Bachelor profesional,180,100,2029-09-30,15,Bachelor profesional
+Kolegji Universum,,private_or_other,"Kozmetologji, Bachelor Profesional","Cosmetology, Bachelor profesional",Prishtinë,Bachelor profesional,180,30,2027-09-30,15,Bachelor profesional
+Kolegji Universum,,private_or_other,"Marketing Digjital, Bachelor Profesional",Professional Bachelor in Digital Marketing,Prishtinë,Bachelor profesional,180,150,2029-09-30,15,Bachelor profesional
+Kolegji Universum,,private_or_other,"Siguri Kibernetike, Bachelor Profesional","Cyber Security, Bachelor Professional",Prishtinë,Bachelor profesional,180,150,2027-09-30,15,Bachelor profesional
+Kolegji Universum,,private_or_other,"Teknik Dentar, Bachelor Profesional",Professional Bachelor Dental Technician,Prishtinë,Bachelor profesional,180,45,2029-09-30,15,Bachelor profesional
+Kolegji Universum,,private_or_other,"Biomjekesi Laboratorike, BSc","Laboratory Biomedicine, BSc",Prishtinë,BSc,180,30,2027-09-30,15,BSc
+Kolegji Universum,,private_or_other,"Psikologji, BSc","Psychology, BSc",Prishtinë,BSc,180,100,2028-09-30,15,BSc
+Kolegji Universum,,private_or_other,"Shkenca Kompjuterike, BSc","Computer Sciences, BSc",Prishtinë,BSc,180,250,2027-09-30,15,BSc
+Kolegji Universum,,private_or_other,Juridik LLB,Law LLB,Prishtinë,LLB,240,100,2027-09-30,15,LLB
+Kolegji Universum,,private_or_other,Juridik LLM,"Law, LLM",Prishtinë,LLM,60,100,2029-09-30,15,LLM
+Kolegji Universum,,private_or_other,"Menaxhment, MA (Specializim në Marketing dhe Komunikim Kreativ)","Management, MA (Specialization in Marketing and Creative Communication)",Prishtinë,MA,120,100,2031-09-30,15,MA
+Kolegji Universum,,private_or_other,"Qeverisje dhe Siguri Kombetare, MA","Governance and National Security, MA",Prishtinë,MA,120,50,2027-09-30,15,MA
+Kolegji Universum,,private_or_other,"Shkenca dhe Analizë e të Dhënave, MSc","Data Science and Analytics, MSc",Prishtinë,MSc,120,75,2027-09-30,15,MSc
+Kolegji Universum,"Kolegji Universum, dega në Ferizaj",private_or_other,"Biznes dhe Menaxhment, BA","Business and Management, BA",Ferizaj,BA,180,150,2028-09-30,15,BA
+Kolegji Universum,"Kolegji Universum, dega në Ferizaj",private_or_other,"Dizajn Mode, BA","Fashion Design, BA",Ferizaj,BA,180,75,2030-09-30,15,BA
+Kolegji Universum,"Kolegji Universum, dega në Ferizaj",private_or_other,"Teknik Dentar, Bachelor profesional","Dental Technician, Bachelor profesional",Ferizaj,Bachelor profesional,180,25,2028-09-30,15,Bachelor profesional
+Kolegji Universum,"Kolegji Universum, dega në Ferizaj",private_or_other,"Nutricion dhe Fitnes, Bachelor profesional","Nutrition and Fitness, Bachelor profesional",Ferizaj,Bachelor profesional,180,50,2027-09-30,15,Bachelor profesional
+Kolegji Universum,"Kolegji Universum, dega në Ferizaj",private_or_other,"Marketing Digjital, Bachelor Profesional","Digital marketing, Bachelor Professional",Ferizaj,Bachelor profesional,180,100,2029-09-30,15,Bachelor profesional
+Kolegji Universum,"Kolegji Universum, dega në Ferizaj",private_or_other,"Dizajn Grafik, Bachelor Profesional","Graphic Design, Bachelor Professional",Ferizaj,Bachelor profesional,180,80,2029-09-30,16,Bachelor profesional
+Kolegji Universum,"Kolegji Universum, dega në Ferizaj",private_or_other,"Zhvillim i Softuerit, Bachelor Profesional","Software Development, Bachelor Professional",Ferizaj,Bachelor profesional,180,100,2029-09-30,16,Bachelor profesional
+Kolegji AMECC Rezonanca,,private_or_other,"Biokimi Laboratorike, BSc","Biochemistry Laboratory, BSc",Prishtinë,BSc,180,50,2028-09-30,16,BSc
+Kolegji AMECC Rezonanca,,private_or_other,"Farmaci Komunitare, BSc","Community Pharmacy, BSc",Prishtinë,BSc,180,120,2031-09-30,16,BSc
+Kolegji AMECC Rezonanca,,private_or_other,"Infermieri, BSc","Nursing, BSc",Prishtinë,BSc,180,150,2027-09-30,16,BSc
+Kolegji AMECC Rezonanca,,private_or_other,"Radiologji Diagnostike, BSc","Diagnostic Radiology, BSc",Prishtinë,BSc,180,60,2027-09-30,16,BSc
+Kolegji AMECC Rezonanca,,private_or_other,"Fizioterapi, Bsc","Physiotherapy, BSc",Prishtinë,BSc,240,100,2027-09-30,16,BSc
+Kolegji AMECC Rezonanca,,private_or_other,"Stomatologji, Dr. Dent","Dentistry, Dr. Dent",Prishtinë,Dr. Dent,300,85,2031-09-30,16,Dr. Dent
+Kolegji AMECC Rezonanca,,private_or_other,"Menaxhim i Kujdesit Shëndetësor dhe Ekonomi Shëndetësore,MSc","Health Care Management and Health Economics, MSc",Prishtinë,MSc,120,50,2028-09-30,16,MSc
+Kolegji AMECC Rezonanca,,private_or_other,"Farmaci, MSc","Pharmacy, MSc",Prishtinë,MSc,120,100,2030-09-30,16,MSc
+Kolegji AMECC Rezonanca,,private_or_other,"Fizioterapi dhe Mjekësi Sportive, MSc","Physiotherapy and Sport Medicine, MSc",Prishtinë,MSc,120,30,2027-09-30,16,MSc
+Kolegji Heimerer,,private_or_other,"Shkencat Shëndetësore për Profile Terapeutike - Logopedi dhe Ergoterapi, BSc","Health Sciences for Therapeutic Profiles (Speech Therapy, and Occupational Therapy), BSc",Prishtinë,BSc,180,180,2027-09-30,16,BSc
+Kolegji Heimerer,,private_or_other,"Psikologji, BSc",Psychology BSc,Prishtinë,BSc,180,80,2028-09-30,16,BSc
+Kolegji Heimerer,,private_or_other,"Shkencat Shëndetësore për Profile Diagnostike - Teknik Laboratori, BSc","Health Sciences for Diagnostic Profiles - Laboratory Technician, BSc",Prishtinë,BSc,180,60,2028-09-30,16,BSc
+Kolegji Heimerer,,private_or_other,"Infermieri, BSc","Nursing, BSc",Prishtinë,BSc,180,250,2029-09-30,16,BSc
+Kolegji Heimerer,,private_or_other,"Infermieri - Praktika e avancuar Infermierore (ANP), MSc","Nursing - Advanced Nursing Practice (ANP), MSc",Prishtinë,MSc,120,50,2027-09-30,16,MSc
+Kolegji Heimerer,,private_or_other,"Shkenca Mjekësore Laboratorike, MSc","Medical Laboratory Science, MSc",Prishtinë,MSc,120,30,2027-09-30,16,MSc
+Kolegji Heimerer,,private_or_other,"Menaxhim i Institucioneve dhe Shërbimeve Shëndetësore, MSc","Management of Health Institutions and Services, MSc",Prishtinë,MSc,120,60,2027-09-30,16,MSc
+Kolegji Heimerer,,private_or_other,"Kujdesi Shendetesor Digjital, MSc","Digital Healthcare, MSc",Prishtinë,MSc,120,40,2028-09-30,16,MSc
+Kolegji Heimerer,,private_or_other,"Psikologji Klinike, MSc","Clinical Psychology, MSc",Prishtinë,MSc,120,50,2028-09-30,16,MSc
+Akademia Evolucion,,private_or_other,"Dizajn i Modës, BA","Fashion Design, BA",Prishtinë,BA,180,60,2030-09-30,16,BA
+Akademia Evolucion,,private_or_other,"Stilizëm dhe Komunikim në Modë, BA","Styling and Fashion Communication, BA",Prishtinë,BA,180,60,2028-09-30,16,BA
+Akademia Evolucion,,private_or_other,"Dizajn i Komunikimit, BA","Communication Design, BA",Prishtinë,BA,180,60,2030-09-30,16,BA
+Akademia Evolucion,,private_or_other,"Dizajn i Modës, MA","Fashion Design, MA",Prishtinë,MA,120,60,2030-09-30,16,MA
+Kolegji Tempulli,,private_or_other,"Sigurimet, Menaxhimi dhe Inovacioni, Bachelor Profesional (me 3 specializime)","Insurance, management and innovation, BA Proff. (with 3 specializations)",Prishtinë,Bachelor profesional,180,80,2027-09-30,16,Bachelor profesional
+Kolegji Tempulli,,private_or_other,"Inxhinieria e Trafikut dhe Transportit, Bachelor Profesional (me 3 specializime)","Traffic and Transport Engineering, Bachelor profesional (with 3 specializations)",Prishtinë,Bachelor profesional,180,80,2029-09-30,16,Bachelor profesional
+Kolegji Pjeter Budi,,private_or_other,"Doganë dhe Shpedicion, BA","Customs and Freight Forwarding, BA",Prishtinë,BA,180,100,2030-09-30,17,BA
+Kolegji Biznesi,,private_or_other,"Menaxhment dhe Ekonomiks, BA","Management and Economics, BA",Prishtinë,BA,180,150,2027-09-30,17,BA
+Kolegji Biznesi,,private_or_other,"Menaxhimi i Emergjencave, BA","Emergency Management, BA",Prishtinë,BSc,180,150,2028-09-30,17,BSc
+Kolegji Biznesi,,private_or_other,Juridik LLB,Law LLB,Prishtinë,LLB,240,50,2028-09-30,17,LLB
+Kolegji Biznesi,,private_or_other,"Menaxhment dhe Financa, MA","Management and Finance, MA",Prishtinë,MA,120,100,2027-09-30,17,MA
+Kolegji Biznesi,,private_or_other,Menaxhimi i Emergjencave MA,"Emergency Management, MA",Prishtinë,MA,120,67,2027-09-30,17,MA
+Kolegji Biznesi,Kolegji Biznesi Dega ne Prizren,private_or_other,"Banka dhe Financane Biznes, BA","Banks and Finance in Business, BA",Prishtinë,BA,180,150,2027-09-30,17,BA
+Kolegji FAMA,,private_or_other,"Juridik i Përgjithshëm, LLB","General Law, LLB",Prishtinë,LLB,240,50,2028-09-30,17,LLB
+Kolegji FAMA,,private_or_other,"Ekonomi e Pergjithshme, BA",Management and Economics BA (General Economy),Prishtinë,BA,180,150,2028-09-30,17,BA
