@@ -39,7 +39,7 @@ export default function HomeClient({ latest = [] }) {
               Nga komuniteti · Për çdo student
             </p>
             <h1 className="page-title mb-6">
-              Materialet e UP-së, më të qarta dhe më të lehta për t'u gjetur.
+              Materialet e UP-së, më të qarta dhe më të lehta për t&apos;u gjetur.
             </h1>
             <p className="page-subtitle max-w-2xl text-lg md:text-xl">
               E-Studenti mbledh shënime, afate, projekte dhe burime praktike në

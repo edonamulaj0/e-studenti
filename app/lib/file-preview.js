@@ -39,11 +39,6 @@ export function hasInBrowserView(fileType) {
   return normalizeExtension(fileType, "") !== "rar";
 }
 
-/** True for types the preview modal can render inline. */
-export function isPreviewable(fileType) {
-  return ["pdf", "docx", "sheet", "pptx"].includes(getPreviewKind(fileType));
-}
-
 /**
  * Short label + color classes for a file-type badge.
  * Full literal Tailwind classes so the JIT compiler keeps them.

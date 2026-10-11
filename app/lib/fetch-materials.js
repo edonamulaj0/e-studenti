@@ -58,6 +58,12 @@ export async function fetchMaterialsPage({
 const BUILD_PAGE_SIZE = 100;
 const BUILD_MAX_PAGES = 200;
 
+/**
+ * Every published material, for generating pages and the sitemap at build time.
+ * Throws if the API cannot be read: a build made from a partial or empty list
+ * would silently ship a site without its material pages, and a failed build
+ * leaves the previous deployment running.
+ */
 export async function fetchAllMaterialsForBuild() {
   const all = [];
   for (let page = 1; page <= BUILD_MAX_PAGES; page += 1) {
@@ -66,16 +72,13 @@ export async function fetchAllMaterialsForBuild() {
       page: String(page),
       limit: String(BUILD_PAGE_SIZE),
     });
-    let data;
-    try {
-      const res = await fetch(`${WORKER_URL}/?${params.toString()}`, {
-        next: { revalidate: 3600 },
-      });
-      if (!res.ok) break;
-      data = await res.json();
-    } catch {
-      break;
+    const res = await fetch(`${WORKER_URL}/?${params.toString()}`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) {
+      throw new Error(`Could not list materials for the build: ${WORKER_URL} answered ${res.status}`);
     }
+    const data = await res.json();
     all.push(...(data.materials || data.entries || []).map(sanitizeFetchedMaterial));
     if (!data.pagination?.hasNextPage) break;
   }

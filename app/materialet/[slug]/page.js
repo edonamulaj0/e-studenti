@@ -25,6 +25,10 @@ async function loadMaterialBySlug(slug) {
 
 export async function generateStaticParams() {
   const materials = await fetchAllMaterialsForBuild();
+  // A static export needs at least one path. With an empty catalogue the single
+  // placeholder renders the "not found" view; real materials still resolve
+  // through the client-side fallback (see app/not-found.js).
+  if (materials.length === 0) return [{ slug: "pa-materiale" }];
   return assignMaterialSlugs(materials).map((material) => ({
     slug: material.slug,
   }));

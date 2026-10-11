@@ -1,0 +1,66 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A newer push to the same branch makes the older run pointless.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  # Wrangler reports usage to Cloudflare unless told not to.
+  WRANGLER_SEND_METRICS: "false"
+  NEXT_TELEMETRY_DISABLED: "1"
+
+jobs:
+  check:
+    name: Lint, types and tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            cloudflare-worker/package-lock.json
+      - run: npm ci
+      - run: npm ci --prefix cloudflare-worker
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      # The Worker imports ../shared, which sits outside its own folder; this
+      # proves it still bundles. Nothing is deployed and no credentials are used.
+      - name: Worker bundles
+        run: npx wrangler deploy --dry-run --outdir "$RUNNER_TEMP/worker-dist"
+        working-directory: cloudflare-worker
+
+  build:
+    name: Production build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+      # Built against a local stand-in for the API so the result does not depend
+      # on whether production is up (see scripts/stub-api.mjs).
+      - name: Build the static site
+        run: |
+          node scripts/stub-api.mjs &
+          for i in $(seq 1 20); do
+            curl -sf "http://127.0.0.1:8799/?action=materials" >/dev/null && break
+            sleep 0.5
+          done
+          NEXT_PUBLIC_WORKER_URL=http://127.0.0.1:8799 npm run build

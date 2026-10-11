@@ -1,61 +1,14 @@
 import fs from "node:fs";
 import path from "node:path";
+import { assignMaterialSlugs } from "../shared/material-slug.mjs";
+import { FACULTY_CODES } from "../shared/material-options.mjs";
 
 const SITE_URL = "https://e-studenti.com";
 const WORKER_URL =
   process.env.NEXT_PUBLIC_WORKER_URL ||
   "https://api.e-studenti.com";
 
-const FACULTY_SLUGS = [
-  "art",
-  "econ",
-  "edu",
-  "fa",
-  "fbv",
-  "fefs",
-  "ffl",
-  "ffz",
-  "fiek",
-  "fim",
-  "fin",
-  "fshmn",
-  "law",
-  "med",
-];
-
-function slugify(value) {
-  return String(value || "")
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "")
-    .replace(/-{2,}/g, "-");
-}
-
-function facultySlug(code) {
-  return FACULTY_SLUGS.includes(String(code || "").toLowerCase())
-    ? String(code).toLowerCase()
-    : slugify(code);
-}
-
-function materialSlugBase(material) {
-  return `${slugify(material.title)}-${facultySlug(material.faculty)}`;
-}
-
-function assignSlugs(materials) {
-  const counts = new Map();
-  for (const material of materials) {
-    const base = materialSlugBase(material);
-    counts.set(base, (counts.get(base) || 0) + 1);
-  }
-  return materials.map((material) => {
-    const base = materialSlugBase(material);
-    const slug =
-      material.slug || ((counts.get(base) || 0) > 1 ? `${base}-${material.id}` : base);
-    return { ...material, slug };
-  });
-}
+const FACULTY_SLUGS = FACULTY_CODES.map((code) => code.toLowerCase());
 
 function urlEntry(loc, changefreq = "weekly", priority = "0.7") {
   return `  <url>
@@ -66,11 +19,15 @@ function urlEntry(loc, changefreq = "weekly", priority = "0.7") {
 }
 
 async function fetchMaterials() {
-  // The Worker caps `limit` at 100, so page through the whole catalogue.
+  // The Worker caps `limit` at 100, so page through the whole catalogue. Any
+  // failure aborts the build: a sitemap built from a partial list would quietly
+  // drop pages from search results.
   const all = [];
   for (let page = 1; page <= 200; page += 1) {
     const res = await fetch(`${WORKER_URL}/?action=materials&page=${page}&limit=100`);
-    if (!res.ok) break;
+    if (!res.ok) {
+      throw new Error(`${WORKER_URL} answered ${res.status} while listing materials`);
+    }
     const data = await res.json();
     all.push(...(data.materials || data.entries || []));
     if (!data.pagination?.hasNextPage) break;
@@ -93,7 +50,7 @@ async function main() {
     "/kushtet",
   ];
 
-  const materials = assignSlugs(await fetchMaterials());
+  const materials = assignMaterialSlugs(await fetchMaterials());
   const urls = [
     ...staticPaths.map((pathName) => urlEntry(`${SITE_URL}${pathName}`, "weekly", pathName === "/" ? "1.0" : "0.8")),
     ...FACULTY_SLUGS.map((slug) =>
@@ -116,6 +73,9 @@ ${urls.join("\n")}
 }
 
 main().catch((error) => {
-  console.error(error);
+  console.error(`generate-sitemap failed: ${error.message}`);
+  console.error(
+    "Is the API reachable? Set NEXT_PUBLIC_WORKER_URL, or run `npm run stub-api` for an offline build."
+  );
   process.exit(1);
 });

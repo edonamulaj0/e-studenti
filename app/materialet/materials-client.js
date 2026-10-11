@@ -20,86 +20,9 @@ import MaterialStatsBadge from "../components/MaterialStatsBadge";
 import TrackableDownloadLink from "../components/TrackableDownloadLink";
 import { trackMaterialView } from "../lib/track-material";
 import { getFileTypeBadge, hasInBrowserView } from "../lib/file-preview";
+import { displayTeacher, normalizeMaterial, typeTone } from "../lib/material-view";
 
 const PAGE_SIZE = 24;
-
-function displayTeacher(material) {
-  const t = material.teacher;
-  if (t == null) return "—";
-  const s = String(t).trim();
-  if (!s || s === "//") return "—";
-  return s;
-}
-
-const TYPE_TONES = [
-  {
-    match: "ligjerata",
-    card: "border-info-blue/35 hover:border-info-blue/60",
-    icon: "bg-info-blue/10 text-info-text",
-    chip: "bg-info-blue/10 text-info-text",
-  },
-  {
-    match: "afat",
-    card: "border-warning-amber/45 hover:border-warning-amber/70",
-    icon: "bg-warning-amber/10 text-warning-text",
-    chip: "bg-warning-amber/10 text-warning-text",
-  },
-  {
-    match: "projekt",
-    card: "border-success-green/35 hover:border-success-green/60",
-    icon: "bg-success-green/10 text-success-text",
-    chip: "bg-success-green/10 text-success-text",
-  },
-  {
-    match: "lib",
-    card: "border-burgundy-600/30 hover:border-burgundy-600/55",
-    icon: "bg-burgundy-50 text-burgundy-600",
-    chip: "bg-burgundy-50 text-burgundy-600",
-  },
-];
-
-function typeTone(type) {
-  const value = String(type || "").toLowerCase();
-  return (
-    TYPE_TONES.find((tone) => value.includes(tone.match)) || {
-      card: "border-navy-700/25 hover:border-navy-700/45",
-      icon: "bg-navy-100 text-navy-700",
-      chip: "bg-navy-100 text-navy-700",
-    }
-  );
-}
-
-function displaySubmitter(name) {
-  const value = String(name || "").trim();
-  return value;
-}
-
-function normalizeMaterial(material) {
-  const isAnonymous = Boolean(material.is_anonymous);
-  const rawName =
-    material.submittedBy?.name ||
-    material.uploader_name ||
-    "";
-  const displayName = isAnonymous ? "Anonim" : displaySubmitter(rawName);
-  return {
-    id: material.id,
-    title: material.title,
-    faculty: material.faculty,
-    department: material.department || "//",
-    type: material.type,
-    subject: material.subject,
-    teacher: material.teacher || "//",
-    study_level: material.study_level || "bachelor",
-    r2Url: material.r2Url || material.r2_url,
-    fileType: material.fileType || material.file_type,
-    fileSize: material.fileSize || material.file_size,
-    view_count: Number(material.view_count || 0),
-    download_count: Number(material.download_count || 0),
-    is_anonymous: isAnonymous,
-    submittedBy: displayName ? { name: displayName } : undefined,
-    slug: material.slug,
-  };
-}
 
 export default function MaterialsClient({ initialData = null }) {
   const [materials, setMaterials] = useState(() =>

@@ -264,17 +264,20 @@ function ModerimPage() {
     if (tab === "burime") loadResourceLinks();
     if (tab === "pritje") loadPending();
     if (tab === "mesazhe") loadMessages();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- each tab loads its data when it is opened; the loaders are plain functions
   }, [ready, tab]);
 
   // The queue count is shown on its tab, so load it even from another tab.
   useEffect(() => {
     if (ready && tab !== "pritje") loadPending();
     if (ready && tab !== "mesazhe") loadMessages();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- prefetches the tab counts once, after the moderator check
   }, [ready]);
 
   useEffect(() => {
     if (!ready || tab !== "materialet") return;
     loadMaterials(page);
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- only paging reloads the materials list; tab changes are handled above
   }, [page]);
 
   // ── Resolve report ─────────────────────────────────────────────────────

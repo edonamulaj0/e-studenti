@@ -42,6 +42,9 @@ export default function GlobalError({ reset }) {
           >
             Provo përsëri
           </button>{" "}
+          {/* A plain link on purpose: this boundary replaces the whole document and
+              the router may be the thing that failed, so a full page load is safer. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a href="/" style={{ color: "#8b3a3a", fontWeight: 600 }}>
             Ballina
           </a>

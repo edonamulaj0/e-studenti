@@ -6,9 +6,9 @@ import { MATERIAL_TYPES } from "./material-options";
  * free of React and the DOM so it can be tested on its own.
  */
 
-/** Must stay in sync with the Worker's limits (MAX_FILE_SIZE, ALLOWED_EXTENSIONS). */
-export const MAX_FILE_SIZE = 50 * 1024 * 1024;
-export const ALLOWED_EXTENSIONS = ["pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx", "zip"];
+import { MAX_FILE_SIZE, ALLOWED_EXTENSIONS } from "../../shared/upload-limits.mjs";
+
+export { MAX_FILE_SIZE, ALLOWED_EXTENSIONS };
 export const MAX_FILES_PER_BATCH = 50;
 /** Files sent at the same time. The Worker holds each upload in memory. */
 export const UPLOAD_CONCURRENCY = 2;
