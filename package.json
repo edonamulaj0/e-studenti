@@ -11,6 +11,7 @@
 		"typecheck": "tsc -p jsconfig.json && tsc -p cloudflare-worker/jsconfig.json",
 		"test": "npm --prefix cloudflare-worker test",
 		"check": "npm run lint && npm run typecheck && npm test",
+		"sync-erasmus": "node scripts/sync-erasmus.mjs",
 		"stub-api": "node scripts/stub-api.mjs",
 		"db:local": "npm --prefix cloudflare-worker run db:local"
 	},

@@ -66,4 +66,4 @@ one preview/archive modal a page of cards shares.
 
 An hourly cron (`wrangler.toml`) refreshes statistics, deletes expired
 rate-limit rows, codes and old statistic events, and — when configured — requests a
-rebuild.
+rebuild. A separate GitHub Action syncs Erasmus calls every two days.
