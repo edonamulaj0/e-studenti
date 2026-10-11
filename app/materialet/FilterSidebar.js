@@ -94,9 +94,15 @@ function Section({ title: titleSq, name, options, selected, onChange, single = f
 }
 
 /** Draft filters are edited freely and only take effect on "Apliko filtrat". */
-export default function FilterSidebar({ draft, setDraft, subjects, onApply, onClear, id }) {
+/**
+ * `sections` limits which filters are shown (the applicants page only wants university and level);
+ * `publicOnly` lists just the public universities, the only ones that run entrance exams.
+ */
+export default function FilterSidebar({ draft, setDraft, subjects, onApply, onClear, id, sections, publicOnly = false }) {
   const t = useT();
   const [subjectQuery, setSubjectQuery] = useState("");
+  const show = (name) => !sections || sections.includes(name);
+  const universities = publicOnly ? UNIVERSITIES.filter((u) => u.sector === "public") : UNIVERSITIES;
   const set = (key) => (value) => setDraft((d) => ({ ...d, [key]: value }));
 
   // The faculty list follows the university: UP has faculties, every other institution study fields.
@@ -144,7 +150,7 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
           name={`${id}-university`}
           single
           defaultOpen
-          options={UNIVERSITIES.map((u) => ({ value: u.slug, label: u.short, sub: u.name.includes(u.short) ? undefined : u.name }))}
+          options={universities.map((u) => ({ value: u.slug, label: u.short, sub: u.name.includes(u.short) ? undefined : u.name }))}
           selected={draft.universities}
           onChange={setUniversity}
         />
@@ -157,23 +163,23 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
           selected={draft.levels}
           onChange={set("levels")}
         />
-        <Section
+        {show("faculty") && <Section
           title="Fakulteti / fusha"
           name={`${id}-faculty`}
           single
           options={facultyOptions}
           selected={draft.faculties}
           onChange={set("faculties")}
-        />
-        <Section
+        />}
+        {show("type") && <Section
           title="Lloji"
           name={`${id}-type`}
           single
           options={MATERIAL_TYPES.map((t) => ({ value: t, label: t }))}
           selected={draft.types}
           onChange={set("types")}
-        />
-        <Section
+        />}
+        {show("subject") && <Section
           title="Lënda"
           name={`${id}-subject`}
           defaultOpen
@@ -192,7 +198,7 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
               className="input-srh min-h-[38px] w-full pl-8 text-sm"
             />
           </div>
-        </Section>
+        </Section>}
       </div>
 
       <div className="mt-4 flex gap-2 border-t border-gray-200 pt-3">

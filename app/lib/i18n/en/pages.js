@@ -208,5 +208,7 @@ const pages = {
   "Ende nuk ka të dhëna për fakultetet në këtë periudhë.": "There is no faculty data for this period yet.",
   "Materiale": "Materials",
   "Përditësuar:": "Updated:",
+  "Provime pranuese nga studentët e mëparshëm. Filtroni sipas universitetit publik dhe nivelit.": "Entrance exams from previous students. Filter by public university and level.",
+  "Kërko provime pranuese…": "Search entrance exams…",
 };
 export default pages;
