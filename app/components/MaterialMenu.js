@@ -43,7 +43,7 @@ export default function MaterialMenu({ material }) {
   };
 
   return (
-    <div ref={ref} className="relative shrink-0">
+    <div ref={ref} className={`relative shrink-0 ${open ? "z-30" : "z-10"}`}>
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
