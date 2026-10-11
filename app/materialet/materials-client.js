@@ -2,11 +2,10 @@
 
 import { useCallback, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { FileText, Search } from "lucide-react";
+import { FileText, Search, SlidersHorizontal, X } from "lucide-react";
 import MaterialGrid from "../components/MaterialGrid";
-import { FACULTIES } from "../lib/material-options";
+import FilterSidebar, { EMPTY_FILTERS } from "./FilterSidebar";
 import { assignMaterialSlugs } from "../lib/material-slug";
-import { STUDY_LEVELS } from "../lib/study-levels";
 import { WORKER_URL } from "../lib/worker-url";
 import { normalizeMaterial } from "../lib/material-view";
 
@@ -20,9 +19,10 @@ export default function MaterialsClient({ initialData = null }) {
   const [hasLoaded, setHasLoaded] = useState(Boolean(initialData));
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [selectedFaculty, setSelectedFaculty] = useState("");
-  const [selectedType, setSelectedType] = useState("");
-  const [selectedStudyLevel, setSelectedStudyLevel] = useState("");
+  // `filters` is what the list shows; `draft` is what the sidebar is editing.
+  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const [draft, setDraft] = useState(EMPTY_FILTERS);
+  const [subjects, setSubjects] = useState([]);
   const [selectedSort, setSelectedSort] = useState("newest");
   const [page, setPage] = useState(() => Number(initialData?.pagination?.page) || 1);
   const [pagination, setPagination] = useState(
@@ -41,16 +41,26 @@ export default function MaterialsClient({ initialData = null }) {
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const faculty = params.get("faculty") || "";
-    const type = params.get("type") || "";
-    const niveli = params.get("niveli") || "";
+    const list = (name) => (params.get(name) || "").split(",").map((v) => v.trim()).filter(Boolean);
+    const initial = {
+      faculties: list("faculty").map((v) => v.toUpperCase()),
+      types: list("type"),
+      levels: list("niveli"),
+      subjects: list("subjects"),
+    };
     const sort = params.get("sort") || "newest";
     const q = params.get("q") || "";
-    setSelectedFaculty(faculty.toUpperCase());
-    setSelectedType(type);
-    setSelectedStudyLevel(niveli);
+    setFilters(initial);
+    setDraft(initial);
     setSelectedSort(["views", "downloads"].includes(sort) ? sort : "newest");
     if (q) setSearchTerm(q);
+  }, []);
+
+  useEffect(() => {
+    fetch(`${WORKER_URL}/?action=subjects`)
+      .then((res) => (res.ok ? res.json() : { subjects: [] }))
+      .then((data) => setSubjects(data.subjects || []))
+      .catch(() => {});
   }, []);
 
   const materialsWithSlugs = useMemo(
@@ -68,9 +78,10 @@ export default function MaterialsClient({ initialData = null }) {
         limit: String(PAGE_SIZE),
       });
       if (searchTerm.trim()) params.set("q", searchTerm.trim());
-      if (selectedFaculty) params.set("faculty", selectedFaculty);
-      if (selectedType) params.set("type", selectedType);
-      if (selectedStudyLevel) params.set("niveli", selectedStudyLevel);
+      if (filters.faculties.length) params.set("faculty", filters.faculties.join(","));
+      if (filters.types.length) params.set("type", filters.types.join(","));
+      if (filters.levels.length) params.set("niveli", filters.levels.join(","));
+      if (filters.subjects.length) params.set("subjects", filters.subjects.join(","));
       if (selectedSort === "views" || selectedSort === "downloads") {
         params.set("sort", selectedSort);
       }
@@ -95,7 +106,7 @@ export default function MaterialsClient({ initialData = null }) {
       setLoading(false);
       setHasLoaded(true);
     }
-  }, [page, searchTerm, selectedFaculty, selectedType, selectedStudyLevel, selectedSort]);
+  }, [page, searchTerm, filters, selectedSort]);
 
   useEffect(() => {
     const timeout = window.setTimeout(loadMaterials, 250);
@@ -104,27 +115,36 @@ export default function MaterialsClient({ initialData = null }) {
 
   useEffect(() => {
     setPage(1);
-  }, [searchTerm, selectedFaculty, selectedType, selectedStudyLevel, selectedSort]);
-
-  const typeOptions = useMemo(() => {
-    const fromServer = Object.keys(availableTypeCounts);
-    if (fromServer.length > 0) {
-      return fromServer.sort((a, b) => a.localeCompare(b, "sq"));
-    }
-    const set = new Set(materials.map((m) => m.type).filter(Boolean));
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "sq"));
-  }, [availableTypeCounts, materials]);
+  }, [searchTerm, filters, selectedSort]);
 
   const filteredMaterials = materialsWithSlugs;
 
-  const resetFilters = () => {
-    setSearchTerm("");
-    setSelectedFaculty("");
-    setSelectedType("");
-    setSelectedStudyLevel("");
-    setSelectedSort("newest");
-    setPage(1);
+  const syncUrl = (next) => {
+    const params = new URLSearchParams();
+    if (next.faculties.length) params.set("faculty", next.faculties.join(","));
+    if (next.types.length) params.set("type", next.types.join(","));
+    if (next.levels.length) params.set("niveli", next.levels.join(","));
+    if (next.subjects.length) params.set("subjects", next.subjects.join(","));
+    const query = params.toString();
+    window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
   };
+
+  const applyFilters = () => {
+    setFilters(draft);
+    setPage(1);
+    syncUrl(draft);
+    setFiltersOpen(false);
+  };
+
+  const clearFilters = () => {
+    setDraft(EMPTY_FILTERS);
+    setFilters(EMPTY_FILTERS);
+    setPage(1);
+    syncUrl(EMPTY_FILTERS);
+  };
+
+  const activeFilterCount =
+    filters.levels.length + filters.faculties.length + filters.types.length + filters.subjects.length;
 
   const runSearch = () => {
     setPage(1);
@@ -207,106 +227,92 @@ export default function MaterialsClient({ initialData = null }) {
             <span className="rounded-full bg-white px-3 py-1 shadow-sm">
               {pagination.total} materiale
             </span>
-            <span className="rounded-full bg-burgundy-50 px-3 py-1 text-burgundy-600">
-              {typeOptions.length} lloje
-            </span>
             <span className="rounded-full bg-navy-100 px-3 py-1 text-navy-800">
               Faqja {currentPage} / {totalPages}
             </span>
           </div>
         </header>
 
-        <div
-          id="material-filters"
-          className="sticky top-24 z-20 mb-4 py-2 backdrop-blur"
-        >
-          <div className="flex flex-col gap-2 lg:flex-row lg:items-center">
-            <button
-              type="button"
-              onClick={() => setFiltersOpen((open) => !open)}
-              aria-expanded={filtersOpen}
-              aria-controls="material-filters"
-              className="btn-outline min-h-[44px] justify-between md:hidden"
-            >
-              {filtersOpen ? "Fshih filtrat" : "Filtra dhe renditja"}
-            </button>
-            <div className="relative w-full lg:max-w-[200px] lg:shrink-0">
-              <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-              <input
-                type="text"
-                placeholder="Kërko…"
-                aria-label="Kërko materiale"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && runSearch()}
-                className="input-srh min-h-[44px] w-full pl-10 text-sm"
-              />
-            </div>
-
-            <select
-              value={selectedFaculty}
-              onChange={(e) => setSelectedFaculty(e.target.value)}
-              className={`input-srh min-h-[44px] min-w-0 flex-1 text-sm md:block ${filtersOpen ? "block" : "hidden"}`}
-              aria-label="Fakulteti"
-            >
-              <option value="">Të gjitha fakultetet</option>
-              {FACULTIES.map((faculty) => (
-                <option key={faculty.code} value={faculty.code}>
-                  {faculty.name}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedType}
-              onChange={(e) => setSelectedType(e.target.value)}
-              className={`input-srh min-h-[44px] min-w-0 flex-1 text-sm md:block ${filtersOpen ? "block" : "hidden"}`}
-              aria-label="Lloji i materialit"
-            >
-              <option value="">Të gjitha llojet</option>
-              {typeOptions.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedStudyLevel}
-              onChange={(e) => setSelectedStudyLevel(e.target.value)}
-              className={`input-srh min-h-[44px] min-w-0 flex-1 text-sm md:block ${filtersOpen ? "block" : "hidden"}`}
-              aria-label="Niveli i studimit"
-            >
-              <option value="">Të gjitha nivelet</option>
-              {STUDY_LEVELS.map((level) => (
-                <option key={level.value} value={level.value}>
-                  {level.label}
-                </option>
-              ))}
-            </select>
-
-            <select
-              value={selectedSort}
-              onChange={(e) => setSelectedSort(e.target.value)}
-              className={`input-srh min-h-[44px] min-w-0 flex-1 text-sm md:block ${filtersOpen ? "block" : "hidden"}`}
-              aria-label="Rendit sipas"
-            >
-              <option value="newest">Më të rejat</option>
-              <option value="views">Më të shikuarat</option>
-              <option value="downloads">Më të shkarkuarat</option>
-            </select>
-
-            <button
-              type="button"
-              onClick={runSearch}
-              className={`btn-primary min-h-[44px] shrink-0 px-5 py-2 text-sm md:inline-flex ${filtersOpen ? "inline-flex" : "hidden"}`}
-            >
-              <Search className="h-4 w-4" />
-              Kërko
-            </button>
+        <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+          <button
+            type="button"
+            onClick={() => setFiltersOpen(true)}
+            className="btn-outline min-h-[44px] justify-center lg:hidden"
+          >
+            <SlidersHorizontal className="h-4 w-4" aria-hidden />
+            Filtrat{activeFilterCount > 0 ? ` (${activeFilterCount})` : ""}
+          </button>
+          <div className="relative min-w-0 flex-1">
+            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" aria-hidden />
+            <input
+              type="text"
+              placeholder="Kërko materiale…"
+              aria-label="Kërko materiale"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && runSearch()}
+              className="input-srh min-h-[44px] w-full pl-10 text-sm"
+            />
           </div>
+          <select
+            value={selectedSort}
+            onChange={(e) => setSelectedSort(e.target.value)}
+            className="input-srh min-h-[44px] text-sm sm:w-48"
+            aria-label="Rendit sipas"
+          >
+            <option value="newest">Më të rejat</option>
+            <option value="views">Më të shikuarat</option>
+            <option value="downloads">Më të shkarkuarat</option>
+          </select>
         </div>
 
+        <div className="lg:grid lg:grid-cols-[17rem_minmax(0,1fr)] lg:items-start lg:gap-6">
+          <aside className="hidden lg:sticky lg:top-24 lg:block lg:max-h-[calc(100vh-7rem)]">
+            <div className="surface-card flex max-h-[calc(100vh-7rem)] flex-col p-4">
+              <FilterSidebar
+                id="filters-desktop"
+                draft={draft}
+                setDraft={setDraft}
+                subjects={subjects}
+                onApply={applyFilters}
+                onClear={clearFilters}
+              />
+            </div>
+          </aside>
+
+          {filtersOpen && (
+            <div className="fixed inset-0 z-50 lg:hidden" role="dialog" aria-modal="true" aria-label="Filtrat">
+              <button
+                type="button"
+                aria-label="Mbyll filtrat"
+                className="absolute inset-0 bg-navy-900/50"
+                onClick={() => setFiltersOpen(false)}
+              />
+              <div className="absolute inset-y-0 left-0 flex w-[88%] max-w-sm flex-col bg-white p-4 shadow-2xl">
+                <div className="mb-3 flex items-center justify-between">
+                  <h2 className="text-lg font-bold text-navy-900">Filtrat</h2>
+                  <button
+                    type="button"
+                    onClick={() => setFiltersOpen(false)}
+                    aria-label="Mbyll"
+                    className="rounded-xl p-2 text-gray-600 hover:bg-gray-100"
+                  >
+                    <X className="h-5 w-5" aria-hidden />
+                  </button>
+                </div>
+                <FilterSidebar
+                  id="filters-mobile"
+                  draft={draft}
+                  setDraft={setDraft}
+                  subjects={subjects}
+                  onApply={applyFilters}
+                  onClear={clearFilters}
+                />
+              </div>
+            </div>
+          )}
+
+          <div className="min-w-0">
         <div id="material-results" className="scroll-mt-28">
           <p className="sr-only" role="status" aria-live="polite">
             {loading ? "Duke përditësuar rezultatet…" : `${pagination.total} materiale u gjetën.`}
@@ -332,7 +338,7 @@ export default function MaterialsClient({ initialData = null }) {
               </p>
             </div>
           ) : (
-            <MaterialGrid materials={filteredMaterials} />
+            <MaterialGrid materials={filteredMaterials} columns="sm:grid-cols-2 2xl:grid-cols-3" />
           )}
           {pagination.total > 0 && (
             <nav
@@ -381,8 +387,9 @@ export default function MaterialsClient({ initialData = null }) {
             </nav>
           )}
         </div>
+          </div>
+        </div>
       </div>
-
     </div>
   );
 }
