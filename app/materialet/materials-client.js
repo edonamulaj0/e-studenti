@@ -64,7 +64,7 @@ export default function MaterialsClient({ initialData = null, applicants = false
     setDraft(initial);
     setSelectedSort(["views", "downloads"].includes(sort) ? sort : "newest");
     if (q) setSearchTerm(q);
-  }, []);
+  }, [applicants]);
 
   useEffect(() => {
     if (applicants) return;
