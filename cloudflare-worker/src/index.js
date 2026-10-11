@@ -1825,6 +1825,7 @@ async function handleReports(request, env) {
        r.id, r.reason, r.status, r.created_at,
        m.id    AS material_id,
        m.title AS material_title,
+       m.university AS material_university,
        m.faculty AS material_faculty,
        m.subject AS material_subject,
        m.r2_url  AS material_url,
@@ -3003,7 +3004,7 @@ async function handleModeratorMaterials(request, url, env) {
   // databases, so retry without it rather than failing the whole page.
   const listMaterials = (ownerColumn) =>
     env.DB.prepare(
-      `SELECT m.id, m.title, m.faculty, m.subject, m.type, m.file_type,
+      `SELECT m.id, m.title, m.university, m.faculty, m.subject, m.type, m.file_type,
               m.r2_url, m.created_at, m.is_anonymous, m.study_level,
               m.status, m.rejection_reason, m.file_size,
               ${ownerColumn}

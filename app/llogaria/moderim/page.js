@@ -27,6 +27,7 @@ import {
 import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
 import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
+import { universityShort } from "../../lib/placement";
 import { getResourceCategoryLabel } from "../../lib/resource-options";
 
 function formatDate(dateStr) {
@@ -279,7 +280,7 @@ function ModerimPage() {
         method: "POST",
         credentials: "include",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ faculty: subject.faculty, key: subject.key, to }),
+        body: JSON.stringify({ university: subject.university, faculty: subject.faculty, key: subject.key, to }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Riemërtimi dështoi.");
@@ -592,7 +593,7 @@ function ModerimPage() {
                             <div className="min-w-0">
                               <p className="font-bold leading-snug text-navy-900">{first.material_title}</p>
                               <p className="mt-0.5 text-sm text-gray-600">
-                                {getFacultyName(first.material_faculty)} · {first.material_subject}
+                                {universityShort(first.material_university)} · {getFacultyName(first.material_faculty)} · {first.material_subject}
                               </p>
                               {first.material_url && (
                                 <a
@@ -687,7 +688,7 @@ function ModerimPage() {
             ) : (
               <ul className="grid gap-2">
                 {shownSubjects.map((subject) => {
-                  const id = `${subject.faculty}|${subject.key}`;
+                  const id = `${subject.university}|${subject.faculty}|${subject.key}`;
                   const editing = renaming === id;
                   return (
                     <li key={id} className="rounded-2xl border border-gray-200 bg-white p-4">
@@ -696,7 +697,7 @@ function ModerimPage() {
                           <p className="font-bold text-navy-900">
                             {subject.name}{" "}
                             <span className="font-normal text-gray-600">
-                              · {getFacultyName(subject.faculty)} · {subject.count}
+                              · {universityShort(subject.university)} · {getFacultyName(subject.faculty)} · {subject.count}
                             </span>
                           </p>
                           {subject.variants.length > 1 && (
@@ -797,7 +798,7 @@ function ModerimPage() {
                         </div>
                         <p className="mt-1 truncate font-bold text-navy-900">{m.title}</p>
                         <p className="mt-0.5 text-sm text-gray-500">
-                          {getFacultyName(m.faculty)}
+                          {universityShort(m.university)} · {getFacultyName(m.faculty)}
                           {m.subject && m.subject !== "//" ? ` · ${m.subject}` : ""}
                         </p>
                         <div className="mt-1 flex flex-wrap items-center gap-3 text-xs text-gray-500">
@@ -967,7 +968,7 @@ function ModerimPage() {
                       </p>
                       <h2 className="mt-1 font-bold leading-snug text-navy-900">{item.title}</h2>
                       <p className="mt-1 text-sm text-gray-500">
-                        {getFacultyName(item.faculty)} · {item.subject} · {item.type}
+                        {universityShort(item.university)} · {getFacultyName(item.faculty)} · {item.subject} · {item.type}
                       </p>
                       <p className="mt-1 text-sm text-gray-500">
                         Ngarkuar nga {`${item.uploader_name || ""} ${item.uploader_surname || ""}`.trim() || "—"}
