@@ -75,6 +75,12 @@ CREATE TABLE IF NOT EXISTS site_stats (
   tracking_since TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS rebuild_state (
+  id INTEGER PRIMARY KEY CHECK (id = 1),
+  dirty_since TEXT,
+  last_triggered_at TEXT
+);
+
 CREATE TABLE IF NOT EXISTS reports (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   material_id INTEGER NOT NULL,

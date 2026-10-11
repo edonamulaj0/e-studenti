@@ -119,7 +119,7 @@ migration before deploying the Worker**, or every catalogue query will fail:
 
 ```bash
 cd cloudflare-worker
-wrangler d1 migrations apply e-studenti-auth --remote   # applies 0011 and 0012
+wrangler d1 migrations apply e-studenti-auth --remote   # applies 0011, 0012 and 0013
 ```
 
 Existing materials are marked `approved`. The thresholds are
@@ -161,10 +161,29 @@ deleted there; they are stored in D1 whether or not `ADMIN_EMAIL` is set.
 
 ## Materials added after a build
 
-Material pages are generated at build time. A material uploaded later has no
-static page, so `/materialet/<slug>` falls through to the 404 page, which loads
-it from the API and shows the normal detail view (no redeploy needed); a
-skeleton is shown while it loads, so the "not found" text never flashes. Until
-the next build such a page is not in the sitemap and is served with a 404
-status, which is fine for people but means search engines pick it up only after
-a rebuild.
+Material pages are generated at build time, so the site has to be rebuilt for a
+new upload to get its own static page (and a sitemap entry). Two things cover
+this:
+
+1. **Automatic rebuilds (recommended).** Whenever the public catalogue changes
+   (an approved upload, an edit, a deletion, a moderator decision, an account
+   deletion), the Worker marks the site as out of date. The hourly job then asks
+   Cloudflare Pages for a new build, at most once every 2 hours, so a burst of
+   changes costs one build. To enable it, create a **deploy hook** in the
+   Cloudflare dashboard (Workers & Pages → your Pages project → Settings →
+   Builds → Deploy hooks) and give its URL to the Worker:
+
+   ```bash
+   wrangler secret put PAGES_DEPLOY_HOOK
+   ```
+
+   This needs the Pages project to be connected to the Git repository (deploy
+   hooks do not exist for direct uploads). Without the secret nothing is
+   requested and everything else works as before. The URL must start with
+   `https://api.cloudflare.com/`; anything else is ignored.
+
+2. **Until that build finishes.** A material without a static page falls through
+   to the 404 page, which shows a loading skeleton, fetches the material from the
+   API and renders the normal detail view. The HTTP status of that response is
+   404 (Cloudflare chooses it before any page code runs), so search engines see
+   the page only after the rebuild above.
