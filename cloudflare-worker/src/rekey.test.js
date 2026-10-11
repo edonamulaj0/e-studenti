@@ -54,7 +54,7 @@ function makeEnv({ moderator, rows, missing = [], rowChanged = false }) {
         },
         async first() {
           if (/FROM users WHERE id/.test(sql)) {
-            return { id: 1, email: "m@example.com", name: "M", token_version: 0, is_moderator: moderator ? 1 : 0 };
+            return { id: 1, email: moderator ? "edonaamulaj@gmail.com" : "m@example.com", name: "M", token_version: 0, is_moderator: moderator ? 1 : 0 };
           }
           return null;
         },

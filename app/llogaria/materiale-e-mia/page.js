@@ -5,7 +5,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { FileText, LogOut, Plus, PackageCheck, ShieldAlert, Eye, Download } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
-import { fetchCurrentUser, logout } from "../../lib/auth";
+import { fetchCurrentUser, logout, setUser as setSessionUser } from "../../lib/auth";
+import ModalOverlay from "../../components/ModalOverlay";
 import { getFacultyName } from "../../lib/material-options";
 import { formatStatCount } from "../../lib/track-material";
 
@@ -45,6 +46,12 @@ function MaterialeEMiaPage() {
   const [materials, setMaterials] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [accountMessage, setAccountMessage] = useState("");
+  const [exporting, setExporting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [confirmEmail, setConfirmEmail] = useState("");
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
   useEffect(() => {
     fetchCurrentUser().then((currentUser) => {
@@ -85,6 +92,52 @@ function MaterialeEMiaPage() {
       setError(err.message || "Ngarkimi dështoi.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const exportData = async () => {
+    setExporting(true);
+    setAccountMessage("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=export-account`, { credentials: "include" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || "Shkarkimi dështoi.");
+      }
+      const url = URL.createObjectURL(await res.blob());
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = "e-studenti-te-dhenat.json";
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setAccountMessage(err.message || "Shkarkimi dështoi.");
+    } finally {
+      setExporting(false);
+    }
+  };
+
+  const deleteAccount = async (event) => {
+    event.preventDefault();
+    setDeleting(true);
+    setDeleteError("");
+    try {
+      const res = await fetch(`${WORKER_URL}/?action=delete-account`, {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ confirm_email: confirmEmail }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.error || "Fshirja dështoi.");
+      setSessionUser(null);
+      router.push("/");
+    } catch (err) {
+      setDeleteError(err.message || "Fshirja dështoi.");
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -235,7 +288,109 @@ function MaterialeEMiaPage() {
             ))}
           </div>
         )}
+
+        {!loading && user && (
+          <section
+            aria-labelledby="account-heading"
+            className="mt-12 rounded-2xl border border-srh-cream bg-white p-6"
+          >
+            <h2 id="account-heading" className="text-xl font-bold text-srh-navy">
+              Të dhënat e llogarisë
+            </h2>
+            <p className="mt-2 text-sm text-srh-navy/70">
+              Mund të shkarkoni një kopje të të dhënave që mbajmë për ju: profili, materialet dhe
+              lidhjet që keni dërguar, dhe raportet që keni bërë.
+            </p>
+            <div className="mt-4 flex flex-wrap gap-3">
+              <button
+                type="button"
+                onClick={exportData}
+                disabled={exporting}
+                className="btn-outline"
+              >
+                {exporting ? "Duke përgatitur…" : "Shkarko të dhënat e mia"}
+              </button>
+              {!user.is_moderator && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setConfirmEmail("");
+                    setDeleteError("");
+                    setDeleteOpen(true);
+                  }}
+                  className="btn-outline text-burgundy-600"
+                >
+                  Fshi llogarinë
+                </button>
+              )}
+            </div>
+            {accountMessage && (
+              <p role="alert" className="mt-3 text-sm font-semibold text-burgundy-600">
+                {accountMessage}
+              </p>
+            )}
+          </section>
+        )}
       </div>
+
+      <ModalOverlay open={deleteOpen} onClose={() => !deleting && setDeleteOpen(false)}>
+        <form
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="delete-account-title"
+          onClick={(e) => e.stopPropagation()}
+          onSubmit={deleteAccount}
+          className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl"
+        >
+          <h2 id="delete-account-title" className="text-lg font-bold text-srh-navy">
+            Fshi llogarinë
+          </h2>
+          <ul className="mt-3 list-disc space-y-1.5 pl-5 text-sm text-srh-navy/75">
+            <li>Emri, mbiemri dhe emaili juaj fshihen dhe nuk mund të hyni më.</li>
+            <li>
+              Materialet e publikuara <strong>mbeten</strong> si &quot;Anonim&quot; dhe nuk mund t&apos;i
+              ndryshoni ose fshini më (vetëm një moderator mund t&apos;i heqë).
+            </li>
+            <li>Materialet në pritje ose të refuzuara fshihen përgjithmonë.</li>
+            <li>Ky veprim nuk kthehet mbrapsht.</li>
+          </ul>
+          <label htmlFor="confirm-email" className="mt-4 block text-sm font-semibold text-srh-navy">
+            Shkruani emailin tuaj ({user?.email}) për ta konfirmuar
+          </label>
+          <input
+            id="confirm-email"
+            type="email"
+            required
+            autoComplete="off"
+            value={confirmEmail}
+            onChange={(e) => setConfirmEmail(e.target.value)}
+            className="input-srh mt-1.5"
+          />
+          {deleteError && (
+            <p role="alert" className="mt-3 text-sm font-semibold text-burgundy-600">
+              {deleteError}
+            </p>
+          )}
+          <div className="mt-5 flex gap-3">
+            <button
+              type="submit"
+              disabled={deleting || confirmEmail.trim().toLowerCase() !== (user?.email || "").toLowerCase()}
+              className="btn-primary flex-1"
+            >
+              {deleting ? "Duke fshirë…" : "Fshi llogarinë"}
+            </button>
+            <button
+              type="button"
+              data-autofocus
+              disabled={deleting}
+              onClick={() => setDeleteOpen(false)}
+              className="btn-outline flex-1"
+            >
+              Anulo
+            </button>
+          </div>
+        </form>
+      </ModalOverlay>
     </div>
   );
 }
