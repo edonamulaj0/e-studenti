@@ -7,6 +7,7 @@ import { fetchCurrentUser } from "../../lib/auth";
 import { DEFAULT_UNIVERSITY, MATERIAL_TYPES, facultiesFor } from "../../lib/material-options";
 import { UNIVERSITIES } from "../../lib/placement";
 import { useT } from "../../components/Preferences";
+import SubjectInput from "../../components/SubjectInput";
 import { translateMessage } from "../../lib/bulk-upload";
 
 const emptyForm = {
@@ -207,10 +208,11 @@ export default function EditMaterialClient({ id }) {
               {/* Subject — hidden for Provime Pranuese */}
               {!isPranues && (
                 <Field label="Lënda" required>
-                  <input
+                  <SubjectInput
                     required
                     value={form.subject}
-                    onChange={(e) => setField("subject", e.target.value)}
+                    onChange={(value) => setField("subject", value)}
+                    university={form.university}
                     className="input-srh"
                   />
                 </Field>

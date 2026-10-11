@@ -10,6 +10,7 @@ import { DEFAULT_UNIVERSITY, MATERIAL_TYPES, facultiesFor } from "../../lib/mate
 import { UNIVERSITIES } from "../../lib/placement";
 import { STUDY_LEVELS } from "../../lib/study-levels";
 import { useT } from "../../components/Preferences";
+import SubjectInput from "../../components/SubjectInput";
 import {
   ALLOWED_EXTENSIONS,
   MAX_FILES_PER_BATCH,
@@ -482,9 +483,10 @@ export default function NgarkoPage() {
                 </label>
                 <label className="block text-sm font-semibold text-srh-navy">
                   {t("Lënda")}
-                  <input
+                  <SubjectInput
                     value={defaults.subject}
-                    onChange={(e) => setDefault("subject", e.target.value)}
+                    onChange={(value) => setDefault("subject", value)}
+                    university={defaults.university}
                     className="input-srh mt-1"
                   />
                 </label>
@@ -601,9 +603,10 @@ export default function NgarkoPage() {
                         </Field>
                         {!isPranues && (
                           <Field label={t("Lënda")} error={tm(errors.subject)}>
-                            <input
+                            <SubjectInput
                               value={fields.subject}
-                              onChange={(e) => setOverride(row.id, "subject", e.target.value)}
+                              onChange={(value) => setOverride(row.id, "subject", value)}
+                              university={defaults.university}
                               aria-invalid={Boolean(errors.subject)}
                               className="input-srh min-h-[44px]"
                             />

@@ -159,6 +159,7 @@ const directory = {
   "Hap thirrjen": "Open the call",
   "Nuk u gjet asgjë": "Nothing found",
   "Provoni të ndryshoni kërkimin, vendin ose muajin.": "Try changing the search, country or month.",
+  "Lëndët e sugjeruara": "Suggested subjects",
 };
 
 export default directory;

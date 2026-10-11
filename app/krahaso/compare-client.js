@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { useT } from "../components/Preferences";
-import CourseList, { loadCourses } from "../components/CourseList";
 import {
   durationLabel,
   formatDate,
@@ -28,43 +27,6 @@ function rowsFor(p, t) {
     [t("Akreditimi vlen deri më")]: formatDate(p.until, t),
     [t("Titulli (anglisht)")]: p.nameEn,
   };
-}
-
-const fold = (t) => t.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-
-/** Lists of both programmes, plus how many course names they have in common. */
-function CoursesCompare({ a, b }) {
-  const t = useT();
-  const [all, setAll] = useState(null);
-  useEffect(() => {
-    loadCourses().then(setAll);
-  }, []);
-  if (!all) return null;
-  const ea = all[a.id];
-  const eb = all[b.id];
-  const shared = ea && eb ? (() => {
-    const names = new Set(eb.courses.map((c) => fold(c[2])));
-    return ea.courses.filter((c) => names.has(fold(c[2]))).length;
-  })() : null;
-
-  return (
-    <section aria-labelledby="courses-compare" className="mt-8">
-      <h2 id="courses-compare" className="mb-1 text-xl font-bold text-navy-900">{t("Lëndët")}</h2>
-      {shared > 0 && (
-        <p className="mb-4 text-sm text-gray-600">
-          {t("{n} lëndë kanë të njëjtin emër në të dy programet.", { n: shared })}
-        </p>
-      )}
-      <div className="grid gap-4 md:grid-cols-2">
-        {[a, b].map((p) => (
-          <div key={p.id} className="surface-card p-4">
-            <h3 className="mb-3 font-bold text-navy-900">{p.name}</h3>
-            <CourseList programmeId={p.id} />
-          </div>
-        ))}
-      </div>
-    </section>
-  );
 }
 
 export default function CompareClient() {
@@ -147,7 +109,6 @@ export default function CompareClient() {
             </tbody>
           </table>
         </div>
-        <CoursesCompare a={a} b={b} />
         <p className="mt-3 text-xs text-gray-600">
           {t(
             "Rreshtat e theksuar janë ato ku programet ndryshojnë. Burimi: lista e programeve të akredituara të Agjencisë së Kosovës për Akreditim."
