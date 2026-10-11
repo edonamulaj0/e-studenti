@@ -2,7 +2,7 @@
 
 import { useCallback, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
-import { FileText, Search, SlidersHorizontal, X } from "lucide-react";
+import { FileText, LayoutGrid, List, Search, SlidersHorizontal, X } from "lucide-react";
 import MaterialGrid from "../components/MaterialGrid";
 import FilterSidebar, { EMPTY_FILTERS } from "./FilterSidebar";
 import { assignMaterialSlugs } from "../lib/material-slug";
@@ -47,6 +47,24 @@ export default function MaterialsClient({ initialData = null, applicants = false
     initialData?.typeCounts || {}
   );
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [view, setViewState] = useState("grid");
+
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("estudenti-view") === "list") setViewState("list");
+    } catch {
+      /* storage can be unavailable */
+    }
+  }, []);
+
+  const setView = (next) => {
+    setViewState(next);
+    try {
+      localStorage.setItem("estudenti-view", next);
+    } catch {
+      /* ignore */
+    }
+  };
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -274,6 +292,26 @@ export default function MaterialsClient({ initialData = null, applicants = false
               className="input-srh min-h-[44px] w-full pl-10 text-sm"
             />
           </div>
+          <div role="group" aria-label={t("Pamja")} className="inline-flex shrink-0 self-start rounded-xl border border-gray-200 bg-surface p-0.5 sm:self-auto">
+            {[
+              ["grid", LayoutGrid, "Kartela"],
+              ["list", List, "Listë"],
+            ].map(([value, Icon, label]) => (
+              <button
+                key={value}
+                type="button"
+                aria-pressed={view === value}
+                aria-label={t(label)}
+                title={t(label)}
+                onClick={() => setView(value)}
+                className={`inline-flex h-10 w-10 items-center justify-center rounded-lg transition-colors ${
+                  view === value ? "bg-navy-100 text-navy-900" : "text-gray-500 hover:text-navy-900"
+                }`}
+              >
+                <Icon className="h-4 w-4" aria-hidden />
+              </button>
+            ))}
+          </div>
           {!applicants && <select
             value={selectedSort}
             onChange={(e) => setSelectedSort(e.target.value)}
@@ -362,7 +400,7 @@ export default function MaterialsClient({ initialData = null, applicants = false
               </p>
             </div>
           ) : (
-            <MaterialGrid materials={filteredMaterials} columns="sm:grid-cols-2 2xl:grid-cols-3" />
+            <MaterialGrid materials={filteredMaterials} view={view} columns="sm:grid-cols-2 2xl:grid-cols-3" />
           )}
           {pagination.total > 0 && (
             <nav

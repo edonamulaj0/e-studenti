@@ -14,7 +14,7 @@ const REASONS = [
   "Tjetër",
 ];
 
-export default function ReportButton({ materialId, materialTitle, materialUrl, compact = false }) {
+export default function ReportButton({ materialId, materialTitle, materialUrl, compact = false, menuItem = false }) {
   const t = useT();
   const [open, setOpen] = useState(false);
   const [reason, setReason] = useState("");
@@ -57,13 +57,15 @@ export default function ReportButton({ materialId, materialTitle, materialUrl, c
         aria-label={compact ? t("Raporto: {title}", { title: materialTitle }) : undefined}
         title={compact ? t("Raporto") : undefined}
         className={
-          compact
+          menuItem
+            ? "flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-navy-900 hover:bg-gray-100"
+            : compact
             ? "inline-flex h-9 w-9 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-gray-100 hover:text-burgundy-600"
             : "flex items-center gap-1.5 text-sm font-semibold text-gray-500 underline decoration-dotted underline-offset-4 transition-colors hover:text-burgundy-600"
         }
       >
         <Flag className="h-4 w-4" aria-hidden />
-        {!compact && t("Raporto")}
+        {(!compact || menuItem) && t("Raporto")}
       </button>
 
       <ModalOverlay open={open} onClose={close}>
