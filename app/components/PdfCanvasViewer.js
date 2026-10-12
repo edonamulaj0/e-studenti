@@ -15,6 +15,20 @@ const MAX_PIXEL_RATIO = 2;
 /** A4 portrait (width / height), used to size placeholders before page 1 loads. */
 const DEFAULT_ASPECT = 1 / 1.414;
 
+/**
+ * Frees a loaded document. pdf.js 6 removed `PDFDocumentProxy.destroy()`; the loading task owns
+ * the worker and has to be destroyed instead. The old method is still tried for older versions.
+ * Cleanup must never throw: it runs while React unmounts the viewer.
+ */
+function releaseDocument(loadingTask, doc) {
+  try {
+    if (typeof loadingTask?.destroy === "function") loadingTask.destroy()?.catch?.(() => {});
+    else if (typeof doc?.destroy === "function") doc.destroy();
+  } catch {
+    /* already torn down */
+  }
+}
+
 /** Upper bound on text kept in the page for assistive technology. */
 const MAX_ACCESSIBLE_CHARS = 400_000;
 
@@ -97,6 +111,7 @@ export default function PdfCanvasViewer({ url, title }) {
   const hostsRef = useRef([]);
   const pagesRef = useRef([]);
   const docRef = useRef(null);
+  const loadingTaskRef = useRef(null);
   const [pageCount, setPageCount] = useState(0);
   const [aspect, setAspect] = useState(DEFAULT_ASPECT);
   const [status, setStatus] = useState("loading");
@@ -204,9 +219,11 @@ export default function PdfCanvasViewer({ url, title }) {
 
         // isEvalSupported keeps pdf.js away from `new Function`, which the
         // site's script-src policy would block.
-        const doc = await pdfjs.getDocument({ data, isEvalSupported: false }).promise;
+        const loadingTask = pdfjs.getDocument({ data, isEvalSupported: false });
+        loadingTaskRef.current = loadingTask;
+        const doc = await loadingTask.promise;
         if (cancelled) {
-          doc.destroy();
+          releaseDocument(loadingTask, doc);
           return;
         }
         docRef.current = doc;
@@ -237,8 +254,10 @@ export default function PdfCanvasViewer({ url, title }) {
       pagesRef.current = [];
       hostsRef.current = [];
       const doc = docRef.current;
+      const loadingTask = loadingTaskRef.current;
       docRef.current = null;
-      doc?.destroy();
+      loadingTaskRef.current = null;
+      releaseDocument(loadingTask, doc);
     };
   }, [url]);
 
