@@ -11,6 +11,8 @@ import {
   ExternalLink,
 } from "lucide-react";
 import { useT } from "../components/Preferences";
+import ContributeCallout from "../components/ContributeCallout";
+import { DEFAULT_UNIVERSITY } from "../lib/material-options";
 
 const WEBSITE_BY_SLUG = {
   ffz: "http://filozofiku.uni-pr.edu/",
@@ -223,6 +225,8 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
             ))}
           </div>
         </section>
+
+        <ContributeCallout name={name} faculty={materialsQuery} university={DEFAULT_UNIVERSITY} />
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <Link

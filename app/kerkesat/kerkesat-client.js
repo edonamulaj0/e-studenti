@@ -43,9 +43,17 @@ export default function KerkesatClient() {
   useEffect(() => {
     fetchCurrentUser().then(setUser);
     // Arriving from a search that found nothing: start a request for it.
-    const asked = new URLSearchParams(window.location.search).get("kerko");
-    if (asked) {
-      setForm((current) => ({ ...current, subject: asked.slice(0, 200) }));
+    const params = new URLSearchParams(window.location.search);
+    const asked = params.get("kerko");
+    const university = params.get("university");
+    const faculty = (params.get("faculty") || "").toUpperCase();
+    if (asked || university || faculty) {
+      setForm((current) => ({
+        ...current,
+        ...(asked ? { subject: asked.slice(0, 200) } : {}),
+        ...(university ? { university } : {}),
+        ...(faculty ? { faculty } : {}),
+      }));
       setFormOpen(true);
     }
   }, []);
