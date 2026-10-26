@@ -50,6 +50,7 @@ async function main() {
     "/",
     "/materialet",
     "/burime",
+    "/kerkesat",
     "/fakultetet",
     "/universitetet",
     "/erasmus",

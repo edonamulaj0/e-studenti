@@ -19,6 +19,7 @@
     "../shared/*.mjs"
   ],
   "exclude": [
-    "src/*.test.js"
+    "src/*.test.js",
+    "src/test-d1.js"
   ]
 }

@@ -3,7 +3,7 @@
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { FileText, LogOut, Plus, PackageCheck, ShieldAlert, Eye, Download } from "lucide-react";
+import { Bell, FileText, LogOut, Plus, PackageCheck, ShieldAlert, Eye, Download } from "lucide-react";
 import { WORKER_URL } from "../../lib/worker-url";
 import { fetchCurrentUser, logout, setUser as setSessionUser } from "../../lib/auth";
 import ModalOverlay from "../../components/ModalOverlay";
@@ -145,6 +145,10 @@ function MaterialeEMiaPage() {
     }
   };
 
+  const published = materials.filter((material) => material.status === "approved");
+  const totalViews = published.reduce((sum, material) => sum + material.view_count, 0);
+  const totalDownloads = published.reduce((sum, material) => sum + material.download_count, 0);
+
   const doLogout = async () => {
     setAccountMessage("");
     if (await logout()) {
@@ -182,6 +186,13 @@ function MaterialeEMiaPage() {
             >
               <Plus className="h-5 w-5" />
               {t("Shto material të ri")}
+            </Link>
+            <Link
+              href="/llogaria/ndjekjet"
+              className="inline-flex items-center gap-2 rounded-xl border-2 border-srh-cream px-5 py-3 font-bold text-srh-navy hover:bg-srh-cream"
+            >
+              <Bell className="h-5 w-5" aria-hidden />
+              {t("Lëndët që ndiqni")}
             </Link>
             <button
               type="button"
@@ -229,6 +240,38 @@ function MaterialeEMiaPage() {
               {t("Ngarkoni materialin e parë për ta ndarë me komunitetin.")}
             </p>
           </div>
+        )}
+
+        {!loading && published.length > 0 && (
+          <section
+            aria-labelledby="impact-heading"
+            className="mb-6 rounded-2xl border border-srh-cream bg-surface p-5 shadow-sm"
+          >
+            <h2 id="impact-heading" className="text-sm font-bold uppercase tracking-wide text-srh-navy/70">
+              {t("Ndikimi juaj")}
+            </h2>
+            <dl className="mt-3 grid grid-cols-3 gap-3">
+              {[
+                [t("të publikuara"), published.length],
+                [t("shikime"), totalViews],
+                [t("shkarkime"), totalDownloads],
+              ].map(([label, value]) => (
+                <div key={label} className="flex flex-col-reverse">
+                  <dt className="text-sm text-srh-navy/70">{label}</dt>
+                  <dd className="font-playfair text-3xl font-black tabular-nums text-srh-navy">
+                    {formatStatCount(value)}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {totalDownloads > 0 && (
+              <p className="mt-3 text-sm text-srh-navy/80">
+                {t("Studentët kanë shkarkuar materialet tuaja {n} herë. Faleminderit që ndani!", {
+                  n: formatStatCount(totalDownloads),
+                })}
+              </p>
+            )}
+          </section>
         )}
 
         {!loading && materials.length > 0 && (

@@ -1,5 +1,7 @@
 /** English translations: privacy policy and terms of service. */
 const legal = {
+  "Kërkesat dhe lëndët që ndiqni": "Requests and subjects you follow",
+  "Kur bëni ose mbështetni një kërkesë për material, ruajmë kërkesën dhe votën tuaj; publikisht shfaqet vetëm lënda dhe numri i votave, kurrë emri juaj. Kur kërkesa plotësohet, ju dërgojmë një email me lidhjen. Nëse ndiqni një lëndë, ju dërgojmë një email në javë me materialet e reja; çdo email ka një lidhje për t'u çregjistruar menjëherë, dhe lëndët i menaxhoni te \"Lëndët që ndiqni\".": "When you make or support a material request, we store the request and your vote; publicly we show only the subject and the number of votes, never your name. When the request is fulfilled, we email you the link. If you follow a subject, we send you one email a week with its new materials; every email has a link to unsubscribe at once, and you manage your subjects under \"Subjects you follow\".",
   "Kush jemi": "Who we are",
   "E-Studenti është një platformë komunitare e ndërtuar nga studentë — shërbim jozyrtar, i palidhur me asnjë universitet, dhe iniciativë jofitimprurëse.": "E-Studenti is a community platform built by students — an unofficial service, not affiliated with any university, and a non-profit initiative.",
   "Çfarë mbledhim": "What we collect",

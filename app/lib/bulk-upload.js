@@ -153,6 +153,7 @@ export function buildFormData(row, defaults, contentHash) {
   form.append("study_level", fields.study_level || "bachelor");
   form.append("is_anonymous", fields.is_anonymous ? "1" : "0");
   if (contentHash) form.append("content_hash", contentHash);
+  if (fields.request_id) form.append("request_id", String(fields.request_id));
   form.append("file", row.file);
   return form;
 }

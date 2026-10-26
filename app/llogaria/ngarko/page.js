@@ -114,6 +114,26 @@ export default function NgarkoPage() {
     });
   }, [router]);
 
+  // Arriving from Kërkesat: the request's subject fills the shared fields, and
+  // the uploads are linked to it so its askers hear when it is published.
+  const [answering, setAnswering] = useState(null);
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const requestId = Number(params.get("request"));
+    if (!Number.isInteger(requestId) || requestId <= 0) return;
+    const type = MATERIAL_TYPES.includes(params.get("type")) ? params.get("type") : "";
+    const fromRequest = {
+      request_id: requestId,
+      university: params.get("university") || DEFAULT_UNIVERSITY,
+      faculty: (params.get("faculty") || "").toUpperCase(),
+      subject: params.get("subject") || "",
+      type,
+      typeLocked: Boolean(type),
+    };
+    setDefaults((current) => ({ ...current, ...fromRequest }));
+    setAnswering(fromRequest);
+  }, []);
+
   const patchRow = useCallback((id, patch) => {
     setRows((current) => current.map((row) => (row.id === id ? { ...row, ...patch } : row)));
   }, []);
@@ -340,6 +360,14 @@ export default function NgarkoPage() {
             {t("Zgjidhni një ose më shumë skedarë, kontrolloni të dhënat dhe ngarkojini së bashku. Materialet e para shqyrtohen nga moderatorët para publikimit; pasi të aprovohen disa, të tjerat publikohen menjëherë.")}
           </p>
         </header>
+
+        {answering && (
+          <div role="status" className="mb-6 rounded-xl border border-success-green/30 bg-success-green/10 p-4 text-sm text-success-text">
+            {t("Po ngarkoni për një kërkesë: {subject}. Kur materiali publikohet, ata që e kërkuan marrin një email.", {
+              subject: answering.subject,
+            })}
+          </div>
+        )}
 
         <div className="mb-6 rounded-xl border border-srh-cream bg-srh-cream/60 p-4 text-sm text-srh-navy/75">
           <p>{t("Lejohen: PDF, Word (doc/docx), PowerPoint (ppt/pptx), Excel (xls/xlsx), ZIP")}</p>
