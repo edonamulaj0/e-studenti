@@ -3,8 +3,13 @@
  * Scrapes https://uni-pr.edu/page.aspx?id=1,39 for Erasmus anchors, optional article body text.
  * Set ERASMUS_SKIP_BODIES=1 to only refresh the listing (faster).
  *
+ * uni-pr.edu asks every visitor to pass a Cloudflare check, which a scheduled
+ * job cannot, so this is run by a person: it opens a visible browser, and if
+ * the check appears you complete it there (you have about three minutes).
+ * ERASMUS_HEADLESS=1 hides the browser (it will then usually be blocked).
+ *
  * Cookies: erasmus-cookies.json or ERASMUS_COOKIES_FILE (Playwright JSON array).
- * Run: npm run sync-erasmus
+ * Run: npm run sync-erasmus, check the changes, then commit app/data/erasmus-calls.json.
  */
 
 import { chromium } from "playwright";
@@ -135,7 +140,7 @@ async function scrapeWithPlaywright() {
     path.join(ROOT, "erasmus-cookies.json");
 
   const browser = await chromium.launch({
-    headless: process.env.ERASMUS_HEADFUL === "1" ? false : true,
+    headless: process.env.ERASMUS_HEADLESS === "1",
   });
 
   const context = await browser.newContext({
@@ -166,7 +171,8 @@ async function scrapeWithPlaywright() {
     timeout: 120000,
   });
 
-  for (let i = 0; i < 40; i++) {
+  // Long enough for a person to complete the check in the visible window.
+  for (let i = 0; i < 90; i++) {
     const text = await page.evaluate(() => document.body?.innerText || "");
     if (/erasmus/i.test(text) && !/security verification/i.test(text)) {
       break;
@@ -269,13 +275,14 @@ async function main() {
   const result = await scrapeWithPlaywright();
 
   if (!result.ok || !result.calls?.length) {
-    console.warn(
-      `Scrape failed (${result.reason || "unknown"}). Keeping ${OUT} unchanged.`
+    console.error(
+      `Scrape failed (${result.reason || "unknown"}). Kept ${OUT} unchanged.`
     );
-    console.warn(
-      "Tips: ERASMUS_HEADFUL=1 npm run sync-erasmus, or erasmus-cookies.json after passing CF in browser."
+    console.error(
+      "If uni-pr.edu showed a check, run again and complete it in the browser window that opens."
     );
-    process.exit(0);
+    // A failure must not look like "nothing new": that hid a month without updates.
+    process.exit(1);
   }
 
   const payload = {
