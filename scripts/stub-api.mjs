@@ -36,7 +36,15 @@ const server = http.createServer((req, res) => {
   res.setHeader("Access-Control-Allow-Origin", "*");
 
   if (action === "materials") {
-    return res.end(JSON.stringify({ materials, entries: [], typeCounts: { Ligjerata: 1, Afat: 1 }, ...page(materials) }));
+    // Enough filtering for the browser tests: a search can come back empty.
+    const q = (url.searchParams.get("q") || "").toLowerCase();
+    const faculty = (url.searchParams.get("faculty") || "").toUpperCase();
+    const found = materials.filter(
+      (m) =>
+        (!q || `${m.title} ${m.subject} ${m.type}`.toLowerCase().includes(q)) &&
+        (!faculty || m.faculty === faculty)
+    );
+    return res.end(JSON.stringify({ materials: found, entries: [], typeCounts: { Ligjerata: 1, Afat: 1 }, ...page(found) }));
   }
   if (action === "material-public") {
     const found = materials.find((m) => m.slug === url.searchParams.get("slug"));
@@ -57,6 +65,7 @@ const server = http.createServer((req, res) => {
   }
   if (action === "resource-links") return res.end(JSON.stringify({ links: [], ...page([]) }));
   if (action === "me") return res.end(JSON.stringify({ user: null }));
+  if (action === "requests") return res.end(JSON.stringify({ requests: [], pagination: { page: 1, total: 0, hasNextPage: false } }));
   res.end("{}");
 });
 

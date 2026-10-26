@@ -13,6 +13,7 @@
 		"check": "npm run lint && npm run typecheck && npm test",
 		"sync-erasmus": "node scripts/sync-erasmus.mjs",
 		"stub-api": "node scripts/stub-api.mjs",
+		"test:e2e": "node --test tests/e2e/*.test.mjs",
 		"db:local": "npm --prefix cloudflare-worker run db:local"
 	},
 	"dependencies": {
