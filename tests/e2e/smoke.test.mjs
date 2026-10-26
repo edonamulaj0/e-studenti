@@ -22,6 +22,7 @@ const PAGES = [
   "/fakultetet/fiek",
   "/llogaria/hyr",
   "/privatesia",
+  "/erasmus",
   "/nuk-ekziston",
 ];
 
