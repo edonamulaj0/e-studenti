@@ -3,16 +3,17 @@
  * Serves the static export like Cloudflare Pages does, for the browser tests:
  * /x -> x.html, /x/ -> x/index.html, unknown paths -> 404.html, and the "/*"
  * headers from public/_headers (so the real CSP is enforced). Requests under
- * /api/ are forwarded to the stub API, which keeps the API same-origin and
- * inside connect-src 'self' without loosening the policy.
+ * /api/ are answered by the stub API in this same process, which keeps the
+ * API same-origin and inside connect-src 'self' without loosening the policy.
  *
- *   node scripts/serve-static.mjs [outDir=out] [port=4180] [apiOrigin=http://127.0.0.1:8799]
+ *   node scripts/serve-static.mjs [outDir=out] [port=4180]
  */
 import { createReadStream, existsSync, readFileSync, statSync } from "node:fs";
 import http from "node:http";
 import path from "node:path";
+import { handleStubApi } from "./stub-api.mjs";
 
-const [root = "out", port = "4180", apiOrigin = "http://127.0.0.1:8799"] = process.argv.slice(2);
+const [root = "out", port = "4180"] = process.argv.slice(2);
 const ROOT = path.resolve(root);
 
 function globalHeaders() {
@@ -45,16 +46,10 @@ const TYPES = {
 };
 
 http
-  .createServer(async (req, res) => {
+  .createServer((req, res) => {
     const url = new URL(req.url, "http://localhost");
     if (url.pathname.startsWith("/api/") || url.pathname === "/api") {
-      try {
-        const upstream = await fetch(`${apiOrigin}/${url.search}`, { method: req.method });
-        res.writeHead(upstream.status, { "Content-Type": upstream.headers.get("Content-Type") || "application/json" });
-        res.end(Buffer.from(await upstream.arrayBuffer()));
-      } catch {
-        res.writeHead(502).end();
-      }
+      handleStubApi(req, res);
       return;
     }
     const pathname = decodeURIComponent(url.pathname);
@@ -70,4 +65,4 @@ http
     res.writeHead(status, { ...globalHeaders(), "Content-Type": TYPES[path.extname(file)] || "application/octet-stream" });
     createReadStream(file).pipe(res);
   })
-  .listen(Number(port), "127.0.0.1", () => console.log(`serving ${ROOT} on http://127.0.0.1:${port} (api -> ${apiOrigin})`));
+  .listen(Number(port), "127.0.0.1", () => console.log(`serving ${ROOT} on http://127.0.0.1:${port} (api: stub)`));

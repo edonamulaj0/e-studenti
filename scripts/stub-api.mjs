@@ -4,9 +4,11 @@
  * Worker, database or internet (`npm run stub-api`, then in another terminal
  * `NEXT_PUBLIC_WORKER_URL=http://127.0.0.1:8799 npm run build`). CI uses it too.
  * It answers only the read-only calls the build needs; everything else is `{}`.
- * `STUB_EMPTY=1` serves an empty catalogue.
+ * `STUB_EMPTY=1` serves an empty catalogue. scripts/serve-static.mjs imports
+ * `handleStubApi` to answer /api/ itself, for the browser tests.
  */
 import http from "node:http";
+import { pathToFileURL } from "node:url";
 
 const PORT = Number(process.env.PORT) || 8799;
 
@@ -29,7 +31,8 @@ const page = (items) => ({
   pagination: { page: 1, limit: 100, total: items.length, totalPages: 1, hasNextPage: false },
 });
 
-const server = http.createServer((req, res) => {
+/** @param {import("node:http").IncomingMessage} req @param {import("node:http").ServerResponse} res */
+export function handleStubApi(req, res) {
   const url = new URL(req.url, "http://localhost");
   const action = url.searchParams.get("action") || "materials";
   res.setHeader("Content-Type", "application/json");
@@ -68,8 +71,10 @@ const server = http.createServer((req, res) => {
   if (action === "me") return res.end(JSON.stringify({ user: null }));
   if (action === "requests") return res.end(JSON.stringify({ requests: [], pagination: { page: 1, total: 0, hasNextPage: false } }));
   res.end("{}");
-});
+}
 
-server.listen(PORT, "127.0.0.1", () => {
-  console.log(`stub API on http://127.0.0.1:${PORT}  (NEXT_PUBLIC_WORKER_URL=http://127.0.0.1:${PORT})`);
-});
+if (import.meta.url === pathToFileURL(process.argv[1] || "").href) {
+  http.createServer(handleStubApi).listen(PORT, "127.0.0.1", () => {
+    console.log(`stub API on http://127.0.0.1:${PORT}  (NEXT_PUBLIC_WORKER_URL=http://127.0.0.1:${PORT})`);
+  });
+}

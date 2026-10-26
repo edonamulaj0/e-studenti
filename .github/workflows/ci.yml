@@ -56,11 +56,10 @@ jobs:
       - run: npm ci
       # Built against a local stand-in for the API so the result does not depend
       # on whether production is up (see scripts/stub-api.mjs). The API is
-      # reached through the static server's /api proxy, so the browser tests
+      # served under the static server's /api/, so the browser tests
       # below run under the production CSP unchanged.
       - name: Build the static site
         run: |
-          node scripts/stub-api.mjs &
           node scripts/serve-static.mjs out 4180 &
           for i in $(seq 1 20); do
             curl -sf "http://127.0.0.1:4180/api/?action=materials" >/dev/null && break
@@ -70,7 +69,6 @@ jobs:
       - name: Browser smoke tests
         run: |
           npx playwright install --with-deps chromium
-          node scripts/stub-api.mjs &
           node scripts/serve-static.mjs out 4180 &
           for i in $(seq 1 20); do
             curl -sf "http://127.0.0.1:4180/" >/dev/null && break
