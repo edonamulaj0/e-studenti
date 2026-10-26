@@ -1,4 +1,6 @@
 const materials = {
+  "Nuk e gjetët “{q}”? Kërkojeni — dikush mund ta ketë dhe ta ngarkojë.": "Didn't find “{q}”? Request it. Someone may have it and upload it.",
+  "Kërkojeni": "Request it",
   // Filters
   "Filtrat": "Filters",
   "Universiteti": "University",

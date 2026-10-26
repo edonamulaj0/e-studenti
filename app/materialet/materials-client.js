@@ -1,7 +1,8 @@
 "use client";
 
 import { useCallback, useState, useMemo, useEffect } from "react";
-import { FileText, LayoutGrid, List, Search, SlidersHorizontal, X } from "lucide-react";
+import Link from "next/link";
+import { FileText, LayoutGrid, List, MessageSquarePlus, Search, SlidersHorizontal, X } from "lucide-react";
 import MaterialGrid from "../components/MaterialGrid";
 import FilterSidebar, { EMPTY_FILTERS } from "./FilterSidebar";
 import { assignMaterialSlugs } from "../lib/material-slug";
@@ -376,6 +377,20 @@ export default function MaterialsClient({ initialData = null }) {
               <p className="text-gray-600">
                 {t("Provoni të ndryshoni kriteret e kërkimit.")}
               </p>
+              {searchTerm.trim() && !loading && (
+                <div className="mt-6 border-t border-gray-200 pt-6">
+                  <p className="text-gray-700">
+                    {t("Nuk e gjetët “{q}”? Kërkojeni — dikush mund ta ketë dhe ta ngarkojë.", { q: searchTerm.trim() })}
+                  </p>
+                  <Link
+                    href={`/kerkesat?kerko=${encodeURIComponent(searchTerm.trim())}`}
+                    className="btn-primary mt-4 inline-flex min-h-[44px] items-center gap-2 px-5 py-2"
+                  >
+                    <MessageSquarePlus className="h-4 w-4" aria-hidden />
+                    {t("Kërkojeni")}
+                  </Link>
+                </div>
+              )}
             </div>
           ) : (
             <MaterialGrid materials={filteredMaterials} view={view} columns="sm:grid-cols-2 2xl:grid-cols-3" />

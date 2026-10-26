@@ -42,6 +42,12 @@ export default function KerkesatClient() {
 
   useEffect(() => {
     fetchCurrentUser().then(setUser);
+    // Arriving from a search that found nothing: start a request for it.
+    const asked = new URLSearchParams(window.location.search).get("kerko");
+    if (asked) {
+      setForm((current) => ({ ...current, subject: asked.slice(0, 200) }));
+      setFormOpen(true);
+    }
   }, []);
 
   const load = useCallback(async () => {
@@ -134,7 +140,7 @@ export default function KerkesatClient() {
         </header>
 
         <section className="mb-8 rounded-2xl border border-gray-200 bg-surface p-5 shadow-sm">
-          {!formOpen ? (
+          {!formOpen || !signedIn ? (
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-gray-600">{t("Nuk e gjeni atë që ju duhet?")}</p>
               {signedIn ? (

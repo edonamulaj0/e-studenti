@@ -1,5 +1,6 @@
 import {
   buildPublicSearchClause,
+  foldSearchText,
   materialMatchesPublic,
   materialToPublicLegacyEntry,
   sanitizeMaterialForPublic,
@@ -116,6 +117,7 @@ const RATE_LIMITS = {
   follow_subject: { requests: 60, window: 3600 },
   unsubscribe_digest: { requests: 20, window: 3600 },
   passkey_login: { requests: 30, window: 900 },
+  search_miss: { requests: 20, window: 3600 },
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
   // Only counted on a cache miss (see handleProxy), so this bounds *cold*
@@ -2171,6 +2173,61 @@ function listParam(url, name, max = 20) {
     .slice(0, max);
 }
 
+/** Bound parameters a bare text search adds; anything beyond that means filters are set too. */
+function baseParamsForSearchOnly(q) {
+  return buildPublicSearchClause(q).params.length;
+}
+
+const MAX_SEARCH_MISSES_SHOWN = 50;
+
+/**
+ * Counts a search that found nothing, so the moderator can see what students
+ * look for and do not find. Only the folded words are stored, and each address
+ * adds at most a few an hour, so the list cannot be flooded from one place.
+ */
+async function recordSearchMiss(request, env, q) {
+  const query = foldSearchText(q).replace(/\s+/g, " ").trim().slice(0, 100);
+  if (query.length < 2) return;
+  try {
+    const limited = await checkRateLimit(request, "search_miss", env);
+    if (limited) return;
+    await env.DB.prepare(
+      `INSERT INTO search_misses (query) VALUES (?)
+       ON CONFLICT(query) DO UPDATE SET count = count + 1, last_seen = datetime('now')`
+    )
+      .bind(query)
+      .run();
+  } catch (error) {
+    console.error("recording a search miss failed", error);
+  }
+}
+
+/** Moderator: the most frequent searches with no results in the last 90 days. */
+async function handleSearchMisses(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
+  const rows = await env.DB.prepare(
+    `SELECT query, count, first_seen, last_seen FROM search_misses
+     WHERE dismissed = 0 AND last_seen > datetime('now', '-90 days')
+     ORDER BY count DESC, last_seen DESC LIMIT ?`
+  )
+    .bind(MAX_SEARCH_MISSES_SHOWN)
+    .all();
+  return jsonResponse({ misses: rows.results || [] });
+}
+
+async function handleDismissSearchMiss(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
+  const body = await request.json().catch(() => ({}));
+  const query = String(body.query || "").slice(0, 100);
+  const result = await env.DB.prepare("UPDATE search_misses SET dismissed = 1 WHERE query = ?").bind(query).run();
+  if (!Number(result.meta?.changes || 0)) return jsonResponse({ error: "Nuk u gjet." }, 404);
+  return jsonResponse({ success: true });
+}
+
 async function handleMaterials(request, url, env) {
   const faculties = listParam(url, "faculty").map((value) => value.toUpperCase());
   const types = listParam(url, "type");
@@ -2295,6 +2352,9 @@ async function handleMaterials(request, url, env) {
     loadSlugIndexCached(env),
   ]);
   const total = Number(countResult?.total || 0);
+  if (total === 0 && q && page === 1 && userFilter !== "me" && params.length === baseParamsForSearchOnly(q)) {
+    await recordSearchMiss(request, env, q);
+  }
   const typeCounts = {};
   for (const row of typeCountsResult.results || []) {
     typeCounts[row.type || "Të pa klasifikuara"] = Number(row.count || 0);
@@ -4460,6 +4520,7 @@ async function pruneExpiredRows(env) {
   const statements = [
     ["DELETE FROM rate_limits WHERE reset_at < ?", [now]],
     ["DELETE FROM verification_codes WHERE expires_at < ?", [new Date().toISOString()]],
+    ["DELETE FROM search_misses WHERE last_seen < datetime('now', '-180 days')", []],
     [
       `DELETE FROM material_stat_events WHERE created_at < datetime('now', '-${STAT_EVENT_RETENTION_DAYS} days')`,
       [],
@@ -4505,6 +4566,7 @@ const POST_ONLY_ACTIONS = new Set([
   "passkey-register",
   "delete-passkey",
   "passkey-login",
+  "dismiss-search-miss",
   "track-view",
   "track-download",
 ]);
@@ -4566,6 +4628,8 @@ const worker = {
       "passkey-register",
       "passkeys",
       "delete-passkey",
+      "search-misses",
+      "dismiss-search-miss",
     ];
     const publicActions = [
       "materials",
@@ -4781,6 +4845,12 @@ const worker = {
           break;
         case "passkey-login":
           response = await handlePasskeyLogin(request, env);
+          break;
+        case "search-misses":
+          response = await handleSearchMisses(request, env);
+          break;
+        case "dismiss-search-miss":
+          response = await handleDismissSearchMiss(request, env);
           break;
         case "site-statistics":
           response = await handleSiteStatistics(url, env);
