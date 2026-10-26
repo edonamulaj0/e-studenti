@@ -36,8 +36,10 @@ jobs:
             return 1
           }
           : > "$RUNNER_TEMP/failures"
-          check "https://e-studenti.com/" "E-Studenti" || true
-          check "https://api.e-studenti.com/?action=materials&limit=1" '"pagination"' || true
+          # Cloudflare's bot protection on e-studenti.com answers GitHub's runners
+          # with 403, so the checks use the same deployments' own addresses.
+          check "https://e-studenti.pages.dev/" "E-Studenti" || true
+          check "https://r2-catalog-manager.edonaamulaj.workers.dev/?action=materials&limit=1" '"pagination"' || true
           if [ -s "$RUNNER_TEMP/failures" ]; then
             echo "down=true" >> "$GITHUB_OUTPUT"
             { echo "failures<<EOF"; cat "$RUNNER_TEMP/failures"; echo "EOF"; } >> "$GITHUB_OUTPUT"

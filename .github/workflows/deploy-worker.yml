@@ -94,7 +94,9 @@ jobs:
         if: steps.creds.outputs.ok == 'true'
         run: |
           for i in 1 2 3 4 5 6; do
-            status=$(curl -s -o /dev/null -w "%{http_code}" "https://api.e-studenti.com/?action=logout")
+            # workers.dev, not api.e-studenti.com: the domain's bot protection
+            # answers GitHub's runners with 403.
+            status=$(curl -s -o /dev/null -w "%{http_code}" "https://r2-catalog-manager.edonaamulaj.workers.dev/?action=logout")
             [ "$status" = "405" ] && { echo "Live API answers 405 to GET logout: new Worker is serving."; exit 0; }
             sleep 10
           done
