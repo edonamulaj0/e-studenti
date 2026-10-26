@@ -2099,6 +2099,68 @@ async function notifyIfFlagged(env, materialId) {
  * Hourly: send any alert that failed earlier, and at most one reminder a day
  * listing files that are still published with 3+ open reports.
  */
+/** Unhandled errors within the last two clock hours that make the hourly job email. */
+const ERROR_ALERT_THRESHOLD = 10;
+/** Fewest hours between two error alerts, so a long outage is one email, not one per hour. */
+const ERROR_ALERT_EVERY_HOURS = 6;
+
+const utcHour = (date) => date.toISOString().slice(0, 13);
+
+/** Counts an unhandled error. Never throws: the database may be what failed. */
+async function recordWorkerError(env, action, error) {
+  try {
+    await env.DB.prepare(
+      `INSERT INTO worker_errors (hour, count, last_action, last_message) VALUES (?, 1, ?, ?)
+       ON CONFLICT(hour) DO UPDATE SET count = count + 1, last_action = excluded.last_action,
+         last_message = excluded.last_message`
+    )
+      .bind(utcHour(new Date()), String(action).slice(0, 60), String(error?.message || error).slice(0, 300))
+      .run();
+  } catch (failure) {
+    console.error("could not record error", failure);
+  }
+}
+
+/** Hourly: emails the moderator when unhandled errors spike, at most once per window. */
+export async function sendErrorAlert(env, now = new Date()) {
+  if (!env.DB) return { sent: false };
+  try {
+    const hours = [utcHour(new Date(now.getTime() - 3600_000)), utcHour(now)];
+    const { results } = await env.DB.prepare(
+      "SELECT hour, count, last_action, last_message FROM worker_errors WHERE hour IN (?, ?) ORDER BY hour"
+    )
+      .bind(...hours)
+      .all();
+    const total = (results || []).reduce((sum, row) => sum + Number(row.count || 0), 0);
+    if (total < ERROR_ALERT_THRESHOLD) return { sent: false };
+
+    const last = await env.DB.prepare("SELECT sent_at FROM ops_alerts WHERE name = 'errors'").first();
+    if (last && now.getTime() - Date.parse(last.sent_at) < ERROR_ALERT_EVERY_HOURS * 3600_000) {
+      return { sent: false };
+    }
+    const latest = results[results.length - 1];
+    const ok = await sendEmail(
+      MODERATOR_EMAIL,
+      `[E-Studenti] ${total} gabime të API-së në dy orët e fundit`,
+      `<p>API ka kthyer ${total} gabime të brendshme (500) në dy orët e fundit.</p>
+       <p>I fundit: <strong>${escapeHtml(latest.last_action)}</strong> — ${escapeHtml(latest.last_message)}</p>
+       <p>Detajet janë te Cloudflare → Workers → r2-catalog-manager → Logs.</p>`,
+      env
+    );
+    if (!ok) return { sent: false };
+    await env.DB.prepare(
+      `INSERT INTO ops_alerts (name, sent_at) VALUES ('errors', ?)
+       ON CONFLICT(name) DO UPDATE SET sent_at = excluded.sent_at`
+    )
+      .bind(now.toISOString())
+      .run();
+    return { sent: true };
+  } catch (error) {
+    console.error("error alert failed", error);
+    return { sent: false };
+  }
+}
+
 export async function sendReportAlerts(env, now = new Date()) {
   if (!env.DB) return { sent: 0 };
   let flagged;
@@ -4638,6 +4700,7 @@ async function pruneExpiredRows(env) {
     ["DELETE FROM rate_limits WHERE reset_at < ?", [now]],
     ["DELETE FROM verification_codes WHERE expires_at < ?", [new Date().toISOString()]],
     ["DELETE FROM search_misses WHERE last_seen < datetime('now', '-180 days')", []],
+    ["DELETE FROM worker_errors WHERE hour < ?", [utcHour(new Date(Date.now() - 30 * 86400_000))]],
     [
       `DELETE FROM material_stat_events WHERE created_at < datetime('now', '-${STAT_EVENT_RETENTION_DAYS} days')`,
       [],
@@ -4696,6 +4759,7 @@ const worker = {
     ctx.waitUntil(pruneExpiredRows(env));
     ctx.waitUntil(triggerRebuildIfDue(env));
     ctx.waitUntil(sendReportAlerts(env));
+    ctx.waitUntil(sendErrorAlert(env));
     ctx.waitUntil(sendSubjectDigest(env).catch((error) => console.error("digest failed", error)));
   },
 
@@ -4991,6 +5055,11 @@ const worker = {
       return withCors(response, request, env);
     } catch (error) {
       console.error(error);
+      if (env.DB) {
+        const counted = recordWorkerError(env, action, error);
+        if (ctx?.waitUntil) ctx.waitUntil(counted);
+        else await counted;
+      }
       return withCors(
         jsonResponse({ error: "Ndodhi një gabim i brendshëm." }, 500),
         request,

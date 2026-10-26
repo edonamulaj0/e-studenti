@@ -1,0 +1,65 @@
+name: Uptime
+
+# Checks the site and the API every 15 minutes. When either is down for two
+# checks in a row it opens an issue labelled "downtime", which GitHub emails
+# to the repository's watchers; when both are back it closes that issue.
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: uptime
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Check the site and the API
+        id: probe
+        run: |
+          check() {
+            # Two tries a minute apart, so one dropped request is not an outage.
+            for attempt in 1 2; do
+              body=$(curl -sS --max-time 20 -w '\n%{http_code}' "$1" 2>&1) || true
+              status=${body##*$'\n'}
+              if [ "$status" = "200" ] && grep -q -- "$2" <<<"$body"; then return 0; fi
+              [ "$attempt" = 1 ] && sleep 60
+            done
+            echo "$1 answered ${status:-nothing}" >> "$RUNNER_TEMP/failures"
+            return 1
+          }
+          : > "$RUNNER_TEMP/failures"
+          check "https://e-studenti.com/" "E-Studenti" || true
+          check "https://api.e-studenti.com/?action=materials&limit=1" '"pagination"' || true
+          if [ -s "$RUNNER_TEMP/failures" ]; then
+            echo "down=true" >> "$GITHUB_OUTPUT"
+            { echo "failures<<EOF"; cat "$RUNNER_TEMP/failures"; echo "EOF"; } >> "$GITHUB_OUTPUT"
+          else
+            echo "down=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Open or close the downtime issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          DOWN: ${{ steps.probe.outputs.down }}
+          FAILURES: ${{ steps.probe.outputs.failures }}
+        run: |
+          gh label create downtime --color B60205 --description "Opened by the uptime check" 2>/dev/null || true
+          open=$(gh issue list --label downtime --state open --json number --jq '.[0].number')
+          if [ "$DOWN" = "true" ]; then
+            if [ -z "$open" ]; then
+              gh issue create --label downtime --title "E-Studenti is down" \
+                --body "$(printf 'The uptime check failed at %s UTC:\n\n```\n%s\n```\n\nThis issue closes itself when the checks pass again.' "$(date -u '+%Y-%m-%d %H:%M')" "$FAILURES")"
+            fi
+            exit 1
+          elif [ -n "$open" ]; then
+            gh issue close "$open" --comment "Back up at $(date -u '+%Y-%m-%d %H:%M') UTC."
+          fi

@@ -227,3 +227,15 @@ CREATE TABLE IF NOT EXISTS material_votes (
   created_at TEXT DEFAULT (datetime('now')),
   PRIMARY KEY (material_id, voter_key)
 );
+
+-- Unhandled Worker errors, counted per hour, and when ops alerts last went out.
+CREATE TABLE IF NOT EXISTS worker_errors (
+  hour TEXT PRIMARY KEY,                   -- YYYY-MM-DDTHH, UTC
+  count INTEGER NOT NULL DEFAULT 0,
+  last_action TEXT,
+  last_message TEXT
+);
+CREATE TABLE IF NOT EXISTS ops_alerts (
+  name TEXT PRIMARY KEY,
+  sent_at TEXT NOT NULL
+);

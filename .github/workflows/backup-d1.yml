@@ -1,0 +1,64 @@
+name: Back up the database
+
+# A weekly SQL dump of the D1 database (accounts, materials, reports,
+# requests) into a private R2 bucket, kept for 90 days. D1's own Time Travel
+# only reaches back 30 days and is undone by the same mistake it would fix,
+# such as a bad migration noticed late; a separate copy is not.
+#
+# Restore: download a dump from the e-studenti-backups bucket, gunzip it, then
+#   npx wrangler d1 execute <a new or emptied database> --remote --file dump.sql
+on:
+  schedule:
+    - cron: "17 3 * * 0" # Sundays 03:17 UTC
+  workflow_dispatch:
+
+concurrency:
+  group: backup-d1
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  WRANGLER_SEND_METRICS: "false"
+  BUCKET: e-studenti-backups
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    defaults:
+      run:
+        working-directory: cloudflare-worker
+    env:
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: cloudflare-worker/package-lock.json
+      - run: npm ci
+
+      - name: Ensure the private backup bucket and its 90-day expiry
+        run: |
+          if ! npx wrangler r2 bucket list | grep -q "$BUCKET"; then
+            npx wrangler r2 bucket create "$BUCKET"
+          fi
+          if ! npx wrangler r2 bucket lifecycle list "$BUCKET" | grep -q "expire-d1-dumps"; then
+            npx wrangler r2 bucket lifecycle add "$BUCKET" expire-d1-dumps d1/ --expire-days 90 --force
+          fi
+
+      - name: Export and upload
+        run: |
+          file="e-studenti-auth-$(date -u +%Y-%m-%d).sql"
+          npx wrangler d1 export e-studenti-auth --remote --output "$RUNNER_TEMP/$file"
+          # An empty or truncated dump is a failed backup, not a quiet success.
+          grep -q "CREATE TABLE.*materials" "$RUNNER_TEMP/$file"
+          gzip -9 "$RUNNER_TEMP/$file"
+          npx wrangler r2 object put "$BUCKET/d1/$file.gz" --file "$RUNNER_TEMP/$file.gz" \
+            --content-type application/gzip --remote
+          echo "Backed up $(du -h "$RUNNER_TEMP/$file.gz" | cut -f1) to $BUCKET/d1/$file.gz" >> "$GITHUB_STEP_SUMMARY"
