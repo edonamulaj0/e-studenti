@@ -196,7 +196,7 @@ export default function Faculties() {
           {faculties.map((faculty, index) => (
             <article
               key={index}
-              className={`group relative flex min-h-[23rem] flex-col overflow-hidden rounded-3xl border border-gray-200 bg-gradient-to-br ${accents[index % accents.length]} p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy-600/30 hover:shadow-md`}
+              className={`group relative flex min-h-92 flex-col overflow-hidden rounded-3xl border border-gray-200 bg-linear-to-br ${accents[index % accents.length]} p-6 shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-burgundy-600/30 hover:shadow-md`}
             >
               <Link
                 href={`/fakultetet/${faculty.acronym.toLowerCase()}`}

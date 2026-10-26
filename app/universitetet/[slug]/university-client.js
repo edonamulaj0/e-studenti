@@ -178,7 +178,7 @@ export default function UniversityClient({ slug }) {
         </nav>
 
         <header className="mb-6">
-          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{name}</h1>
+          <h1 className="page-title mb-2 text-3xl! leading-9! md:text-4xl! md:leading-10!">{name}</h1>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-600">
             <span>{t(sectorLabel(university.sector))}</span>
             <span className="inline-flex items-center gap-1">

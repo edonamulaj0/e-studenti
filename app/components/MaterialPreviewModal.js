@@ -180,7 +180,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
   const showSpinner = status === "loading";
 
   return (
-    <ModalOverlay open={isOpen} onClose={onClose} className="!p-0 sm:!p-4">
+    <ModalOverlay open={isOpen} onClose={onClose} className="p-0! sm:p-4!">
       <div
         className="preview-modal-height flex w-full max-w-[1600px] flex-col overflow-hidden border border-srh-cream bg-surface shadow-2xl sm:rounded-2xl"
         onClick={(e) => e.stopPropagation()}
@@ -275,7 +275,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
           {(kind === "docx" || kind === "pptx") && (
             <div className="h-full w-full overflow-auto">
               {/* contain: paint keeps file-controlled fixed/absolute boxes inside the preview */}
-              <div ref={containerRef} className="mx-auto min-h-full w-full [contain:paint]" />
+              <div ref={containerRef} className="mx-auto min-h-full w-full contain-[paint]" />
             </div>
           )}
 

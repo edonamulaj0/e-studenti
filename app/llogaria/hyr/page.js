@@ -85,8 +85,8 @@ export default function HyrPage() {
 
   return (
     <div className="page-shell">
-      <div className="mx-auto grid max-w-6xl overflow-hidden rounded-[2rem] bg-surface shadow-lg lg:grid-cols-[1.15fr_0.85fr]">
-        <section className="relative hidden min-h-[34rem] overflow-hidden bg-gradient-to-br from-ink to-ink-soft p-12 text-white lg:block">
+      <div className="mx-auto grid max-w-6xl overflow-hidden rounded-4xl bg-surface shadow-lg lg:grid-cols-[1.15fr_0.85fr]">
+        <section className="relative hidden min-h-136 overflow-hidden bg-linear-to-br from-ink to-ink-soft p-12 text-white lg:block">
           <div className="relative z-10 flex h-full flex-col justify-between">
             <div>
               <p className="mb-5 inline-flex rounded-full bg-white/10 px-4 py-2 text-sm font-semibold">
@@ -96,7 +96,7 @@ export default function HyrPage() {
                 {t("Vazhdo aty ku e ke lënë semestrin.")}
               </h1>
             </div>
-            <div className="rounded-3xl bg-white/10 p-6 backdrop-blur">
+            <div className="rounded-3xl bg-white/10 p-6 backdrop-blur-sm">
               <Users className="mb-3 h-6 w-6 text-burgundy-50" />
               <p className="text-lg font-semibold">{t("Nga komuniteti, për çdo student")}</p>
               <p className="mt-2 text-sm leading-relaxed text-white/65">
@@ -109,7 +109,7 @@ export default function HyrPage() {
         <section className="p-6 md:p-10 lg:p-12">
         <div className="mb-8">
           <p className="page-kicker mb-4">{t("Llogaria")}</p>
-          <h1 className="font-display text-4xl font-bold leading-tight text-navy-900 md:text-5xl">
+          <h1 className="font-display text-4xl font-bold leading-tight text-navy-900 md:text-5xl md:leading-none">
             {t("Hyr në llogari")}
           </h1>
           <p className="mt-3 text-gray-600">

@@ -27,20 +27,20 @@ function PageSkeleton() {
         <div className={`${bar} mb-6 h-4 w-56`} />
         <div className="surface-card p-6 md:p-10">
           <div className="mb-6 flex gap-2">
-            <div className={`${bar} h-7 w-32 !rounded-full`} />
-            <div className={`${bar} h-7 w-24 !rounded-full`} />
-            <div className={`${bar} h-7 w-20 !rounded-full`} />
+            <div className={`${bar} h-7 w-32 rounded-full!`} />
+            <div className={`${bar} h-7 w-24 rounded-full!`} />
+            <div className={`${bar} h-7 w-20 rounded-full!`} />
           </div>
           <div className={`${bar} mb-4 h-10 w-3/4`} />
           <div className={`${bar} mb-8 h-5 w-1/2`} />
           <div className="mb-8 grid gap-4 sm:grid-cols-2">
             {[0, 1, 2, 3].map((i) => (
-              <div key={i} className={`${bar} h-20 !rounded-2xl`} />
+              <div key={i} className={`${bar} h-20 rounded-2xl!`} />
             ))}
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
-            <div className={`${bar} h-12 flex-1 !rounded-xl`} />
-            <div className={`${bar} h-12 flex-1 !rounded-xl`} />
+            <div className={`${bar} h-12 flex-1 rounded-xl!`} />
+            <div className={`${bar} h-12 flex-1 rounded-xl!`} />
           </div>
         </div>
       </div>

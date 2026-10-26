@@ -68,7 +68,7 @@ export default function CompareClient() {
           <ArrowLeft className="h-4 w-4" aria-hidden />
           {t("Universitetet")}
         </Link>
-        <h1 className="page-title mb-6 !text-3xl md:!text-4xl">{t("Krahasimi")}</h1>
+        <h1 className="page-title mb-6 text-3xl! leading-9! md:text-4xl! md:leading-10!">{t("Krahasimi")}</h1>
 
         <div className="surface-card overflow-hidden">
           <table className="w-full table-fixed text-left text-sm">

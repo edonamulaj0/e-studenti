@@ -78,7 +78,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                 <span className="inline-flex rounded-full bg-srh-cream text-srh-crimson px-4 py-1.5 text-sm font-bold tracking-wide border border-srh-cream">
                   {code}
                 </span>
-                <h1 className="mt-4 font-playfair text-3xl md:text-4xl font-extrabold text-srh-navy tracking-tight leading-tight">
+                <h1 className="mt-4 font-playfair text-3xl md:text-4xl font-extrabold text-srh-navy tracking-tight leading-tight md:leading-10">
                   {t(name)}
                 </h1>
               </div>
@@ -96,7 +96,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
             </div>
 
             {description ? (
-              <p className="text-base md:text-lg text-srh-navy/70 leading-relaxed mb-8 border-t border-srh-cream pt-8">
+              <p className="text-base md:text-lg text-srh-navy/70 leading-relaxed mb-8 border-t border-srh-cream pt-8 md:leading-7">
                 {t(description)}
               </p>
             ) : null}
@@ -217,7 +217,7 @@ export default function FacultyDetailLayout({ faculty, materialsQuery }) {
                   {t(department.name)}
                 </h3>
                 {department.description ? (
-                  <p className="text-sm md:text-base text-srh-navy/70 leading-relaxed line-clamp-4">
+                  <p className="text-sm md:text-base text-srh-navy/70 leading-relaxed line-clamp-4 md:leading-6">
                     {t(department.description)}
                   </p>
                 ) : null}

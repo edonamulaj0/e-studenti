@@ -75,7 +75,7 @@ export default function ArchiveContents({ url, fileType = "zip", onCount }) {
     );
   }
   return (
-    <ul className="max-h-[32rem] divide-y divide-gray-100 overflow-y-auto text-sm">
+    <ul className="max-h-128 divide-y divide-gray-100 overflow-y-auto text-sm">
       {state.rows.map((row, i) => (
         <li
           key={i}

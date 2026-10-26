@@ -137,7 +137,7 @@ export default function BurimeClient({ initialData = null }) {
           </div>
         </header>
 
-        <div className="sticky top-24 z-20 mb-8 py-3 backdrop-blur">
+        <div className="sticky top-24 z-20 mb-8 py-3 backdrop-blur-sm">
           <div className="grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-5">
             <div className="relative md:col-span-2 xl:col-span-2">
               <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />

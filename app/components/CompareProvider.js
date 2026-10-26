@@ -71,7 +71,7 @@ export function CompareStrip() {
     <div
       role="region"
       aria-label={t("Krahasimi")}
-      className="sticky top-[4.25rem] z-40 border-b border-burgundy-600/20 bg-burgundy-50 md:top-20"
+      className="sticky top-17 z-40 border-b border-burgundy-600/20 bg-burgundy-50 md:top-20"
     >
       <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-2.5 text-sm md:px-6">
         <p className="min-w-0 text-navy-900">

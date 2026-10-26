@@ -715,7 +715,7 @@ export default function NgarkoPage() {
             </ul>
 
             {/* Controls */}
-            <div className="sticky bottom-4 z-10 rounded-2xl border border-srh-cream bg-surface/95 p-4 shadow-lg backdrop-blur">
+            <div className="sticky bottom-4 z-10 rounded-2xl border border-srh-cream bg-surface/95 p-4 shadow-lg backdrop-blur-sm">
               <p aria-live="polite" className="mb-3 text-sm font-semibold text-srh-navy">
                 {t("{done} nga {total} u ngarkuan", { done: summary.done, total: summary.total })}
                 {summary.failed > 0 && ` · ${t("{n} dështuan", { n: summary.failed })}`}

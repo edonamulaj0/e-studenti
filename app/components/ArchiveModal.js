@@ -263,7 +263,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
                   <div className="flex items-center space-x-3 flex-1 min-w-0">
                     {file.isRarNotice ? (
                       <>
-                        <AlertCircle className="w-5 h-5 text-srh-sage flex-shrink-0" />
+                        <AlertCircle className="w-5 h-5 text-srh-sage shrink-0" />
                         <div>
                           <p className="font-medium text-srh-navy">
                             {t(file.name)}
@@ -292,7 +292,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
                   {!file.isRarNotice && zipObject && (
                     <button
                       onClick={() => downloadFile(file)}
-                      className="ml-3 p-2 text-srh-crimson hover:bg-srh-blush/20 rounded-lg transition-colors flex-shrink-0"
+                      className="ml-3 p-2 text-srh-crimson hover:bg-srh-blush/20 rounded-lg transition-colors shrink-0"
                       title={t("Shkarko skedarin")}
                       aria-label={t("Shkarko {name}", { name: file.name })}
                     >

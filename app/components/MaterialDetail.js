@@ -83,7 +83,7 @@ function PreviewPanel({ card }) {
   if (kind === "pdf") {
     body = (
       <WhenVisible minHeight="36rem">
-        <div className="h-[36rem] bg-gray-100">
+        <div className="h-144 bg-gray-100">
           <PdfCanvasViewer url={`${WORKER_URL}/?action=proxy&url=${encodeURIComponent(card.r2Url)}`} title={card.title} />
         </div>
       </WhenVisible>
@@ -217,7 +217,7 @@ export default function MaterialDetail({ material, slug }) {
   ].filter(Boolean);
 
   return (
-    <div className="page-shell !py-8 md:!py-10">
+    <div className="page-shell py-8! md:py-10!">
       <MaterialViewTracker materialId={material.id} />
       <div className="section-shell">
         <nav className="mb-5 flex flex-wrap items-center gap-1.5 text-sm text-gray-600" aria-label={t("Rruga")}>
@@ -245,7 +245,7 @@ export default function MaterialDetail({ material, slug }) {
                 <FileBadge fileType={card.fileType} />
                 {t(material.type)} · {level}
               </p>
-              <h1 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl">{material.title}</h1>
+              <h1 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl md:leading-10">{material.title}</h1>
             </div>
             <PreviewPanel card={card} />
           </div>

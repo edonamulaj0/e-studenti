@@ -121,7 +121,7 @@ export default function InformacionePage() {
           <h1 className="page-title mb-5">
             {t("Rreth nesh")}
           </h1>
-          <p className="page-subtitle max-w-3xl text-lg md:text-xl">
+          <p className="page-subtitle max-w-3xl text-lg leading-7 md:text-xl md:leading-7">
             {t("E-Studenti është një iniciativë komunitare e ndërtuar nga studentë — jo platformë zyrtare e asnjë universiteti.")}
           </p>
           <div className="mt-6 rounded-2xl border border-burgundy-600/20 bg-burgundy-50/60 p-5 text-sm leading-relaxed text-navy-900">
@@ -142,7 +142,7 @@ export default function InformacionePage() {
         </header>
 
         <div className="grid gap-8 lg:grid-cols-[16rem_1fr] lg:items-start">
-          <aside className="hidden rounded-3xl border border-gray-200 bg-surface/80 p-4 shadow-sm backdrop-blur lg:sticky lg:top-28 lg:block">
+          <aside className="hidden rounded-3xl border border-gray-200 bg-surface/80 p-4 shadow-sm backdrop-blur-sm lg:sticky lg:top-28 lg:block">
             {[
               ["#misioni", "Misioni"],
               ["#privatesia", "Privatësia"],
@@ -185,7 +185,7 @@ export default function InformacionePage() {
 
           <div className="space-y-8 md:space-y-10">
           <SectionCard id="misioni" icon={Shield} title="Misioni dhe transparenca">
-            <div className="space-y-4 text-base leading-relaxed text-gray-600 md:text-lg">
+            <div className="space-y-4 text-base leading-relaxed text-gray-600 md:text-lg md:leading-7">
               <p>
                 {t("Synojmë t'i ndihmojmë studentët të gjejnë materiale studimore, lidhje burimesh dhe informacion fakulteti — me transparencë, respekt për autorët dhe pa monetizim.")}
               </p>
@@ -209,7 +209,7 @@ export default function InformacionePage() {
           </SectionCard>
 
           <SectionCard id="autoret" icon={Code} title="Të drejtat e autorit">
-            <p className="mb-6 text-base leading-relaxed text-gray-600 md:text-lg">
+            <p className="mb-6 text-base leading-relaxed text-gray-600 md:text-lg md:leading-7">
               {t("Respektojmë të drejtat e autorëve dhe krijuesve të përmbajtjes.")}
             </p>
             <div className="grid md:grid-cols-2 gap-5">
@@ -302,7 +302,7 @@ export default function InformacionePage() {
           </SectionCard>
 
           <SectionCard id="faq" icon={HelpCircle} title="Pyetje të shpeshta">
-            <p className="mb-6 text-base leading-relaxed text-gray-600 md:text-lg">
+            <p className="mb-6 text-base leading-relaxed text-gray-600 md:text-lg md:leading-7">
               {t("Përgjigje të shpejta për pyetjet më të zakonshme rreth platformës.")}
             </p>
             <div className="space-y-4">

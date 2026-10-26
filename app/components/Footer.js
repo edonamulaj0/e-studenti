@@ -22,7 +22,7 @@ const accountLinks = [
 ];
 
 const linkClass =
-  "block rounded-lg py-0.5 text-white/68 transition-colors hover:text-white";
+  "block rounded-lg py-0.5 transition-colors hover:text-white";
 const headingClass =
   "text-xs font-semibold uppercase tracking-widest text-white/65";
 
@@ -45,7 +45,7 @@ export default function Footer() {
         <div className="grid gap-8 md:grid-cols-[auto_1fr_auto] md:items-start">
           <Link
             href="/"
-            className="flex h-28 w-28 items-center justify-center rounded-3xl bg-white/8 p-3 md:h-32 md:w-32"
+            className="flex h-28 w-28 items-center justify-center rounded-3xl p-3 md:h-32 md:w-32"
             aria-label="E-Studenti"
           >
             <img

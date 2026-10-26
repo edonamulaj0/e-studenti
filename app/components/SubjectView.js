@@ -32,7 +32,7 @@ export default function SubjectView({ subject, materials }) {
           <span aria-current="page">{subject.name}</span>
         </nav>
         <header className="mb-6 max-w-3xl">
-          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{subject.name}</h1>
+          <h1 className="page-title mb-2 text-3xl! leading-9! md:text-4xl! md:leading-10!">{subject.name}</h1>
           <p className="text-gray-600">
             {universityShort(subject.university || DEFAULT_UNIVERSITY)} · {t(getFacultyName(subject.faculty))} · {subject.count}{" "}
             {subject.count === 1 ? t("material") : t("materiale")}

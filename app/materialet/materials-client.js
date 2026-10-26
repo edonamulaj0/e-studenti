@@ -240,8 +240,8 @@ export default function MaterialsClient({ initialData = null }) {
     <div className="page-shell">
       <div className="section-shell">
         <header className="mb-5 max-w-3xl">
-          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{t("Materialet")}</h1>
-          <p className="page-subtitle mb-3 max-w-2xl !text-base">
+          <h1 className="page-title mb-2 text-3xl! leading-9! md:text-4xl! md:leading-10!">{t("Materialet")}</h1>
+          <p className="page-subtitle mb-3 max-w-2xl text-base! leading-6!">
             {t("Filtroni sipas universitetit, nivelit, fakultetit, llojit ose lëndës.")}
           </p>
           <div className="flex flex-wrap items-center gap-3 text-sm font-semibold text-gray-600">

@@ -1093,7 +1093,7 @@ function ModerimPage() {
                     </p>
                     <h2 className="mt-1 font-bold leading-snug text-navy-900">{item.subject}</h2>
                     <p className="text-sm text-gray-500">{t("Nga {name}", { name: item.sender_name })}</p>
-                    <p className="mt-3 whitespace-pre-wrap break-words text-gray-700">{item.message}</p>
+                    <p className="mt-3 whitespace-pre-wrap wrap-break-word text-gray-700">{item.message}</p>
                     <div className="mt-4">
                       {confirmDeleteMessageId === item.id ? (
                         <span className="inline-flex items-center gap-2">
