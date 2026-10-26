@@ -1,5 +1,14 @@
 /** English for the moderator panel (app/llogaria/moderim) and the Worker messages shown there. */
 const translations = {
+  "Kategoritë": "Categories",
+  "Materialet e ruajtura si “Të tjera”. Lloji i sugjeruar vjen nga titulli ose emri i skedarit; kontrolloni, ndryshoni dhe ruani ato që janë të shënuara.": "Materials filed as “Other”. The suggested type comes from the title or file name; check it, change what is wrong and save the ticked rows.",
+  "Asnjë material nuk është më te “Të tjera”.": "No materials are left under “Other”.",
+  "{n} materiale te “Të tjera”, {s} me sugjerim.": "{n} materials under “Other”, {s} with a suggestion.",
+  "Ruaj {n} ndryshime": "Save {n} changes",
+  "U ndryshua lloji i {n} materialeve.": "Changed the type of {n} materials.",
+  "Ndrysho llojin e “{title}”": "Change the type of “{title}”",
+  "sugjerim": "suggested",
+  "Materialet nuk u ngarkuan.": "The materials could not be loaded.",
   "Moderim": "Moderation",
   "Paneli i moderimit": "Moderation panel",
   "Shiko dhe menaxho raportet dhe të gjitha materialet e platformës.": "View and manage reports and all materials on the platform.",

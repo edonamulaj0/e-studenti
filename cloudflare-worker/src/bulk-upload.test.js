@@ -9,6 +9,7 @@ import {
   effectiveFields,
   findBatchDuplicates,
   inferMetadata,
+  suggestType,
   planUploads,
   sha256Hex,
   summarize,
@@ -24,6 +25,28 @@ const row = (over = {}) => ({
   id: "r1", status: "ready", file: file("a.pdf"), inferred: { title: "A", type: null }, overrides: {}, ...over,
 });
 
+describe("suggestType", () => {
+  // Titles and stored file names of real materials that were filed as "Të tjera".
+  it("files notes, course slides and exams", () => {
+    expect(suggestType({ title: "Elektronika - Shënime" })).toBe("Shënime");
+    expect(suggestType({ title: "Automatikë - Teori (Skriptë)" })).toBe("Shënime");
+    expect(suggestType({ title: "Përmbledhje pyetjesh nga Mjekësia Interne" })).toBe("Shënime");
+    expect(suggestType({ title: "Semestri 5 - Analize e algoritmeve - materiale kursi - 3" })).toBe("Ligjerata");
+    expect(suggestType({ title: "Kolokfiumi i parë" })).toBe("Afat");
+  });
+
+  it("falls back to the stored file name", () => {
+    expect(
+      suggestType({ title: "Instrumente Endodontike", r2_url: "https://media.e-studenti.com/materials/1778525321674-Shenime-JM.pdf" })
+    ).toBe("Shënime");
+  });
+
+  it("does not guess when nothing says which type it is", () => {
+    expect(suggestType({ title: "Fundamentals of Pathology", r2_url: "https://media.e-studenti.com/x/PATHOMA.pdf" })).toBeNull();
+    expect(suggestType({ title: "Orari i përhershëm i provimeve" })).toBeNull();
+  });
+});
+
 describe("inferMetadata", () => {
   it("turns a file name into a readable title", () => {
     expect(inferMetadata("Anatomia_Ligjerata_3.pdf").title).toBe("Anatomia Ligjerata 3");
@@ -37,7 +60,7 @@ describe("inferMetadata", () => {
     expect(inferMetadata("Projekti final.pdf").type).toBe("Projekt");
     expect(inferMetadata("Libri i matematikës.pdf").type).toBe("Libër");
     expect(inferMetadata("Slajde java 1.pptx").type).toBe("Ligjerata");
-    expect(inferMetadata("shenime.pdf").type).toBeNull();
+    expect(inferMetadata("shenime.pdf").type).toBe("Shënime");
   });
 });
 

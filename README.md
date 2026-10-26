@@ -59,7 +59,7 @@ NEXT_PUBLIC_WORKER_URL=http://127.0.0.1:8787 npm run dev     # terminal 2, http:
 ```
 
 Sign-in codes are printed in the Worker's terminal (`[dev email] …`) instead of
-being emailed. Open <http://localhost:3000>, register, and copy the six digits
+being emailed. Open <http://localhost:3000>, register, and copy the eight digits
 from that terminal. To try moderation locally, register as `edonaamulaj@gmail.com`
 (the moderator address is fixed in `cloudflare-worker/src/moderators.js`).
 

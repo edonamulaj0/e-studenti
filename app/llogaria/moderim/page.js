@@ -23,10 +23,12 @@ import {
   EyeOff,
   ShieldOff,
   BadgeCheck,
+  Tags,
 } from "lucide-react";
 import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
 import { safeHref } from "../../lib/file-preview";
 import { matchesSearch } from "../../lib/search-text";
+import RetypePanel from "./RetypePanel";
 import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
 import { universityShort } from "../../lib/placement";
@@ -55,6 +57,7 @@ function ModerimPage() {
     if (t === "pritje") return "pritje";
     if (t === "mesazhe") return "mesazhe";
     if (t === "lendet") return "lendet";
+    if (t === "kategorite") return "kategorite";
     return "raportet";
   });
   const [ready, setReady] = useState(false);
@@ -525,6 +528,10 @@ function ModerimPage() {
             <BookOpen className="h-4 w-4" />
             {t("Lëndët")}
           </button>
+          <button type="button" onClick={() => setTab("kategorite")} className={tabCls("kategorite")}>
+            <Tags className="h-4 w-4" />
+            {t("Kategoritë")}
+          </button>
           <button type="button" onClick={() => setTab("burime")} className={tabCls("burime")}>
             <Link2 className="h-4 w-4" />
             {t("Burime")}
@@ -673,6 +680,8 @@ function ModerimPage() {
         )}
 
         {/* ── SUBJECTS TAB ──────────────────────────────────────────── */}
+        {tab === "kategorite" && <RetypePanel />}
+
         {tab === "lendet" && (
           <>
             <p className="mb-3 text-sm text-gray-600">

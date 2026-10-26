@@ -48,14 +48,39 @@ export function inferMetadata(filename) {
   const haystack = fold(base);
   const ext = fileExtension(filename);
   let type = null;
-  if (/pranues/.test(haystack)) type = PRANUES;
-  else if (/\bafat|\bprovim/.test(haystack)) type = "Afat";
+  if (/\borar/.test(haystack)) type = null; // a timetable mentions exams but is not one
+  else if (/pranues/.test(haystack)) type = PRANUES;
+  else if (/\bafat|\bprovim|kolok/.test(haystack)) type = "Afat";
   else if (/projekt|seminar/.test(haystack)) type = "Projekt";
-  else if (/\bliber|\blibr|\bbook/.test(haystack)) type = "Libër";
-  else if (/ligjerat|lecture|slajd|slide|ppt|prezantim/.test(haystack) || ext === "ppt" || ext === "pptx") {
+  else if (/shenim|skript|permbledhj|\bnotes?\b|summary/.test(haystack)) type = "Shënime";
+  else if (/\bliber|\blibr|\bbook|textbook/.test(haystack)) type = "Libër";
+  else if (
+    /ligjerat|lecture|slajd|slide|ppt|prezantim|materiale kursi|course material/.test(haystack) ||
+    ext === "ppt" ||
+    ext === "pptx"
+  ) {
     type = "Ligjerata";
   }
   return { title, type: MATERIAL_TYPES.includes(type) ? type : null };
+}
+
+/**
+ * A better type for a material filed as "Të tjera", guessed from its title and
+ * then its stored file name (as on R2: URL-encoded, maybe timestamp-prefixed).
+ * Null when nothing in either says which type it is.
+ *
+ * @param {{ title?: string, r2_url?: string }} [material]
+ */
+export function suggestType({ title, r2_url: url } = {}) {
+  const fromTitle = inferMetadata(`${title || ""}.x`).type;
+  if (fromTitle) return fromTitle;
+  let file = String(url || "").split("/").pop() || "";
+  try {
+    file = decodeURIComponent(file);
+  } catch {
+    // keep it encoded
+  }
+  return inferMetadata(file.replace(/^\d{10,}-/, "").replace(/-/g, " ")).type;
 }
 
 /** What would actually be sent for a row: the shared defaults, then its own edits. */

@@ -54,7 +54,7 @@ export function facultiesFor(universitySlug) {
   return universitySlug === DEFAULT_UNIVERSITY ? FACULTIES : FIELDS;
 }
 
-export const MATERIAL_TYPES = ["Provime Pranuese", "Ligjerata", "Afat", "Projekt", "Libër", "Të tjera"];
+export const MATERIAL_TYPES = ["Provime Pranuese", "Ligjerata", "Afat", "Shënime", "Projekt", "Libër", "Të tjera"];
 
 export const STUDY_LEVELS = [
   { value: "bachelor", label: "Bachelor" },

@@ -3014,10 +3014,21 @@ async function handleModeratorMaterials(request, url, env) {
   const page = Math.max(1, Math.floor(Number(url.searchParams.get("page"))) || 1);
   const status = url.searchParams.get("status");
   const filterStatus = ["pending", "approved", "rejected"].includes(status) ? status : null;
+  const typeParam = url.searchParams.get("type");
+  const filterType = MATERIAL_TYPES.includes(typeParam) ? typeParam : null;
   const LIMIT = 50;
   const offset = (page - 1) * LIMIT;
-  const where = filterStatus ? "WHERE m.status = ?" : "";
-  const params = filterStatus ? [filterStatus] : [];
+  const conditions = [];
+  const params = [];
+  if (filterStatus) {
+    conditions.push("m.status = ?");
+    params.push(filterStatus);
+  }
+  if (filterType) {
+    conditions.push("m.type = ?");
+    params.push(filterType);
+  }
+  const where = whereClause(conditions);
 
   // pending_owner_email predates the migrations and is missing from fresh
   // databases, so retry without it rather than failing the whole page.
@@ -3059,6 +3070,45 @@ async function handleModeratorMaterials(request, url, env) {
     page,
     limit: LIMIT,
   });
+}
+
+const MAX_RETYPE_CHANGES = 100;
+
+/**
+ * Moderator: move materials to another type in one go, e.g. to sort the backlog
+ * filed under "Të tjera". Body: { changes: [{ id, type }] }. Every change is
+ * checked before any is applied, and they are applied together.
+ */
+async function handleRetypeMaterials(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const body = await request.json().catch(() => ({}));
+  const changes = Array.isArray(body.changes) ? body.changes : [];
+  if (changes.length === 0 || changes.length > MAX_RETYPE_CHANGES) {
+    return jsonResponse({ error: `Dërgoni 1–${MAX_RETYPE_CHANGES} ndryshime.` }, 400);
+  }
+  const seen = new Set();
+  for (const change of changes) {
+    const id = Number(change?.id);
+    if (!Number.isInteger(id) || id <= 0 || seen.has(id)) {
+      return jsonResponse({ error: "ID i pavlefshëm ose i përsëritur." }, 400);
+    }
+    if (!MATERIAL_TYPES.includes(change?.type)) {
+      return jsonResponse({ error: "Lloji i materialit nuk njihet." }, 400);
+    }
+    seen.add(id);
+  }
+
+  const results = await env.DB.batch(
+    changes.map(({ id, type }) =>
+      env.DB.prepare("UPDATE materials SET type = ?, updated_at = datetime('now') WHERE id = ?").bind(type, Number(id))
+    )
+  );
+  const updated = results.reduce((sum, result) => sum + Number(result.meta?.changes || 0), 0);
+  if (updated) await catalogChanged(env);
+  return jsonResponse({ success: true, updated });
 }
 
 /** Approve or reject a material waiting in the review queue. */
@@ -3688,6 +3738,7 @@ const POST_ONLY_ACTIONS = new Set([
   "delete-material",
   "rekey-materials",
   "review-material",
+  "retype-materials",
   "unpublish-material",
   "set-user-trust",
   "check-duplicates",
@@ -3734,6 +3785,7 @@ const worker = {
       "delete-material",
       "rekey-materials",
       "review-material",
+      "retype-materials",
       "unpublish-material",
       "set-user-trust",
       "check-duplicates",
@@ -3892,6 +3944,9 @@ const worker = {
           break;
         case "review-material":
           response = await handleReviewMaterial(request, env);
+          break;
+        case "retype-materials":
+          response = await handleRetypeMaterials(request, env);
           break;
         case "rekey-materials":
           response = await handleRekeyMaterials(request, env);

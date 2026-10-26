@@ -26,6 +26,7 @@ const materials = {
   "Afat": "Exam",
   "Projekt": "Project",
   "Libër": "Book",
+  "Shënime": "Notes",
   "Të tjera": "Other",
 
   // Faculties
