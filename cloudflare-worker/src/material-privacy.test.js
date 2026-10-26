@@ -82,3 +82,17 @@ describe("anonymous poster privacy", () => {
     expect(params).toHaveLength(5);
   });
 });
+
+describe("public material payloads", () => {
+  it("leave out moderation and upload bookkeeping", () => {
+    const material = sanitizeMaterialForPublic({
+      id: 1,
+      title: "T",
+      reviewed_by: 7,
+      reviewed_at: "2026-01-01",
+      content_hash: "a".repeat(64),
+      client_upload_id: "abcdefgh",
+    });
+    expect(material).toEqual({ id: 1, title: "T", is_anonymous: 0 });
+  });
+});

@@ -10,6 +10,12 @@ const PUBLIC_STRIP_FIELDS = [
   "uploader_surname",
   "moderator_id",
   "rejection_reason",
+  // Moderation and upload bookkeeping: who reviewed it (a user id), and the
+  // uploader's file hash and retry id.
+  "reviewed_by",
+  "reviewed_at",
+  "content_hash",
+  "client_upload_id",
 ];
 
 export function isMaterialAnonymous(material) {
