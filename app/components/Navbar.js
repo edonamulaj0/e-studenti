@@ -12,6 +12,7 @@ import ViberIcon, { VIBER_URL } from "./ViberIcon";
 const navItems = [
   { href: "/universitetet", label: "Universitetet" },
   { href: "/materialet", label: "Materialet" },
+  { href: "/kerkesat", label: "Kërkesat" },
   { href: "/erasmus", label: "Erasmus" },
   { href: "/informacione", label: "Rreth nesh" },
 ];
@@ -75,7 +76,7 @@ export default function Navbar() {
     [
       mobile
         ? "block w-full rounded-2xl px-5 py-4 text-center text-lg font-semibold"
-        : "relative rounded-full px-4 py-2 text-sm font-semibold",
+        : "relative whitespace-nowrap rounded-full px-3 py-2 text-sm font-semibold 2xl:px-4",
       "transition-all duration-200",
       isActive(href)
         ? mobile
@@ -111,17 +112,17 @@ export default function Navbar() {
               className="h-10 w-10 md:h-12 md:w-12 shrink-0 dark:brightness-0 dark:invert"
             />
             <span>
-              <span className="block font-display text-2xl md:text-3xl font-bold tracking-tight">
+              <span className="block whitespace-nowrap font-display text-2xl md:text-3xl font-bold tracking-tight">
                 E-Studenti
               </span>
-              <span className="hidden md:block text-[10px] font-semibold tracking-widest text-gray-500">
+              <span className="hidden whitespace-nowrap text-[10px] font-semibold tracking-widest text-gray-500 2xl:block">
                 {t("NGA KOMUNITETI, PËR ÇDO STUDENT.")}
               </span>
             </span>
           </Link>
 
           {/* desktop menu */}
-          <div className="hidden md:flex items-center gap-1 lg:gap-2">
+          <div className="hidden xl:flex items-center gap-1 2xl:gap-2">
             {navItems.map((item) => (
               <Link key={item.href} href={item.href} className={linkClass(item.href)}>
                 {t(item.label)}
@@ -130,7 +131,7 @@ export default function Navbar() {
             <PreferenceControls className="ml-2" />
             <Link
               href={isLoggedIn ? "/llogaria/materiale-e-mia" : "/llogaria/regjistrohu"}
-              className="btn-primary ml-2 min-h-[44px] px-4 py-2"
+              className="btn-primary ml-2 min-h-[44px] whitespace-nowrap px-4 py-2"
             >
               {isLoggedIn ? t("Llogaria ime") : t("Hyr / Regjistrohu")}
             </Link>
@@ -148,7 +149,7 @@ export default function Navbar() {
             {isLoggedIn && (
               <Link
                 href="/llogaria/ngarko"
-                className="btn-outline min-h-[44px] px-4 py-2"
+                className="btn-outline min-h-[44px] whitespace-nowrap px-4 py-2"
               >
                 {t("Ngarko ↑")}
               </Link>
@@ -158,7 +159,7 @@ export default function Navbar() {
           {/* mobile menu hamburger */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="absolute right-0 top-1/2 z-[80] -translate-y-1/2 rounded-xl p-2.5 text-navy-900 transition-colors hover:bg-surface focus:outline-none focus:ring-4 focus:ring-burgundy-600/15 md:hidden"
+            className="absolute right-0 top-1/2 z-[80] -translate-y-1/2 rounded-xl p-2.5 text-navy-900 transition-colors hover:bg-surface focus:outline-none focus:ring-4 focus:ring-burgundy-600/15 xl:hidden"
             aria-label={isOpen ? t("Mbyll menunë") : t("Hap menunë")}
             aria-expanded={isOpen}
             aria-controls="mobile-navigation"
@@ -171,7 +172,7 @@ export default function Navbar() {
         <div
           id="mobile-navigation"
           ref={menuRef}
-          className="fixed inset-0 z-[70] flex h-dvh items-end bg-ink/30 px-4 pb-4 backdrop-blur-sm md:hidden"
+          className="fixed inset-0 z-[70] flex h-dvh items-end bg-ink/30 px-4 pb-4 backdrop-blur-sm xl:hidden"
         >
           <div
             role="dialog"

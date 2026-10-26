@@ -6,6 +6,7 @@ import { FACULTIES, FIELDS, MATERIAL_TYPES, facultiesFor } from "../lib/material
 import { UNIVERSITIES, universityShort } from "../lib/placement";
 import { STUDY_LEVELS } from "../lib/study-levels";
 import { useT } from "../components/Preferences";
+import { matchesSearch } from "../lib/search-text";
 
 export const EMPTY_FILTERS = { universities: [], levels: [], faculties: [], types: [], subjects: [] };
 
@@ -119,7 +120,6 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
     });
 
   const subjectOptions = useMemo(() => {
-    const q = subjectQuery.trim().toLowerCase();
     const picked = new Set(draft.subjects);
     return subjects
       .filter(
@@ -127,7 +127,7 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
           picked.has(s.slug) ||
           ((draft.universities.length === 0 || draft.universities.includes(s.university)) &&
             (draft.faculties.length === 0 || draft.faculties.includes(s.faculty)) &&
-            (!q || s.name.toLowerCase().includes(q)))
+            matchesSearch(subjectQuery, s.name))
       )
       .sort((a, b) => a.name.localeCompare(b.name, "sq"))
       .slice(0, 80)

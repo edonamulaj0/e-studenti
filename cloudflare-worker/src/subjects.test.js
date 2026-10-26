@@ -81,6 +81,6 @@ describe("type order", () => {
   it("puts exams first", () => {
     expect(typeRank("Afat")).toBeLessThan(typeRank("Ligjerata"));
     expect(typeRank("Ligjerata")).toBeLessThan(typeRank("Libër"));
-    expect(typeRank("e panjohur")).toBe(6);
+    expect(typeRank("e panjohur")).toBe(7);
   });
 });

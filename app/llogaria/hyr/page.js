@@ -8,6 +8,7 @@ import { WORKER_URL } from "../../lib/worker-url";
 import { setUser } from "../../lib/auth";
 import { useT } from "../../components/Preferences";
 import { translateMessage } from "../../lib/bulk-upload";
+import { completePasskeyLogin } from "../../lib/passkeys";
 
 export default function HyrPage() {
   const router = useRouter();
@@ -65,8 +66,10 @@ export default function HyrPage() {
         credentials: "include",
         body: JSON.stringify({ email: email.trim().toLowerCase(), code }),
       });
-      const data = await res.json().catch(() => ({}));
+      let data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Verifikimi dështoi.");
+      // The moderator confirms with a passkey after the emailed code.
+      if (data.passkey_required) data = await completePasskeyLogin(data.passkey);
       setUser(data.user);
       const linked = data.linked_materials_count || 0;
       router.push(linked > 0

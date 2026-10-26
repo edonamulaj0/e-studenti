@@ -18,6 +18,7 @@ import {
   sectorLabel,
 } from "../../lib/directory";
 import { useCompare } from "../../components/CompareProvider";
+import { matchesSearch } from "../../lib/search-text";
 
 const LEVEL_TONE = {
   bachelor: "bg-teal-100 text-teal-900",
@@ -136,11 +137,10 @@ export default function UniversityClient({ slug }) {
 
   // Per category: Bachelor first, then professional, integrated, Master, PhD; alphabetical within a level.
   const groups = useMemo(() => {
-    const q = query.trim().toLowerCase();
     const list = all.filter(
       (p) =>
         (!category || categoryOf(p) === category) &&
-        (!q || p.name.toLowerCase().includes(q) || p.nameEn.toLowerCase().includes(q))
+        matchesSearch(query, p.name, p.nameEn)
     );
     return categories
       .map(([name]) => ({

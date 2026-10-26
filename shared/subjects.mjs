@@ -38,7 +38,7 @@ export function subjectSlug(faculty, subject, university) {
 }
 
 /** Order in which material types appear on a subject page: exams first. */
-export const SUBJECT_TYPE_ORDER = ["Afat", "Provime Pranuese", "Ligjerata", "Projekt", "Libër", "Të tjera"];
+export const SUBJECT_TYPE_ORDER = ["Afat", "Provime Pranuese", "Ligjerata", "Shënime", "Projekt", "Libër", "Të tjera"];
 
 export function typeRank(type) {
   const index = SUBJECT_TYPE_ORDER.indexOf(type);

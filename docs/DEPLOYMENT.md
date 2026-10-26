@@ -7,6 +7,35 @@
 - Confirm `.env.example` files contain placeholders only.
 - Run `git ls-files | rg '(^|/)(\\.next|\\.wrangler|\\.env|\\.dev\\.vars)(/|$)'` and investigate any output.
 
+## Automatic Worker deploys (recommended)
+
+`.github/workflows/deploy-worker.yml` deploys the Worker on every push to `main`
+that touches `cloudflare-worker/` or `shared/`: it runs the tests, applies new D1
+migrations (`wrangler d1 migrations apply --remote`), deploys, then checks that
+the live API runs the new code. Migrations always go first, because new code may
+read tables only a migration creates.
+
+It needs two GitHub secrets (Settings → Secrets and variables → Actions, as
+repository secrets or on an environment named `production`):
+
+| Secret | Where to get it |
+|---|---|
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard → Workers & Pages → Account ID (right sidebar) |
+| `CLOUDFLARE_API_TOKEN` | My Profile → API Tokens → Create token → "Edit Cloudflare Workers" template, then add **Account → D1 → Edit**; limit it to this account |
+
+Until both are set, the workflow skips itself with a notice instead of failing.
+The token template includes R2 edit access, which the workflow uses to create
+the private `e-studenti-pending` bucket on its first run. That bucket holds
+files waiting for review; it must never get a public domain.
+You can also run it by hand from the Actions tab ("Run workflow").
+
+A redeploy from the Cloudflare dashboard re-uploads the *last deployed* bundle;
+it does not pull new code from GitHub.
+
+Worker logs (console output and exceptions, including the hourly cron) are in
+the dashboard under Workers & Pages → `r2-catalog-manager` → Logs, enabled by
+`[observability]` in `wrangler.toml`.
+
 ## Worker Setup
 
 ```bash
@@ -239,3 +268,18 @@ duplicate warnings, never used for security.
 Not included: the queue does not survive a page reload (the browser asks before
 leaving while uploads are active), and files still pass through the Worker
 rather than going straight to R2.
+
+## Moderator passkeys
+
+Once the moderator registers a passkey (Moderim → Siguria), signing in takes the
+emailed code and then the passkey. Register at least two (for example phone and
+laptop). If every passkey is lost, remove them from the database; sign-in then
+falls back to the emailed code alone, and new passkeys can be added:
+
+```bash
+cd cloudflare-worker
+npx wrangler d1 execute e-studenti-auth --remote --command "DELETE FROM passkeys"
+```
+
+Passkeys are bound to `e-studenti.com` (and work on `www.e-studenti.com`); one
+registered on a preview or local origin only works there.

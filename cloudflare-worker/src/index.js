@@ -22,6 +22,13 @@ import {
 } from "./resource-links.js";
 import { loadSiteStats, refreshSiteStats } from "./site-stats.js";
 import {
+  bytesToBase64Url,
+  challengeOf,
+  randomChallenge,
+  verifyAssertion,
+  verifyRegistration,
+} from "./webauthn.js";
+import {
   ALWAYS_ALLOWED_DOMAINS as ALWAYS_ALLOWED_EMAIL_DOMAINS,
   isDisposableEmail,
 } from "../../shared/email-domains.mjs";
@@ -33,6 +40,7 @@ import {
   isRealSubject,
   normalizeSubjectName,
   subjectKey,
+  subjectSlug,
   typeRank,
 } from "../../shared/subjects.mjs";
 import {
@@ -99,6 +107,15 @@ const RATE_LIMITS = {
   check_duplicates: { requests: 120, window: 3600 },
   delete_account: { requests: 3, window: 3600 },
   resource_link: { requests: 5, window: 3600 },
+  create_request: {
+    requests: 5,
+    window: 86400,
+    message: "Keni bërë 5 kërkesa sot. Provoni përsëri nesër.",
+  },
+  vote_request: { requests: 60, window: 3600 },
+  follow_subject: { requests: 60, window: 3600 },
+  unsubscribe_digest: { requests: 20, window: 3600 },
+  passkey_login: { requests: 30, window: 900 },
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
   // Only counted on a cache miss (see handleProxy), so this bounds *cold*
@@ -1503,21 +1520,32 @@ async function handleVerify(request, env) {
     // pending_owner_email column may not exist yet — non-fatal
   }
 
+  // The moderator confirms with a passkey once one is registered: the emailed
+  // code alone (a compromised inbox, a lucky guess) is then not enough.
+  if (userIsModerator(user)) {
+    const passkeyStep = await passkeyLoginChallenge(request, env, user);
+    if (passkeyStep) return jsonResponse({ success: true, passkey_required: true, passkey: passkeyStep });
+  }
+
+  return signedInResponse(user, env, { linked_materials_count: linkedMaterialsCount });
+}
+
+/** Sets the session cookie and describes the signed-in user. */
+async function signedInResponse(user, env, extra = {}) {
   const token = await signJWT(
     { sub: user.id, email: user.email, tv: Number(user.token_version ?? 0) },
     env
   );
-
   return new Response(
     JSON.stringify({
       success: true,
-      linked_materials_count: linkedMaterialsCount,
+      ...extra,
       user: {
         id: user.id,
         name: user.name,
         surname: user.surname,
         email: user.email,
-        is_moderator: Boolean(user.is_moderator),
+        is_moderator: userIsModerator(user),
       },
     }),
     {
@@ -1528,6 +1556,201 @@ async function handleVerify(request, env) {
       },
     }
   );
+}
+
+// ── Passkeys (the moderator's second factor) ─────────────────────────────
+
+const WEBAUTHN_CHALLENGE_TTL_SECONDS = 5 * 60;
+const MAX_PASSKEYS_PER_USER = 10;
+
+/** The relying party for a page origin: the site's registrable domain, or the host itself locally. */
+function rpIdForOrigin(origin) {
+  try {
+    const host = new URL(origin).hostname;
+    return host === "e-studenti.com" || host.endsWith(".e-studenti.com") ? "e-studenti.com" : host;
+  } catch {
+    return null;
+  }
+}
+
+async function storeWebauthnChallenge(env, userId, purpose) {
+  const challenge = randomChallenge();
+  const now = Math.floor(Date.now() / 1000);
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM webauthn_challenges WHERE expires_at < ?").bind(now),
+    env.DB.prepare(
+      "INSERT INTO webauthn_challenges (challenge, user_id, purpose, expires_at) VALUES (?, ?, ?, ?)"
+    ).bind(challenge, userId, purpose, now + WEBAUTHN_CHALLENGE_TTL_SECONDS),
+  ]);
+  return challenge;
+}
+
+/** Looks up and consumes a challenge; it works once, for its purpose, until it expires. */
+async function takeWebauthnChallenge(env, challenge, purpose) {
+  if (!challenge) return null;
+  const row = await env.DB.prepare(
+    "DELETE FROM webauthn_challenges WHERE challenge = ? AND purpose = ? RETURNING user_id, expires_at"
+  )
+    .bind(challenge, purpose)
+    .first();
+  if (!row || Number(row.expires_at) < Math.floor(Date.now() / 1000)) return null;
+  return row;
+}
+
+async function passkeysOf(env, userId) {
+  return (
+    (await env.DB.prepare("SELECT * FROM passkeys WHERE user_id = ? ORDER BY id").bind(userId).all()).results || []
+  );
+}
+
+/** Options for navigator.credentials.get(), or null when the user has no passkey. */
+async function passkeyLoginChallenge(request, env, user) {
+  const passkeys = await passkeysOf(env, user.id);
+  if (passkeys.length === 0) return null;
+  return {
+    challenge: await storeWebauthnChallenge(env, user.id, "login"),
+    rpId: rpIdForOrigin(request.headers.get("Origin")),
+    timeout: WEBAUTHN_CHALLENGE_TTL_SECONDS * 1000,
+    userVerification: "required",
+    allowCredentials: passkeys.map((key) => ({ type: "public-key", id: key.credential_id })),
+  };
+}
+
+async function requireModerator(request, env) {
+  const user = await getUserFromRequest(request, env);
+  return user && userIsModerator(user) ? user : null;
+}
+
+/** Options for navigator.credentials.create(). Moderator only. */
+async function handlePasskeyRegisterOptions(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await requireModerator(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const existing = await passkeysOf(env, user.id);
+  if (existing.length >= MAX_PASSKEYS_PER_USER) {
+    return jsonResponse({ error: `Mund të keni deri në ${MAX_PASSKEYS_PER_USER} passkey.` }, 400);
+  }
+  const rpId = rpIdForOrigin(request.headers.get("Origin"));
+  if (!rpId) return jsonResponse({ error: "Origin not allowed" }, 403);
+  return jsonResponse({
+    challenge: await storeWebauthnChallenge(env, user.id, "register"),
+    rp: { id: rpId, name: "E-Studenti" },
+    user: {
+      id: bytesToBase64Url(new TextEncoder().encode(`user:${user.id}`)),
+      name: user.email,
+      displayName: `${user.name || ""} ${user.surname || ""}`.trim() || user.email,
+    },
+    pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+    authenticatorSelection: { residentKey: "preferred", userVerification: "required" },
+    attestation: "none",
+    timeout: WEBAUTHN_CHALLENGE_TTL_SECONDS * 1000,
+    excludeCredentials: existing.map((key) => ({ type: "public-key", id: key.credential_id })),
+  });
+}
+
+async function handlePasskeyRegister(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await requireModerator(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const body = await request.json().catch(() => ({}));
+  const response = body.response || {};
+  const nameCheck = validateMaterialTextField(body.name, "Emri", { maxLen: 60, allowEmpty: true });
+  if (!nameCheck.ok) return jsonResponse({ error: nameCheck.error }, 400);
+
+  const challenge = await takeWebauthnChallenge(env, challengeOf(response.clientDataJSON), "register");
+  if (!challenge || Number(challenge.user_id) !== Number(user.id)) {
+    return jsonResponse({ error: "Kërkesa skadoi. Provoni përsëri." }, 400);
+  }
+  let credential;
+  try {
+    const origin = request.headers.get("Origin");
+    credential = await verifyRegistration(response, {
+      challenge: challengeOf(response.clientDataJSON),
+      origins: getAllowedOrigins(env),
+      rpId: rpIdForOrigin(origin),
+    });
+  } catch (error) {
+    return jsonResponse({ error: `Passkey nuk u pranua: ${error.message}` }, 400);
+  }
+  try {
+    await env.DB.prepare(
+      "INSERT INTO passkeys (user_id, credential_id, public_key, sign_count, name) VALUES (?, ?, ?, ?, ?)"
+    )
+      .bind(user.id, credential.credentialId, JSON.stringify(credential.jwk), credential.signCount, nameCheck.value || null)
+      .run();
+  } catch (error) {
+    if (String(error.message || error).includes("UNIQUE")) {
+      return jsonResponse({ error: "Ky passkey është regjistruar tashmë." }, 400);
+    }
+    throw error;
+  }
+  return jsonResponse({ success: true });
+}
+
+async function handlePasskeys(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await requireModerator(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  return jsonResponse({
+    passkeys: (await passkeysOf(env, user.id)).map((key) => ({
+      id: key.id,
+      name: key.name,
+      created_at: key.created_at,
+      last_used_at: key.last_used_at,
+    })),
+  });
+}
+
+async function handleDeletePasskey(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await requireModerator(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body.id);
+  if (!Number.isInteger(id) || id <= 0) return jsonResponse({ error: "ID i pavlefshëm." }, 400);
+  const result = await env.DB.prepare("DELETE FROM passkeys WHERE id = ? AND user_id = ?").bind(id, user.id).run();
+  if (!Number(result.meta?.changes || 0)) return jsonResponse({ error: "Passkey nuk u gjet." }, 404);
+  return jsonResponse({ success: true });
+}
+
+/** Second step of the moderator's sign-in: the passkey assertion, then the session. */
+async function handlePasskeyLogin(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const limited = await checkRateLimit(request, "passkey_login", env);
+  if (limited) return limited;
+  const body = await request.json().catch(() => ({}));
+  const response = body.response || {};
+  const challengeText = challengeOf(response.clientDataJSON);
+  const challenge = await takeWebauthnChallenge(env, challengeText, "login");
+  if (!challenge) return jsonResponse({ error: "Hyrja skadoi. Kërkoni një kod të ri." }, 400);
+
+  const passkey = await env.DB.prepare("SELECT * FROM passkeys WHERE credential_id = ? AND user_id = ?")
+    .bind(String(body.id || ""), challenge.user_id)
+    .first();
+  if (!passkey) return jsonResponse({ error: "Ky passkey nuk njihet për këtë llogari." }, 400);
+
+  let verified;
+  try {
+    verified = await verifyAssertion(response, {
+      challenge: challengeText,
+      origins: getAllowedOrigins(env),
+      rpId: rpIdForOrigin(request.headers.get("Origin")),
+      jwk: JSON.parse(passkey.public_key),
+      signCount: Number(passkey.sign_count || 0),
+    });
+  } catch (error) {
+    console.error("passkey assertion rejected", error.message);
+    return jsonResponse({ error: "Passkey nuk u verifikua." }, 400);
+  }
+  await env.DB.prepare("UPDATE passkeys SET sign_count = ?, last_used_at = datetime('now') WHERE id = ?")
+    .bind(verified.signCount, passkey.id)
+    .run();
+
+  const user = await env.DB.prepare("SELECT * FROM users WHERE id = ? AND email_verified = 1")
+    .bind(challenge.user_id)
+    .first();
+  if (!user) return jsonResponse({ error: "Llogaria nuk u gjet." }, 400);
+  return signedInResponse(user, env);
 }
 
 async function handleLogin(request, env) {
@@ -2250,6 +2473,41 @@ function existingUploadResponse(existing) {
   });
 }
 
+/**
+ * The bucket holding a material's file. Files waiting for review live in the
+ * private PENDING_BUCKET when it is bound; everything else (and every file when
+ * it is not bound) is in the public MY_BUCKET behind media.e-studenti.com.
+ */
+function bucketFor(material, env) {
+  return material?.storage === "pending" && env.PENDING_BUCKET ? env.PENDING_BUCKET : env.MY_BUCKET;
+}
+
+function materialFileKey(material) {
+  return material.file_key || publicUrlToKey(material.r2_url);
+}
+
+/**
+ * Moves a material's file to the public or the private bucket and records
+ * where it is. Copy, then repoint the row, then delete the old copy, so a
+ * failure part-way never leaves the row pointing at a missing object.
+ */
+async function moveMaterialFile(env, material, to) {
+  if (!env.PENDING_BUCKET || !env.MY_BUCKET) return false;
+  const from = material.storage === "pending" ? "pending" : "public";
+  if (from === to) return true;
+  const key = materialFileKey(material);
+  if (!key) return false;
+  const source = from === "pending" ? env.PENDING_BUCKET : env.MY_BUCKET;
+  const target = to === "pending" ? env.PENDING_BUCKET : env.MY_BUCKET;
+  const object = await source.get(key);
+  if (!object) throw new Error(`file ${key} missing from the ${from} bucket`);
+  await target.put(key, object.body, { httpMetadata: object.httpMetadata });
+  await env.DB.prepare("UPDATE materials SET storage = ? WHERE id = ?").bind(to, material.id).run();
+  await source.delete(key).catch(() => {});
+  material.storage = to;
+  return true;
+}
+
 async function handleUpload(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
 
@@ -2351,11 +2609,15 @@ async function handleUpload(request, env) {
   // be grouped with each other and with the same person's named ones. A full
   // random UUID also keeps two same-named uploads in the same millisecond from
   // sharing a key, which would make the second R2 put replace the first.
+  const requestId = await openRequestId(env, form.get("request_id"));
+
   const fileKey = newMaterialKey(file.name);
   const contentType = contentTypeForExtension(ext);
   // The file is handed to R2 as a Blob rather than an ArrayBuffer so the body is
   // not copied a second time in memory.
-  await env.MY_BUCKET.put(fileKey, file, {
+  // Held for review: kept out of the public bucket until a moderator approves.
+  const storage = review.status === "pending" && env.PENDING_BUCKET ? "pending" : "public";
+  await (storage === "pending" ? env.PENDING_BUCKET : env.MY_BUCKET).put(fileKey, file, {
     httpMetadata: { contentType },
   });
 
@@ -2364,20 +2626,20 @@ async function handleUpload(request, env) {
   try {
     insert = await env.DB.prepare(
       `INSERT INTO materials
-        (user_id, title, university, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level, content_hash, client_upload_id, status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        (user_id, title, university, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level, content_hash, client_upload_id, request_id, storage, status)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
       .bind(
         user.id, title, university, faculty, department, subject, teacher, type, fileKey, ext, file.size,
         r2Url, isAnonymous, studyLevel, normalizeContentHash(form.get("content_hash")),
-        clientUploadId, review.status
+        clientUploadId, requestId, storage, review.status
       )
       .run();
   } catch (error) {
     // Two requests carrying the same client id raced; the other one won. Remove
     // the object this one wrote and answer with the row that exists.
     if (clientUploadId && String(error.message || error).includes("UNIQUE")) {
-      await env.MY_BUCKET.delete(fileKey).catch(() => {});
+      await bucketFor({ storage }, env).delete(fileKey).catch(() => {});
       const existing = await findUploadByClientId(env, user.id, clientUploadId);
       if (existing) return existingUploadResponse(existing);
     }
@@ -2386,6 +2648,11 @@ async function handleUpload(request, env) {
 
   // Invalidate public catalog cache after upload
   await catalogChanged(env, { publicChange: review.status === "approved" });
+  if (requestId && review.status === "approved") {
+    await fulfillRequestForMaterial(env, insert.meta.last_row_id).catch((error) =>
+      console.error("request fulfilment failed", error)
+    );
+  }
 
   return jsonResponse({
     success: true,
@@ -2694,7 +2961,7 @@ async function handleExportAccount(request, env) {
     }
   };
 
-  const [materials, resourceLinks, reports] = await Promise.all([
+  const [materials, resourceLinks, reports, requests, follows] = await Promise.all([
     rows(
       `SELECT id, title, faculty, department, subject, teacher, type, study_level,
               file_type, file_size, r2_url, is_anonymous, status, rejection_reason,
@@ -2710,6 +2977,11 @@ async function handleExportAccount(request, env) {
       `SELECT material_id, reason, status, created_at
        FROM reports WHERE reporter_id = ? ORDER BY id`
     ),
+    rows(
+      `SELECT university, faculty, subject, type, details, status, created_at, fulfilled_at
+       FROM material_requests WHERE user_id = ? ORDER BY id`
+    ),
+    rows("SELECT subject_slug, created_at FROM subject_follows WHERE user_id = ? ORDER BY created_at"),
   ]);
 
   const payload = {
@@ -2723,6 +2995,8 @@ async function handleExportAccount(request, env) {
     materials,
     resource_links: resourceLinks,
     reports_submitted: reports,
+    material_requests: requests,
+    followed_subjects: follows,
   };
 
   return new Response(JSON.stringify(payload, null, 2), {
@@ -2762,7 +3036,7 @@ async function handleDeleteAccount(request, env) {
 
   // Files that were never public go with the account.
   const unpublished = await env.DB.prepare(
-    "SELECT file_key, r2_url FROM materials WHERE user_id = ? AND status != 'approved'"
+    "SELECT file_key, r2_url, storage FROM materials WHERE user_id = ? AND status != 'approved'"
   )
     .bind(user.id)
     .all();
@@ -2777,6 +3051,9 @@ async function handleDeleteAccount(request, env) {
     env.DB.prepare("DELETE FROM resource_links WHERE user_id = ? AND status != 'approved'").bind(user.id),
     env.DB.prepare("UPDATE resource_links SET is_anonymous = 1 WHERE user_id = ?").bind(user.id),
     env.DB.prepare("UPDATE reports SET reporter_id = NULL WHERE reporter_id = ?").bind(user.id),
+    env.DB.prepare("DELETE FROM subject_follows WHERE user_id = ?").bind(user.id),
+    env.DB.prepare("DELETE FROM material_request_votes WHERE user_id = ?").bind(user.id),
+    env.DB.prepare("UPDATE material_requests SET status = 'removed' WHERE user_id = ? AND status = 'open'").bind(user.id),
     env.DB.prepare("DELETE FROM verification_codes WHERE email = ?").bind(user.email),
     env.DB.prepare(
       `UPDATE users
@@ -2786,11 +3063,10 @@ async function handleDeleteAccount(request, env) {
     ).bind(placeholderEmail, user.id),
   ]);
 
-  if (env.MY_BUCKET) {
-    for (const row of unpublished.results || []) {
-      const key = row.file_key || publicUrlToKey(row.r2_url);
-      if (key) await env.MY_BUCKET.delete(key).catch(() => {});
-    }
+  for (const row of unpublished.results || []) {
+    const bucket = bucketFor(row, env);
+    const key = materialFileKey(row);
+    if (bucket && key) await bucket.delete(key).catch(() => {});
   }
   await catalogChanged(env);
 
@@ -2828,8 +3104,21 @@ async function handleUnpublishMaterial(request, env) {
   if (!Number(result.meta?.changes || 0)) {
     return jsonResponse({ error: "Materiali nuk është i publikuar." }, 404);
   }
+  await hideMaterialFile(env, id);
   await catalogChanged(env);
   return jsonResponse({ success: true, status: "pending" });
+}
+
+/** Best effort: a material taken off the site stops being reachable at its public URL. */
+async function hideMaterialFile(env, id) {
+  try {
+    const material = await env.DB.prepare("SELECT id, file_key, r2_url, storage FROM materials WHERE id = ?")
+      .bind(id)
+      .first();
+    if (material) await moveMaterialFile(env, material, "pending");
+  } catch (error) {
+    console.error("moving file to private storage failed", id, error);
+  }
 }
 
 /** Withdraw (or restore) an uploader's trust: their uploads go back to review. */
@@ -3001,6 +3290,7 @@ async function handleEdit(request, url, env) {
     .bind(title, university, faculty, department, subject, teacher, type, studyLevel, resubmit ? 1 : 0, resubmit ? 1 : 0, id)
     .run();
 
+  if (resubmit && material.status === "approved") await hideMaterialFile(env, id);
   await catalogChanged(env);
 
   return jsonResponse({ success: true, status: resubmit ? "pending" : material.status });
@@ -3014,10 +3304,21 @@ async function handleModeratorMaterials(request, url, env) {
   const page = Math.max(1, Math.floor(Number(url.searchParams.get("page"))) || 1);
   const status = url.searchParams.get("status");
   const filterStatus = ["pending", "approved", "rejected"].includes(status) ? status : null;
+  const typeParam = url.searchParams.get("type");
+  const filterType = MATERIAL_TYPES.includes(typeParam) ? typeParam : null;
   const LIMIT = 50;
   const offset = (page - 1) * LIMIT;
-  const where = filterStatus ? "WHERE m.status = ?" : "";
-  const params = filterStatus ? [filterStatus] : [];
+  const conditions = [];
+  const params = [];
+  if (filterStatus) {
+    conditions.push("m.status = ?");
+    params.push(filterStatus);
+  }
+  if (filterType) {
+    conditions.push("m.type = ?");
+    params.push(filterType);
+  }
+  const where = whereClause(conditions);
 
   // pending_owner_email predates the migrations and is missing from fresh
   // databases, so retry without it rather than failing the whole page.
@@ -3061,6 +3362,458 @@ async function handleModeratorMaterials(request, url, env) {
   });
 }
 
+const MAX_RETYPE_CHANGES = 100;
+
+/**
+ * Moderator: move materials to another type in one go, e.g. to sort the backlog
+ * filed under "Të tjera". Body: { changes: [{ id, type }] }. Every change is
+ * checked before any is applied, and they are applied together.
+ */
+async function handleRetypeMaterials(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
+
+  const body = await request.json().catch(() => ({}));
+  const changes = Array.isArray(body.changes) ? body.changes : [];
+  if (changes.length === 0 || changes.length > MAX_RETYPE_CHANGES) {
+    return jsonResponse({ error: `Dërgoni 1–${MAX_RETYPE_CHANGES} ndryshime.` }, 400);
+  }
+  const seen = new Set();
+  for (const change of changes) {
+    const id = Number(change?.id);
+    if (!Number.isInteger(id) || id <= 0 || seen.has(id)) {
+      return jsonResponse({ error: "ID i pavlefshëm ose i përsëritur." }, 400);
+    }
+    if (!MATERIAL_TYPES.includes(change?.type)) {
+      return jsonResponse({ error: "Lloji i materialit nuk njihet." }, 400);
+    }
+    seen.add(id);
+  }
+
+  const results = await env.DB.batch(
+    changes.map(({ id, type }) =>
+      env.DB.prepare("UPDATE materials SET type = ?, updated_at = datetime('now') WHERE id = ?").bind(type, Number(id))
+    )
+  );
+  const updated = results.reduce((sum, result) => sum + Number(result.meta?.changes || 0), 0);
+  if (updated) await catalogChanged(env);
+  return jsonResponse({ success: true, updated });
+}
+
+// ── Material requests ("Kërkesat") ────────────────────────────────────────
+
+const REQUEST_PAGE_SIZE = 50;
+const MAX_REQUEST_DETAILS = 300;
+/** Votes are emailed when a request is fulfilled; this bounds one fulfilment. */
+const MAX_FULFILMENT_EMAILS = 50;
+
+/** One request as the public sees it: no requester identity, only counts. */
+function publicRequest(row, viewerId, slugIndex) {
+  return {
+    id: row.id,
+    university: row.university,
+    faculty: row.faculty,
+    subject: row.subject,
+    type: row.type || null,
+    details: row.details || "",
+    status: row.status,
+    votes: Number(row.votes || 0),
+    voted: Boolean(row.voted),
+    own: viewerId != null && Number(row.user_id) === Number(viewerId),
+    created_at: row.created_at,
+    fulfilled_at: row.fulfilled_at || null,
+    material_slug: row.fulfilled_material_id ? slugIndex.byId.get(row.fulfilled_material_id) || null : null,
+  };
+}
+
+/** Open requests (most wanted first) or recently fulfilled ones. Public. */
+async function handleRequests(request, url, env) {
+  if (!env.DB) return jsonResponse({ requests: [] });
+  const status = url.searchParams.get("status") === "fulfilled" ? "fulfilled" : "open";
+  const faculty = String(url.searchParams.get("faculty") || "").trim().toUpperCase();
+  const university = String(url.searchParams.get("university") || "").trim();
+  const page = Math.min(100, Math.max(1, Math.floor(Number(url.searchParams.get("page"))) || 1));
+  const viewer = await getUserFromRequest(request, env);
+  const viewerId = viewer ? viewer.id : null;
+
+  const where = ["r.status = ?"];
+  const params = [status];
+  if (faculty) {
+    where.push("r.faculty = ?");
+    params.push(faculty);
+  }
+  if (university) {
+    where.push("r.university = ?");
+    params.push(university);
+  }
+  const order = status === "open" ? "votes DESC, r.created_at DESC" : "r.fulfilled_at DESC";
+  const [rows, countRow, slugIndex] = await Promise.all([
+    env.DB.prepare(
+      `SELECT r.*,
+              (SELECT COUNT(*) FROM material_request_votes v WHERE v.request_id = r.id) AS votes,
+              EXISTS (SELECT 1 FROM material_request_votes v WHERE v.request_id = r.id AND v.user_id = ?) AS voted
+       FROM material_requests r
+       WHERE ${where.join(" AND ")}
+       ORDER BY ${order}
+       LIMIT ? OFFSET ?`
+    )
+      .bind(viewerId ?? -1, ...params, REQUEST_PAGE_SIZE, (page - 1) * REQUEST_PAGE_SIZE)
+      .all(),
+    env.DB.prepare(`SELECT COUNT(*) AS total FROM material_requests r WHERE ${where.join(" AND ")}`)
+      .bind(...params)
+      .first(),
+    loadSlugIndexCached(env),
+  ]);
+  const total = Number(countRow?.total || 0);
+  return jsonResponse({
+    requests: (rows.results || []).map((row) => publicRequest(row, viewerId, slugIndex)),
+    pagination: { page, total, hasNextPage: page * REQUEST_PAGE_SIZE < total },
+  });
+}
+
+/**
+ * Asks for a missing material. An open request for the same subject and type is
+ * not duplicated: the asker's vote is added to it instead, so demand collects in
+ * one place.
+ */
+async function handleCreateRequest(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const limited = await checkRateLimit(request, "create_request", env, `user:${user.id}`);
+  if (limited) return limited;
+
+  const body = await request.json().catch(() => ({}));
+  const university = String(body.university || DEFAULT_UNIVERSITY).trim();
+  const faculty = String(body.faculty || "").trim().toUpperCase();
+  if (!isValidPlacement(university, faculty)) {
+    return jsonResponse({ error: "Universiteti ose fakulteti nuk njihet." }, 400);
+  }
+  const subjectCheck = validateMaterialTextField(body.subject, "Lënda", { maxLen: MAX_SUBJECT_LENGTH });
+  if (!subjectCheck.ok) return jsonResponse({ error: subjectCheck.error }, 400);
+  const type = body.type ? String(body.type) : null;
+  if (type && !MATERIAL_TYPES.includes(type)) {
+    return jsonResponse({ error: "Lloji i materialit nuk njihet." }, 400);
+  }
+  const detailsCheck = validateMaterialTextField(body.details, "Përshkrimi", {
+    maxLen: MAX_REQUEST_DETAILS,
+    allowEmpty: true,
+  });
+  if (!detailsCheck.ok) return jsonResponse({ error: detailsCheck.error }, 400);
+  const subject = await canonicalSubject(env, faculty, subjectCheck.value, university);
+
+  const open = await env.DB.prepare(
+    `SELECT id, subject FROM material_requests
+     WHERE status = 'open' AND university = ? AND faculty = ? AND COALESCE(type, '') = ?`
+  )
+    .bind(university, faculty, type || "")
+    .all();
+  const existing = (open.results || []).find((row) => subjectKey(row.subject) === subjectKey(subject));
+  let requestId = existing?.id;
+  if (!requestId) {
+    const insert = await env.DB.prepare(
+      `INSERT INTO material_requests (user_id, university, faculty, subject, type, details)
+       VALUES (?, ?, ?, ?, ?, ?)`
+    )
+      .bind(user.id, university, faculty, subject, type, detailsCheck.value || null)
+      .run();
+    requestId = insert.meta.last_row_id;
+  }
+  await env.DB.prepare("INSERT OR IGNORE INTO material_request_votes (request_id, user_id) VALUES (?, ?)")
+    .bind(requestId, user.id)
+    .run();
+  return jsonResponse({ success: true, id: requestId, merged: Boolean(existing) });
+}
+
+/** Adds or withdraws the caller's "me too" on an open request. */
+async function handleVoteRequest(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const limited = await checkRateLimit(request, "vote_request", env, `user:${user.id}`);
+  if (limited) return limited;
+
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body.id);
+  if (!Number.isInteger(id) || id <= 0) return jsonResponse({ error: "ID i pavlefshëm." }, 400);
+  const row = await env.DB.prepare("SELECT status FROM material_requests WHERE id = ?").bind(id).first();
+  if (!row || row.status !== "open") return jsonResponse({ error: "Kërkesa nuk është e hapur." }, 404);
+
+  const vote = body.vote !== false;
+  await env.DB.prepare(
+    vote
+      ? "INSERT OR IGNORE INTO material_request_votes (request_id, user_id) VALUES (?, ?)"
+      : "DELETE FROM material_request_votes WHERE request_id = ? AND user_id = ?"
+  )
+    .bind(id, user.id)
+    .run();
+  const count = await env.DB.prepare("SELECT COUNT(*) AS votes FROM material_request_votes WHERE request_id = ?")
+    .bind(id)
+    .first();
+  return jsonResponse({ success: true, voted: vote, votes: Number(count?.votes || 0) });
+}
+
+/** Takes a request down: its author can withdraw it, the moderator can remove any. */
+async function handleRemoveRequest(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body.id);
+  if (!Number.isInteger(id) || id <= 0) return jsonResponse({ error: "ID i pavlefshëm." }, 400);
+  const result = userIsModerator(user)
+    ? await env.DB.prepare("UPDATE material_requests SET status = 'removed' WHERE id = ? AND status = 'open'")
+        .bind(id)
+        .run()
+    : await env.DB.prepare(
+        "UPDATE material_requests SET status = 'removed' WHERE id = ? AND status = 'open' AND user_id = ?"
+      )
+        .bind(id, user.id)
+        .run();
+  if (!Number(result.meta?.changes || 0)) return jsonResponse({ error: "Kërkesa nuk u gjet." }, 404);
+  return jsonResponse({ success: true });
+}
+
+/** The open request an upload claims to answer, or null. */
+async function openRequestId(env, value) {
+  const id = Number(value);
+  if (!Number.isInteger(id) || id <= 0) return null;
+  const row = await env.DB.prepare("SELECT id FROM material_requests WHERE id = ? AND status = 'open'")
+    .bind(id)
+    .first();
+  return row ? row.id : null;
+}
+
+/**
+ * Called once a material is published. If it answers an open request, the
+ * request is closed and everyone who asked for it is told where to find it.
+ */
+export async function fulfillRequestForMaterial(env, materialId) {
+  const material = await env.DB.prepare(
+    "SELECT id, title, request_id FROM materials WHERE id = ? AND status = 'approved'"
+  )
+    .bind(materialId)
+    .first();
+  if (!material?.request_id) return { fulfilled: false };
+  const claimed = await env.DB.prepare(
+    `UPDATE material_requests
+     SET status = 'fulfilled', fulfilled_material_id = ?, fulfilled_at = datetime('now')
+     WHERE id = ? AND status = 'open'`
+  )
+    .bind(material.id, material.request_id)
+    .run();
+  if (!Number(claimed.meta?.changes || 0)) return { fulfilled: false };
+
+  invalidateCatalogCaches();
+  const slug = (await loadSlugIndexCached(env)).byId.get(material.id);
+  const link = slug ? `${SITE_URL}/materialet/${slug}` : `${SITE_URL}/kerkesat`;
+  const voters = await env.DB.prepare(
+    `SELECT u.email FROM material_request_votes v JOIN users u ON u.id = v.user_id
+     WHERE v.request_id = ? AND u.email_verified = 1
+     LIMIT ?`
+  )
+    .bind(material.request_id, MAX_FULFILMENT_EMAILS)
+    .all();
+  const html = `<p>Materiali që kërkuat është tani në E-Studenti: <strong>${escapeHtml(material.title)}</strong>.</p>
+    <p><a href="${link}">Hape materialin</a></p>
+    <p style="color:#4a5568;font-size:13px">E morët këtë email sepse kërkuat ose mbështetët këtë material te Kërkesat.</p>`;
+  let sent = 0;
+  for (const { email } of voters.results || []) {
+    try {
+      if (await sendEmail(email, "Materiali që kërkuat u ngarkua — E-Studenti", html, env, env.RESEND_CONTACT_FROM || env.RESEND_FROM || DEFAULT_RESEND_FROM)) {
+        sent += 1;
+      }
+    } catch (error) {
+      console.error("request fulfilment email failed", error);
+    }
+  }
+  return { fulfilled: true, sent };
+}
+
+// ── Subject follows and the weekly digest ────────────────────────────────
+
+const MAX_FOLLOWS_PER_USER = 50;
+const SUBJECT_SLUG = /^[a-z0-9-]{1,160}$/;
+const MAX_DIGEST_ITEMS = 15;
+
+async function digestUnsubscribeSignature(userId, env) {
+  const key = await crypto.subtle.importKey(
+    "raw",
+    new TextEncoder().encode(env.HASH_SECRET || env.JWT_SECRET),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"]
+  );
+  const mac = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(`digest-unsubscribe:${userId}`));
+  return hexFromBuffer(mac).slice(0, 32);
+}
+
+/** Follows or unfollows a subject page for the weekly email. */
+async function handleFollowSubject(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const limited = await checkRateLimit(request, "follow_subject", env, `user:${user.id}`);
+  if (limited) return limited;
+
+  const body = await request.json().catch(() => ({}));
+  const slug = String(body.slug || "").trim();
+  if (!SUBJECT_SLUG.test(slug)) return jsonResponse({ error: "Lënda nuk u gjet." }, 400);
+
+  if (body.follow === false) {
+    await env.DB.prepare("DELETE FROM subject_follows WHERE user_id = ? AND subject_slug = ?")
+      .bind(user.id, slug)
+      .run();
+    return jsonResponse({ success: true, following: false });
+  }
+  const exists = (await loadSubjectGroupsCached(env)).some((group) => group.slug === slug);
+  if (!exists) return jsonResponse({ error: "Lënda nuk u gjet." }, 404);
+  const count = await env.DB.prepare("SELECT COUNT(*) AS n FROM subject_follows WHERE user_id = ?")
+    .bind(user.id)
+    .first();
+  if (Number(count?.n || 0) >= MAX_FOLLOWS_PER_USER) {
+    return jsonResponse({ error: `Mund të ndiqni deri në ${MAX_FOLLOWS_PER_USER} lëndë.` }, 400);
+  }
+  await env.DB.prepare("INSERT OR IGNORE INTO subject_follows (user_id, subject_slug) VALUES (?, ?)")
+    .bind(user.id, slug)
+    .run();
+  return jsonResponse({ success: true, following: true });
+}
+
+/** The subjects the signed-in user follows, with their current names. */
+async function handleMyFollows(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const [rows, groups] = await Promise.all([
+    env.DB.prepare("SELECT subject_slug, created_at FROM subject_follows WHERE user_id = ? ORDER BY created_at")
+      .bind(user.id)
+      .all(),
+    loadSubjectGroupsCached(env),
+  ]);
+  const bySlug = new Map(groups.map((group) => [group.slug, group]));
+  return jsonResponse({
+    follows: (rows.results || []).map((row) => {
+      const group = bySlug.get(row.subject_slug);
+      return {
+        slug: row.subject_slug,
+        name: group?.name || null,
+        faculty: group?.faculty || null,
+        university: group?.university || null,
+      };
+    }),
+  });
+}
+
+/** One-click unsubscribe from the digest email; signed, so no sign-in is needed. */
+async function handleUnsubscribeDigest(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const limited = await checkRateLimit(request, "unsubscribe_digest", env);
+  if (limited) return limited;
+  const body = await request.json().catch(() => ({}));
+  const userId = Number(body.u);
+  if (!Number.isInteger(userId) || userId <= 0) return jsonResponse({ error: "Lidhja nuk është e vlefshme." }, 400);
+  const expected = await digestUnsubscribeSignature(userId, env);
+  if (!timingSafeEqual(String(body.s || ""), expected)) {
+    return jsonResponse({ error: "Lidhja nuk është e vlefshme." }, 400);
+  }
+  const result = await env.DB.prepare("DELETE FROM subject_follows WHERE user_id = ?").bind(userId).run();
+  return jsonResponse({ success: true, removed: Number(result.meta?.changes || 0) });
+}
+
+function digestEmailHtml(items, unsubscribeUrl) {
+  const list = items
+    .map(
+      (item) =>
+        `<li style="margin:0 0 10px"><a href="${item.link}" style="color:#8B3A3A;font-weight:600">${escapeHtml(item.title)}</a><br><span style="color:#4a5568;font-size:13px">${escapeHtml(item.subject)} · ${escapeHtml(item.type)}</span></li>`
+    )
+    .join("");
+  return `<div style="font-family:Inter,Arial,sans-serif;color:#1a2332;line-height:1.5;max-width:560px">
+    <h1 style="font-size:22px">Materiale të reja në lëndët që ndiqni</h1>
+    <ul style="padding-left:18px">${list}</ul>
+    <p style="color:#4a5568;font-size:13px">E merrni këtë email një herë në javë sepse ndiqni këto lëndë në E-Studenti.
+    <a href="${unsubscribeUrl}" style="color:#4a5568">Çregjistrohu nga të gjitha</a>.</p>
+  </div>`;
+}
+
+/**
+ * Weekly email of new materials in followed subjects, sent from the hourly cron
+ * on Monday morning (UTC) at most once a week. The run is claimed in the
+ * database before anything is sent, so overlapping invocations cannot double it.
+ */
+export async function sendSubjectDigest(env, now = new Date()) {
+  if (!env.DB) return { sent: 0, reason: "no_db" };
+  if (now.getUTCDay() !== 1 || now.getUTCHours() < 7) return { sent: 0, reason: "not_due" };
+  const stamp = now.toISOString().slice(0, 19).replace("T", " ");
+  const weekAgo = new Date(now.getTime() - 6 * 86400_000).toISOString().slice(0, 19).replace("T", " ");
+  const state = await env.DB.prepare("SELECT last_sent_at FROM digest_state WHERE id = 1").first();
+  const claim = await env.DB.prepare(
+    "UPDATE digest_state SET last_sent_at = ? WHERE id = 1 AND (last_sent_at IS NULL OR last_sent_at < ?)"
+  )
+    .bind(stamp, weekAgo)
+    .run();
+  if (!Number(claim.meta?.changes || 0)) return { sent: 0, reason: "already_sent" };
+
+  const since =
+    state?.last_sent_at || new Date(now.getTime() - 7 * 86400_000).toISOString().slice(0, 19).replace("T", " ");
+  const [fresh, follows, slugIndex] = await Promise.all([
+    env.DB.prepare(
+      `SELECT id, title, university, faculty, subject, type FROM materials
+       WHERE status = 'approved' AND COALESCE(reviewed_at, created_at) > ?
+       ORDER BY COALESCE(reviewed_at, created_at) DESC`
+    )
+      .bind(since)
+      .all(),
+    env.DB.prepare(
+      `SELECT f.user_id, f.subject_slug, u.email FROM subject_follows f
+       JOIN users u ON u.id = f.user_id WHERE u.email_verified = 1`
+    ).all(),
+    loadSlugIndexCached(env),
+  ]);
+
+  const bySubject = new Map();
+  for (const material of fresh.results || []) {
+    if (!isRealSubject(material.subject)) continue;
+    const slug = subjectSlug(material.faculty, material.subject, material.university);
+    if (!bySubject.has(slug)) bySubject.set(slug, []);
+    const materialSlug = slugIndex.byId.get(material.id);
+    bySubject.get(slug).push({
+      title: material.title,
+      subject: material.subject,
+      type: material.type,
+      link: materialSlug ? `${SITE_URL}/materialet/${materialSlug}` : `${SITE_URL}/lenda/${slug}`,
+    });
+  }
+  if (bySubject.size === 0) return { sent: 0, reason: "nothing_new" };
+
+  const perUser = new Map();
+  for (const follow of follows.results || []) {
+    const items = bySubject.get(follow.subject_slug);
+    if (!items) continue;
+    if (!perUser.has(follow.user_id)) perUser.set(follow.user_id, { email: follow.email, items: [] });
+    perUser.get(follow.user_id).items.push(...items);
+  }
+
+  let sent = 0;
+  for (const [userId, { email, items }] of perUser) {
+    const unsubscribeUrl = `${SITE_URL}/llogaria/ndjekjet?u=${userId}&s=${await digestUnsubscribeSignature(userId, env)}`;
+    try {
+      const ok = await sendEmail(
+        email,
+        `${items.length} materiale të reja në lëndët tuaja — E-Studenti`,
+        digestEmailHtml(items.slice(0, MAX_DIGEST_ITEMS), unsubscribeUrl),
+        env,
+        env.RESEND_CONTACT_FROM || env.RESEND_FROM || DEFAULT_RESEND_FROM
+      );
+      if (ok) sent += 1;
+    } catch (error) {
+      console.error("digest email failed", userId, error);
+    }
+  }
+  return { sent };
+}
+
 /** Approve or reject a material waiting in the review queue. */
 async function handleReviewMaterial(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
@@ -3095,7 +3848,28 @@ async function handleReviewMaterial(request, env) {
     return jsonResponse({ error: "Materiali nuk u gjet ose është shqyrtuar tashmë." }, 404);
   }
 
+  if (decision === "approve") {
+    const material = await env.DB.prepare("SELECT id, file_key, r2_url, storage FROM materials WHERE id = ?")
+      .bind(id)
+      .first();
+    try {
+      await moveMaterialFile(env, material, "public");
+    } catch (error) {
+      // Not published without its file: put the decision back so it can be retried.
+      console.error("publishing file failed", id, error);
+      await env.DB.prepare(
+        "UPDATE materials SET status = 'pending', reviewed_at = NULL, reviewed_by = NULL WHERE id = ?"
+      )
+        .bind(id)
+        .run();
+      return jsonResponse({ error: "Skedari nuk mund të publikohej. Provoni përsëri." }, 500);
+    }
+  }
+
   await catalogChanged(env);
+  if (decision === "approve") {
+    await fulfillRequestForMaterial(env, id).catch((error) => console.error("request fulfilment failed", error));
+  }
 
   // Best effort: the decision stands even if the email cannot be sent.
   try {
@@ -3153,9 +3927,10 @@ async function handleDeleteMaterial(request, env) {
   // invisible, whereas the other order could leave a listed row with no file.
   await env.DB.prepare("DELETE FROM materials WHERE id = ?").bind(id).run();
 
-  if (env.MY_BUCKET) {
-    const key = material.file_key || publicUrlToKey(material.r2_url);
-    if (key) await env.MY_BUCKET.delete(key).catch(() => {});
+  const bucket = bucketFor(material, env);
+  if (bucket) {
+    const key = materialFileKey(material);
+    if (key) await bucket.delete(key).catch(() => {});
   }
 
   await catalogChanged(env);
@@ -3603,7 +4378,7 @@ async function handleRedirectMaterial(request, url, env, eventType) {
   if (limited) return limited;
 
   const material = await env.DB.prepare(
-    "SELECT id, r2_url, file_key, status, user_id FROM materials WHERE id = ?"
+    "SELECT id, title, r2_url, file_key, file_type, status, user_id, storage FROM materials WHERE id = ?"
   )
     .bind(materialId)
     .first();
@@ -3616,6 +4391,9 @@ async function handleRedirectMaterial(request, url, env, eventType) {
     const allowed =
       viewer && (Number(viewer.id) === Number(material.user_id) || userIsModerator(viewer));
     if (!allowed) return jsonResponse({ error: "Material not found" }, 404);
+    if (material.storage === "pending" && env.PENDING_BUCKET) {
+      return streamPrivateFile(env, material, eventType === "download");
+    }
   }
 
   let targetUrl = String(material.r2_url || "");
@@ -3632,6 +4410,27 @@ async function handleRedirectMaterial(request, url, env, eventType) {
 
   await trackMaterialEventById(request, env, eventType, materialId);
   return Response.redirect(targetUrl, 302);
+}
+
+/**
+ * A file that is not public, streamed to its owner or the moderator. It comes
+ * from the API origin, which holds the session cookie, so it is served inert:
+ * sandboxed, never sniffed, never cached.
+ */
+async function streamPrivateFile(env, material, asDownload) {
+  const key = materialFileKey(material);
+  const object = key ? await env.PENDING_BUCKET.get(key) : null;
+  if (!object) return jsonResponse({ error: "Material not found" }, 404);
+  const name = `${sanitizeFilename(material.title || "material")}.${material.file_type || extFromKey(key)}`;
+  return new Response(object.body, {
+    headers: {
+      "Content-Type": object.httpMetadata?.contentType || contentTypeForExtension(material.file_type),
+      "Content-Disposition": `${asDownload ? "attachment" : "inline"}; filename="${name}"`,
+      "Cache-Control": "private, no-store",
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "sandbox; default-src 'none'",
+    },
+  });
 }
 
 async function handleViewMaterial(request, url, env) {
@@ -3688,6 +4487,7 @@ const POST_ONLY_ACTIONS = new Set([
   "delete-material",
   "rekey-materials",
   "review-material",
+  "retype-materials",
   "unpublish-material",
   "set-user-trust",
   "check-duplicates",
@@ -3696,6 +4496,15 @@ const POST_ONLY_ACTIONS = new Set([
   "delete-account",
   "submit-resource-link",
   "moderate-resource-link",
+  "create-request",
+  "vote-request",
+  "remove-request",
+  "follow-subject",
+  "unsubscribe-digest",
+  "passkey-register-options",
+  "passkey-register",
+  "delete-passkey",
+  "passkey-login",
   "track-view",
   "track-download",
 ]);
@@ -3707,6 +4516,7 @@ const worker = {
     ctx.waitUntil(pruneExpiredRows(env));
     ctx.waitUntil(triggerRebuildIfDue(env));
     ctx.waitUntil(sendReportAlerts(env));
+    ctx.waitUntil(sendSubjectDigest(env).catch((error) => console.error("digest failed", error)));
   },
 
   async fetch(request, env, ctx) {
@@ -3734,6 +4544,7 @@ const worker = {
       "delete-material",
       "rekey-materials",
       "review-material",
+      "retype-materials",
       "unpublish-material",
       "set-user-trust",
       "check-duplicates",
@@ -3746,6 +4557,15 @@ const worker = {
       "submit-resource-link",
       "moderator-resource-links",
       "moderate-resource-link",
+      "create-request",
+      "vote-request",
+      "remove-request",
+      "follow-subject",
+      "my-follows",
+      "passkey-register-options",
+      "passkey-register",
+      "passkeys",
+      "delete-passkey",
     ];
     const publicActions = [
       "materials",
@@ -3768,6 +4588,9 @@ const worker = {
       "download-material",
       "site-statistics",
       "me",
+      "requests",
+      "unsubscribe-digest",
+      "passkey-login",
     ];
 
     // Actions that change state are POST only. The session cookie is SameSite=Lax,
@@ -3893,6 +4716,9 @@ const worker = {
         case "review-material":
           response = await handleReviewMaterial(request, env);
           break;
+        case "retype-materials":
+          response = await handleRetypeMaterials(request, env);
+          break;
         case "rekey-materials":
           response = await handleRekeyMaterials(request, env);
           break;
@@ -3919,6 +4745,42 @@ const worker = {
           break;
         case "download-material":
           response = await handleDownloadMaterial(request, url, env);
+          break;
+        case "requests":
+          response = await handleRequests(request, url, env);
+          break;
+        case "create-request":
+          response = await handleCreateRequest(request, env);
+          break;
+        case "vote-request":
+          response = await handleVoteRequest(request, env);
+          break;
+        case "remove-request":
+          response = await handleRemoveRequest(request, env);
+          break;
+        case "follow-subject":
+          response = await handleFollowSubject(request, env);
+          break;
+        case "my-follows":
+          response = await handleMyFollows(request, env);
+          break;
+        case "unsubscribe-digest":
+          response = await handleUnsubscribeDigest(request, env);
+          break;
+        case "passkey-register-options":
+          response = await handlePasskeyRegisterOptions(request, env);
+          break;
+        case "passkey-register":
+          response = await handlePasskeyRegister(request, env);
+          break;
+        case "passkeys":
+          response = await handlePasskeys(request, env);
+          break;
+        case "delete-passkey":
+          response = await handleDeletePasskey(request, env);
+          break;
+        case "passkey-login":
+          response = await handlePasskeyLogin(request, env);
           break;
         case "site-statistics":
           response = await handleSiteStatistics(url, env);

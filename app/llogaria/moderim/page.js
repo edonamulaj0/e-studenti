@@ -23,9 +23,14 @@ import {
   EyeOff,
   ShieldOff,
   BadgeCheck,
+  Tags,
+  Fingerprint,
 } from "lucide-react";
 import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
 import { safeHref } from "../../lib/file-preview";
+import { matchesSearch } from "../../lib/search-text";
+import RetypePanel from "./RetypePanel";
+import PasskeysPanel from "./PasskeysPanel";
 import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
 import { universityShort } from "../../lib/placement";
@@ -54,6 +59,8 @@ function ModerimPage() {
     if (t === "pritje") return "pritje";
     if (t === "mesazhe") return "mesazhe";
     if (t === "lendet") return "lendet";
+    if (t === "kategorite") return "kategorite";
+    if (t === "siguria") return "siguria";
     return "raportet";
   });
   const [ready, setReady] = useState(false);
@@ -433,12 +440,13 @@ function ModerimPage() {
   // ── Client-side search filter ──────────────────────────────────────────
   const filtered = search.trim()
     ? materials.filter((m) => {
-        const q = search.toLowerCase();
-        return (
-          m.title?.toLowerCase().includes(q) ||
-          m.subject?.toLowerCase().includes(q) ||
-          m.uploader_email?.toLowerCase().includes(q) ||
-          `${m.uploader_name || ""} ${m.uploader_surname || ""}`.toLowerCase().includes(q)
+        return matchesSearch(
+          search,
+          m.title,
+          m.subject,
+          m.type,
+          m.uploader_email,
+          `${m.uploader_name || ""} ${m.uploader_surname || ""}`
         );
       })
     : materials;
@@ -455,12 +463,12 @@ function ModerimPage() {
   }
 
   const shownSubjects = subjectFilter.trim()
-    ? subjects.filter((s) => s.name.toLowerCase().includes(subjectFilter.trim().toLowerCase()))
+    ? subjects.filter((s) => matchesSearch(subjectFilter, s.name))
     : subjects;
 
   // ── Tab pill styles ────────────────────────────────────────────────────
   const tabCls = (name) =>
-    `inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-colors ${
+    `inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-bold transition-colors ${
       tab === name
         ? "bg-ink text-white shadow-sm"
         : "text-gray-500 hover:bg-gray-100"
@@ -522,6 +530,14 @@ function ModerimPage() {
           <button type="button" onClick={() => setTab("lendet")} className={tabCls("lendet")}>
             <BookOpen className="h-4 w-4" />
             {t("Lëndët")}
+          </button>
+          <button type="button" onClick={() => setTab("kategorite")} className={tabCls("kategorite")}>
+            <Tags className="h-4 w-4" />
+            {t("Kategoritë")}
+          </button>
+          <button type="button" onClick={() => setTab("siguria")} className={tabCls("siguria")}>
+            <Fingerprint className="h-4 w-4" />
+            {t("Siguria")}
           </button>
           <button type="button" onClick={() => setTab("burime")} className={tabCls("burime")}>
             <Link2 className="h-4 w-4" />
@@ -602,7 +618,7 @@ function ModerimPage() {
                               </p>
                               {first.material_url && (
                                 <a
-                                  href={safeHref(first.material_url)}
+                                  href={first.material_status === "approved" ? safeHref(first.material_url) : materialViewUrl(first.material_id)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-burgundy-600 hover:underline"
@@ -671,6 +687,10 @@ function ModerimPage() {
         )}
 
         {/* ── SUBJECTS TAB ──────────────────────────────────────────── */}
+        {tab === "kategorite" && <RetypePanel />}
+
+        {tab === "siguria" && <PasskeysPanel />}
+
         {tab === "lendet" && (
           <>
             <p className="mb-3 text-sm text-gray-600">
@@ -831,7 +851,7 @@ function ModerimPage() {
                             <>
                               <span className="text-gray-300">·</span>
                               <a
-                                href={safeHref(m.r2_url)}
+                                href={m.status === "approved" ? safeHref(m.r2_url) : materialViewUrl(m.id)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 font-semibold text-burgundy-600 hover:underline"

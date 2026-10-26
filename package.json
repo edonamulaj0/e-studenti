@@ -5,7 +5,7 @@
 	"scripts": {
 		"dev": "next dev",
 		"dev:worker": "npm --prefix cloudflare-worker run dev",
-		"build": "node scripts/generate-sitemap.mjs && next build && node scripts/scan-client-secrets.mjs",
+		"build": "node scripts/generate-sitemap.mjs && next build && node scripts/csp-inline-hashes.mjs && node scripts/scan-client-secrets.mjs",
 		"scan-secrets": "node scripts/scan-client-secrets.mjs",
 		"lint": "eslint .",
 		"typecheck": "tsc -p jsconfig.json && tsc -p cloudflare-worker/jsconfig.json",

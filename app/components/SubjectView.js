@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { ChevronRight, Users } from "lucide-react";
 import MaterialGrid from "./MaterialGrid";
+import FollowSubjectButton from "./FollowSubjectButton";
 import { DEFAULT_UNIVERSITY, universityShort } from "../lib/placement";
 import { getFacultyName } from "../lib/material-options";
 import { normalizeMaterial } from "../lib/material-view";
@@ -41,6 +42,11 @@ export default function SubjectView({ subject, materials }) {
               <Users className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
               <span>{teachers.join(", ")}</span>
             </p>
+          )}
+          {subject.slug && (
+            <div className="mt-4">
+              <FollowSubjectButton slug={subject.slug} />
+            </div>
           )}
         </header>
 

@@ -27,6 +27,10 @@ const sections = [
     text: "Lidhjet e dërguara në /burime ruhen me URL origjinale dhe të zgjidhura (pas shkurtimeve). Vetëm lidhjet e aprovuara shfaqen publikisht. Ne nuk kontrollojmë përmbajtjen e faqeve të jashtme pas publikimit — përdoruesit njoftohen para se të dalin nga platforma.",
   },
   {
+    title: "Kërkesat dhe lëndët që ndiqni",
+    text: "Kur bëni ose mbështetni një kërkesë për material, ruajmë kërkesën dhe votën tuaj; publikisht shfaqet vetëm lënda dhe numri i votave, kurrë emri juaj. Kur kërkesa plotësohet, ju dërgojmë një email me lidhjen. Nëse ndiqni një lëndë, ju dërgojmë një email në javë me materialet e reja; çdo email ka një lidhje për t'u çregjistruar menjëherë, dhe lëndët i menaxhoni te \"Lëndët që ndiqni\".",
+  },
+  {
     title: "Shërbimet e treta",
     text: "Përdorim Cloudflare (Workers, D1, R2, Pages) për hostim, ruajtje skedarësh dhe siguri. Email-et e verifikimit dërgohen përmes Resend. Nëse është konfiguruar, Google Safe Browsing mund të kontrollojë URL-të e dërguara për alarme sigurie — vetëm si flamur moderimi, jo bllokim automatik. Statistika të përgjithshme hostimi (vizita, lloji shfletuesi) mund të përdoren për mirëmbajtje.",
   },

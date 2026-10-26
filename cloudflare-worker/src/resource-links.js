@@ -1,4 +1,4 @@
-import { ANONYMOUS_DISPLAY_NAME, likePattern } from "./material-privacy.js";
+import { ANONYMOUS_DISPLAY_NAME, buildFoldedSearchClause } from "./material-privacy.js";
 
 export const RESOURCE_CATEGORIES = [
   "course_site",
@@ -243,10 +243,9 @@ export function sanitizeResourceLinkForPublic(link, { revealSubmitter = false } 
 }
 
 export function buildResourceSearchClause(q) {
-  if (!q) return { clause: null, params: [] };
-  return {
-    clause:
-      "(r.title LIKE ? ESCAPE '\\' OR r.description LIKE ? ESCAPE '\\' OR r.subject LIKE ? ESCAPE '\\' OR r.resolved_domain LIKE ? ESCAPE '\\' OR (COALESCE(r.is_anonymous, 0) = 0 AND (u.name LIKE ? ESCAPE '\\' OR COALESCE(u.surname, '') LIKE ? ESCAPE '\\')))",
-    params: Array(6).fill(likePattern(q)),
-  };
+  return buildFoldedSearchClause(
+    q,
+    ["r.title", "r.description", "r.subject", "r.resolved_domain"],
+    { privateColumns: ["u.name", "u.surname"], guard: "COALESCE(r.is_anonymous, 0) = 0" }
+  );
 }
