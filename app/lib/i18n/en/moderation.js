@@ -123,6 +123,9 @@ const translations = {
   "Materiali nuk u gjet.": "Material not found.",
   "Lidhja nuk u gjet.": "Link not found.",
   "Kjo lidhje është trajtuar tashmë.": "This link has already been handled.",
+  "Vlerësimet": "Ratings",
+  "Materialet që të paktën 3 studentë i shënuan si të padobishme, më shumë se sa i shënuan të dobishme. Shikojini: mund të jenë të gabuara, të palexueshme ose në vendin e gabuar.": "Materials that at least 3 students marked as not useful, and more than marked them useful. Check them: they may be wrong, unreadable or in the wrong place.",
+  "Asnjë material me vlerësim të dobët.": "No poorly rated materials.",
 };
 
 export default translations;

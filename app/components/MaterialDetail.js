@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Download, Link2, Check } from "lucide-react";
 import ShareRow from "./ShareRow";
+import HelpfulVote from "./HelpfulVote";
 import { DEFAULT_UNIVERSITY, universityName, universityShort } from "../lib/placement";
 import ReportButton from "./ReportButton";
 import MaterialViewTracker from "./MaterialViewTracker";
@@ -268,6 +269,7 @@ export default function MaterialDetail({ material, slug }) {
                 {copied ? t("U kopjua") : t("Kopjo lidhjen")}
               </button>
               <ShareRow title={material.title} slug={slug} />
+              <HelpfulVote materialId={material.id} />
               <p className="text-xs text-gray-600">
                 {t("{n} shikime", { n: formatStatCount(Number(material.view_count || 0)) })}
                 <span className="mx-2 text-gray-400">·</span>

@@ -118,6 +118,7 @@ const RATE_LIMITS = {
   unsubscribe_digest: { requests: 20, window: 3600 },
   passkey_login: { requests: 30, window: 900 },
   search_miss: { requests: 20, window: 3600 },
+  rate_material: { requests: 60, window: 3600 },
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
   // Only counted on a cache miss (see handleProxy), so this bounds *cold*
@@ -536,6 +537,13 @@ function materialSortBy(sort) {
   if (sort === "downloads") {
     return (a, b) =>
       Number(b.download_count || 0) - Number(a.download_count || 0) ||
+      String(b.created_at || "").localeCompare(String(a.created_at || ""));
+  }
+  if (sort === "helpful") {
+    const score = (m) => Number(m.helpful_count || 0) - Number(m.unhelpful_count || 0);
+    return (a, b) =>
+      score(b) - score(a) ||
+      Number(b.helpful_count || 0) - Number(a.helpful_count || 0) ||
       String(b.created_at || "").localeCompare(String(a.created_at || ""));
   }
   return materialSort;
@@ -1875,6 +1883,106 @@ async function handleReport(request, env, ctx) {
   return jsonResponse({ success: true });
 }
 
+/** One vote per person: account for the signed-in, salted address hash otherwise (as reports). */
+async function voterKey(request, env) {
+  const user = await getUserFromRequest(request, env);
+  return user
+    ? `u:${user.id}`
+    : `a:${await hashVisitorIdentity(visitorClientIp(request), "", env.HASH_SECRET || env.JWT_SECRET)}`;
+}
+
+/**
+ * "Was this useful?" for one material: the totals and the visitor's own vote
+ * (true, false or null), so the buttons show what they chose.
+ */
+async function handleMaterialRating(request, url, env) {
+  const materialId = Number(url.searchParams.get("material_id"));
+  if (!Number.isInteger(materialId) || materialId <= 0) {
+    return jsonResponse({ error: "ID i materialit nuk është i vlefshëm." }, 400);
+  }
+  const [material, mine] = await Promise.all([
+    env.DB.prepare("SELECT helpful_count, unhelpful_count FROM materials WHERE id = ? AND status = 'approved'")
+      .bind(materialId)
+      .first(),
+    voterKey(request, env).then((key) =>
+      env.DB.prepare("SELECT helpful FROM material_votes WHERE material_id = ? AND voter_key = ?")
+        .bind(materialId, key)
+        .first()
+    ),
+  ]);
+  if (!material) return jsonResponse({ error: "Materiali nuk ekziston." }, 404);
+  return jsonResponse({
+    helpful: Number(material.helpful_count || 0),
+    unhelpful: Number(material.unhelpful_count || 0),
+    mine: mine ? Boolean(mine.helpful) : null,
+  });
+}
+
+/** Casts, changes (helpful: true/false) or withdraws (helpful: null) a vote. */
+async function handleRateMaterial(request, env) {
+  const limited = await checkRateLimit(request, "rate_material", env);
+  if (limited) return limited;
+  const body = await request.json().catch(() => ({}));
+  const materialId = Number(body.material_id);
+  if (!Number.isInteger(materialId) || materialId <= 0) {
+    return jsonResponse({ error: "ID i materialit nuk është i vlefshëm." }, 400);
+  }
+  if (![true, false, null].includes(body.helpful)) {
+    return jsonResponse({ error: "Vota nuk është e vlefshme." }, 400);
+  }
+  const material = await env.DB.prepare("SELECT id FROM materials WHERE id = ? AND status = 'approved'")
+    .bind(materialId)
+    .first();
+  if (!material) return jsonResponse({ error: "Materiali nuk ekziston." }, 404);
+
+  const key = await voterKey(request, env);
+  const vote =
+    body.helpful === null
+      ? env.DB.prepare("DELETE FROM material_votes WHERE material_id = ? AND voter_key = ?").bind(materialId, key)
+      : env.DB.prepare(
+          `INSERT INTO material_votes (material_id, voter_key, helpful) VALUES (?, ?, ?)
+           ON CONFLICT(material_id, voter_key) DO UPDATE SET helpful = excluded.helpful`
+        ).bind(materialId, key, body.helpful ? 1 : 0);
+  // Recounted rather than incremented, so a repeated or changed vote can never
+  // drift the totals.
+  const recount = env.DB.prepare(
+    `UPDATE materials SET
+       helpful_count = (SELECT COUNT(*) FROM material_votes WHERE material_id = ?1 AND helpful = 1),
+       unhelpful_count = (SELECT COUNT(*) FROM material_votes WHERE material_id = ?1 AND helpful = 0)
+     WHERE id = ?1`
+  ).bind(materialId);
+  await env.DB.batch([vote, recount]);
+  const row =
+    (await env.DB.prepare("SELECT helpful_count, unhelpful_count FROM materials WHERE id = ?").bind(materialId).first()) || {};
+  return jsonResponse({
+    helpful: Number(row.helpful_count || 0),
+    unhelpful: Number(row.unhelpful_count || 0),
+    mine: body.helpful,
+  });
+}
+
+/** Votes "not useful" from this many people, outnumbering "useful", put a file before the moderator. */
+const LOW_RATED_MIN_VOTES = 3;
+
+/** Moderator: materials students found unhelpful, worst first. */
+async function handleLowRated(request, env) {
+  const user = await getUserFromRequest(request, env);
+  if (!userIsModerator(user)) return jsonResponse({ error: "Nuk keni leje." }, 403);
+  const { results } = await env.DB.prepare(
+    `SELECT id, title, faculty, subject, type, helpful_count, unhelpful_count
+     FROM materials
+     WHERE status = 'approved' AND unhelpful_count >= ? AND unhelpful_count > helpful_count
+     ORDER BY unhelpful_count - helpful_count DESC, unhelpful_count DESC
+     LIMIT 50`
+  )
+    .bind(LOW_RATED_MIN_VOTES)
+    .all();
+  const slugIndex = await loadSlugIndexCached(env);
+  return jsonResponse({
+    materials: (results || []).map((row) => ({ ...row, slug: slugIndex.byId.get(row.id) || null })),
+  });
+}
+
 /** Distinct people with an open report against a material needed to flag it. */
 const REPORT_ALERT_THRESHOLD = 3;
 /** Fewest hours between reminders about a file that is still flagged. */
@@ -2237,7 +2345,7 @@ async function handleMaterials(request, url, env) {
   const q = capSearchTerm(url.searchParams.get("q") || url.searchParams.get("search"));
   const userFilter = url.searchParams.get("user");
   const sortParam = url.searchParams.get("sort") || "newest";
-  const sort = ["views", "downloads"].includes(sortParam) ? sortParam : "newest";
+  const sort = ["views", "downloads", "helpful"].includes(sortParam) ? sortParam : "newest";
   const page = Math.min(1000, Math.max(1, Math.floor(Number(url.searchParams.get("page"))) || 1));
   const requestedLimit = Number(url.searchParams.get("limit")) || 50;
   const limit = Math.min(100, Math.max(1, requestedLimit));
@@ -2332,7 +2440,9 @@ async function handleMaterials(request, url, env) {
       ? "m.view_count DESC, m.created_at DESC"
       : sort === "downloads"
         ? "m.download_count DESC, m.created_at DESC"
-        : "m.created_at DESC";
+        : sort === "helpful"
+          ? "m.helpful_count - m.unhelpful_count DESC, m.helpful_count DESC, m.created_at DESC"
+          : "m.created_at DESC";
 
   const statement = env.DB.prepare(
     `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name,
@@ -3021,7 +3131,7 @@ async function handleExportAccount(request, env) {
     }
   };
 
-  const [materials, resourceLinks, reports, requests, follows] = await Promise.all([
+  const [materials, resourceLinks, reports, requests, follows, votes] = await Promise.all([
     rows(
       `SELECT id, title, faculty, department, subject, teacher, type, study_level,
               file_type, file_size, r2_url, is_anonymous, status, rejection_reason,
@@ -3042,6 +3152,7 @@ async function handleExportAccount(request, env) {
        FROM material_requests WHERE user_id = ? ORDER BY id`
     ),
     rows("SELECT subject_slug, created_at FROM subject_follows WHERE user_id = ? ORDER BY created_at"),
+    rows("SELECT material_id, helpful, created_at FROM material_votes WHERE voter_key = 'u:' || ? ORDER BY created_at"),
   ]);
 
   const payload = {
@@ -3057,6 +3168,7 @@ async function handleExportAccount(request, env) {
     reports_submitted: reports,
     material_requests: requests,
     followed_subjects: follows,
+    material_votes: votes,
   };
 
   return new Response(JSON.stringify(payload, null, 2), {
@@ -3113,6 +3225,10 @@ async function handleDeleteAccount(request, env) {
     env.DB.prepare("UPDATE reports SET reporter_id = NULL WHERE reporter_id = ?").bind(user.id),
     env.DB.prepare("DELETE FROM subject_follows WHERE user_id = ?").bind(user.id),
     env.DB.prepare("DELETE FROM material_request_votes WHERE user_id = ?").bind(user.id),
+    // The votes still count, but no longer lead back to the account.
+    env.DB.prepare(
+      "UPDATE material_votes SET voter_key = 'gone:' || lower(hex(randomblob(8))) WHERE voter_key = ?"
+    ).bind(`u:${user.id}`),
     env.DB.prepare("UPDATE material_requests SET status = 'removed' WHERE user_id = ? AND status = 'open'").bind(user.id),
     env.DB.prepare("DELETE FROM verification_codes WHERE email = ?").bind(user.email),
     env.DB.prepare(
@@ -3979,6 +4095,7 @@ async function handleDeleteMaterial(request, env) {
 
   try {
     await env.DB.prepare("DELETE FROM reports WHERE material_id = ?").bind(id).run();
+    await env.DB.prepare("DELETE FROM material_votes WHERE material_id = ?").bind(id).run();
   } catch {
     // reports table may not exist yet — non-fatal
   }
@@ -4567,6 +4684,7 @@ const POST_ONLY_ACTIONS = new Set([
   "delete-passkey",
   "passkey-login",
   "dismiss-search-miss",
+  "rate-material",
   "track-view",
   "track-download",
 ]);
@@ -4630,6 +4748,7 @@ const worker = {
       "delete-passkey",
       "search-misses",
       "dismiss-search-miss",
+      "low-rated",
     ];
     const publicActions = [
       "materials",
@@ -4655,6 +4774,8 @@ const worker = {
       "requests",
       "unsubscribe-digest",
       "passkey-login",
+      "material-rating",
+      "rate-material",
     ];
 
     // Actions that change state are POST only. The session cookie is SameSite=Lax,
@@ -4851,6 +4972,15 @@ const worker = {
           break;
         case "dismiss-search-miss":
           response = await handleDismissSearchMiss(request, env);
+          break;
+        case "material-rating":
+          response = await handleMaterialRating(request, url, env);
+          break;
+        case "rate-material":
+          response = await handleRateMaterial(request, env);
+          break;
+        case "low-rated":
+          response = await handleLowRated(request, env);
           break;
         case "site-statistics":
           response = await handleSiteStatistics(url, env);

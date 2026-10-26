@@ -74,7 +74,7 @@ export default function MaterialsClient({ initialData = null }) {
     const q = params.get("q") || "";
     setFilters(initial);
     setDraft(initial);
-    setSelectedSort(["views", "downloads"].includes(sort) ? sort : "newest");
+    setSelectedSort(["views", "downloads", "helpful"].includes(sort) ? sort : "newest");
     if (q) setSearchTerm(q);
   }, []);
 
@@ -105,7 +105,7 @@ export default function MaterialsClient({ initialData = null }) {
       if (filters.types.length) params.set("type", filters.types.join(","));
       if (filters.levels.length) params.set("niveli", filters.levels.join(","));
       if (filters.subjects.length) params.set("subjects", filters.subjects.join(","));
-      if (selectedSort === "views" || selectedSort === "downloads") {
+      if (["views", "downloads", "helpful"].includes(selectedSort)) {
         params.set("sort", selectedSort);
       }
 
@@ -304,6 +304,7 @@ export default function MaterialsClient({ initialData = null }) {
             <option value="newest">{t("Më të rejat")}</option>
             <option value="views">{t("Më të shikuarat")}</option>
             <option value="downloads">{t("Më të shkarkuarat")}</option>
+            <option value="helpful">{t("Më të dobishmet")}</option>
           </select>
         </div>
 

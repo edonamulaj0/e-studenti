@@ -64,6 +64,7 @@ const server = http.createServer((req, res) => {
       : { error: "Lënda nuk u gjet." }));
   }
   if (action === "resource-links") return res.end(JSON.stringify({ links: [], ...page([]) }));
+  if (action === "material-rating") return res.end(JSON.stringify({ helpful: 2, unhelpful: 0, mine: null }));
   if (action === "me") return res.end(JSON.stringify({ user: null }));
   if (action === "requests") return res.end(JSON.stringify({ requests: [], pagination: { page: 1, total: 0, hasNextPage: false } }));
   res.end("{}");

@@ -110,6 +110,17 @@ describe("layout", () => {
   }
 });
 
+describe("materials", () => {
+  it("can be marked useful from their page", async () => {
+    const { page, problems } = await open("/materialet/anatomia-1-med");
+    const useful = page.locator('button[aria-label="Po, më ndihmoi"]');
+    await useful.waitFor({ timeout: 10000 });
+    assert.equal((await useful.textContent()).trim(), "2");
+    assert.deepEqual(problems, []);
+    await page.close();
+  });
+});
+
 describe("search", () => {
   it("a search with no results offers to request the material", async () => {
     const { page, problems } = await open("/materialet");
