@@ -7,6 +7,32 @@
 - Confirm `.env.example` files contain placeholders only.
 - Run `git ls-files | rg '(^|/)(\\.next|\\.wrangler|\\.env|\\.dev\\.vars)(/|$)'` and investigate any output.
 
+## Automatic Worker deploys (recommended)
+
+`.github/workflows/deploy-worker.yml` deploys the Worker on every push to `main`
+that touches `cloudflare-worker/` or `shared/`: it runs the tests, applies new D1
+migrations (`wrangler d1 migrations apply --remote`), deploys, then checks that
+the live API runs the new code. Migrations always go first, because new code may
+read tables only a migration creates.
+
+It needs two GitHub secrets (Settings → Secrets and variables → Actions, as
+repository secrets or on an environment named `production`):
+
+| Secret | Where to get it |
+|---|---|
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare dashboard → Workers & Pages → Account ID (right sidebar) |
+| `CLOUDFLARE_API_TOKEN` | My Profile → API Tokens → Create token → "Edit Cloudflare Workers" template, then add **Account → D1 → Edit**; limit it to this account |
+
+Until both are set, the workflow skips itself with a notice instead of failing.
+You can also run it by hand from the Actions tab ("Run workflow").
+
+A redeploy from the Cloudflare dashboard re-uploads the *last deployed* bundle;
+it does not pull new code from GitHub.
+
+Worker logs (console output and exceptions, including the hourly cron) are in
+the dashboard under Workers & Pages → `r2-catalog-manager` → Logs, enabled by
+`[observability]` in `wrangler.toml`.
+
 ## Worker Setup
 
 ```bash

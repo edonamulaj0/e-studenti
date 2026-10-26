@@ -1,0 +1,88 @@
+name: Deploy Worker
+
+# The API used to be deployed by hand, which let production fall behind main.
+# Every push to main that touches the Worker now tests it, applies any new D1
+# migrations, then deploys it, in that order: new code may read tables that
+# only a migration creates.
+on:
+  push:
+    branches: [main]
+    paths:
+      - "cloudflare-worker/**"
+      - "shared/**"
+      - ".github/workflows/deploy-worker.yml"
+  workflow_dispatch:
+
+# Never two deploys at once, and never cancel one halfway through a migration.
+concurrency:
+  group: deploy-worker
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  WRANGLER_SEND_METRICS: "false"
+
+jobs:
+  deploy:
+    name: Test, migrate and deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+    steps:
+      - name: Check for Cloudflare credentials
+        id: creds
+        env:
+          HAS_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN != '' && secrets.CLOUDFLARE_ACCOUNT_ID != '' }}
+        run: |
+          echo "ok=$HAS_TOKEN" >> "$GITHUB_OUTPUT"
+          if [ "$HAS_TOKEN" != "true" ]; then
+            echo "::notice::CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID are not set (repository or 'production' environment secrets); skipping the deploy."
+          fi
+
+      - uses: actions/checkout@v5
+        if: steps.creds.outputs.ok == 'true'
+      - uses: actions/setup-node@v5
+        if: steps.creds.outputs.ok == 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            cloudflare-worker/package-lock.json
+      - name: Install
+        if: steps.creds.outputs.ok == 'true'
+        run: npm ci --prefix cloudflare-worker
+      - name: Test
+        if: steps.creds.outputs.ok == 'true'
+        run: npm test
+
+      - name: Apply D1 migrations
+        if: steps.creds.outputs.ok == 'true'
+        working-directory: cloudflare-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler d1 migrations apply e-studenti-auth --remote
+
+      - name: Deploy
+        if: steps.creds.outputs.ok == 'true'
+        working-directory: cloudflare-worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: npx wrangler deploy
+
+      # GET is refused by the new router for state-changing actions; a 405 here
+      # proves the code that just went out is the code that is live.
+      - name: Smoke test
+        if: steps.creds.outputs.ok == 'true'
+        run: |
+          for i in 1 2 3 4 5 6; do
+            status=$(curl -s -o /dev/null -w "%{http_code}" "https://api.e-studenti.com/?action=logout")
+            [ "$status" = "405" ] && { echo "Live API answers 405 to GET logout: new Worker is serving."; exit 0; }
+            sleep 10
+          done
+          echo "::error::Expected 405 from GET ?action=logout, got $status"
+          exit 1

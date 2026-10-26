@@ -45,6 +45,12 @@ migrations_dir = "./migrations"
 [triggers]
 crons = ["0 * * * *"]
 
+# Workers Logs: console output and exceptions from every request and cron run,
+# searchable in the dashboard (Workers → r2-catalog-manager → Logs).
+[observability]
+enabled = true
+head_sampling_rate = 1
+
 # Environment variables
 [vars]
 ENVIRONMENT = "production"
