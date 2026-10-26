@@ -17,7 +17,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const found = await fetchSubjectBySlug(params.slug);
+  const { slug } = await params;
+  const found = await fetchSubjectBySlug(slug);
   if (!found) return { title: "Lënda nuk u gjet" };
   const { subject } = found;
   const faculty = getFacultyName(subject.faculty);
@@ -26,12 +27,13 @@ export async function generateMetadata({ params }) {
   return {
     title,
     description: description.slice(0, 160),
-    alternates: { canonical: `${SITE_URL}/lenda/${params.slug}` },
+    alternates: { canonical: `${SITE_URL}/lenda/${slug}` },
   };
 }
 
 export default async function SubjectPage({ params }) {
-  const found = await fetchSubjectBySlug(params.slug);
+  const { slug } = await params;
+  const found = await fetchSubjectBySlug(slug);
   if (!found) {
     return (
       <div className="page-shell">
@@ -49,7 +51,7 @@ export default async function SubjectPage({ params }) {
         data={breadcrumbJsonLd([
           { name: "Ballina", url: SITE_URL },
           { name: "Materialet", url: `${SITE_URL}/materialet` },
-          { name: found.subject.name, url: `${SITE_URL}/lenda/${params.slug}` },
+          { name: found.subject.name, url: `${SITE_URL}/lenda/${slug}` },
         ])}
       />
       <SubjectView subject={found.subject} materials={found.materials} />

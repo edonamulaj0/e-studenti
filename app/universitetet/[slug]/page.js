@@ -7,8 +7,9 @@ export function generateStaticParams() {
   return universities.map((u) => ({ slug: u.slug }));
 }
 
-export function generateMetadata({ params }) {
-  const u = getUniversity(params.slug);
+export async function generateMetadata({ params }) {
+  const { slug } = await params;
+  const u = getUniversity(slug);
   if (!u) return { title: "Universiteti nuk u gjet" };
   const name = u.name.replace(/"/g, "");
   return {
@@ -18,6 +19,7 @@ export function generateMetadata({ params }) {
   };
 }
 
-export default function UniversityPage({ params }) {
-  return <UniversityClient slug={params.slug} />;
+export default async function UniversityPage({ params }) {
+  const { slug } = await params;
+  return <UniversityClient slug={slug} />;
 }

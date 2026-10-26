@@ -1,16 +1,14 @@
 #!/usr/bin/env node
 /**
  * Fail the build if likely secrets appear in client JS chunks.
- * Scans only app-specific chunks (excludes Next.js framework bundles).
+ * Turbopack (Next 16) writes every chunk into one flat folder, so all of the
+ * shipped JS is scanned, framework included.
  */
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
-const CHUNK_DIRS = [
-  join(ROOT, "out/_next/static/chunks/app"),
-  join(ROOT, ".next/static/chunks/app"),
-];
+const CHUNK_DIRS = [join(ROOT, "out/_next/static/chunks")];
 
 const HIGH_RISK =
   /AKIA[0-9A-Z]{16}|sk_live_[A-Za-z0-9]{20,}|SG\.[A-Za-z0-9_-]{20,}|re_[A-Za-z0-9]{20,}|whsec_[A-Za-z0-9]{20,}/g;
@@ -46,8 +44,9 @@ function scanFile(filePath) {
 
 const chunkDirs = CHUNK_DIRS.filter((dir) => statSync(dir, { throwIfNoEntry: false }));
 if (chunkDirs.length === 0) {
-  console.warn("scan-client-secrets: no client chunk output found; run next build first.");
-  process.exit(0);
+  // A scanner that finds nothing to scan must not report the build clean.
+  console.error("scan-client-secrets: no client chunk output found; run next build first.");
+  process.exit(1);
 }
 
 let failed = false;
@@ -68,4 +67,4 @@ if (failed) {
   process.exit(1);
 }
 
-console.log("scan-client-secrets: no high-risk secrets found in client app chunks.");
+console.log("scan-client-secrets: no high-risk secrets found in client chunks.");

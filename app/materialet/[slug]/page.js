@@ -36,7 +36,8 @@ export async function generateStaticParams() {
 }
 
 export async function generateMetadata({ params }) {
-  const material = await loadMaterialBySlug(params.slug);
+  const { slug } = await params;
+  const material = await loadMaterialBySlug(slug);
   if (!material) {
     return { title: "Materiali nuk u gjet" };
   }
@@ -47,12 +48,12 @@ export async function generateMetadata({ params }) {
     title,
     description: description.slice(0, 160),
     alternates: {
-      canonical: `${SITE_URL}/materialet/${params.slug}`,
+      canonical: `${SITE_URL}/materialet/${slug}`,
     },
     openGraph: {
       type: "article",
       locale: "sq_AL",
-      url: `${SITE_URL}/materialet/${params.slug}`,
+      url: `${SITE_URL}/materialet/${slug}`,
       siteName: "E-Studenti",
       title,
       description: description.slice(0, 160),
@@ -61,7 +62,8 @@ export async function generateMetadata({ params }) {
 }
 
 export default async function MaterialDetailPage({ params }) {
-  const material = await loadMaterialBySlug(params.slug);
+  const { slug } = await params;
+  const material = await loadMaterialBySlug(slug);
   if (!material) {
     return (
       <div className="page-shell">
@@ -80,7 +82,7 @@ export default async function MaterialDetailPage({ params }) {
 
   const facultyName = getFacultyName(material.faculty);
   const studyLevelLabel = getStudyLevelLabel(material.study_level || "bachelor");
-  const detailUrl = `${SITE_URL}/materialet/${params.slug}`;
+  const detailUrl = `${SITE_URL}/materialet/${slug}`;
 
   return (
     <>
@@ -92,12 +94,12 @@ export default async function MaterialDetailPage({ params }) {
         ])}
       />
       <JsonLd
-        data={materialJsonLd({ ...material, slug: params.slug }, {
+        data={materialJsonLd({ ...material, slug: slug }, {
           facultyName,
           studyLevelLabel,
         })}
       />
-      <MaterialDetail material={material} slug={params.slug} />
+      <MaterialDetail material={material} slug={slug} />
     </>
   );
 }

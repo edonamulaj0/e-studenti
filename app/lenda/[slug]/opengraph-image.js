@@ -15,7 +15,8 @@ export async function generateStaticParams() {
 }
 
 export default async function Image({ params }) {
-  const found = await fetchSubjectBySlug(params.slug);
+  const { slug } = await params;
+  const found = await fetchSubjectBySlug(slug);
   if (!found) return renderOgCard({ title: "Materiale studimore për studentët në Kosovë" });
   const { subject } = found;
   return renderOgCard({

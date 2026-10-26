@@ -17,7 +17,8 @@ export async function generateStaticParams() {
 }
 
 export default async function Image({ params }) {
-  const material = prepareMaterial(await fetchMaterialBySlug(params.slug), params.slug);
+  const { slug } = await params;
+  const material = prepareMaterial(await fetchMaterialBySlug(slug), slug);
   if (!material) return renderOgCard({ title: "Materiale studimore për studentët në Kosovë" });
   const faculty = getFacultyName(material.faculty);
   return renderOgCard({
