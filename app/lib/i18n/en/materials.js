@@ -187,5 +187,8 @@ const materials = {
   "Vota nuk u ruajt.": "Your vote was not saved.",
   "Vota nuk është e vlefshme.": "The vote is not valid.",
   "Më të dobishmet": "Most useful",
+  "Filtrat aktivë": "Active filters",
+  "Pastro të gjitha": "Clear all",
+  "Shiko {n} materiale": "Show {n} materials",
 };
 export default materials;

@@ -57,7 +57,7 @@ export function handleStubApi(req, res) {
   if (action === "subjects" || action === "subject-public") {
     const groups = [...new Set(materials.map((m) => `${m.subject.toLowerCase()}-${m.faculty.toLowerCase()}`))].map((slug) => {
       const rows = materials.filter((m) => `${m.subject.toLowerCase()}-${m.faculty.toLowerCase()}` === slug);
-      return { slug, faculty: rows[0].faculty, name: rows[0].subject, count: rows.length, teachers: [], types: {} };
+      return { slug, university: "universiteti-i-prishtines-hasan-prishtina", faculty: rows[0].faculty, name: rows[0].subject, count: rows.length, teachers: [], types: {} };
     });
     if (action === "subjects") return res.end(JSON.stringify({ subjects: groups }));
     const group = groups.find((g) => g.slug === url.searchParams.get("slug"));

@@ -4,7 +4,7 @@ import { useCallback, useState, useMemo, useEffect } from "react";
 import Link from "next/link";
 import { FileText, LayoutGrid, List, MessageSquarePlus, Search, SlidersHorizontal, X } from "lucide-react";
 import MaterialGrid from "../components/MaterialGrid";
-import FilterSidebar, { EMPTY_FILTERS } from "./FilterSidebar";
+import FilterSidebar, { EMPTY_FILTERS, activeFilterChips } from "./FilterSidebar";
 import { assignMaterialSlugs } from "../lib/material-slug";
 import { WORKER_URL } from "../lib/worker-url";
 import { normalizeMaterial } from "../lib/material-view";
@@ -22,9 +22,7 @@ export default function MaterialsClient({ initialData = null }) {
   const [hasLoaded, setHasLoaded] = useState(Boolean(initialData));
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  // `filters` is what the list shows; `draft` is what the sidebar is editing.
   const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [draft, setDraft] = useState(EMPTY_FILTERS);
   const [subjects, setSubjects] = useState([]);
   const [selectedSort, setSelectedSort] = useState("newest");
   const [page, setPage] = useState(() => Number(initialData?.pagination?.page) || 1);
@@ -73,7 +71,6 @@ export default function MaterialsClient({ initialData = null }) {
     const sort = params.get("sort") || "newest";
     const q = params.get("q") || "";
     setFilters(initial);
-    setDraft(initial);
     setSelectedSort(["views", "downloads", "helpful"].includes(sort) ? sort : "newest");
     if (q) setSearchTerm(q);
   }, []);
@@ -153,22 +150,19 @@ export default function MaterialsClient({ initialData = null }) {
     window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
   };
 
-  const applyFilters = () => {
-    setFilters(draft);
+  // Filters apply as soon as they are picked (the list reloads after a short pause).
+  const updateFilters = (next) => {
+    setFilters(next);
     setPage(1);
-    syncUrl(draft);
-    setFiltersOpen(false);
+    syncUrl(next);
   };
 
-  const clearFilters = () => {
-    setDraft(EMPTY_FILTERS);
-    setFilters(EMPTY_FILTERS);
-    setPage(1);
-    syncUrl(EMPTY_FILTERS);
-  };
+  const clearFilters = () => updateFilters(EMPTY_FILTERS);
 
-  const activeFilterCount =
-    filters.universities.length + filters.levels.length + filters.faculties.length + filters.types.length + filters.subjects.length;
+  const chips = activeFilterChips(filters, subjects);
+  const activeFilterCount = chips.length;
+  const removeChip = (chip) =>
+    updateFilters({ ...filters, [chip.key]: filters[chip.key].filter((value) => value !== chip.value) });
 
   const runSearch = () => {
     setPage(1);
@@ -313,10 +307,9 @@ export default function MaterialsClient({ initialData = null }) {
             <div className="surface-card flex max-h-[calc(100vh-7rem)] flex-col p-4">
               <FilterSidebar
                 id="filters-desktop"
-                draft={draft}
-                setDraft={setDraft}
+                filters={filters}
+                onChange={updateFilters}
                 subjects={subjects}
-                onApply={applyFilters}
                 onClear={clearFilters}
               />
             </div>
@@ -344,11 +337,12 @@ export default function MaterialsClient({ initialData = null }) {
                 </div>
                 <FilterSidebar
                   id="filters-mobile"
-                  draft={draft}
-                  setDraft={setDraft}
+                  filters={filters}
+                  onChange={updateFilters}
                   subjects={subjects}
-                  onApply={applyFilters}
                   onClear={clearFilters}
+                  onDone={() => setFiltersOpen(false)}
+                  resultCount={loading ? null : pagination.total}
                 />
               </div>
             </div>
@@ -356,6 +350,34 @@ export default function MaterialsClient({ initialData = null }) {
 
           <div className="min-w-0">
         <div id="material-results" className="scroll-mt-28">
+          {chips.length > 0 && (
+            <ul className="mb-4 flex flex-wrap items-center gap-2" aria-label={t("Filtrat aktivë")}>
+              {chips.map((chip) => (
+                <li key={`${chip.key}:${chip.value}`}>
+                  <button
+                    type="button"
+                    onClick={() => removeChip(chip)}
+                    aria-label={t("Hiq {label}", { label: t(chip.label) })}
+                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full bg-burgundy-50 px-3 py-1 text-sm font-semibold text-burgundy-600 hover:bg-burgundy-600 hover:text-white"
+                  >
+                    {t(chip.label)}
+                    <X className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                </li>
+              ))}
+              {chips.length > 1 && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="min-h-[36px] px-2 text-sm font-semibold text-gray-600 underline-offset-4 hover:text-navy-900 hover:underline"
+                  >
+                    {t("Pastro të gjitha")}
+                  </button>
+                </li>
+              )}
+            </ul>
+          )}
           <p className="sr-only" role="status" aria-live="polite">
             {loading ? t("Duke përditësuar rezultatet…") : t("{n} materiale u gjetën.", { n: pagination.total })}
           </p>

@@ -121,6 +121,40 @@ describe("materials", () => {
   });
 });
 
+describe("filters", () => {
+  it("apply at once, narrow the other lists and show removable chips", async () => {
+    const { page, problems } = await open("/materialet");
+    const sidebar = page.locator("#filters-desktop");
+    await sidebar.getByRole("button", { name: /Fakulteti \/ fusha/i }).click();
+    await sidebar.getByRole("radio", { name: /^Fakulteti i Mjekësisë/ }).click();
+    const chip = page.locator('ul[aria-label="Filtrat aktivë"] button', { hasText: "Fakulteti i Mjekësisë" });
+    await chip.waitFor({ timeout: 10000 });
+    await page.getByText("1 materiale", { exact: true }).waitFor({ timeout: 10000 });
+    assert.match(page.url(), /faculty=MED/);
+    // A UP faculty leaves only UP among the universities.
+    assert.equal(await sidebar.getByText("UHZ Pejë").count(), 0);
+    await chip.click();
+    await page.getByText("2 materiale", { exact: true }).waitFor({ timeout: 10000 });
+    assert.equal(await sidebar.getByText("UHZ Pejë").count(), 1);
+    assert.deepEqual(problems, []);
+    await page.close();
+  });
+
+  it("on phones, say how many materials match and close the drawer", async () => {
+    const { page, problems } = await open("/materialet", { width: 390, height: 844 });
+    await page.getByRole("button", { name: /^Filtrat/ }).click();
+    const drawer = page.locator("#filters-mobile");
+    await drawer.getByRole("button", { name: /Fakulteti \/ fusha/i }).click();
+    await drawer.getByRole("radio", { name: /^Fakulteti i Mjekësisë/ }).click();
+    const done = drawer.getByRole("button", { name: "Shiko 1 materiale" });
+    await done.waitFor({ timeout: 10000 });
+    await done.click();
+    assert.equal(await drawer.count(), 0);
+    assert.deepEqual(problems, []);
+    await page.close();
+  });
+});
+
 describe("search", () => {
   it("a search with no results offers to request the material", async () => {
     const { page, problems } = await open("/materialet");
