@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Download, Link2, Check } from "lucide-react";
+import ShareRow from "./ShareRow";
+import HelpfulVote from "./HelpfulVote";
 import { DEFAULT_UNIVERSITY, universityName, universityShort } from "../lib/placement";
 import ReportButton from "./ReportButton";
 import MaterialViewTracker from "./MaterialViewTracker";
@@ -14,7 +16,7 @@ import TrackableDownloadLink from "./TrackableDownloadLink";
 import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
 import { getFacultyName } from "../lib/material-options";
 import { getStudyLevelLabel } from "../lib/study-levels";
-import { formatFileSize, getPreviewKind, hasInBrowserView } from "../lib/file-preview";
+import { formatFileSize, getPreviewKind } from "../lib/file-preview";
 import { formatStatCount, trackMaterialView } from "../lib/track-material";
 import { formatDate } from "../lib/format-date";
 import { isRealSubject, subjectSlug } from "../lib/subjects";
@@ -81,23 +83,17 @@ function PreviewPanel({ card }) {
   if (kind === "pdf") {
     body = (
       <WhenVisible minHeight="36rem">
-        <div className="h-[36rem] bg-gray-100">
+        <div className="h-144 bg-gray-100">
           <PdfCanvasViewer url={`${WORKER_URL}/?action=proxy&url=${encodeURIComponent(card.r2Url)}`} title={card.title} />
         </div>
       </WhenVisible>
     );
-  } else if (kind === "archive" && card.fileType?.toLowerCase() === "zip") {
+  } else if (kind === "archive") {
     header = fileCount == null ? t("Përmbajtja e arkivit") : t("Përmbajtja e arkivit · {n} skedarë", { n: fileCount });
     body = (
       <WhenVisible minHeight="8rem">
-        <ArchiveContents url={card.r2Url} onCount={setFileCount} />
+        <ArchiveContents url={card.r2Url} fileType={card.fileType} onCount={setFileCount} />
       </WhenVisible>
-    );
-  } else if (!hasInBrowserView(card.fileType)) {
-    return (
-      <p className="rounded-2xl border border-gray-200 bg-surface p-5 text-sm text-gray-600">
-        {t("Arkivat RAR nuk hapen në shfletues — shkarkoni skedarin për të parë përmbajtjen.")}
-      </p>
     );
   } else {
     body = (
@@ -221,7 +217,7 @@ export default function MaterialDetail({ material, slug }) {
   ].filter(Boolean);
 
   return (
-    <div className="page-shell !py-8 md:!py-10">
+    <div className="page-shell py-8! md:py-10!">
       <MaterialViewTracker materialId={material.id} />
       <div className="section-shell">
         <nav className="mb-5 flex flex-wrap items-center gap-1.5 text-sm text-gray-600" aria-label={t("Rruga")}>
@@ -249,7 +245,7 @@ export default function MaterialDetail({ material, slug }) {
                 <FileBadge fileType={card.fileType} />
                 {t(material.type)} · {level}
               </p>
-              <h1 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl">{material.title}</h1>
+              <h1 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl md:leading-10">{material.title}</h1>
             </div>
             <PreviewPanel card={card} />
           </div>
@@ -272,6 +268,8 @@ export default function MaterialDetail({ material, slug }) {
                 {copied ? <Check className="h-4 w-4" aria-hidden /> : <Link2 className="h-4 w-4" aria-hidden />}
                 {copied ? t("U kopjua") : t("Kopjo lidhjen")}
               </button>
+              <ShareRow title={material.title} slug={slug} />
+              <HelpfulVote materialId={material.id} />
               <p className="text-xs text-gray-600">
                 {t("{n} shikime", { n: formatStatCount(Number(material.view_count || 0)) })}
                 <span className="mx-2 text-gray-400">·</span>

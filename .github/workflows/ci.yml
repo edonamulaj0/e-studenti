@@ -55,12 +55,23 @@ jobs:
           cache: npm
       - run: npm ci
       # Built against a local stand-in for the API so the result does not depend
-      # on whether production is up (see scripts/stub-api.mjs).
+      # on whether production is up (see scripts/stub-api.mjs). The API is
+      # served under the static server's /api/, so the browser tests
+      # below run under the production CSP unchanged.
       - name: Build the static site
         run: |
-          node scripts/stub-api.mjs &
+          node scripts/serve-static.mjs out 4180 &
           for i in $(seq 1 20); do
-            curl -sf "http://127.0.0.1:8799/?action=materials" >/dev/null && break
+            curl -sf "http://127.0.0.1:4180/api/?action=materials" >/dev/null && break
             sleep 0.5
           done
-          NEXT_PUBLIC_WORKER_URL=http://127.0.0.1:8799 npm run build
+          NEXT_PUBLIC_WORKER_URL=http://127.0.0.1:4180/api npm run build
+      - name: Browser smoke tests
+        run: |
+          npx playwright install --with-deps chromium
+          node scripts/serve-static.mjs out 4180 &
+          for i in $(seq 1 20); do
+            curl -sf "http://127.0.0.1:4180/" >/dev/null && break
+            sleep 0.5
+          done
+          npm run test:e2e

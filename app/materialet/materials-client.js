@@ -1,9 +1,10 @@
 "use client";
 
 import { useCallback, useState, useMemo, useEffect } from "react";
-import { FileText, LayoutGrid, List, Search, SlidersHorizontal, X } from "lucide-react";
+import Link from "next/link";
+import { FileText, LayoutGrid, List, MessageSquarePlus, Search, SlidersHorizontal, X } from "lucide-react";
 import MaterialGrid from "../components/MaterialGrid";
-import FilterSidebar, { EMPTY_FILTERS } from "./FilterSidebar";
+import FilterSidebar, { EMPTY_FILTERS, activeFilterChips } from "./FilterSidebar";
 import { assignMaterialSlugs } from "../lib/material-slug";
 import { WORKER_URL } from "../lib/worker-url";
 import { normalizeMaterial } from "../lib/material-view";
@@ -21,9 +22,7 @@ export default function MaterialsClient({ initialData = null }) {
   const [hasLoaded, setHasLoaded] = useState(Boolean(initialData));
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  // `filters` is what the list shows; `draft` is what the sidebar is editing.
   const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [draft, setDraft] = useState(EMPTY_FILTERS);
   const [subjects, setSubjects] = useState([]);
   const [selectedSort, setSelectedSort] = useState("newest");
   const [page, setPage] = useState(() => Number(initialData?.pagination?.page) || 1);
@@ -72,8 +71,7 @@ export default function MaterialsClient({ initialData = null }) {
     const sort = params.get("sort") || "newest";
     const q = params.get("q") || "";
     setFilters(initial);
-    setDraft(initial);
-    setSelectedSort(["views", "downloads"].includes(sort) ? sort : "newest");
+    setSelectedSort(["views", "downloads", "helpful"].includes(sort) ? sort : "newest");
     if (q) setSearchTerm(q);
   }, []);
 
@@ -104,7 +102,7 @@ export default function MaterialsClient({ initialData = null }) {
       if (filters.types.length) params.set("type", filters.types.join(","));
       if (filters.levels.length) params.set("niveli", filters.levels.join(","));
       if (filters.subjects.length) params.set("subjects", filters.subjects.join(","));
-      if (selectedSort === "views" || selectedSort === "downloads") {
+      if (["views", "downloads", "helpful"].includes(selectedSort)) {
         params.set("sort", selectedSort);
       }
 
@@ -152,22 +150,19 @@ export default function MaterialsClient({ initialData = null }) {
     window.history.replaceState(null, "", query ? `?${query}` : window.location.pathname);
   };
 
-  const applyFilters = () => {
-    setFilters(draft);
+  // Filters apply as soon as they are picked (the list reloads after a short pause).
+  const updateFilters = (next) => {
+    setFilters(next);
     setPage(1);
-    syncUrl(draft);
-    setFiltersOpen(false);
+    syncUrl(next);
   };
 
-  const clearFilters = () => {
-    setDraft(EMPTY_FILTERS);
-    setFilters(EMPTY_FILTERS);
-    setPage(1);
-    syncUrl(EMPTY_FILTERS);
-  };
+  const clearFilters = () => updateFilters(EMPTY_FILTERS);
 
-  const activeFilterCount =
-    filters.universities.length + filters.levels.length + filters.faculties.length + filters.types.length + filters.subjects.length;
+  const chips = activeFilterChips(filters, subjects);
+  const activeFilterCount = chips.length;
+  const removeChip = (chip) =>
+    updateFilters({ ...filters, [chip.key]: filters[chip.key].filter((value) => value !== chip.value) });
 
   const runSearch = () => {
     setPage(1);
@@ -239,8 +234,8 @@ export default function MaterialsClient({ initialData = null }) {
     <div className="page-shell">
       <div className="section-shell">
         <header className="mb-5 max-w-3xl">
-          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{t("Materialet")}</h1>
-          <p className="page-subtitle mb-3 max-w-2xl !text-base">
+          <h1 className="page-title mb-2 text-3xl! leading-9! md:text-4xl! md:leading-10!">{t("Materialet")}</h1>
+          <p className="page-subtitle mb-3 max-w-2xl text-base! leading-6!">
             {t("Filtroni sipas universitetit, nivelit, fakultetit, llojit ose lëndës.")}
           </p>
           <div className="flex flex-wrap items-center gap-3 text-sm font-semibold text-gray-600">
@@ -303,6 +298,7 @@ export default function MaterialsClient({ initialData = null }) {
             <option value="newest">{t("Më të rejat")}</option>
             <option value="views">{t("Më të shikuarat")}</option>
             <option value="downloads">{t("Më të shkarkuarat")}</option>
+            <option value="helpful">{t("Më të dobishmet")}</option>
           </select>
         </div>
 
@@ -311,10 +307,9 @@ export default function MaterialsClient({ initialData = null }) {
             <div className="surface-card flex max-h-[calc(100vh-7rem)] flex-col p-4">
               <FilterSidebar
                 id="filters-desktop"
-                draft={draft}
-                setDraft={setDraft}
+                filters={filters}
+                onChange={updateFilters}
                 subjects={subjects}
-                onApply={applyFilters}
                 onClear={clearFilters}
               />
             </div>
@@ -342,11 +337,12 @@ export default function MaterialsClient({ initialData = null }) {
                 </div>
                 <FilterSidebar
                   id="filters-mobile"
-                  draft={draft}
-                  setDraft={setDraft}
+                  filters={filters}
+                  onChange={updateFilters}
                   subjects={subjects}
-                  onApply={applyFilters}
                   onClear={clearFilters}
+                  onDone={() => setFiltersOpen(false)}
+                  resultCount={loading ? null : pagination.total}
                 />
               </div>
             </div>
@@ -354,6 +350,34 @@ export default function MaterialsClient({ initialData = null }) {
 
           <div className="min-w-0">
         <div id="material-results" className="scroll-mt-28">
+          {chips.length > 0 && (
+            <ul className="mb-4 flex flex-wrap items-center gap-2" aria-label={t("Filtrat aktivë")}>
+              {chips.map((chip) => (
+                <li key={`${chip.key}:${chip.value}`}>
+                  <button
+                    type="button"
+                    onClick={() => removeChip(chip)}
+                    aria-label={t("Hiq {label}", { label: t(chip.label) })}
+                    className="inline-flex min-h-[36px] items-center gap-1.5 rounded-full bg-burgundy-50 px-3 py-1 text-sm font-semibold text-burgundy-600 hover:bg-burgundy-600 hover:text-white"
+                  >
+                    {t(chip.label)}
+                    <X className="h-3.5 w-3.5" aria-hidden />
+                  </button>
+                </li>
+              ))}
+              {chips.length > 1 && (
+                <li>
+                  <button
+                    type="button"
+                    onClick={clearFilters}
+                    className="min-h-[36px] px-2 text-sm font-semibold text-gray-600 underline-offset-4 hover:text-navy-900 hover:underline"
+                  >
+                    {t("Pastro të gjitha")}
+                  </button>
+                </li>
+              )}
+            </ul>
+          )}
           <p className="sr-only" role="status" aria-live="polite">
             {loading ? t("Duke përditësuar rezultatet…") : t("{n} materiale u gjetën.", { n: pagination.total })}
           </p>
@@ -376,6 +400,20 @@ export default function MaterialsClient({ initialData = null }) {
               <p className="text-gray-600">
                 {t("Provoni të ndryshoni kriteret e kërkimit.")}
               </p>
+              {searchTerm.trim() && !loading && (
+                <div className="mt-6 border-t border-gray-200 pt-6">
+                  <p className="text-gray-700">
+                    {t("Nuk e gjetët “{q}”? Kërkojeni — dikush mund ta ketë dhe ta ngarkojë.", { q: searchTerm.trim() })}
+                  </p>
+                  <Link
+                    href={`/kerkesat?kerko=${encodeURIComponent(searchTerm.trim())}`}
+                    className="btn-primary mt-4 inline-flex min-h-[44px] items-center gap-2 px-5 py-2"
+                  >
+                    <MessageSquarePlus className="h-4 w-4" aria-hidden />
+                    {t("Kërkojeni")}
+                  </Link>
+                </div>
+              )}
             </div>
           ) : (
             <MaterialGrid materials={filteredMaterials} view={view} columns="sm:grid-cols-2 2xl:grid-cols-3" />

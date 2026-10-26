@@ -19,6 +19,8 @@ import {
 } from "../../lib/directory";
 import { useCompare } from "../../components/CompareProvider";
 import { matchesSearch } from "../../lib/search-text";
+import ContributeCallout from "../../components/ContributeCallout";
+import { isKnownUniversity } from "../../lib/placement";
 
 const LEVEL_TONE = {
   bachelor: "bg-teal-100 text-teal-900",
@@ -176,7 +178,7 @@ export default function UniversityClient({ slug }) {
         </nav>
 
         <header className="mb-6">
-          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{name}</h1>
+          <h1 className="page-title mb-2 text-3xl! leading-9! md:text-4xl! md:leading-10!">{name}</h1>
           <p className="flex flex-wrap items-center gap-x-4 gap-y-1 text-gray-600">
             <span>{t(sectorLabel(university.sector))}</span>
             <span className="inline-flex items-center gap-1">
@@ -186,6 +188,8 @@ export default function UniversityClient({ slug }) {
             <span>{t("{n} programe të akredituara", { n: university.programmeCount })}</span>
           </p>
         </header>
+
+        {isKnownUniversity(slug) && <ContributeCallout name={name} university={slug} />}
 
         <div className="mb-6 flex flex-col gap-2 sm:flex-row">
           <div className="relative min-w-0 flex-1">

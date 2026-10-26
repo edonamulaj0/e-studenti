@@ -17,7 +17,7 @@ official university service.
                                           └─ Resend   sign-in codes and notifications by email
 ```
 
-- **Website** (`app/`): Next.js 15, React 18, Tailwind CSS, plain JavaScript. It is
+- **Website** (`app/`): Next.js 16, React 19, Tailwind CSS 4, plain JavaScript. It is
   built as a static export (`output: "export"`), so it cannot contain API routes
   or server-only code. Everything dynamic is a call to the Worker.
 - **Worker** (`cloudflare-worker/`): one entry point (`src/index.js`) that routes
@@ -78,11 +78,27 @@ Safari does not store `Secure` cookies on `http://localhost`; use Chrome or Fire
 | `npm test` | The Worker's test suite (Vitest), including shared and browser-side logic |
 | `npm run check` | Lint, typecheck and tests — what CI runs |
 | `npm run build` | Sitemap, static export into `out/`, then a scan for leaked secrets |
+| `npm run test:e2e` | Browser smoke tests against a build served by `scripts/serve-static.mjs` (see `tests/e2e/smoke.test.mjs`) |
 
 `npm run build` reads the catalogue from the API (`NEXT_PUBLIC_WORKER_URL`,
 default production) to create one page per material. It stops with an error if
 the API cannot be read, so a broken deploy never replaces a working site. To
 build with no network, use the stub as above.
+
+### Updating the Erasmus page
+
+The Erasmus+ page lists calls from uni-pr.edu, kept in
+`app/data/erasmus-calls.json`. The university's site asks every visitor to pass
+a Cloudflare check, so this cannot run on a schedule; update it by hand:
+
+```bash
+npx playwright install chromium   # once
+npm run sync-erasmus              # a browser opens; complete the check if one appears
+git add app/data/erasmus-calls.json && git commit -m "Sync Erasmus calls"
+```
+
+The script exits with an error, and leaves the file alone, if it could not
+read the list.
 
 ## Project layout
 

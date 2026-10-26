@@ -84,7 +84,7 @@ export default function Navbar() {
           : "bg-surface text-burgundy-600 shadow-sm"
         : mobile
           ? "text-navy-900 hover:bg-navy-100"
-          : "text-navy-900/72 hover:bg-surface/80 hover:text-navy-900",
+          : "hover:bg-surface/80 hover:text-navy-900",
     ].join(" ");
 
   return (
@@ -92,12 +92,12 @@ export default function Navbar() {
       aria-label={t("Kryesore")}
       className={`sticky top-0 z-50 w-full border-b transition-all duration-300 ${
         isScrolled
-          ? "border-gray-200/80 bg-cream-50/88 shadow-sm backdrop-blur-xl"
+          ? "border-gray-200/80 shadow-sm backdrop-blur-xl"
           : "border-transparent bg-cream-50/70 backdrop-blur-md"
       }`}
     >
       <div className="px-6 md:px-12">
-        <div className="relative mx-auto flex h-[4.25rem] max-w-7xl items-center justify-between md:h-20">
+        <div className="relative mx-auto flex h-17 max-w-7xl items-center justify-between md:h-20">
           <Link
             href="/"
             className="flex items-center gap-3 leading-tight text-navy-900 transition-colors"
@@ -159,7 +159,7 @@ export default function Navbar() {
           {/* mobile menu hamburger */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="absolute right-0 top-1/2 z-[80] -translate-y-1/2 rounded-xl p-2.5 text-navy-900 transition-colors hover:bg-surface focus:outline-none focus:ring-4 focus:ring-burgundy-600/15 xl:hidden"
+            className="absolute right-0 top-1/2 z-80 -translate-y-1/2 rounded-xl p-2.5 text-navy-900 transition-colors hover:bg-surface focus:outline-hidden focus:ring-4 focus:ring-burgundy-600/15 xl:hidden"
             aria-label={isOpen ? t("Mbyll menunë") : t("Hap menunë")}
             aria-expanded={isOpen}
             aria-controls="mobile-navigation"
@@ -172,7 +172,7 @@ export default function Navbar() {
         <div
           id="mobile-navigation"
           ref={menuRef}
-          className="fixed inset-0 z-[70] flex h-dvh items-end bg-ink/30 px-4 pb-4 backdrop-blur-sm xl:hidden"
+          className="fixed inset-0 z-70 flex h-dvh items-end bg-ink/30 px-4 pb-4 backdrop-blur-xs xl:hidden"
         >
           <div
             role="dialog"

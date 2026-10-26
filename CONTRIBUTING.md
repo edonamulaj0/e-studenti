@@ -39,7 +39,7 @@ npm run build     # for changes to the website; use `npm run stub-api` if offlin
 
 - JavaScript with JSDoc types where it clarifies a contract. `npm run typecheck`
   covers `app/lib`, `shared` and the Worker; new modules there should typecheck.
-- Prefer the existing Tailwind tokens (see `tailwind.config.js` and
+- Prefer the existing Tailwind tokens (see the `@theme` block in `app/globals.css` and
   [docs/ACCESSIBILITY.md](docs/ACCESSIBILITY.md)). Text colours must meet 4.5:1
   contrast; use `text-gray-500` or darker, and the `*-text` status colours.
 - Put browser-only APIs (`localStorage`, `window`) inside effects or event handlers.

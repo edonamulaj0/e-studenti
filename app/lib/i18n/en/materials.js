@@ -1,4 +1,9 @@
 const materials = {
+  "Shpërndaje": "Share",
+  "Shpërndaje në Viber": "Share on Viber",
+  "Shpërndaje në WhatsApp": "Share on WhatsApp",
+  "Nuk e gjetët “{q}”? Kërkojeni — dikush mund ta ketë dhe ta ngarkojë.": "Didn't find “{q}”? Request it. Someone may have it and upload it.",
+  "Kërkojeni": "Request it",
   // Filters
   "Filtrat": "Filters",
   "Universiteti": "University",
@@ -176,5 +181,14 @@ const materials = {
   "Ngarkuar": "Uploaded",
   "Rruga": "Breadcrumb",
   "Diçka nuk është në rregull me këtë skedar?": "Something wrong with this file?",
+  "Ju ndihmoi ky material?": "Did this material help you?",
+  "Po, më ndihmoi": "Yes, it helped",
+  "Jo, nuk më ndihmoi": "No, it did not help",
+  "Vota nuk u ruajt.": "Your vote was not saved.",
+  "Vota nuk është e vlefshme.": "The vote is not valid.",
+  "Më të dobishmet": "Most useful",
+  "Filtrat aktivë": "Active filters",
+  "Pastro të gjitha": "Clear all",
+  "Shiko {n} materiale": "Show {n} materials",
 };
 export default materials;

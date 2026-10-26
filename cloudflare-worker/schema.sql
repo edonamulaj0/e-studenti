@@ -48,6 +48,8 @@ CREATE TABLE IF NOT EXISTS materials (
   study_level TEXT NOT NULL DEFAULT 'bachelor',
   view_count INTEGER NOT NULL DEFAULT 0,
   download_count INTEGER NOT NULL DEFAULT 0,
+  helpful_count INTEGER NOT NULL DEFAULT 0,
+  unhelpful_count INTEGER NOT NULL DEFAULT 0,
   status TEXT NOT NULL DEFAULT 'approved',
   rejection_reason TEXT,
   reviewed_at TEXT,
@@ -69,6 +71,7 @@ CREATE INDEX IF NOT EXISTS idx_materials_status_created ON materials(status, cre
 CREATE INDEX IF NOT EXISTS idx_materials_user_status ON materials(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_materials_faculty ON materials(faculty);
 CREATE INDEX IF NOT EXISTS idx_materials_university ON materials(university);
+CREATE INDEX IF NOT EXISTS idx_materials_helpful ON materials(status, helpful_count DESC);
 
 CREATE TABLE IF NOT EXISTS material_stat_events (
   dedupe_key TEXT PRIMARY KEY,
@@ -199,4 +202,40 @@ CREATE TABLE IF NOT EXISTS webauthn_challenges (
   user_id INTEGER NOT NULL,
   purpose TEXT NOT NULL,                   -- register | login
   expires_at INTEGER NOT NULL              -- unix seconds
+);
+
+-- Searches that found nothing, counted by their folded text (lowercase, no
+-- accents). Only the words are kept: no address, account or time of each
+-- search. The moderator sees the most frequent ones as missing content.
+CREATE TABLE IF NOT EXISTS search_misses (
+  query TEXT PRIMARY KEY,
+  count INTEGER NOT NULL DEFAULT 1,
+  first_seen TEXT DEFAULT (datetime('now')),
+  last_seen TEXT DEFAULT (datetime('now')),
+  dismissed INTEGER NOT NULL DEFAULT 0
+);
+CREATE INDEX IF NOT EXISTS idx_search_misses_count ON search_misses(dismissed, count DESC);
+
+-- "Was this useful?" votes on materials. One vote per person per material:
+-- signed-in people by account, others by a salted hash of their address,
+-- the same keys reports use. The totals are kept on the material so the
+-- catalog can sort by them without counting on every request.
+CREATE TABLE IF NOT EXISTS material_votes (
+  material_id INTEGER NOT NULL REFERENCES materials(id) ON DELETE CASCADE,
+  voter_key TEXT NOT NULL,
+  helpful INTEGER NOT NULL,                -- 1 useful, 0 not useful
+  created_at TEXT DEFAULT (datetime('now')),
+  PRIMARY KEY (material_id, voter_key)
+);
+
+-- Unhandled Worker errors, counted per hour, and when ops alerts last went out.
+CREATE TABLE IF NOT EXISTS worker_errors (
+  hour TEXT PRIMARY KEY,                   -- YYYY-MM-DDTHH, UTC
+  count INTEGER NOT NULL DEFAULT 0,
+  last_action TEXT,
+  last_message TEXT
+);
+CREATE TABLE IF NOT EXISTS ops_alerts (
+  name TEXT PRIMARY KEY,
+  sent_at TEXT NOT NULL
 );

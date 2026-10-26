@@ -1,6 +1,202 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+@custom-variant dark (&:is([data-theme="dark"] *));
+
+@theme {
+  --color-ink: rgb(var(--ink-rgb));
+  --color-ink-soft: rgb(var(--ink-soft-rgb));
+
+  --color-surface: rgb(var(--surface-rgb));
+
+  --color-gray-50: rgb(var(--g50-rgb));
+  --color-gray-100: rgb(var(--g100-rgb));
+  --color-gray-200: rgb(var(--g200-rgb));
+  --color-gray-300: rgb(var(--g300-rgb));
+  --color-gray-400: rgb(var(--g400-rgb));
+  --color-gray-500: rgb(var(--g500-rgb));
+  --color-gray-600: rgb(var(--g600-rgb));
+  --color-gray-700: rgb(var(--g700-rgb));
+
+  --color-navy-100: rgb(var(--navy-100-rgb));
+  --color-navy-700: rgb(var(--navy-700-rgb));
+  --color-navy-800: rgb(var(--navy-800-rgb));
+  --color-navy-900: rgb(var(--navy-900-rgb));
+
+  --color-burgundy-50: rgb(var(--burgundy-50-rgb));
+  --color-burgundy-500: rgb(var(--burgundy-500-rgb));
+  --color-burgundy-600: rgb(var(--burgundy-600-rgb));
+  --color-burgundy-700: #5e1621;
+
+  --color-cream-50: rgb(var(--cream-50-rgb));
+
+  --color-beige-100: rgb(var(--beige-100-rgb));
+
+  --color-success-green: rgb(var(--success-green-rgb));
+  --color-warning-amber: rgb(var(--warning-amber-rgb));
+  --color-info-blue: rgb(var(--info-blue-rgb));
+  --color-success-text: rgb(var(--success-text-rgb));
+  --color-warning-text: rgb(var(--warning-text-rgb));
+  --color-info-text: rgb(var(--info-text-rgb));
+
+  --color-srh-crimson: rgb(var(--burgundy-600-rgb));
+  --color-srh-navy: rgb(var(--navy-900-rgb));
+  --color-srh-sage: rgb(var(--success-green-rgb));
+  --color-srh-cream: rgb(var(--gray-200-rgb));
+  --color-srh-blush: rgb(var(--burgundy-50-rgb));
+  --color-srh-paper: rgb(var(--cream-50-rgb));
+  --color-srh-white: #ffffff;
+
+  --font-display: var(--font-display), Georgia, serif;
+  --font-playfair: var(--font-display), Georgia, serif;
+  --font-montserrat: var(--font-sans), sans-serif;
+  --font-inter: var(--font-sans), sans-serif;
+
+  /* Tailwind 3's line heights: absolute lengths, so a child with another font
+     size inherits the same line box, as it did before the v4 upgrade (v4's
+     defaults are ratios, which scale with the child's font size). */
+  --text-xs--line-height: 1rem;
+  --text-sm--line-height: 1.25rem;
+  --text-base--line-height: 1.5rem;
+  --text-lg--line-height: 1.75rem;
+  --text-xl--line-height: 1.75rem;
+  --text-2xl--line-height: 2rem;
+  --text-3xl--line-height: 2.25rem;
+  --text-4xl--line-height: 2.5rem;
+
+  /* --font-display and the shadows below name themselves: the real values
+     are set on :root in the base layer further down (light and dark), which
+     comes after this theme layer and so wins. The entries here only make
+     Tailwind generate the font-display / shadow-* utilities. */
+  --shadow-sm: var(--shadow-sm);
+  --shadow: var(--shadow-base);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
+  --shadow-xl: var(--shadow-xl);
+  --shadow-burgundy: var(--shadow-burgundy);
+}
+
+/*
+  The default border color has changed to `currentcolor` in Tailwind CSS v4,
+  so we've added these compatibility styles to make sure everything still
+  looks the same as it did with Tailwind CSS v3.
+
+  If we ever want to remove these styles, we need to add an explicit border
+  color utility to any element that depends on these defaults.
+*/
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  /* Tailwind 3's preflight, which v4 dropped: buttons show a pointer, and
+     placeholders are a fixed light grey instead of a tint of the text colour. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  input::placeholder,
+  textarea::placeholder {
+    opacity: 1;
+    color: var(--color-gray-400);
+  }
+}
+
+@utility input-srh {
+  @apply w-full min-h-[48px] rounded-xl border border-gray-200 bg-surface/90 px-4 text-base text-navy-900 outline-hidden transition-all placeholder:text-gray-500 focus:border-burgundy-600 focus:ring-4 focus:ring-burgundy-600/15;
+}
+
+@utility page-shell {
+  @apply bg-cream-50 px-6 py-14 md:px-12 md:py-20;
+}
+
+@utility viewport-section {
+  min-height: calc(100dvh - 4.25rem);
+  @apply flex items-center px-6 py-16 md:px-12;
+
+  @media (min-width: 768px) {
+    min-height: calc(100dvh - 5rem);
+  }
+
+  @media (min-width: 1024px) {
+    min-height: calc(100dvh - 5rem);
+  }
+}
+
+@utility viewport-section-start {
+  min-height: calc(100dvh - 4.25rem);
+  @apply px-6 py-16 md:px-12;
+
+  @media (min-width: 768px) {
+    min-height: calc(100dvh - 5rem);
+  }
+
+  @media (min-width: 1024px) {
+    min-height: calc(100dvh - 5rem);
+  }
+}
+
+@utility viewport-panel {
+  min-height: 78dvh;
+
+  @media (min-width: 768px) {
+    min-height: 72dvh;
+  }
+
+  @media (min-width: 1024px) {
+    min-height: 68dvh;
+  }
+}
+
+@utility section-shell {
+  @apply mx-auto w-full max-w-7xl;
+}
+
+@utility page-kicker {
+  @apply inline-flex items-center gap-2 rounded-full border border-burgundy-600/10 bg-burgundy-50 px-4 py-2 text-sm font-semibold text-burgundy-600;
+}
+
+@utility page-title {
+  @apply font-display text-4xl font-bold leading-tight tracking-tight text-navy-900 md:text-5xl lg:text-6xl md:leading-none lg:leading-none;
+}
+
+@utility page-subtitle {
+  @apply text-base leading-relaxed text-gray-600 md:text-lg md:leading-7;
+}
+
+@utility surface-card {
+  @apply rounded-3xl border border-gray-200/80 bg-surface/90 shadow-sm backdrop-blur-sm transition-all duration-300;
+}
+
+@utility btn {
+  @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 ease-out focus:outline-hidden focus:ring-4 disabled:pointer-events-none disabled:opacity-60;
+}
+
+@utility btn-primary {
+  @apply btn bg-burgundy-600 text-white hover:-translate-y-0.5 hover:bg-burgundy-500 hover:shadow-burgundy focus:ring-burgundy-600/25;
+}
+
+@utility btn-secondary {
+  @apply btn bg-ink text-white hover:-translate-y-0.5 hover:bg-ink-soft hover:shadow-md focus:ring-navy-900/20;
+}
+
+@utility btn-outline {
+  @apply btn border border-gray-200 bg-surface/80 text-navy-900 hover:-translate-y-0.5 hover:border-burgundy-600 hover:text-burgundy-600 hover:shadow-sm focus:ring-burgundy-600/15;
+}
+
+@utility btn-viber {
+  @apply btn bg-[#7360f2] text-white hover:-translate-y-0.5 hover:bg-[#6250d6] hover:shadow-md focus:ring-[#7360f2]/30;
+}
+
+@utility soft-grid {
+  background-image:
+    linear-gradient(var(--grid-line) 1px, transparent 1px),
+    linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
 
 @layer base {
   :root {
@@ -129,118 +325,27 @@
   }
 }
 
-/* Honour the OS "reduce motion" setting: no smooth scrolling, no hover lifts,
+@layer utilities {
+  /* Honour the OS "reduce motion" setting: no smooth scrolling, no hover lifts,
    no looping pulses. Essential state changes still happen, just instantly. */
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto !important;
-  }
-
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
-  }
-
-  .hover\:-translate-y-0\.5:hover,
-  .hover\:-translate-y-1:hover {
-    transform: none !important;
-  }
-}
-
-@layer components {
-  .input-srh {
-    @apply w-full min-h-[48px] rounded-xl border border-gray-200 bg-surface/90 px-4 text-base text-navy-900 outline-none transition-all placeholder:text-gray-500 focus:border-burgundy-600 focus:ring-4 focus:ring-burgundy-600/15;
-  }
-
-  .page-shell {
-    @apply bg-cream-50 px-6 py-14 md:px-12 md:py-20;
-  }
-
-  .viewport-section {
-    min-height: calc(100dvh - 4.25rem);
-    @apply flex items-center px-6 py-16 md:px-12;
-  }
-
-  .viewport-section-start {
-    min-height: calc(100dvh - 4.25rem);
-    @apply px-6 py-16 md:px-12;
-  }
-
-  .viewport-panel {
-    min-height: 78dvh;
-  }
-
-  @media (min-width: 768px) {
-    .viewport-section,
-    .viewport-section-start {
-      min-height: calc(100dvh - 5rem);
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto !important;
     }
 
-    .viewport-panel {
-      min-height: 72dvh;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .viewport-section,
-    .viewport-section-start {
-      min-height: calc(100dvh - 5rem);
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
     }
 
-    .viewport-panel {
-      min-height: 68dvh;
+    .hover\:-translate-y-0\.5:hover,
+    .hover\:-translate-y-1:hover {
+      transform: none !important;
     }
-  }
-
-  .section-shell {
-    @apply mx-auto w-full max-w-7xl;
-  }
-
-  .page-kicker {
-    @apply inline-flex items-center gap-2 rounded-full border border-burgundy-600/10 bg-burgundy-50 px-4 py-2 text-sm font-semibold text-burgundy-600;
-  }
-
-  .page-title {
-    @apply font-display text-4xl font-bold leading-tight tracking-tight text-navy-900 md:text-5xl lg:text-6xl;
-  }
-
-  .page-subtitle {
-    @apply text-base leading-relaxed text-gray-600 md:text-lg;
-  }
-
-  .surface-card {
-    @apply rounded-3xl border border-gray-200/80 bg-surface/90 shadow-sm backdrop-blur transition-all duration-300;
-  }
-
-  .btn {
-    @apply inline-flex min-h-[48px] items-center justify-center gap-2 rounded-xl px-5 py-3 text-sm font-semibold transition-all duration-200 ease-out focus:outline-none focus:ring-4 disabled:pointer-events-none disabled:opacity-60;
-  }
-
-  .btn-primary {
-    @apply btn bg-burgundy-600 text-white hover:-translate-y-0.5 hover:bg-burgundy-500 hover:shadow-burgundy focus:ring-burgundy-600/25;
-  }
-
-  .btn-secondary {
-    @apply btn bg-ink text-white hover:-translate-y-0.5 hover:bg-ink-soft hover:shadow-md focus:ring-navy-900/20;
-  }
-
-  .btn-outline {
-    @apply btn border border-gray-200 bg-surface/80 text-navy-900 hover:-translate-y-0.5 hover:border-burgundy-600 hover:text-burgundy-600 hover:shadow-sm focus:ring-burgundy-600/15;
-  }
-
-  .btn-viber {
-    @apply btn bg-[#7360f2] text-white hover:-translate-y-0.5 hover:bg-[#6250d6] hover:shadow-md focus:ring-[#7360f2]/30;
-  }
-
-  .soft-grid {
-    background-image:
-      linear-gradient(var(--grid-line) 1px, transparent 1px),
-      linear-gradient(90deg, var(--grid-line) 1px, transparent 1px);
-    background-size: 32px 32px;
   }
 }
 

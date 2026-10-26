@@ -6,8 +6,25 @@ import { formatFileSize } from "../lib/file-preview";
 import { WORKER_URL } from "../lib/worker-url";
 import { useT } from "./Preferences";
 
-/** Inline, read-only listing of a ZIP's files (folders shown as headings), loaded through the proxy. */
-export default function ArchiveContents({ url, onCount }) {
+/** Files in a ZIP or RAR archive, without unpacking them. */
+async function listArchive(buffer, fileType) {
+  if (String(fileType || "").toLowerCase() === "rar") {
+    const { listRarEntries } = await import("../lib/rar-listing");
+    return listRarEntries(new Uint8Array(buffer))
+      .filter((entry) => !entry.dir)
+      .map((entry) => ({ path: entry.path, size: entry.size || 0 }));
+  }
+  const { default: JSZip } = await import("jszip");
+  const zip = await JSZip.loadAsync(buffer);
+  const files = [];
+  zip.forEach((path, entry) => {
+    if (!entry.dir) files.push({ path, size: entry._data?.uncompressedSize || 0 });
+  });
+  return files;
+}
+
+/** Inline, read-only listing of a ZIP's or RAR's files (folders shown as headings), loaded through the proxy. */
+export default function ArchiveContents({ url, fileType = "zip", onCount }) {
   const t = useT();
   const [state, setState] = useState({ status: "loading", rows: [] });
 
@@ -17,12 +34,7 @@ export default function ArchiveContents({ url, onCount }) {
       try {
         const res = await fetch(`${WORKER_URL}/?action=proxy&url=${encodeURIComponent(url)}`, { cache: "no-cache" });
         if (!res.ok) throw new Error(`fetch ${res.status}`);
-        const { default: JSZip } = await import("jszip");
-        const zip = await JSZip.loadAsync(await res.arrayBuffer());
-        const files = [];
-        zip.forEach((path, entry) => {
-          if (!entry.dir) files.push({ path, size: entry._data?.uncompressedSize || 0 });
-        });
+        const files = await listArchive(await res.arrayBuffer(), fileType);
         files.sort((a, b) => a.path.localeCompare(b.path));
         if (cancelled) return;
         // Folder headings are inserted whenever the directory changes.
@@ -44,7 +56,7 @@ export default function ArchiveContents({ url, onCount }) {
     return () => {
       cancelled = true;
     };
-  }, [url, onCount]);
+  }, [url, fileType, onCount]);
 
   if (state.status === "loading") {
     return (
@@ -63,7 +75,7 @@ export default function ArchiveContents({ url, onCount }) {
     );
   }
   return (
-    <ul className="max-h-[32rem] divide-y divide-gray-100 overflow-y-auto text-sm">
+    <ul className="max-h-128 divide-y divide-gray-100 overflow-y-auto text-sm">
       {state.rows.map((row, i) => (
         <li
           key={i}

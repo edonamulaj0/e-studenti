@@ -1,5 +1,6 @@
 import {
   buildPublicSearchClause,
+  foldSearchText,
   materialMatchesPublic,
   materialToPublicLegacyEntry,
   sanitizeMaterialForPublic,
@@ -116,6 +117,8 @@ const RATE_LIMITS = {
   follow_subject: { requests: 60, window: 3600 },
   unsubscribe_digest: { requests: 20, window: 3600 },
   passkey_login: { requests: 30, window: 900 },
+  search_miss: { requests: 20, window: 3600 },
+  rate_material: { requests: 60, window: 3600 },
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
   // Only counted on a cache miss (see handleProxy), so this bounds *cold*
@@ -534,6 +537,13 @@ function materialSortBy(sort) {
   if (sort === "downloads") {
     return (a, b) =>
       Number(b.download_count || 0) - Number(a.download_count || 0) ||
+      String(b.created_at || "").localeCompare(String(a.created_at || ""));
+  }
+  if (sort === "helpful") {
+    const score = (m) => Number(m.helpful_count || 0) - Number(m.unhelpful_count || 0);
+    return (a, b) =>
+      score(b) - score(a) ||
+      Number(b.helpful_count || 0) - Number(a.helpful_count || 0) ||
       String(b.created_at || "").localeCompare(String(a.created_at || ""));
   }
   return materialSort;
@@ -1873,6 +1883,106 @@ async function handleReport(request, env, ctx) {
   return jsonResponse({ success: true });
 }
 
+/** One vote per person: account for the signed-in, salted address hash otherwise (as reports). */
+async function voterKey(request, env) {
+  const user = await getUserFromRequest(request, env);
+  return user
+    ? `u:${user.id}`
+    : `a:${await hashVisitorIdentity(visitorClientIp(request), "", env.HASH_SECRET || env.JWT_SECRET)}`;
+}
+
+/**
+ * "Was this useful?" for one material: the totals and the visitor's own vote
+ * (true, false or null), so the buttons show what they chose.
+ */
+async function handleMaterialRating(request, url, env) {
+  const materialId = Number(url.searchParams.get("material_id"));
+  if (!Number.isInteger(materialId) || materialId <= 0) {
+    return jsonResponse({ error: "ID i materialit nuk është i vlefshëm." }, 400);
+  }
+  const [material, mine] = await Promise.all([
+    env.DB.prepare("SELECT helpful_count, unhelpful_count FROM materials WHERE id = ? AND status = 'approved'")
+      .bind(materialId)
+      .first(),
+    voterKey(request, env).then((key) =>
+      env.DB.prepare("SELECT helpful FROM material_votes WHERE material_id = ? AND voter_key = ?")
+        .bind(materialId, key)
+        .first()
+    ),
+  ]);
+  if (!material) return jsonResponse({ error: "Materiali nuk ekziston." }, 404);
+  return jsonResponse({
+    helpful: Number(material.helpful_count || 0),
+    unhelpful: Number(material.unhelpful_count || 0),
+    mine: mine ? Boolean(mine.helpful) : null,
+  });
+}
+
+/** Casts, changes (helpful: true/false) or withdraws (helpful: null) a vote. */
+async function handleRateMaterial(request, env) {
+  const limited = await checkRateLimit(request, "rate_material", env);
+  if (limited) return limited;
+  const body = await request.json().catch(() => ({}));
+  const materialId = Number(body.material_id);
+  if (!Number.isInteger(materialId) || materialId <= 0) {
+    return jsonResponse({ error: "ID i materialit nuk është i vlefshëm." }, 400);
+  }
+  if (![true, false, null].includes(body.helpful)) {
+    return jsonResponse({ error: "Vota nuk është e vlefshme." }, 400);
+  }
+  const material = await env.DB.prepare("SELECT id FROM materials WHERE id = ? AND status = 'approved'")
+    .bind(materialId)
+    .first();
+  if (!material) return jsonResponse({ error: "Materiali nuk ekziston." }, 404);
+
+  const key = await voterKey(request, env);
+  const vote =
+    body.helpful === null
+      ? env.DB.prepare("DELETE FROM material_votes WHERE material_id = ? AND voter_key = ?").bind(materialId, key)
+      : env.DB.prepare(
+          `INSERT INTO material_votes (material_id, voter_key, helpful) VALUES (?, ?, ?)
+           ON CONFLICT(material_id, voter_key) DO UPDATE SET helpful = excluded.helpful`
+        ).bind(materialId, key, body.helpful ? 1 : 0);
+  // Recounted rather than incremented, so a repeated or changed vote can never
+  // drift the totals.
+  const recount = env.DB.prepare(
+    `UPDATE materials SET
+       helpful_count = (SELECT COUNT(*) FROM material_votes WHERE material_id = ?1 AND helpful = 1),
+       unhelpful_count = (SELECT COUNT(*) FROM material_votes WHERE material_id = ?1 AND helpful = 0)
+     WHERE id = ?1`
+  ).bind(materialId);
+  await env.DB.batch([vote, recount]);
+  const row =
+    (await env.DB.prepare("SELECT helpful_count, unhelpful_count FROM materials WHERE id = ?").bind(materialId).first()) || {};
+  return jsonResponse({
+    helpful: Number(row.helpful_count || 0),
+    unhelpful: Number(row.unhelpful_count || 0),
+    mine: body.helpful,
+  });
+}
+
+/** Votes "not useful" from this many people, outnumbering "useful", put a file before the moderator. */
+const LOW_RATED_MIN_VOTES = 3;
+
+/** Moderator: materials students found unhelpful, worst first. */
+async function handleLowRated(request, env) {
+  const user = await getUserFromRequest(request, env);
+  if (!userIsModerator(user)) return jsonResponse({ error: "Nuk keni leje." }, 403);
+  const { results } = await env.DB.prepare(
+    `SELECT id, title, faculty, subject, type, helpful_count, unhelpful_count
+     FROM materials
+     WHERE status = 'approved' AND unhelpful_count >= ? AND unhelpful_count > helpful_count
+     ORDER BY unhelpful_count - helpful_count DESC, unhelpful_count DESC
+     LIMIT 50`
+  )
+    .bind(LOW_RATED_MIN_VOTES)
+    .all();
+  const slugIndex = await loadSlugIndexCached(env);
+  return jsonResponse({
+    materials: (results || []).map((row) => ({ ...row, slug: slugIndex.byId.get(row.id) || null })),
+  });
+}
+
 /** Distinct people with an open report against a material needed to flag it. */
 const REPORT_ALERT_THRESHOLD = 3;
 /** Fewest hours between reminders about a file that is still flagged. */
@@ -1989,6 +2099,68 @@ async function notifyIfFlagged(env, materialId) {
  * Hourly: send any alert that failed earlier, and at most one reminder a day
  * listing files that are still published with 3+ open reports.
  */
+/** Unhandled errors within the last two clock hours that make the hourly job email. */
+const ERROR_ALERT_THRESHOLD = 10;
+/** Fewest hours between two error alerts, so a long outage is one email, not one per hour. */
+const ERROR_ALERT_EVERY_HOURS = 6;
+
+const utcHour = (date) => date.toISOString().slice(0, 13);
+
+/** Counts an unhandled error. Never throws: the database may be what failed. */
+async function recordWorkerError(env, action, error) {
+  try {
+    await env.DB.prepare(
+      `INSERT INTO worker_errors (hour, count, last_action, last_message) VALUES (?, 1, ?, ?)
+       ON CONFLICT(hour) DO UPDATE SET count = count + 1, last_action = excluded.last_action,
+         last_message = excluded.last_message`
+    )
+      .bind(utcHour(new Date()), String(action).slice(0, 60), String(error?.message || error).slice(0, 300))
+      .run();
+  } catch (failure) {
+    console.error("could not record error", failure);
+  }
+}
+
+/** Hourly: emails the moderator when unhandled errors spike, at most once per window. */
+export async function sendErrorAlert(env, now = new Date()) {
+  if (!env.DB) return { sent: false };
+  try {
+    const hours = [utcHour(new Date(now.getTime() - 3600_000)), utcHour(now)];
+    const { results } = await env.DB.prepare(
+      "SELECT hour, count, last_action, last_message FROM worker_errors WHERE hour IN (?, ?) ORDER BY hour"
+    )
+      .bind(...hours)
+      .all();
+    const total = (results || []).reduce((sum, row) => sum + Number(row.count || 0), 0);
+    if (total < ERROR_ALERT_THRESHOLD) return { sent: false };
+
+    const last = await env.DB.prepare("SELECT sent_at FROM ops_alerts WHERE name = 'errors'").first();
+    if (last && now.getTime() - Date.parse(last.sent_at) < ERROR_ALERT_EVERY_HOURS * 3600_000) {
+      return { sent: false };
+    }
+    const latest = results[results.length - 1];
+    const ok = await sendEmail(
+      MODERATOR_EMAIL,
+      `[E-Studenti] ${total} gabime të API-së në dy orët e fundit`,
+      `<p>API ka kthyer ${total} gabime të brendshme (500) në dy orët e fundit.</p>
+       <p>I fundit: <strong>${escapeHtml(latest.last_action)}</strong> — ${escapeHtml(latest.last_message)}</p>
+       <p>Detajet janë te Cloudflare → Workers → r2-catalog-manager → Logs.</p>`,
+      env
+    );
+    if (!ok) return { sent: false };
+    await env.DB.prepare(
+      `INSERT INTO ops_alerts (name, sent_at) VALUES ('errors', ?)
+       ON CONFLICT(name) DO UPDATE SET sent_at = excluded.sent_at`
+    )
+      .bind(now.toISOString())
+      .run();
+    return { sent: true };
+  } catch (error) {
+    console.error("error alert failed", error);
+    return { sent: false };
+  }
+}
+
 export async function sendReportAlerts(env, now = new Date()) {
   if (!env.DB) return { sent: 0 };
   let flagged;
@@ -2171,6 +2343,61 @@ function listParam(url, name, max = 20) {
     .slice(0, max);
 }
 
+/** Bound parameters a bare text search adds; anything beyond that means filters are set too. */
+function baseParamsForSearchOnly(q) {
+  return buildPublicSearchClause(q).params.length;
+}
+
+const MAX_SEARCH_MISSES_SHOWN = 50;
+
+/**
+ * Counts a search that found nothing, so the moderator can see what students
+ * look for and do not find. Only the folded words are stored, and each address
+ * adds at most a few an hour, so the list cannot be flooded from one place.
+ */
+async function recordSearchMiss(request, env, q) {
+  const query = foldSearchText(q).replace(/\s+/g, " ").trim().slice(0, 100);
+  if (query.length < 2) return;
+  try {
+    const limited = await checkRateLimit(request, "search_miss", env);
+    if (limited) return;
+    await env.DB.prepare(
+      `INSERT INTO search_misses (query) VALUES (?)
+       ON CONFLICT(query) DO UPDATE SET count = count + 1, last_seen = datetime('now')`
+    )
+      .bind(query)
+      .run();
+  } catch (error) {
+    console.error("recording a search miss failed", error);
+  }
+}
+
+/** Moderator: the most frequent searches with no results in the last 90 days. */
+async function handleSearchMisses(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
+  const rows = await env.DB.prepare(
+    `SELECT query, count, first_seen, last_seen FROM search_misses
+     WHERE dismissed = 0 AND last_seen > datetime('now', '-90 days')
+     ORDER BY count DESC, last_seen DESC LIMIT ?`
+  )
+    .bind(MAX_SEARCH_MISSES_SHOWN)
+    .all();
+  return jsonResponse({ misses: rows.results || [] });
+}
+
+async function handleDismissSearchMiss(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await getUserFromRequest(request, env);
+  if (!user || !userIsModerator(user)) return jsonResponse({ error: "Unauthorized" }, 401);
+  const body = await request.json().catch(() => ({}));
+  const query = String(body.query || "").slice(0, 100);
+  const result = await env.DB.prepare("UPDATE search_misses SET dismissed = 1 WHERE query = ?").bind(query).run();
+  if (!Number(result.meta?.changes || 0)) return jsonResponse({ error: "Nuk u gjet." }, 404);
+  return jsonResponse({ success: true });
+}
+
 async function handleMaterials(request, url, env) {
   const faculties = listParam(url, "faculty").map((value) => value.toUpperCase());
   const types = listParam(url, "type");
@@ -2180,7 +2407,7 @@ async function handleMaterials(request, url, env) {
   const q = capSearchTerm(url.searchParams.get("q") || url.searchParams.get("search"));
   const userFilter = url.searchParams.get("user");
   const sortParam = url.searchParams.get("sort") || "newest";
-  const sort = ["views", "downloads"].includes(sortParam) ? sortParam : "newest";
+  const sort = ["views", "downloads", "helpful"].includes(sortParam) ? sortParam : "newest";
   const page = Math.min(1000, Math.max(1, Math.floor(Number(url.searchParams.get("page"))) || 1));
   const requestedLimit = Number(url.searchParams.get("limit")) || 50;
   const limit = Math.min(100, Math.max(1, requestedLimit));
@@ -2275,7 +2502,9 @@ async function handleMaterials(request, url, env) {
       ? "m.view_count DESC, m.created_at DESC"
       : sort === "downloads"
         ? "m.download_count DESC, m.created_at DESC"
-        : "m.created_at DESC";
+        : sort === "helpful"
+          ? "m.helpful_count - m.unhelpful_count DESC, m.helpful_count DESC, m.created_at DESC"
+          : "m.created_at DESC";
 
   const statement = env.DB.prepare(
     `SELECT m.*, TRIM(COALESCE(u.name, '') || ' ' || COALESCE(u.surname, '')) as uploader_name,
@@ -2295,6 +2524,9 @@ async function handleMaterials(request, url, env) {
     loadSlugIndexCached(env),
   ]);
   const total = Number(countResult?.total || 0);
+  if (total === 0 && q && page === 1 && userFilter !== "me" && params.length === baseParamsForSearchOnly(q)) {
+    await recordSearchMiss(request, env, q);
+  }
   const typeCounts = {};
   for (const row of typeCountsResult.results || []) {
     typeCounts[row.type || "Të pa klasifikuara"] = Number(row.count || 0);
@@ -2961,7 +3193,7 @@ async function handleExportAccount(request, env) {
     }
   };
 
-  const [materials, resourceLinks, reports, requests, follows] = await Promise.all([
+  const [materials, resourceLinks, reports, requests, follows, votes] = await Promise.all([
     rows(
       `SELECT id, title, faculty, department, subject, teacher, type, study_level,
               file_type, file_size, r2_url, is_anonymous, status, rejection_reason,
@@ -2982,6 +3214,7 @@ async function handleExportAccount(request, env) {
        FROM material_requests WHERE user_id = ? ORDER BY id`
     ),
     rows("SELECT subject_slug, created_at FROM subject_follows WHERE user_id = ? ORDER BY created_at"),
+    rows("SELECT material_id, helpful, created_at FROM material_votes WHERE voter_key = 'u:' || ? ORDER BY created_at"),
   ]);
 
   const payload = {
@@ -2997,6 +3230,7 @@ async function handleExportAccount(request, env) {
     reports_submitted: reports,
     material_requests: requests,
     followed_subjects: follows,
+    material_votes: votes,
   };
 
   return new Response(JSON.stringify(payload, null, 2), {
@@ -3053,6 +3287,10 @@ async function handleDeleteAccount(request, env) {
     env.DB.prepare("UPDATE reports SET reporter_id = NULL WHERE reporter_id = ?").bind(user.id),
     env.DB.prepare("DELETE FROM subject_follows WHERE user_id = ?").bind(user.id),
     env.DB.prepare("DELETE FROM material_request_votes WHERE user_id = ?").bind(user.id),
+    // The votes still count, but no longer lead back to the account.
+    env.DB.prepare(
+      "UPDATE material_votes SET voter_key = 'gone:' || lower(hex(randomblob(8))) WHERE voter_key = ?"
+    ).bind(`u:${user.id}`),
     env.DB.prepare("UPDATE material_requests SET status = 'removed' WHERE user_id = ? AND status = 'open'").bind(user.id),
     env.DB.prepare("DELETE FROM verification_codes WHERE email = ?").bind(user.email),
     env.DB.prepare(
@@ -3919,6 +4157,7 @@ async function handleDeleteMaterial(request, env) {
 
   try {
     await env.DB.prepare("DELETE FROM reports WHERE material_id = ?").bind(id).run();
+    await env.DB.prepare("DELETE FROM material_votes WHERE material_id = ?").bind(id).run();
   } catch {
     // reports table may not exist yet — non-fatal
   }
@@ -4460,6 +4699,8 @@ async function pruneExpiredRows(env) {
   const statements = [
     ["DELETE FROM rate_limits WHERE reset_at < ?", [now]],
     ["DELETE FROM verification_codes WHERE expires_at < ?", [new Date().toISOString()]],
+    ["DELETE FROM search_misses WHERE last_seen < datetime('now', '-180 days')", []],
+    ["DELETE FROM worker_errors WHERE hour < ?", [utcHour(new Date(Date.now() - 30 * 86400_000))]],
     [
       `DELETE FROM material_stat_events WHERE created_at < datetime('now', '-${STAT_EVENT_RETENTION_DAYS} days')`,
       [],
@@ -4505,6 +4746,8 @@ const POST_ONLY_ACTIONS = new Set([
   "passkey-register",
   "delete-passkey",
   "passkey-login",
+  "dismiss-search-miss",
+  "rate-material",
   "track-view",
   "track-download",
 ]);
@@ -4516,6 +4759,7 @@ const worker = {
     ctx.waitUntil(pruneExpiredRows(env));
     ctx.waitUntil(triggerRebuildIfDue(env));
     ctx.waitUntil(sendReportAlerts(env));
+    ctx.waitUntil(sendErrorAlert(env));
     ctx.waitUntil(sendSubjectDigest(env).catch((error) => console.error("digest failed", error)));
   },
 
@@ -4566,6 +4810,9 @@ const worker = {
       "passkey-register",
       "passkeys",
       "delete-passkey",
+      "search-misses",
+      "dismiss-search-miss",
+      "low-rated",
     ];
     const publicActions = [
       "materials",
@@ -4591,6 +4838,8 @@ const worker = {
       "requests",
       "unsubscribe-digest",
       "passkey-login",
+      "material-rating",
+      "rate-material",
     ];
 
     // Actions that change state are POST only. The session cookie is SameSite=Lax,
@@ -4782,6 +5031,21 @@ const worker = {
         case "passkey-login":
           response = await handlePasskeyLogin(request, env);
           break;
+        case "search-misses":
+          response = await handleSearchMisses(request, env);
+          break;
+        case "dismiss-search-miss":
+          response = await handleDismissSearchMiss(request, env);
+          break;
+        case "material-rating":
+          response = await handleMaterialRating(request, url, env);
+          break;
+        case "rate-material":
+          response = await handleRateMaterial(request, env);
+          break;
+        case "low-rated":
+          response = await handleLowRated(request, env);
+          break;
         case "site-statistics":
           response = await handleSiteStatistics(url, env);
           break;
@@ -4791,6 +5055,11 @@ const worker = {
       return withCors(response, request, env);
     } catch (error) {
       console.error(error);
+      if (env.DB) {
+        const counted = recordWorkerError(env, action, error);
+        if (ctx?.waitUntil) ctx.waitUntil(counted);
+        else await counted;
+      }
       return withCors(
         jsonResponse({ error: "Ndodhi një gabim i brendshëm." }, 500),
         request,

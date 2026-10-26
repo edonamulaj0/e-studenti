@@ -27,8 +27,8 @@ export default function UniversitiesClient() {
     <div className="page-shell">
       <div className="section-shell">
         <header className="mb-6 max-w-3xl">
-          <h1 className="page-title mb-2 !text-3xl md:!text-4xl">{t("Universitetet")}</h1>
-          <p className="page-subtitle !text-base">
+          <h1 className="page-title mb-2 text-3xl! leading-9! md:text-4xl! md:leading-10!">{t("Universitetet")}</h1>
+          <p className="page-subtitle text-base! leading-6!">
             {t(
               "Universitetet dhe kolegjet me programe të akredituara në Kosovë. Hapni një institucion për të parë programet e tij, ose krahasoni dy programe."
             )}

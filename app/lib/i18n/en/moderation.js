@@ -1,5 +1,12 @@
 /** English for the moderator panel (app/llogaria/moderim) and the Worker messages shown there. */
 const translations = {
+  "Kërkimet": "Searches",
+  "Kërkimet pa asnjë rezultat në 90 ditët e fundit, sipas sa herë u bënë. Ruhen vetëm fjalët, pa asnjë të dhënë për kë kërkoi.": "Searches with no results in the last 90 days, by how often they were made. Only the words are stored, nothing about who searched.",
+  "Asnjë kërkim pa rezultat për momentin.": "No searches without results right now.",
+  "{n} herë · së fundi më {date}": "{n} times · last on {date}",
+  "Bëje kërkesë": "Make it a request",
+  "Fshih “{q}”": "Hide “{q}”",
+  "Fshih": "Hide",
   "Siguria": "Security",
   "Passkey për llogarinë e moderatorit": "Passkey for the moderator account",
   "Hyrja kërkon kodin nga emaili dhe pastaj passkey-n. Mbani të paktën dy (p.sh. telefoni dhe laptopi), që të mos mbeteni jashtë nëse humbni njërin.": "Signing in takes the emailed code and then the passkey. Keep at least two (e.g. phone and laptop) so you are not locked out if you lose one.",
@@ -116,6 +123,9 @@ const translations = {
   "Materiali nuk u gjet.": "Material not found.",
   "Lidhja nuk u gjet.": "Link not found.",
   "Kjo lidhje është trajtuar tashmë.": "This link has already been handled.",
+  "Vlerësimet": "Ratings",
+  "Materialet që të paktën 3 studentë i shënuan si të padobishme, më shumë se sa i shënuan të dobishme. Shikojini: mund të jenë të gabuara, të palexueshme ose në vendin e gabuar.": "Materials that at least 3 students marked as not useful, and more than marked them useful. Check them: they may be wrong, unreadable or in the wrong place.",
+  "Asnjë material me vlerësim të dobët.": "No poorly rated materials.",
 };
 
 export default translations;

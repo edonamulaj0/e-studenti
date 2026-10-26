@@ -129,7 +129,7 @@ export default function EditMaterialClient({ id }) {
                     <span className="relative">
                       <button
                         type="button"
-                        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-srh-navy/15 text-[10px] font-bold text-srh-navy/70 hover:bg-srh-navy/25 focus:outline-none"
+                        className="inline-flex h-4 w-4 items-center justify-center rounded-full bg-srh-navy/15 text-[10px] font-bold text-srh-navy/70 hover:bg-srh-navy/25 focus:outline-hidden"
                         onMouseEnter={() => setTitleTooltip(true)}
                         onMouseLeave={() => setTitleTooltip(false)}
                         onFocus={() => setTitleTooltip(true)}

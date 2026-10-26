@@ -1,4 +1,10 @@
 const pages = {
+  "Kontribuo": "Contribute",
+  "Ende nuk ka materiale për {name}.": "No materials for {name} yet.",
+  "Vetëm {n} materiale për {name} deri tani.": "Only {n} materials for {name} so far.",
+  "Keni afate, ligjërata apo shënime? Ngarkojini që t'i gjejë edhe shoku i radhës — ose kërkoni atë që ju mungon.": "Have exams, lectures or notes? Upload them so the next student finds them too, or request what you are missing.",
+  "Ngarko të parin": "Upload the first one",
+  "Ngarko material": "Upload material",
   "Kërkesat": "Requests",
   "Ju mungon një afat, ligjëratë apo shënime? Kërkojeni këtu. Nëse e ka dikush, e ngarkon — dhe të gjithë që e kërkuan marrin një email.": "Missing an exam, lecture or notes? Ask for it here. If someone has it, they upload it, and everyone who asked gets an email.",
   "Nuk e gjeni atë që ju duhet?": "Can't find what you need?",

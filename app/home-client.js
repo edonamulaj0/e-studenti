@@ -29,7 +29,7 @@ export default function HomeClient({ latest = [] }) {
   return (
     <MotionConfig reducedMotion="user">
     <div className="relative bg-cream-50">
-      <section className="viewport-section relative isolate overflow-hidden bg-gradient-to-br from-cream-50 via-beige-100 to-surface">
+      <section className="viewport-section relative isolate overflow-hidden bg-linear-to-br from-cream-50 via-beige-100 to-surface">
         <div className="pointer-events-none absolute left-0 top-20 h-64 w-64 rounded-full bg-burgundy-50 blur-3xl md:h-96 md:w-96" />
         <div className="relative z-10 mx-auto grid max-w-7xl items-center gap-12 lg:grid-cols-[1.05fr_0.95fr]">
           <motion.div {...fadeUp} className="max-w-3xl">
@@ -39,7 +39,7 @@ export default function HomeClient({ latest = [] }) {
             <h1 className="page-title mb-6">
               {t("Materialet e universiteteve të Kosovës, më të qarta dhe më të lehta për t'u gjetur.")}
             </h1>
-            <p className="page-subtitle max-w-2xl text-lg md:text-xl">
+            <p className="page-subtitle max-w-2xl text-lg leading-7 md:text-xl md:leading-7">
               {t(
                 "E-Studenti mbledh shënime, afate, projekte dhe burime praktike në një hapësirë të thjeshtë për studentët e universiteteve dhe kolegjeve në Kosovë."
               )}
@@ -110,7 +110,7 @@ export default function HomeClient({ latest = [] }) {
         <div className="mx-auto max-w-7xl">
           <motion.div {...fadeUp} className="mx-auto mb-8 max-w-2xl text-center">
             <p className="page-kicker mb-4">{t("Pse ekziston")}</p>
-            <h2 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl">
+            <h2 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl md:leading-10">
               {t("Pse E-Studenti?")}
             </h2>
             <p className="page-subtitle mx-auto mt-3 max-w-xl">
@@ -165,7 +165,7 @@ export default function HomeClient({ latest = [] }) {
         <div className="mx-auto max-w-7xl">
           <motion.div {...fadeUp} className="mx-auto mb-8 max-w-2xl text-center">
             <p className="page-kicker mb-4">{t("Eksploro")}</p>
-            <h2 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl">
+            <h2 className="font-display text-3xl font-bold leading-tight text-navy-900 md:text-4xl md:leading-10">
               {t("Çfarë ofron E-Studenti")}
             </h2>
             <p className="page-subtitle mx-auto mt-3 max-w-xl">
@@ -256,7 +256,7 @@ export default function HomeClient({ latest = [] }) {
               <ViberIcon className="h-9 w-9" />
             </span>
             <div>
-              <h2 className="font-display text-2xl font-bold leading-tight text-white md:text-3xl">
+              <h2 className="font-display text-2xl font-bold leading-tight text-white md:text-3xl md:leading-9">
                 {t("Bashkohu me komunitetin në Viber")}
               </h2>
               <p className="mt-2 max-w-xl text-white/85">
@@ -268,7 +268,7 @@ export default function HomeClient({ latest = [] }) {
             href={VIBER_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-xl bg-surface px-6 py-3 text-sm font-semibold text-[#7360f2] transition-all duration-200 hover:-translate-y-0.5 hover:bg-surface/90 focus:outline-none focus:ring-4 focus:ring-white/40"
+            className="inline-flex min-h-[48px] shrink-0 items-center justify-center gap-2 rounded-xl bg-surface px-6 py-3 text-sm font-semibold text-[#7360f2] transition-all duration-200 hover:-translate-y-0.5 hover:bg-surface/90 focus:outline-hidden focus:ring-4 focus:ring-white/40"
           >
             {t("Bashkohu tani")}
           </a>

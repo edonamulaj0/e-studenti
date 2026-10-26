@@ -31,12 +31,12 @@ export function isArchiveType(fileType) {
 }
 
 /**
- * False for types with no in-browser view at all. RAR is the only one: no
- * renderer handles it and the archive modal cannot list its entries, so those
- * materials are offered as a download only.
+ * Whether a material can be opened in the browser. Every supported type can:
+ * RAR archives, the last exception, are now listed from their headers
+ * (lib/rar-listing.js) like ZIPs. Kept as the one place to decide it.
  */
-export function hasInBrowserView(fileType) {
-  return normalizeExtension(fileType, "") !== "rar";
+export function hasInBrowserView() {
+  return true;
 }
 
 /**

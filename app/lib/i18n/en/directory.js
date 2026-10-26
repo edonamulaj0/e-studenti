@@ -140,6 +140,7 @@ const directory = {
   "Burim zyrtar: Universiteti i Prishtinës": "Official source: University of Prishtina",
   "Kjo faqe është vetëm për Universitetin e Prishtinës (UP). Thirrjet e universiteteve dhe kolegjeve të tjera nuk përfshihen këtu; shihni faqet e tyre zyrtare.": "This page is only for the University of Prishtina (UP). Calls from other universities and colleges are not included here; see their official pages.",
   "Të dhënat e eksportuara:": "Data exported:",
+  "Thirrjet më të reja te faqja e UP": "Latest calls on the UP website",
   "Kërko universitet, vend, program...": "Search university, country, programme...",
   "Të gjitha vendet": "All countries",
   "Gjermani": "Germany",

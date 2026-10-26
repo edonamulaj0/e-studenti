@@ -94,52 +94,97 @@ function Section({ title: titleSq, name, options, selected, onChange, single = f
   );
 }
 
-/** Draft filters are edited freely and only take effect on "Apliko filtrat". */
-/**
+const FACULTY_BY_CODE = Object.fromEntries([...FACULTIES, ...FIELDS].map((f) => [f.code, f.name]));
 
- * `publicOnly` lists just the public universities, the only ones that run entrance exams.
+/**
+ * The active filters as removable chips, in the order the sidebar lists them.
+ * @returns {{ key: string, value: string, label: string }[]}
  */
-export default function FilterSidebar({ draft, setDraft, subjects, onApply, onClear, id, sections, publicOnly = false }) {
+export function activeFilterChips(filters, subjects) {
+  const subjectName = new Map(subjects.map((s) => [s.slug, s.name]));
+  return [
+    ...filters.universities.map((v) => ({ key: "universities", value: v, label: universityShort(v) })),
+    ...filters.levels.map((v) => ({ key: "levels", value: v, label: STUDY_LEVELS.find((l) => l.value === v)?.label || v })),
+    ...filters.faculties.map((v) => ({ key: "faculties", value: v, label: FACULTY_BY_CODE[v] || v })),
+    ...filters.types.map((v) => ({ key: "types", value: v, label: v })),
+    ...filters.subjects.map((v) => ({ key: "subjects", value: v, label: subjectName.get(v) || v })),
+  ];
+}
+
+/**
+ * Filters apply as they are picked. Each list narrows to what can still match
+ * the others, in both directions: a university narrows faculties and subjects,
+ * and a faculty or subject narrows the universities that offer it.
+ *
+ * `onDone` (the phone drawer) adds a button that closes the drawer and says how
+ * many materials match. `publicOnly` lists just the public universities.
+ */
+export default function FilterSidebar({ filters, onChange, subjects, onClear, onDone, resultCount, id, sections, publicOnly = false }) {
   const t = useT();
   const [subjectQuery, setSubjectQuery] = useState("");
   const show = (name) => !sections || sections.includes(name);
-  const universities = publicOnly ? UNIVERSITIES.filter((u) => u.sector === "public") : UNIVERSITIES;
-  const set = (key) => (value) => setDraft((d) => ({ ...d, [key]: value }));
+  const set = (key) => (value) => onChange({ ...filters, [key]: value });
+
+  const pickedSubjects = subjects.filter((s) => filters.subjects.includes(s.slug));
+  const universities = (publicOnly ? UNIVERSITIES.filter((u) => u.sector === "public") : UNIVERSITIES).filter(
+    (u) =>
+      filters.universities.includes(u.slug) ||
+      ((filters.faculties.length === 0 || facultiesFor(u.slug).some((f) => filters.faculties.includes(f.code))) &&
+        (pickedSubjects.length === 0 || pickedSubjects.some((s) => s.university === u.slug)))
+  );
 
   // The faculty list follows the university: UP has faculties, every other institution study fields.
-  const university = draft.universities[0];
-  const facultyOptions = (university ? facultiesFor(university) : [...FACULTIES, ...FIELDS]).map((f) => ({
-    value: f.code,
-    label: f.name,
-    sub: university ? undefined : FACULTIES.includes(f) ? "UP" : "Fushë studimi",
-  }));
-  const setUniversity = (next) =>
-    setDraft((d) => {
-      const allowed = new Set((next[0] ? facultiesFor(next[0]) : [...FACULTIES, ...FIELDS]).map((f) => f.code));
-      return { ...d, universities: next, faculties: d.faculties.filter((code) => allowed.has(code)), subjects: [] };
+  const university = filters.universities[0];
+  const facultyOptions = (university ? facultiesFor(university) : [...FACULTIES, ...FIELDS])
+    .filter(
+      (f) =>
+        filters.faculties.includes(f.code) ||
+        pickedSubjects.length === 0 ||
+        pickedSubjects.some((s) => s.faculty === f.code)
+    )
+    .map((f) => ({
+      value: f.code,
+      label: f.name,
+      sub: university ? undefined : FACULTIES.includes(f) ? "UP" : "Fushë studimi",
+    }));
+  const setUniversity = (next) => {
+    const allowed = new Set((next[0] ? facultiesFor(next[0]) : [...FACULTIES, ...FIELDS]).map((f) => f.code));
+    onChange({
+      ...filters,
+      universities: next,
+      faculties: filters.faculties.filter((code) => allowed.has(code)),
+      subjects: filters.subjects.filter((slug) => !next[0] || subjects.find((s) => s.slug === slug)?.university === next[0]),
+    });
+  };
+  const setFaculty = (next) =>
+    onChange({
+      ...filters,
+      faculties: next,
+      subjects: filters.subjects.filter((slug) => !next[0] || subjects.find((s) => s.slug === slug)?.faculty === next[0]),
     });
 
   const subjectOptions = useMemo(() => {
-    const picked = new Set(draft.subjects);
+    const picked = new Set(filters.subjects);
     return subjects
       .filter(
         (s) =>
           picked.has(s.slug) ||
-          ((draft.universities.length === 0 || draft.universities.includes(s.university)) &&
-            (draft.faculties.length === 0 || draft.faculties.includes(s.faculty)) &&
+          ((filters.universities.length === 0 || filters.universities.includes(s.university)) &&
+            (filters.faculties.length === 0 || filters.faculties.includes(s.faculty)) &&
             matchesSearch(subjectQuery, s.name))
       )
       .sort((a, b) => a.name.localeCompare(b.name, "sq"))
       .slice(0, 80)
       .map((s) => ({ value: s.slug, label: s.name, sub: `${universityShort(s.university)} · ${t(FACULTY_BY_CODE[s.faculty] || s.faculty)}` }));
-  }, [subjects, subjectQuery, draft.subjects, draft.faculties, draft.universities, t]);
+  }, [subjects, subjectQuery, filters.subjects, filters.faculties, filters.universities, t]);
+  const active = activeFilterChips(filters, subjects).length > 0;
 
   return (
     <form
       id={id}
       onSubmit={(e) => {
         e.preventDefault();
-        onApply();
+        onDone?.();
       }}
       className="flex min-h-0 flex-1 flex-col"
       aria-label={t("Filtrat")}
@@ -151,7 +196,7 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
           single
           defaultOpen
           options={universities.map((u) => ({ value: u.slug, label: u.short, sub: u.name.includes(u.short) ? undefined : u.name }))}
-          selected={draft.universities}
+          selected={filters.universities}
           onChange={setUniversity}
         />
         <Section
@@ -160,7 +205,7 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
           single
           defaultOpen
           options={STUDY_LEVELS.map((l) => ({ value: l.value, label: l.label }))}
-          selected={draft.levels}
+          selected={filters.levels}
           onChange={set("levels")}
         />
         {show("faculty") && <Section
@@ -168,15 +213,15 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
           name={`${id}-faculty`}
           single
           options={facultyOptions}
-          selected={draft.faculties}
-          onChange={set("faculties")}
+          selected={filters.faculties}
+          onChange={setFaculty}
         />}
         {show("type") && <Section
           title="Lloji"
           name={`${id}-type`}
           single
           options={MATERIAL_TYPES.map((t) => ({ value: t, label: t }))}
-          selected={draft.types}
+          selected={filters.types}
           onChange={set("types")}
         />}
         {show("subject") && <Section
@@ -184,7 +229,7 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
           name={`${id}-subject`}
           defaultOpen
           options={subjectOptions}
-          selected={draft.subjects}
+          selected={filters.subjects}
           onChange={set("subjects")}
         >
           <div className="relative mb-1.5">
@@ -201,16 +246,20 @@ export default function FilterSidebar({ draft, setDraft, subjects, onApply, onCl
         </Section>}
       </div>
 
-      <div className="mt-4 flex gap-2 border-t border-gray-200 pt-3">
-        <button type="submit" className="btn-primary min-h-[44px] flex-1 px-4 py-2 text-sm">
-          {t("Apliko filtrat")}
-        </button>
-        <button type="button" onClick={onClear} className="btn-outline min-h-[44px] px-4 py-2 text-sm">
-          {t("Pastro")}
-        </button>
-      </div>
+      {(onDone || active) && (
+        <div className="mt-4 flex gap-2 border-t border-gray-200 pt-3">
+          {onDone && (
+            <button type="submit" className="btn-primary min-h-[44px] flex-1 px-4 py-2 text-sm">
+              {resultCount == null ? t("Shiko materialet") : t("Shiko {n} materiale", { n: resultCount })}
+            </button>
+          )}
+          {active && (
+            <button type="button" onClick={onClear} className={`btn-outline min-h-[44px] px-4 py-2 text-sm ${onDone ? "" : "flex-1"}`}>
+              {t("Pastro")}
+            </button>
+          )}
+        </div>
+      )}
     </form>
   );
 }
-
-const FACULTY_BY_CODE = Object.fromEntries([...FACULTIES, ...FIELDS].map((f) => [f.code, f.name]));

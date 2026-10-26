@@ -43,14 +43,12 @@ export const metadata = {
     title: "E-Studenti — Materiale dhe burime për studentët në Kosovë",
     description:
       "Platformë komunitare me materiale studimore, afate, ligjërata dhe burime për studentët e universiteteve në Kosovë.",
-    images: [{ url: "/logo-color.svg", alt: "E-Studenti" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "E-Studenti",
     description:
       "Materiale, provime dhe burime studimore për studentët e universiteteve në Kosovë.",
-    images: ["/logo-color.svg"],
   },
   icons: {
     icon: "/favicon.svg",
@@ -78,7 +76,7 @@ export default function RootLayout({ children }) {
       <body className="flex min-h-dvh flex-col font-montserrat text-base antialiased">
         <a
           href="#main"
-          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-[300] focus:rounded-xl focus:bg-ink focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
+          className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-300 focus:rounded-xl focus:bg-ink focus:px-5 focus:py-3 focus:text-sm focus:font-semibold focus:text-white"
         >
           Kalo te përmbajtja
         </a>
@@ -88,7 +86,7 @@ export default function RootLayout({ children }) {
         <CompareStrip />
         {/* flex-1: short pages end at the bottom of the viewport instead of
             being padded to a full screen, so the footer no longer forces a scrollbar */}
-        <main id="main" tabIndex={-1} className="flex-1 outline-none">
+        <main id="main" tabIndex={-1} className="flex-1 outline-hidden">
           {children}
         </main>
         </CompareProvider>

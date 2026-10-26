@@ -25,12 +25,16 @@ import {
   BadgeCheck,
   Tags,
   Fingerprint,
+  SearchX,
+  ThumbsDown,
 } from "lucide-react";
 import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
 import { safeHref } from "../../lib/file-preview";
 import { matchesSearch } from "../../lib/search-text";
 import RetypePanel from "./RetypePanel";
 import PasskeysPanel from "./PasskeysPanel";
+import SearchMissesPanel from "./SearchMissesPanel";
+import LowRatedPanel from "./LowRatedPanel";
 import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
 import { universityShort } from "../../lib/placement";
@@ -61,6 +65,8 @@ function ModerimPage() {
     if (t === "lendet") return "lendet";
     if (t === "kategorite") return "kategorite";
     if (t === "siguria") return "siguria";
+    if (t === "kerkimet") return "kerkimet";
+    if (t === "vleresimet") return "vleresimet";
     return "raportet";
   });
   const [ready, setReady] = useState(false);
@@ -535,6 +541,14 @@ function ModerimPage() {
             <Tags className="h-4 w-4" />
             {t("Kategoritë")}
           </button>
+          <button type="button" onClick={() => setTab("kerkimet")} className={tabCls("kerkimet")}>
+            <SearchX className="h-4 w-4" />
+            {t("Kërkimet")}
+          </button>
+          <button type="button" onClick={() => setTab("vleresimet")} className={tabCls("vleresimet")}>
+            <ThumbsDown className="h-4 w-4" />
+            {t("Vlerësimet")}
+          </button>
           <button type="button" onClick={() => setTab("siguria")} className={tabCls("siguria")}>
             <Fingerprint className="h-4 w-4" />
             {t("Siguria")}
@@ -690,6 +704,10 @@ function ModerimPage() {
         {tab === "kategorite" && <RetypePanel />}
 
         {tab === "siguria" && <PasskeysPanel />}
+
+        {tab === "kerkimet" && <SearchMissesPanel />}
+
+        {tab === "vleresimet" && <LowRatedPanel />}
 
         {tab === "lendet" && (
           <>
@@ -1075,7 +1093,7 @@ function ModerimPage() {
                     </p>
                     <h2 className="mt-1 font-bold leading-snug text-navy-900">{item.subject}</h2>
                     <p className="text-sm text-gray-500">{t("Nga {name}", { name: item.sender_name })}</p>
-                    <p className="mt-3 whitespace-pre-wrap break-words text-gray-700">{item.message}</p>
+                    <p className="mt-3 whitespace-pre-wrap wrap-break-word text-gray-700">{item.message}</p>
                     <div className="mt-4">
                       {confirmDeleteMessageId === item.id ? (
                         <span className="inline-flex items-center gap-2">
