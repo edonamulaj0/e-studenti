@@ -3,13 +3,18 @@
 import Link from "next/link";
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { X } from "lucide-react";
-import { getProgramme, getUniversity } from "../lib/directory";
 import { useT } from "./Preferences";
 
 const KEY = "compare-first";
 const CompareContext = createContext({ first: null, start: () => {}, clear: () => {} });
 
 export const useCompare = () => useContext(CompareContext);
+
+/**
+ * The directory is ~170 KB of JSON and this provider sits in the root layout,
+ * so it is fetched only once a comparison has actually been started.
+ */
+const loadDirectory = () => import("../lib/directory");
 
 /** Remembers the first programme picked for comparison while the visitor browses. */
 export default function CompareProvider({ children }) {
@@ -18,7 +23,13 @@ export default function CompareProvider({ children }) {
   useEffect(() => {
     try {
       const saved = window.sessionStorage.getItem(KEY);
-      if (saved && getProgramme(saved)) setFirst(saved);
+      if (saved) {
+        loadDirectory()
+          .then(({ getProgramme }) => {
+            if (getProgramme(saved)) setFirst(saved);
+          })
+          .catch(() => {});
+      }
     } catch {
       /* storage can be blocked; the comparison just won't survive a reload */
     }
@@ -49,9 +60,13 @@ export default function CompareProvider({ children }) {
 export function CompareStrip() {
   const t = useT();
   const { first, clear } = useCompare();
-  const programme = first ? getProgramme(first) : null;
+  const [directory, setDirectory] = useState(null);
+  useEffect(() => {
+    if (first && !directory) loadDirectory().then(setDirectory).catch(() => {});
+  }, [first, directory]);
+  const programme = first && directory ? directory.getProgramme(first) : null;
   if (!programme) return null;
-  const university = getUniversity(programme.uni);
+  const university = directory.getUniversity(programme.uni);
   return (
     <div
       role="region"

@@ -157,7 +157,7 @@ export default function HyrPage() {
               </p>
               <label className="block">
                 <span className="mb-1.5 block text-sm font-semibold text-navy-900">
-                  {t("Kodi 6-shifror")}
+                  {t("Kodi 8-shifror")}
                 </span>
                 <span className="relative block">
                   <KeyRound className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
@@ -165,10 +165,10 @@ export default function HyrPage() {
                   required
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  maxLength={6}
+                  maxLength={8}
                   value={code}
                   onChange={(e) =>
-                    setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                    setCode(e.target.value.replace(/\D/g, "").slice(0, 8))
                   }
                   className="input-srh pl-12 text-center text-2xl tracking-[0.4em]"
                 />

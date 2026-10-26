@@ -9,7 +9,6 @@ import {
   Loader2,
   AlertCircle,
 } from "lucide-react";
-import JSZip from "jszip";
 import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
 import ModalOverlay from "./ModalOverlay";
 import { useT } from "./Preferences";
@@ -113,6 +112,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
         throw new Error("Skedari është bosh ose nuk mund të ngarkohet");
       }
 
+      const { default: JSZip } = await import("jszip");
       const zip = await JSZip.loadAsync(arrayBuffer);
 
       setZipObject(zip);

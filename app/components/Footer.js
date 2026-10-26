@@ -48,11 +48,13 @@ export default function Footer() {
             aria-label="E-Studenti"
           >
             <img
-              src="/logo.svg"
+              src="/logo-footer.webp"
               alt=""
               aria-hidden="true"
-              width={2480}
-              height={3508}
+              width={272}
+              height={384}
+              loading="lazy"
+              decoding="async"
               className="h-full w-auto shrink-0 object-contain"
             />
           </Link>

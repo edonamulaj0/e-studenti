@@ -200,15 +200,15 @@ export default function RegjistrohuPage() {
               <p className="rounded-2xl border border-gray-200 bg-navy-100/50 p-4 text-gray-600">
                 {t("Kodi u dërgua te")} <strong>{form.email}</strong>. {t("Kontrolloni edhe spam/junk.")}
               </p>
-              <Field label="Kodi 6-shifror" icon={KeyRound}>
+              <Field label="Kodi 8-shifror" icon={KeyRound}>
                 <input
                   required
                   inputMode="numeric"
                   autoComplete="one-time-code"
-                  maxLength={6}
+                  maxLength={8}
                   value={code}
                   onChange={(e) =>
-                    setCode(e.target.value.replace(/\D/g, "").slice(0, 6))
+                    setCode(e.target.value.replace(/\D/g, "").slice(0, 8))
                   }
                   className="input-srh pl-12 text-center text-2xl tracking-[0.4em]"
                 />

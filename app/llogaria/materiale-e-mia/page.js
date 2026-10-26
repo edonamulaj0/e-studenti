@@ -145,9 +145,13 @@ function MaterialeEMiaPage() {
     }
   };
 
-  const doLogout = () => {
-    logout();
-    router.push("/");
+  const doLogout = async () => {
+    setAccountMessage("");
+    if (await logout()) {
+      router.push("/");
+    } else {
+      setAccountMessage("Dalja dështoi. Kontrolloni lidhjen dhe provoni përsëri.");
+    }
   };
 
   return (

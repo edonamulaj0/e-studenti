@@ -16,7 +16,7 @@ import { getFacultyName } from "../lib/material-options";
 import { getStudyLevelLabel } from "../lib/study-levels";
 import { formatFileSize, getPreviewKind, hasInBrowserView } from "../lib/file-preview";
 import { formatStatCount, trackMaterialView } from "../lib/track-material";
-import { formatDate } from "../lib/directory";
+import { formatDate } from "../lib/format-date";
 import { isRealSubject, subjectSlug } from "../lib/subjects";
 import { normalizeMaterial } from "../lib/material-view";
 import { useT } from "./Preferences";
