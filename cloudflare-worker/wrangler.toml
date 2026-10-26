@@ -32,6 +32,13 @@ bucket_name = "e-studenti-materials"
 binding = "METADATA_BUCKET"
 bucket_name = "materials-metadata"
 
+# Private: files waiting for review (or taken off the site). No public domain
+# is attached; the Worker streams them to their owner and the moderator.
+# Create once: npx wrangler r2 bucket create e-studenti-pending
+[[r2_buckets]]
+binding = "PENDING_BUCKET"
+bucket_name = "e-studenti-pending"
+
 [[r2_buckets]]
 binding = "DEPARTMENT_BUCKET"
 bucket_name = "department-materials"

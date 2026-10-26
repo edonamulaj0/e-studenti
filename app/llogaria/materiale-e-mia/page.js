@@ -4,7 +4,7 @@ import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Bell, FileText, LogOut, Plus, PackageCheck, ShieldAlert, Eye, Download } from "lucide-react";
-import { WORKER_URL } from "../../lib/worker-url";
+import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
 import { fetchCurrentUser, logout, setUser as setSessionUser } from "../../lib/auth";
 import ModalOverlay from "../../components/ModalOverlay";
 import { getFacultyName } from "../../lib/material-options";
@@ -326,7 +326,7 @@ function MaterialeEMiaPage() {
                   </Link>
                   {material.r2Url && (
                     <a
-                      href={material.r2Url}
+                      href={material.status === "approved" ? material.r2Url : materialViewUrl(material.id)}
                       target="_blank"
                       rel="noopener noreferrer"
                       className="rounded-xl border-2 border-srh-navy px-4 py-2 font-bold text-srh-navy hover:bg-srh-navy hover:text-white"

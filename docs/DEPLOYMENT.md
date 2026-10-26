@@ -24,6 +24,9 @@ repository secrets or on an environment named `production`):
 | `CLOUDFLARE_API_TOKEN` | My Profile → API Tokens → Create token → "Edit Cloudflare Workers" template, then add **Account → D1 → Edit**; limit it to this account |
 
 Until both are set, the workflow skips itself with a notice instead of failing.
+The token template includes R2 edit access, which the workflow uses to create
+the private `e-studenti-pending` bucket on its first run. That bucket holds
+files waiting for review; it must never get a public domain.
 You can also run it by hand from the Actions tab ("Run workflow").
 
 A redeploy from the Cloudflare dashboard re-uploads the *last deployed* bundle;

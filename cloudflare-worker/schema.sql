@@ -55,6 +55,7 @@ CREATE TABLE IF NOT EXISTS materials (
   content_hash TEXT,
   client_upload_id TEXT,
   request_id INTEGER,
+  storage TEXT NOT NULL DEFAULT 'public',
   created_at TEXT DEFAULT (datetime('now')),
   updated_at TEXT DEFAULT (datetime('now'))
 );

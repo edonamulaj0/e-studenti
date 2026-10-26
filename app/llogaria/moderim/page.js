@@ -611,7 +611,7 @@ function ModerimPage() {
                               </p>
                               {first.material_url && (
                                 <a
-                                  href={safeHref(first.material_url)}
+                                  href={first.material_status === "approved" ? safeHref(first.material_url) : materialViewUrl(first.material_id)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-burgundy-600 hover:underline"
@@ -842,7 +842,7 @@ function ModerimPage() {
                             <>
                               <span className="text-gray-300">·</span>
                               <a
-                                href={safeHref(m.r2_url)}
+                                href={m.status === "approved" ? safeHref(m.r2_url) : materialViewUrl(m.id)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 font-semibold text-burgundy-600 hover:underline"

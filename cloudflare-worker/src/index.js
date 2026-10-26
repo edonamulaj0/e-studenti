@@ -2259,6 +2259,41 @@ function existingUploadResponse(existing) {
   });
 }
 
+/**
+ * The bucket holding a material's file. Files waiting for review live in the
+ * private PENDING_BUCKET when it is bound; everything else (and every file when
+ * it is not bound) is in the public MY_BUCKET behind media.e-studenti.com.
+ */
+function bucketFor(material, env) {
+  return material?.storage === "pending" && env.PENDING_BUCKET ? env.PENDING_BUCKET : env.MY_BUCKET;
+}
+
+function materialFileKey(material) {
+  return material.file_key || publicUrlToKey(material.r2_url);
+}
+
+/**
+ * Moves a material's file to the public or the private bucket and records
+ * where it is. Copy, then repoint the row, then delete the old copy, so a
+ * failure part-way never leaves the row pointing at a missing object.
+ */
+async function moveMaterialFile(env, material, to) {
+  if (!env.PENDING_BUCKET || !env.MY_BUCKET) return false;
+  const from = material.storage === "pending" ? "pending" : "public";
+  if (from === to) return true;
+  const key = materialFileKey(material);
+  if (!key) return false;
+  const source = from === "pending" ? env.PENDING_BUCKET : env.MY_BUCKET;
+  const target = to === "pending" ? env.PENDING_BUCKET : env.MY_BUCKET;
+  const object = await source.get(key);
+  if (!object) throw new Error(`file ${key} missing from the ${from} bucket`);
+  await target.put(key, object.body, { httpMetadata: object.httpMetadata });
+  await env.DB.prepare("UPDATE materials SET storage = ? WHERE id = ?").bind(to, material.id).run();
+  await source.delete(key).catch(() => {});
+  material.storage = to;
+  return true;
+}
+
 async function handleUpload(request, env) {
   if (!env.DB) return databaseUnavailableResponse();
 
@@ -2366,7 +2401,9 @@ async function handleUpload(request, env) {
   const contentType = contentTypeForExtension(ext);
   // The file is handed to R2 as a Blob rather than an ArrayBuffer so the body is
   // not copied a second time in memory.
-  await env.MY_BUCKET.put(fileKey, file, {
+  // Held for review: kept out of the public bucket until a moderator approves.
+  const storage = review.status === "pending" && env.PENDING_BUCKET ? "pending" : "public";
+  await (storage === "pending" ? env.PENDING_BUCKET : env.MY_BUCKET).put(fileKey, file, {
     httpMetadata: { contentType },
   });
 
@@ -2375,20 +2412,20 @@ async function handleUpload(request, env) {
   try {
     insert = await env.DB.prepare(
       `INSERT INTO materials
-        (user_id, title, university, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level, content_hash, client_upload_id, request_id, status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
+        (user_id, title, university, faculty, department, subject, teacher, type, file_key, file_type, file_size, r2_url, is_anonymous, study_level, content_hash, client_upload_id, request_id, storage, status)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`
     )
       .bind(
         user.id, title, university, faculty, department, subject, teacher, type, fileKey, ext, file.size,
         r2Url, isAnonymous, studyLevel, normalizeContentHash(form.get("content_hash")),
-        clientUploadId, requestId, review.status
+        clientUploadId, requestId, storage, review.status
       )
       .run();
   } catch (error) {
     // Two requests carrying the same client id raced; the other one won. Remove
     // the object this one wrote and answer with the row that exists.
     if (clientUploadId && String(error.message || error).includes("UNIQUE")) {
-      await env.MY_BUCKET.delete(fileKey).catch(() => {});
+      await bucketFor({ storage }, env).delete(fileKey).catch(() => {});
       const existing = await findUploadByClientId(env, user.id, clientUploadId);
       if (existing) return existingUploadResponse(existing);
     }
@@ -2785,7 +2822,7 @@ async function handleDeleteAccount(request, env) {
 
   // Files that were never public go with the account.
   const unpublished = await env.DB.prepare(
-    "SELECT file_key, r2_url FROM materials WHERE user_id = ? AND status != 'approved'"
+    "SELECT file_key, r2_url, storage FROM materials WHERE user_id = ? AND status != 'approved'"
   )
     .bind(user.id)
     .all();
@@ -2812,11 +2849,10 @@ async function handleDeleteAccount(request, env) {
     ).bind(placeholderEmail, user.id),
   ]);
 
-  if (env.MY_BUCKET) {
-    for (const row of unpublished.results || []) {
-      const key = row.file_key || publicUrlToKey(row.r2_url);
-      if (key) await env.MY_BUCKET.delete(key).catch(() => {});
-    }
+  for (const row of unpublished.results || []) {
+    const bucket = bucketFor(row, env);
+    const key = materialFileKey(row);
+    if (bucket && key) await bucket.delete(key).catch(() => {});
   }
   await catalogChanged(env);
 
@@ -2854,8 +2890,21 @@ async function handleUnpublishMaterial(request, env) {
   if (!Number(result.meta?.changes || 0)) {
     return jsonResponse({ error: "Materiali nuk është i publikuar." }, 404);
   }
+  await hideMaterialFile(env, id);
   await catalogChanged(env);
   return jsonResponse({ success: true, status: "pending" });
+}
+
+/** Best effort: a material taken off the site stops being reachable at its public URL. */
+async function hideMaterialFile(env, id) {
+  try {
+    const material = await env.DB.prepare("SELECT id, file_key, r2_url, storage FROM materials WHERE id = ?")
+      .bind(id)
+      .first();
+    if (material) await moveMaterialFile(env, material, "pending");
+  } catch (error) {
+    console.error("moving file to private storage failed", id, error);
+  }
 }
 
 /** Withdraw (or restore) an uploader's trust: their uploads go back to review. */
@@ -3027,6 +3076,7 @@ async function handleEdit(request, url, env) {
     .bind(title, university, faculty, department, subject, teacher, type, studyLevel, resubmit ? 1 : 0, resubmit ? 1 : 0, id)
     .run();
 
+  if (resubmit && material.status === "approved") await hideMaterialFile(env, id);
   await catalogChanged(env);
 
   return jsonResponse({ success: true, status: resubmit ? "pending" : material.status });
@@ -3584,6 +3634,24 @@ async function handleReviewMaterial(request, env) {
     return jsonResponse({ error: "Materiali nuk u gjet ose është shqyrtuar tashmë." }, 404);
   }
 
+  if (decision === "approve") {
+    const material = await env.DB.prepare("SELECT id, file_key, r2_url, storage FROM materials WHERE id = ?")
+      .bind(id)
+      .first();
+    try {
+      await moveMaterialFile(env, material, "public");
+    } catch (error) {
+      // Not published without its file: put the decision back so it can be retried.
+      console.error("publishing file failed", id, error);
+      await env.DB.prepare(
+        "UPDATE materials SET status = 'pending', reviewed_at = NULL, reviewed_by = NULL WHERE id = ?"
+      )
+        .bind(id)
+        .run();
+      return jsonResponse({ error: "Skedari nuk mund të publikohej. Provoni përsëri." }, 500);
+    }
+  }
+
   await catalogChanged(env);
   if (decision === "approve") {
     await fulfillRequestForMaterial(env, id).catch((error) => console.error("request fulfilment failed", error));
@@ -3645,9 +3713,10 @@ async function handleDeleteMaterial(request, env) {
   // invisible, whereas the other order could leave a listed row with no file.
   await env.DB.prepare("DELETE FROM materials WHERE id = ?").bind(id).run();
 
-  if (env.MY_BUCKET) {
-    const key = material.file_key || publicUrlToKey(material.r2_url);
-    if (key) await env.MY_BUCKET.delete(key).catch(() => {});
+  const bucket = bucketFor(material, env);
+  if (bucket) {
+    const key = materialFileKey(material);
+    if (key) await bucket.delete(key).catch(() => {});
   }
 
   await catalogChanged(env);
@@ -4095,7 +4164,7 @@ async function handleRedirectMaterial(request, url, env, eventType) {
   if (limited) return limited;
 
   const material = await env.DB.prepare(
-    "SELECT id, r2_url, file_key, status, user_id FROM materials WHERE id = ?"
+    "SELECT id, title, r2_url, file_key, file_type, status, user_id, storage FROM materials WHERE id = ?"
   )
     .bind(materialId)
     .first();
@@ -4108,6 +4177,9 @@ async function handleRedirectMaterial(request, url, env, eventType) {
     const allowed =
       viewer && (Number(viewer.id) === Number(material.user_id) || userIsModerator(viewer));
     if (!allowed) return jsonResponse({ error: "Material not found" }, 404);
+    if (material.storage === "pending" && env.PENDING_BUCKET) {
+      return streamPrivateFile(env, material, eventType === "download");
+    }
   }
 
   let targetUrl = String(material.r2_url || "");
@@ -4124,6 +4196,27 @@ async function handleRedirectMaterial(request, url, env, eventType) {
 
   await trackMaterialEventById(request, env, eventType, materialId);
   return Response.redirect(targetUrl, 302);
+}
+
+/**
+ * A file that is not public, streamed to its owner or the moderator. It comes
+ * from the API origin, which holds the session cookie, so it is served inert:
+ * sandboxed, never sniffed, never cached.
+ */
+async function streamPrivateFile(env, material, asDownload) {
+  const key = materialFileKey(material);
+  const object = key ? await env.PENDING_BUCKET.get(key) : null;
+  if (!object) return jsonResponse({ error: "Material not found" }, 404);
+  const name = `${sanitizeFilename(material.title || "material")}.${material.file_type || extFromKey(key)}`;
+  return new Response(object.body, {
+    headers: {
+      "Content-Type": object.httpMetadata?.contentType || contentTypeForExtension(material.file_type),
+      "Content-Disposition": `${asDownload ? "attachment" : "inline"}; filename="${name}"`,
+      "Cache-Control": "private, no-store",
+      "X-Content-Type-Options": "nosniff",
+      "Content-Security-Policy": "sandbox; default-src 'none'",
+    },
+  });
 }
 
 async function handleViewMaterial(request, url, env) {
