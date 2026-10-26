@@ -63,6 +63,8 @@ CREATE INDEX IF NOT EXISTS idx_materials_content_hash ON materials(content_hash)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_materials_client_upload
   ON materials(user_id, client_upload_id) WHERE client_upload_id IS NOT NULL;
 CREATE INDEX IF NOT EXISTS idx_materials_user ON materials(user_id);
+CREATE INDEX IF NOT EXISTS idx_materials_status_created ON materials(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_materials_user_status ON materials(user_id, status);
 CREATE INDEX IF NOT EXISTS idx_materials_faculty ON materials(faculty);
 CREATE INDEX IF NOT EXISTS idx_materials_university ON materials(university);
 
@@ -133,3 +135,4 @@ CREATE TABLE IF NOT EXISTS resource_links (
 
 CREATE INDEX IF NOT EXISTS idx_resource_links_status ON resource_links(status);
 CREATE INDEX IF NOT EXISTS idx_resource_links_faculty ON resource_links(faculty);
+CREATE INDEX IF NOT EXISTS idx_resource_links_status_created ON resource_links(status, created_at DESC);

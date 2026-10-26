@@ -82,6 +82,11 @@ export function isSafeLinkHref(href) {
   }
 }
 
+/** `href` when it may be followed, otherwise undefined (React then renders no link target). */
+export function safeHref(href) {
+  return isSafeLinkHref(href) ? href : undefined;
+}
+
 /**
  * Strips unsafe link targets from rendered preview content and forces external
  * links to open in a new, isolated tab. Content that mounts later (windowed
@@ -111,6 +116,36 @@ export function blockUnsafeLinkClick(event) {
   if (href !== null && !isSafeLinkHref(href)) {
     event.preventDefault();
     event.stopPropagation();
+  }
+}
+
+/**
+ * docx-preview copies style ids and font names out of the uploaded file into
+ * <style> text without escaping them, so a crafted .docx can close its own
+ * rule and style the rest of the site (hide the page, paint a fake login
+ * notice, load tracking images). Every selector the renderer itself writes is
+ * an optional tag name followed by a `.<className>…` class, so anything else
+ * came from the file and is dropped, as are at-rules other than @font-face and
+ * any url() that is not inline data.
+ */
+export function scopePreviewStyles(root, className) {
+  if (!root?.querySelectorAll) return;
+  const scoped = new RegExp(`^[a-z0-9]*\\.${className}[\\w-]*(?![\\w-])`, "i");
+  const externalUrl = /url\(\s*(['"]?)(?!data:|blob:)/i;
+  for (const style of root.querySelectorAll("style")) {
+    let rules;
+    try {
+      rules = Array.from(style.sheet?.cssRules ?? []);
+    } catch {
+      rules = [];
+    }
+    const kept = rules.filter((rule) => {
+      if (externalUrl.test(rule.cssText)) return false;
+      if (rule instanceof CSSFontFaceRule) return true;
+      if (!(rule instanceof CSSStyleRule)) return false;
+      return rule.selectorText.split(",").every((part) => scoped.test(part.trim()));
+    });
+    style.textContent = kept.map((rule) => rule.cssText).join("\n");
   }
 }
 

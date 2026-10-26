@@ -17,6 +17,7 @@ import {
   cleanSheetHtml,
   getPreviewKind,
   sanitizePreviewLinks,
+  scopePreviewStyles,
 } from "../lib/file-preview";
 import { useT } from "./Preferences";
 
@@ -112,6 +113,7 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
             breakPages: true,
             ignoreLastRenderedPageBreak: false,
           });
+          scopePreviewStyles(containerRef.current, "docx");
           sanitizePreviewLinks(containerRef.current);
         } else if (kind === "sheet") {
           const XLSX = await import("xlsx");
@@ -272,7 +274,8 @@ export default function MaterialPreviewModal({ isOpen, onClose, material }) {
           {/* DOCX / PPTX: rendered imperatively into this container */}
           {(kind === "docx" || kind === "pptx") && (
             <div className="h-full w-full overflow-auto">
-              <div ref={containerRef} className="mx-auto min-h-full w-full" />
+              {/* contain: paint keeps file-controlled fixed/absolute boxes inside the preview */}
+              <div ref={containerRef} className="mx-auto min-h-full w-full [contain:paint]" />
             </div>
           )}
 

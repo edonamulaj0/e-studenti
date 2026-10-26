@@ -42,16 +42,24 @@ export async function fetchCurrentUser() {
   return _fetchPromise;
 }
 
+/**
+ * Signs out on the server (which revokes every token for the account) and only
+ * then forgets the user locally. Resolves false when the server could not be
+ * reached: showing a signed-out page while the session cookie is still valid
+ * would mislead someone leaving a shared computer.
+ */
 export async function logout() {
-  if (typeof window === "undefined") return;
+  if (typeof window === "undefined") return false;
   try {
-    await fetch(`${WORKER_URL}/?action=logout`, {
+    const res = await fetch(`${WORKER_URL}/?action=logout`, {
       method: "POST",
       credentials: "include",
     });
+    if (!res.ok) return false;
   } catch {
-    // ignore network errors on logout
+    return false;
   }
   _user = null;
   window.dispatchEvent(new Event("srh-auth-change"));
+  return true;
 }

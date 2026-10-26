@@ -4,6 +4,7 @@ import { useState } from "react";
 import { ExternalLink, AlertTriangle } from "lucide-react";
 import ModalOverlay from "./ModalOverlay";
 import { useT } from "./Preferences";
+import { safeHref } from "../lib/file-preview";
 
 export default function ExternalLinkGate({ href, domain, children, className = "" }) {
   const t = useT();
@@ -45,7 +46,7 @@ export default function ExternalLinkGate({ href, domain, children, className = "
           </div>
           <div className="flex flex-col gap-3 sm:flex-row">
             <a
-              href={href}
+              href={safeHref(href)}
               target="_blank"
               rel="noopener noreferrer nofollow ugc"
               className="btn-primary flex-1"

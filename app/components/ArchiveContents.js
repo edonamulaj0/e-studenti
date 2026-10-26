@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { AlertCircle, FileText, Folder, Loader2 } from "lucide-react";
-import JSZip from "jszip";
 import { formatFileSize } from "../lib/file-preview";
 import { WORKER_URL } from "../lib/worker-url";
 import { useT } from "./Preferences";
@@ -18,6 +17,7 @@ export default function ArchiveContents({ url, onCount }) {
       try {
         const res = await fetch(`${WORKER_URL}/?action=proxy&url=${encodeURIComponent(url)}`, { cache: "no-cache" });
         if (!res.ok) throw new Error(`fetch ${res.status}`);
+        const { default: JSZip } = await import("jszip");
         const zip = await JSZip.loadAsync(await res.arrayBuffer());
         const files = [];
         zip.forEach((path, entry) => {

@@ -15,7 +15,7 @@ async function token() {
   return `${data}.${b64(new Uint8Array(await crypto.subtle.sign("HMAC", key, enc.encode(data))))}`;
 }
 
-function makeEnv({ material = { id: 3, user_id: 1, status: "approved" }, userLookups } = {}) {
+function makeEnv({ material = { id: 3, user_id: 1, status: "approved" }, approvedUploads = 0 } = {}) {
   const calls = { userLookups: 0, updates: [] };
   const db = {
     prepare(sql) {
@@ -32,6 +32,7 @@ function makeEnv({ material = { id: 3, user_id: 1, status: "approved" }, userLoo
             return { id: 1, email: "u@example.com", name: "U", token_version: 0, is_moderator: 0 };
           }
           if (/FROM materials WHERE id/.test(sql)) return material;
+          if (/FROM materials WHERE user_id/.test(sql)) return { approved: approvedUploads, pending: 0 };
           return null;
         },
         async all() {
@@ -76,6 +77,43 @@ describe("edit allowlists", () => {
     const { env } = makeEnv();
     expect((await call(env, "edit", editBody)).status).toBe(200);
   });
+});
+
+describe("edits to a published material", () => {
+  // UPDATE materials ... bind(title, university, faculty, department, subject, teacher, type, level, resubmit, ...)
+  const resubmitFlag = (calls) => calls.updates[0][8];
+
+  it("go back to review when the owner is not yet trusted", async () => {
+    const { env, calls } = makeEnv({ approvedUploads: 1 });
+    const response = await call(env, "edit", editBody);
+    expect(response.status).toBe(200);
+    expect((await response.json()).status).toBe("pending");
+    expect(resubmitFlag(calls)).toBe(1);
+  });
+
+  it("stay published for a trusted owner", async () => {
+    const { env, calls } = makeEnv({ approvedUploads: 3 });
+    const response = await call(env, "edit", editBody);
+    expect((await response.json()).status).toBe("approved");
+    expect(resubmitFlag(calls)).toBe(0);
+  });
+});
+
+describe("state-changing actions", () => {
+  it.each(["logout", "edit", "delete-material", "upload", "verify", "moderate-resource-link"])(
+    "refuse GET for %s (Lax cookies ride along on cross-site navigations)",
+    async (action) => {
+      const { env, calls } = makeEnv();
+      const response = await worker.fetch(
+        new Request(`https://api.e-studenti.com/?action=${action}&id=3`, {
+          headers: { Cookie: `srh_token=${await token()}` },
+        }),
+        env
+      );
+      expect(response.status).toBe(405);
+      expect(calls.updates).toHaveLength(0);
+    }
+  );
 });
 
 describe("authentication is resolved once per request", () => {

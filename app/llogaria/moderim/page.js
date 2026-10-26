@@ -25,6 +25,7 @@ import {
   BadgeCheck,
 } from "lucide-react";
 import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
+import { safeHref } from "../../lib/file-preview";
 import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
 import { universityShort } from "../../lib/placement";
@@ -601,7 +602,7 @@ function ModerimPage() {
                               </p>
                               {first.material_url && (
                                 <a
-                                  href={first.material_url}
+                                  href={safeHref(first.material_url)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="mt-1 inline-flex items-center gap-1 text-sm font-semibold text-burgundy-600 hover:underline"
@@ -830,7 +831,7 @@ function ModerimPage() {
                             <>
                               <span className="text-gray-300">·</span>
                               <a
-                                href={m.r2_url}
+                                href={safeHref(m.r2_url)}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="inline-flex items-center gap-1 font-semibold text-burgundy-600 hover:underline"
@@ -1131,13 +1132,13 @@ function ModerimPage() {
                           <div className="mb-3 space-y-1 text-sm">
                             <p>
                               <span className="font-semibold text-navy-900">{t("Origjinal:")}</span>{" "}
-                              <a href={link.url} target="_blank" rel="noopener noreferrer" className="break-all text-burgundy-600 hover:underline">
+                              <a href={safeHref(link.url)} target="_blank" rel="noopener noreferrer" className="break-all text-burgundy-600 hover:underline">
                                 {link.url}
                               </a>
                             </p>
                             <p>
                               <span className="font-semibold text-navy-900">{t("Destinacion:")}</span>{" "}
-                              <a href={link.resolved_url} target="_blank" rel="noopener noreferrer" className="break-all text-burgundy-600 hover:underline">
+                              <a href={safeHref(link.resolved_url)} target="_blank" rel="noopener noreferrer" className="break-all text-burgundy-600 hover:underline">
                                 {link.resolved_url}
                               </a>
                             </p>

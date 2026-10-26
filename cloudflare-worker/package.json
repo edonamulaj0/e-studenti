@@ -10,8 +10,11 @@
 		"db:local": "wrangler d1 migrations apply e-studenti-auth --local"
 	},
 	"devDependencies": {
-		"@cloudflare/workers-types": "^4.20250101.0",
-		"vitest": "^3.2.4",
-		"wrangler": "^3.0.0"
+		"@cloudflare/workers-types": "^5.20261026.1",
+		"vitest": "^5.0.5",
+		"wrangler": "^4.152.0"
+	},
+	"overrides": {
+		"undici": "^7.30.1"
 	}
 }

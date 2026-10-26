@@ -81,6 +81,11 @@ const RATE_LIMITS = {
   // verifying; the per-email ceiling still stops a distributed guessing run.
   verify_fail: { requests: 5, window: 900 },
   verify_fail_email: { requests: 50, window: 900 },
+  // Bounds a distributed guessing run to 500 tries a day per inbox (against
+  // 90M possible 8-digit codes). Set above what one address can reach under
+  // verify_fail (5 per 15 min = 480/day), so a single client cannot use it to
+  // lock someone out for a day.
+  verify_fail_email_day: { requests: 500, window: 86400 },
   contact: { requests: 3, window: 3600 },
   // Keyed to the account rather than the IP (see handleUpload), so the ceiling
   // is what one person may upload in an hour and a bulk upload fits under it.
@@ -348,10 +353,19 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+/**
+ * 8 digits (90M values) rather than 6 (900k): with the per-inbox failure caps
+ * the chance of guessing a code stays negligible over a year of sustained
+ * attempts, where 6 digits gave a botnet real odds against one account.
+ * Rejection sampling avoids modulo bias.
+ */
 function verificationCode() {
   const array = new Uint32Array(1);
-  crypto.getRandomValues(array);
-  return String(100000 + (array[0] % 900000));
+  const limit = 4_230_000_000; // largest multiple of 90M below 2^32
+  do {
+    crypto.getRandomValues(array);
+  } while (array[0] >= limit);
+  return String(10_000_000 + (array[0] % 90_000_000));
 }
 
 function extFromFilename(name) {
@@ -768,7 +782,7 @@ function codeEmailHtml(code) {
         <h1 style="margin:0 0 16px;font-size:28px;line-height:1.2;color:#1a2332">Kodi juaj i verifikimit</h1>
         <p style="margin:0 0 20px;color:#4a5568">Përdoreni këtë kod për të përfunduar hyrjen ose regjistrimin në E-Studenti.</p>
         <p style="margin:0 0 20px;border-radius:18px;background:#fef5f5;padding:18px;text-align:center">
-          <strong style="font-size:34px;letter-spacing:8px;color:#8B3A3A">${escapeHtml(code)}</strong>
+          <strong style="font-size:32px;letter-spacing:6px;color:#8B3A3A">${escapeHtml(code)}</strong>
         </p>
         <p style="margin:0;color:#4a5568">Ky kod skadon në 15 minuta. Nëse nuk e kërkuat ju këtë kod, mund ta injoroni këtë email.</p>
       </div>
@@ -894,7 +908,8 @@ async function recordVerifyFailure(request, email, env) {
   const ip = rateLimitIdentity(request);
   const perClient = await checkRateLimit(request, "verify_fail", env, `${email}|${ip}`);
   const perEmail = await checkRateLimit(request, "verify_fail_email", env, email);
-  return { locked: Boolean(perClient || perEmail) };
+  const perDay = await checkRateLimit(request, "verify_fail_email_day", env, email);
+  return { locked: Boolean(perClient || perEmail || perDay) };
 }
 
 async function clearVerifyFailures(request, email, env) {
@@ -1425,6 +1440,7 @@ async function handleVerify(request, env) {
   const lockouts = [
     { key: `verify_fail:${email}|${rateLimitIdentity(request)}`, cap: RATE_LIMITS.verify_fail.requests },
     { key: `verify_fail_email:${email}`, cap: RATE_LIMITS.verify_fail_email.requests },
+    { key: `verify_fail_email_day:${email}`, cap: RATE_LIMITS.verify_fail_email_day.requests },
   ];
   for (const { key, cap } of lockouts) {
     const failRow = await env.DB.prepare("SELECT count, reset_at FROM rate_limits WHERE key=?")
@@ -1942,7 +1958,7 @@ async function handleMaterials(request, url, env) {
   const userFilter = url.searchParams.get("user");
   const sortParam = url.searchParams.get("sort") || "newest";
   const sort = ["views", "downloads"].includes(sortParam) ? sortParam : "newest";
-  const page = Math.max(1, Number(url.searchParams.get("page")) || 1);
+  const page = Math.min(1000, Math.max(1, Math.floor(Number(url.searchParams.get("page"))) || 1));
   const requestedLimit = Number(url.searchParams.get("limit")) || 50;
   const limit = Math.min(100, Math.max(1, requestedLimit));
   const offset = (page - 1) * limit;
@@ -2022,10 +2038,6 @@ async function handleMaterials(request, url, env) {
      FROM materials m LEFT JOIN users u ON m.user_id = u.id
      ${whereClause(where)}`
   );
-  const countResult = params.length
-    ? await countStatement.bind(...params).first()
-    : await countStatement.first();
-  const total = Number(countResult?.total || 0);
 
   const typeCountsStatement = env.DB.prepare(
     `SELECT m.type, COUNT(*) as count
@@ -2034,13 +2046,6 @@ async function handleMaterials(request, url, env) {
      GROUP BY m.type
      ORDER BY m.type ASC`
   );
-  const typeCountsResult = baseParams.length
-    ? await typeCountsStatement.bind(...baseParams).all()
-    : await typeCountsStatement.all();
-  const typeCounts = {};
-  for (const row of typeCountsResult.results || []) {
-    typeCounts[row.type || "Të pa klasifikuara"] = Number(row.count || 0);
-  }
 
   const orderBy =
     sort === "views"
@@ -2059,9 +2064,19 @@ async function handleMaterials(request, url, env) {
      ORDER BY ${orderBy}
      LIMIT ? OFFSET ?`
   );
-  const result = await statement.bind(...params, limit, offset).all();
+  // Independent reads: one round trip's latency instead of four in a row.
+  const [countResult, typeCountsResult, result, slugIndex] = await Promise.all([
+    params.length ? countStatement.bind(...params).first() : countStatement.first(),
+    baseParams.length ? typeCountsStatement.bind(...baseParams).all() : typeCountsStatement.all(),
+    statement.bind(...params, limit, offset).all(),
+    loadSlugIndexCached(env),
+  ]);
+  const total = Number(countResult?.total || 0);
+  const typeCounts = {};
+  for (const row of typeCountsResult.results || []) {
+    typeCounts[row.type || "Të pa klasifikuara"] = Number(row.count || 0);
+  }
 
-  const slugIndex = await loadSlugIndexCached(env);
   const rawMaterials = (result.results || []).map((material) => {
     const slug = slugIndex.byId.get(material.id);
     return slug ? { ...material, slug } : material;
@@ -2966,11 +2981,15 @@ async function handleEdit(request, url, env) {
   }
   subject = await canonicalSubject(env, faculty, subject, university);
 
-  // An owner who edits a rejected material is resubmitting it for review.
+  // An owner who edits a rejected material is resubmitting it for review. An
+  // owner whose new uploads would still be held for review gets the same
+  // treatment for edits to a published one: otherwise a harmless first version
+  // could be approved and then renamed to anything without a moderator seeing it.
+  const isOwnerEdit = Number(material.user_id) === Number(user.id) && !userIsModerator(user);
   const resubmit =
-    material.status === "rejected" &&
-    Number(material.user_id) === Number(user.id) &&
-    !userIsModerator(user);
+    isOwnerEdit &&
+    (material.status === "rejected" ||
+      (material.status === "approved" && (await uploadReviewStatus(user, env)).status === "pending"));
 
   await env.DB.prepare(
     `UPDATE materials
@@ -3153,7 +3172,14 @@ async function handleContact(request, env) {
   const subject = String(body.subject || "").trim();
   const message = String(body.message || "").trim();
 
-  if (!senderName || !subject || message.length < 10 || message.length > 2000) {
+  if (
+    !senderName ||
+    !subject ||
+    senderName.length > 100 ||
+    subject.length > 200 ||
+    message.length < 10 ||
+    message.length > 2000
+  ) {
     return jsonResponse(
       { error: "Plotësoni emrin, subjektin dhe mesazhin 10-2000 karaktere." },
       400
@@ -3244,16 +3270,16 @@ async function handleResourceLinks(request, url, env) {
     params.push(...search.params);
   }
 
-  const countRow = await env.DB.prepare(
-    `SELECT COUNT(*) AS total
-     FROM resource_links r
-     JOIN users u ON r.user_id = u.id
-     WHERE ${where.join(" AND ")}`
-  )
-    .bind(...params)
-    .first();
-
-  const result = await env.DB.prepare(
+  const [countRow, result] = await Promise.all([
+    env.DB.prepare(
+      `SELECT COUNT(*) AS total
+       FROM resource_links r
+       JOIN users u ON r.user_id = u.id
+       WHERE ${where.join(" AND ")}`
+    )
+      .bind(...params)
+      .first(),
+    env.DB.prepare(
     `SELECT r.id, r.url, r.resolved_url, r.resolved_domain, r.was_shortened,
             r.title, r.description, r.category, r.faculty, r.subject,
             r.is_anonymous, r.created_at,
@@ -3263,9 +3289,10 @@ async function handleResourceLinks(request, url, env) {
      WHERE ${where.join(" AND ")}
      ORDER BY r.created_at DESC
      LIMIT ? OFFSET ?`
-  )
-    .bind(...params, limit, offset)
-    .all();
+    )
+      .bind(...params, limit, offset)
+      .all(),
+  ]);
 
   const links = (result.results || []).map((link) => sanitizeResourceLinkForPublic(link));
   const total = Number(countRow?.total || 0);
@@ -3291,11 +3318,15 @@ async function handleSubmitResourceLink(request, env) {
   if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
 
   const body = await request.json().catch(() => ({}));
-  const title = String(body.title || "").trim();
+  const titleCheck = validateMaterialTextField(body.title, "Titulli", { maxLen: 200 });
+  if (!titleCheck.ok) return jsonResponse({ error: titleCheck.error }, 400);
+  const subjectCheck = validateMaterialTextField(body.subject, "Lënda", { maxLen: 200, allowEmpty: true });
+  if (!subjectCheck.ok) return jsonResponse({ error: subjectCheck.error }, 400);
+  const title = titleCheck.value;
   const description = String(body.description || "").trim();
   const category = String(body.category || "").trim();
-  const faculty = String(body.faculty || "").trim().toUpperCase();
-  const subject = String(body.subject || "").trim() || "//";
+  const faculty = String(body.faculty || "").trim().toUpperCase().slice(0, 20);
+  const subject = subjectCheck.value || "//";
   const isAnonymous = body.is_anonymous === true || body.is_anonymous === 1 ? 1 : 0;
   const rawUrl = String(body.url || "").trim();
 
@@ -3407,8 +3438,8 @@ async function handleModerateResourceLink(request, env) {
   if (!["approve", "reject"].includes(decision)) {
     return jsonResponse({ error: "Vendimi nuk është i vlefshëm." }, 400);
   }
-  if (decision === "reject" && rejectionReason.length < 5) {
-    return jsonResponse({ error: "Jepni një arsye refuzimi (min. 5 karaktere)." }, 400);
+  if (decision === "reject" && (rejectionReason.length < 5 || rejectionReason.length > 300)) {
+    return jsonResponse({ error: "Jepni një arsye refuzimi (5–300 karaktere)." }, 400);
   }
 
   const link = await env.DB.prepare("SELECT * FROM resource_links WHERE id=?").bind(id).first();
@@ -3418,13 +3449,18 @@ async function handleModerateResourceLink(request, env) {
   }
 
   const status = decision === "approve" ? "approved" : "rejected";
-  await env.DB.prepare(
+  // Guarded like handleReviewMaterial: of two concurrent decisions, only the
+  // first applies (and only it sends the owner an email).
+  const update = await env.DB.prepare(
     `UPDATE resource_links
      SET status=?, rejection_reason=?, moderator_id=?, reviewed_at=datetime('now')
-     WHERE id=?`
+     WHERE id=? AND status = 'pending'`
   )
     .bind(status, decision === "reject" ? rejectionReason : null, user.id, id)
     .run();
+  if (!Number(update.meta?.changes || 0)) {
+    return jsonResponse({ error: "Kjo lidhje është trajtuar tashmë." }, 400);
+  }
 
   // Best effort: the decision stands even if the email cannot be sent.
   try {
@@ -3639,6 +3675,31 @@ async function pruneExpiredRows(env) {
   }
 }
 
+const POST_ONLY_ACTIONS = new Set([
+  "register",
+  "verify",
+  "login",
+  "logout",
+  "contact",
+  "upload",
+  "edit",
+  "report",
+  "resolve-report",
+  "delete-material",
+  "rekey-materials",
+  "review-material",
+  "unpublish-material",
+  "set-user-trust",
+  "check-duplicates",
+  "rename-subject",
+  "delete-contact-message",
+  "delete-account",
+  "submit-resource-link",
+  "moderate-resource-link",
+  "track-view",
+  "track-download",
+]);
+
 const worker = {
   async scheduled(_event, env, ctx) {
     if (!env.DB) return;
@@ -3708,6 +3769,13 @@ const worker = {
       "site-statistics",
       "me",
     ];
+
+    // Actions that change state are POST only. The session cookie is SameSite=Lax,
+    // which browsers still send on a cross-site top-level GET navigation, and
+    // such a request carries no Origin header — so a GET must never act.
+    if (POST_ONLY_ACTIONS.has(action) && request.method !== "POST") {
+      return withCors(jsonResponse({ error: "Method not allowed" }, 405), request, env);
+    }
 
     try {
       if (accountActions.includes(action) && !env.DB) {
