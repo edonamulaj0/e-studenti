@@ -12,7 +12,6 @@ const platformaLinks = [
   { href: "/universitetet", label: "Universitetet" },
   { href: "/materialet", label: "Materialet" },
   { href: "/kerkesat", label: "Kërkesat" },
-  { href: "/erasmus", label: "Erasmus+" },
   { href: "/informacione", label: "Rreth nesh" },
 ];
 

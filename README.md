@@ -85,21 +85,6 @@ default production) to create one page per material. It stops with an error if
 the API cannot be read, so a broken deploy never replaces a working site. To
 build with no network, use the stub as above.
 
-### Updating the Erasmus page
-
-The Erasmus+ page lists calls from uni-pr.edu, kept in
-`app/data/erasmus-calls.json`. The university's site asks every visitor to pass
-a Cloudflare check, so this cannot run on a schedule; update it by hand:
-
-```bash
-npx playwright install chromium   # once
-npm run sync-erasmus              # a browser opens; complete the check if one appears
-git add app/data/erasmus-calls.json && git commit -m "Sync Erasmus calls"
-```
-
-The script exits with an error, and leaves the file alone, if it could not
-read the list.
-
 ## Project layout
 
 ```text
@@ -114,7 +99,7 @@ cloudflare-worker/
   migrations/        D1 schema history (apply in order)
   schema.sql         the same schema in one file, for a brand-new database
 shared/              rules used by both the site and the Worker
-scripts/             build helpers (sitemap, secret scan, stub API, Erasmus sync)
+scripts/             build helpers (sitemap, secret scan, stub API, test server)
 docs/                architecture, deployment, accessibility conventions
 public/              static files, including `_headers` (CSP) and `_redirects`
 ```
