@@ -1,5 +1,10 @@
 /** Account area: sign in, register, upload, edit, my materials, plus the Worker/helper messages they show. */
 const account = {
+  "Konfirmimi me passkey u anulua ose skadoi. Provoni përsëri.": "The passkey confirmation was cancelled or timed out. Try again.",
+  "Ky shfletues nuk mbështet passkey.": "This browser does not support passkeys.",
+  "Hyrja skadoi. Kërkoni një kod të ri.": "The sign-in expired. Request a new code.",
+  "Ky passkey nuk njihet për këtë llogari.": "This passkey is not registered for this account.",
+  "Passkey nuk u verifikua.": "The passkey could not be verified.",
   "Lëndët që ndiqni": "Subjects you follow",
   "Një herë në javë, të hënën, ju dërgojmë një email me materialet e reja në këto lëndë.": "Once a week, on Monday, we email you the new materials in these subjects.",
   "U çregjistruat. Nuk do të merrni më email për lëndët që ndiqnit.": "You're unsubscribed. You won't get emails about the subjects you followed any more.",

@@ -268,3 +268,18 @@ duplicate warnings, never used for security.
 Not included: the queue does not survive a page reload (the browser asks before
 leaving while uploads are active), and files still pass through the Worker
 rather than going straight to R2.
+
+## Moderator passkeys
+
+Once the moderator registers a passkey (Moderim → Siguria), signing in takes the
+emailed code and then the passkey. Register at least two (for example phone and
+laptop). If every passkey is lost, remove them from the database; sign-in then
+falls back to the emailed code alone, and new passkeys can be added:
+
+```bash
+cd cloudflare-worker
+npx wrangler d1 execute e-studenti-auth --remote --command "DELETE FROM passkeys"
+```
+
+Passkeys are bound to `e-studenti.com` (and work on `www.e-studenti.com`); one
+registered on a preview or local origin only works there.

@@ -24,11 +24,13 @@ import {
   ShieldOff,
   BadgeCheck,
   Tags,
+  Fingerprint,
 } from "lucide-react";
 import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
 import { safeHref } from "../../lib/file-preview";
 import { matchesSearch } from "../../lib/search-text";
 import RetypePanel from "./RetypePanel";
+import PasskeysPanel from "./PasskeysPanel";
 import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
 import { universityShort } from "../../lib/placement";
@@ -58,6 +60,7 @@ function ModerimPage() {
     if (t === "mesazhe") return "mesazhe";
     if (t === "lendet") return "lendet";
     if (t === "kategorite") return "kategorite";
+    if (t === "siguria") return "siguria";
     return "raportet";
   });
   const [ready, setReady] = useState(false);
@@ -465,7 +468,7 @@ function ModerimPage() {
 
   // ── Tab pill styles ────────────────────────────────────────────────────
   const tabCls = (name) =>
-    `inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-bold transition-colors ${
+    `inline-flex shrink-0 items-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-bold transition-colors ${
       tab === name
         ? "bg-ink text-white shadow-sm"
         : "text-gray-500 hover:bg-gray-100"
@@ -531,6 +534,10 @@ function ModerimPage() {
           <button type="button" onClick={() => setTab("kategorite")} className={tabCls("kategorite")}>
             <Tags className="h-4 w-4" />
             {t("Kategoritë")}
+          </button>
+          <button type="button" onClick={() => setTab("siguria")} className={tabCls("siguria")}>
+            <Fingerprint className="h-4 w-4" />
+            {t("Siguria")}
           </button>
           <button type="button" onClick={() => setTab("burime")} className={tabCls("burime")}>
             <Link2 className="h-4 w-4" />
@@ -681,6 +688,8 @@ function ModerimPage() {
 
         {/* ── SUBJECTS TAB ──────────────────────────────────────────── */}
         {tab === "kategorite" && <RetypePanel />}
+
+        {tab === "siguria" && <PasskeysPanel />}
 
         {tab === "lendet" && (
           <>

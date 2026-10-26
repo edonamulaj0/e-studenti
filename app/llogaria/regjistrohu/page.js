@@ -9,6 +9,7 @@ import { setUser } from "../../lib/auth";
 import { useT } from "../../components/Preferences";
 import { translateMessage } from "../../lib/bulk-upload";
 import { isDisposableEmail, DISPOSABLE_EMAIL_ERROR } from "../../lib/disposable-email-domains";
+import { completePasskeyLogin } from "../../lib/passkeys";
 
 export default function RegjistrohuPage() {
   const router = useRouter();
@@ -82,8 +83,10 @@ export default function RegjistrohuPage() {
           code: code.trim(),
         }),
       });
-      const data = await res.json().catch(() => ({}));
+      let data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error || "Verifikimi dështoi.");
+      // The moderator confirms with a passkey after the emailed code.
+      if (data.passkey_required) data = await completePasskeyLogin(data.passkey);
       setUser(data.user);
       router.push("/llogaria/materiale-e-mia");
     } catch (err) {

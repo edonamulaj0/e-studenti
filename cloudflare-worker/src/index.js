@@ -22,6 +22,13 @@ import {
 } from "./resource-links.js";
 import { loadSiteStats, refreshSiteStats } from "./site-stats.js";
 import {
+  bytesToBase64Url,
+  challengeOf,
+  randomChallenge,
+  verifyAssertion,
+  verifyRegistration,
+} from "./webauthn.js";
+import {
   ALWAYS_ALLOWED_DOMAINS as ALWAYS_ALLOWED_EMAIL_DOMAINS,
   isDisposableEmail,
 } from "../../shared/email-domains.mjs";
@@ -108,6 +115,7 @@ const RATE_LIMITS = {
   vote_request: { requests: 60, window: 3600 },
   follow_subject: { requests: 60, window: 3600 },
   unsubscribe_digest: { requests: 20, window: 3600 },
+  passkey_login: { requests: 30, window: 900 },
   track_view: { requests: 120, window: 3600 },
   track_download: { requests: 120, window: 3600 },
   // Only counted on a cache miss (see handleProxy), so this bounds *cold*
@@ -1512,21 +1520,32 @@ async function handleVerify(request, env) {
     // pending_owner_email column may not exist yet — non-fatal
   }
 
+  // The moderator confirms with a passkey once one is registered: the emailed
+  // code alone (a compromised inbox, a lucky guess) is then not enough.
+  if (userIsModerator(user)) {
+    const passkeyStep = await passkeyLoginChallenge(request, env, user);
+    if (passkeyStep) return jsonResponse({ success: true, passkey_required: true, passkey: passkeyStep });
+  }
+
+  return signedInResponse(user, env, { linked_materials_count: linkedMaterialsCount });
+}
+
+/** Sets the session cookie and describes the signed-in user. */
+async function signedInResponse(user, env, extra = {}) {
   const token = await signJWT(
     { sub: user.id, email: user.email, tv: Number(user.token_version ?? 0) },
     env
   );
-
   return new Response(
     JSON.stringify({
       success: true,
-      linked_materials_count: linkedMaterialsCount,
+      ...extra,
       user: {
         id: user.id,
         name: user.name,
         surname: user.surname,
         email: user.email,
-        is_moderator: Boolean(user.is_moderator),
+        is_moderator: userIsModerator(user),
       },
     }),
     {
@@ -1537,6 +1556,201 @@ async function handleVerify(request, env) {
       },
     }
   );
+}
+
+// ── Passkeys (the moderator's second factor) ─────────────────────────────
+
+const WEBAUTHN_CHALLENGE_TTL_SECONDS = 5 * 60;
+const MAX_PASSKEYS_PER_USER = 10;
+
+/** The relying party for a page origin: the site's registrable domain, or the host itself locally. */
+function rpIdForOrigin(origin) {
+  try {
+    const host = new URL(origin).hostname;
+    return host === "e-studenti.com" || host.endsWith(".e-studenti.com") ? "e-studenti.com" : host;
+  } catch {
+    return null;
+  }
+}
+
+async function storeWebauthnChallenge(env, userId, purpose) {
+  const challenge = randomChallenge();
+  const now = Math.floor(Date.now() / 1000);
+  await env.DB.batch([
+    env.DB.prepare("DELETE FROM webauthn_challenges WHERE expires_at < ?").bind(now),
+    env.DB.prepare(
+      "INSERT INTO webauthn_challenges (challenge, user_id, purpose, expires_at) VALUES (?, ?, ?, ?)"
+    ).bind(challenge, userId, purpose, now + WEBAUTHN_CHALLENGE_TTL_SECONDS),
+  ]);
+  return challenge;
+}
+
+/** Looks up and consumes a challenge; it works once, for its purpose, until it expires. */
+async function takeWebauthnChallenge(env, challenge, purpose) {
+  if (!challenge) return null;
+  const row = await env.DB.prepare(
+    "DELETE FROM webauthn_challenges WHERE challenge = ? AND purpose = ? RETURNING user_id, expires_at"
+  )
+    .bind(challenge, purpose)
+    .first();
+  if (!row || Number(row.expires_at) < Math.floor(Date.now() / 1000)) return null;
+  return row;
+}
+
+async function passkeysOf(env, userId) {
+  return (
+    (await env.DB.prepare("SELECT * FROM passkeys WHERE user_id = ? ORDER BY id").bind(userId).all()).results || []
+  );
+}
+
+/** Options for navigator.credentials.get(), or null when the user has no passkey. */
+async function passkeyLoginChallenge(request, env, user) {
+  const passkeys = await passkeysOf(env, user.id);
+  if (passkeys.length === 0) return null;
+  return {
+    challenge: await storeWebauthnChallenge(env, user.id, "login"),
+    rpId: rpIdForOrigin(request.headers.get("Origin")),
+    timeout: WEBAUTHN_CHALLENGE_TTL_SECONDS * 1000,
+    userVerification: "required",
+    allowCredentials: passkeys.map((key) => ({ type: "public-key", id: key.credential_id })),
+  };
+}
+
+async function requireModerator(request, env) {
+  const user = await getUserFromRequest(request, env);
+  return user && userIsModerator(user) ? user : null;
+}
+
+/** Options for navigator.credentials.create(). Moderator only. */
+async function handlePasskeyRegisterOptions(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await requireModerator(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const existing = await passkeysOf(env, user.id);
+  if (existing.length >= MAX_PASSKEYS_PER_USER) {
+    return jsonResponse({ error: `Mund të keni deri në ${MAX_PASSKEYS_PER_USER} passkey.` }, 400);
+  }
+  const rpId = rpIdForOrigin(request.headers.get("Origin"));
+  if (!rpId) return jsonResponse({ error: "Origin not allowed" }, 403);
+  return jsonResponse({
+    challenge: await storeWebauthnChallenge(env, user.id, "register"),
+    rp: { id: rpId, name: "E-Studenti" },
+    user: {
+      id: bytesToBase64Url(new TextEncoder().encode(`user:${user.id}`)),
+      name: user.email,
+      displayName: `${user.name || ""} ${user.surname || ""}`.trim() || user.email,
+    },
+    pubKeyCredParams: [{ type: "public-key", alg: -7 }],
+    authenticatorSelection: { residentKey: "preferred", userVerification: "required" },
+    attestation: "none",
+    timeout: WEBAUTHN_CHALLENGE_TTL_SECONDS * 1000,
+    excludeCredentials: existing.map((key) => ({ type: "public-key", id: key.credential_id })),
+  });
+}
+
+async function handlePasskeyRegister(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await requireModerator(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const body = await request.json().catch(() => ({}));
+  const response = body.response || {};
+  const nameCheck = validateMaterialTextField(body.name, "Emri", { maxLen: 60, allowEmpty: true });
+  if (!nameCheck.ok) return jsonResponse({ error: nameCheck.error }, 400);
+
+  const challenge = await takeWebauthnChallenge(env, challengeOf(response.clientDataJSON), "register");
+  if (!challenge || Number(challenge.user_id) !== Number(user.id)) {
+    return jsonResponse({ error: "Kërkesa skadoi. Provoni përsëri." }, 400);
+  }
+  let credential;
+  try {
+    const origin = request.headers.get("Origin");
+    credential = await verifyRegistration(response, {
+      challenge: challengeOf(response.clientDataJSON),
+      origins: getAllowedOrigins(env),
+      rpId: rpIdForOrigin(origin),
+    });
+  } catch (error) {
+    return jsonResponse({ error: `Passkey nuk u pranua: ${error.message}` }, 400);
+  }
+  try {
+    await env.DB.prepare(
+      "INSERT INTO passkeys (user_id, credential_id, public_key, sign_count, name) VALUES (?, ?, ?, ?, ?)"
+    )
+      .bind(user.id, credential.credentialId, JSON.stringify(credential.jwk), credential.signCount, nameCheck.value || null)
+      .run();
+  } catch (error) {
+    if (String(error.message || error).includes("UNIQUE")) {
+      return jsonResponse({ error: "Ky passkey është regjistruar tashmë." }, 400);
+    }
+    throw error;
+  }
+  return jsonResponse({ success: true });
+}
+
+async function handlePasskeys(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await requireModerator(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  return jsonResponse({
+    passkeys: (await passkeysOf(env, user.id)).map((key) => ({
+      id: key.id,
+      name: key.name,
+      created_at: key.created_at,
+      last_used_at: key.last_used_at,
+    })),
+  });
+}
+
+async function handleDeletePasskey(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const user = await requireModerator(request, env);
+  if (!user) return jsonResponse({ error: "Unauthorized" }, 401);
+  const body = await request.json().catch(() => ({}));
+  const id = Number(body.id);
+  if (!Number.isInteger(id) || id <= 0) return jsonResponse({ error: "ID i pavlefshëm." }, 400);
+  const result = await env.DB.prepare("DELETE FROM passkeys WHERE id = ? AND user_id = ?").bind(id, user.id).run();
+  if (!Number(result.meta?.changes || 0)) return jsonResponse({ error: "Passkey nuk u gjet." }, 404);
+  return jsonResponse({ success: true });
+}
+
+/** Second step of the moderator's sign-in: the passkey assertion, then the session. */
+async function handlePasskeyLogin(request, env) {
+  if (!env.DB) return databaseUnavailableResponse();
+  const limited = await checkRateLimit(request, "passkey_login", env);
+  if (limited) return limited;
+  const body = await request.json().catch(() => ({}));
+  const response = body.response || {};
+  const challengeText = challengeOf(response.clientDataJSON);
+  const challenge = await takeWebauthnChallenge(env, challengeText, "login");
+  if (!challenge) return jsonResponse({ error: "Hyrja skadoi. Kërkoni një kod të ri." }, 400);
+
+  const passkey = await env.DB.prepare("SELECT * FROM passkeys WHERE credential_id = ? AND user_id = ?")
+    .bind(String(body.id || ""), challenge.user_id)
+    .first();
+  if (!passkey) return jsonResponse({ error: "Ky passkey nuk njihet për këtë llogari." }, 400);
+
+  let verified;
+  try {
+    verified = await verifyAssertion(response, {
+      challenge: challengeText,
+      origins: getAllowedOrigins(env),
+      rpId: rpIdForOrigin(request.headers.get("Origin")),
+      jwk: JSON.parse(passkey.public_key),
+      signCount: Number(passkey.sign_count || 0),
+    });
+  } catch (error) {
+    console.error("passkey assertion rejected", error.message);
+    return jsonResponse({ error: "Passkey nuk u verifikua." }, 400);
+  }
+  await env.DB.prepare("UPDATE passkeys SET sign_count = ?, last_used_at = datetime('now') WHERE id = ?")
+    .bind(verified.signCount, passkey.id)
+    .run();
+
+  const user = await env.DB.prepare("SELECT * FROM users WHERE id = ? AND email_verified = 1")
+    .bind(challenge.user_id)
+    .first();
+  if (!user) return jsonResponse({ error: "Llogaria nuk u gjet." }, 400);
+  return signedInResponse(user, env);
 }
 
 async function handleLogin(request, env) {
@@ -4287,6 +4501,10 @@ const POST_ONLY_ACTIONS = new Set([
   "remove-request",
   "follow-subject",
   "unsubscribe-digest",
+  "passkey-register-options",
+  "passkey-register",
+  "delete-passkey",
+  "passkey-login",
   "track-view",
   "track-download",
 ]);
@@ -4344,6 +4562,10 @@ const worker = {
       "remove-request",
       "follow-subject",
       "my-follows",
+      "passkey-register-options",
+      "passkey-register",
+      "passkeys",
+      "delete-passkey",
     ];
     const publicActions = [
       "materials",
@@ -4368,6 +4590,7 @@ const worker = {
       "me",
       "requests",
       "unsubscribe-digest",
+      "passkey-login",
     ];
 
     // Actions that change state are POST only. The session cookie is SameSite=Lax,
@@ -4543,6 +4766,21 @@ const worker = {
           break;
         case "unsubscribe-digest":
           response = await handleUnsubscribeDigest(request, env);
+          break;
+        case "passkey-register-options":
+          response = await handlePasskeyRegisterOptions(request, env);
+          break;
+        case "passkey-register":
+          response = await handlePasskeyRegister(request, env);
+          break;
+        case "passkeys":
+          response = await handlePasskeys(request, env);
+          break;
+        case "delete-passkey":
+          response = await handleDeletePasskey(request, env);
+          break;
+        case "passkey-login":
+          response = await handlePasskeyLogin(request, env);
           break;
         case "site-statistics":
           response = await handleSiteStatistics(url, env);
