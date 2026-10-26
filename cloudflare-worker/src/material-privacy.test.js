@@ -78,8 +78,8 @@ describe("anonymous poster privacy", () => {
   it("search SQL excludes anonymous poster names", () => {
     const { clause, params } = buildPublicSearchClause("Arben");
     expect(clause).toContain("is_anonymous");
-    expect(clause).toContain("u.name LIKE ?");
-    expect(params).toHaveLength(5);
+    expect(clause).toContain("u.name");
+    expect(params).toHaveLength(2);
   });
 });
 

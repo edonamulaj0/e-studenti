@@ -1,6 +1,7 @@
 "use client";
 
 import { compareText } from "../lib/directory";
+import { matchesSearch } from "../lib/search-text";
 import { useT } from "../components/Preferences";
 import { useMemo, useState } from "react";
 import {
@@ -126,13 +127,12 @@ export default function ErasmusClient({ calls: rawCalls, sourceUrl, generatedAt 
   }, [calls]);
 
   const filtered = useMemo(() => {
-    const s = q.trim().toLowerCase();
     const items = calls.filter((c) => {
       const itemCountry = getCountry(c).label;
-      const matchesSearch = !s || c.name.toLowerCase().includes(s) || c.title.toLowerCase().includes(s);
+      const matchesQuery = matchesSearch(q, c.name, c.title);
       const matchesCountry = !country || itemCountry === country;
       const matchesMonth = !month || getMonth(c.date) === month;
-      return matchesSearch && matchesCountry && matchesMonth;
+      return matchesQuery && matchesCountry && matchesMonth;
     });
     return items.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
   }, [calls, q, country, month]);

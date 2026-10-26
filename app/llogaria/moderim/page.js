@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { WORKER_URL, materialViewUrl } from "../../lib/worker-url";
 import { safeHref } from "../../lib/file-preview";
+import { matchesSearch } from "../../lib/search-text";
 import { fetchCurrentUser } from "../../lib/auth";
 import { getFacultyName } from "../../lib/material-options";
 import { universityShort } from "../../lib/placement";
@@ -433,12 +434,13 @@ function ModerimPage() {
   // ── Client-side search filter ──────────────────────────────────────────
   const filtered = search.trim()
     ? materials.filter((m) => {
-        const q = search.toLowerCase();
-        return (
-          m.title?.toLowerCase().includes(q) ||
-          m.subject?.toLowerCase().includes(q) ||
-          m.uploader_email?.toLowerCase().includes(q) ||
-          `${m.uploader_name || ""} ${m.uploader_surname || ""}`.toLowerCase().includes(q)
+        return matchesSearch(
+          search,
+          m.title,
+          m.subject,
+          m.type,
+          m.uploader_email,
+          `${m.uploader_name || ""} ${m.uploader_surname || ""}`
         );
       })
     : materials;
@@ -455,7 +457,7 @@ function ModerimPage() {
   }
 
   const shownSubjects = subjectFilter.trim()
-    ? subjects.filter((s) => s.name.toLowerCase().includes(subjectFilter.trim().toLowerCase()))
+    ? subjects.filter((s) => matchesSearch(subjectFilter, s.name))
     : subjects;
 
   // ── Tab pill styles ────────────────────────────────────────────────────
