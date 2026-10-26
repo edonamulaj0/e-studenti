@@ -15,7 +15,7 @@ import TrackableDownloadLink from "./TrackableDownloadLink";
 import { WORKER_URL, materialDownloadUrl } from "../lib/worker-url";
 import { getFacultyName } from "../lib/material-options";
 import { getStudyLevelLabel } from "../lib/study-levels";
-import { formatFileSize, getPreviewKind, hasInBrowserView } from "../lib/file-preview";
+import { formatFileSize, getPreviewKind } from "../lib/file-preview";
 import { formatStatCount, trackMaterialView } from "../lib/track-material";
 import { formatDate } from "../lib/format-date";
 import { isRealSubject, subjectSlug } from "../lib/subjects";
@@ -87,18 +87,12 @@ function PreviewPanel({ card }) {
         </div>
       </WhenVisible>
     );
-  } else if (kind === "archive" && card.fileType?.toLowerCase() === "zip") {
+  } else if (kind === "archive") {
     header = fileCount == null ? t("Përmbajtja e arkivit") : t("Përmbajtja e arkivit · {n} skedarë", { n: fileCount });
     body = (
       <WhenVisible minHeight="8rem">
-        <ArchiveContents url={card.r2Url} onCount={setFileCount} />
+        <ArchiveContents url={card.r2Url} fileType={card.fileType} onCount={setFileCount} />
       </WhenVisible>
-    );
-  } else if (!hasInBrowserView(card.fileType)) {
-    return (
-      <p className="rounded-2xl border border-gray-200 bg-surface p-5 text-sm text-gray-600">
-        {t("Arkivat RAR nuk hapen në shfletues — shkarkoni skedarin për të parë përmbajtjen.")}
-      </p>
     );
   } else {
     body = (

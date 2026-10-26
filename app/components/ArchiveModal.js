@@ -71,15 +71,7 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
       if (fileType === "zip") {
         await loadZipContents();
       } else if (fileType === "rar") {
-        // For static sites, RAR files must be downloaded
-        setFiles([
-          {
-            name: "Arkivat RAR duhet të shkarkohen",
-            isRarNotice: true,
-            message:
-              "Për të parë përmbajtjen e skedarëve RAR, ju lutemi shkarkoni arkivin duke klikuar butonin 'Shkarko arkivin' më poshtë.",
-          },
-        ]);
+        await loadRarContents();
       }
     } catch (err) {
       console.error("Gabim gjatë ngarkimit të arkivit:", err);
@@ -135,6 +127,21 @@ export default function ArchiveModal({ isOpen, onClose, material }) {
       console.error("Gabim ZIP:", err);
       throw err;
     }
+  };
+
+  /** RAR entries are listed from the headers; single files cannot be taken out, only the whole archive. */
+  const loadRarContents = async () => {
+    const response = await fetch(`${WORKER_URL}/?action=proxy&url=${encodeURIComponent(material.r2Url)}`, {
+      cache: "no-cache",
+    });
+    if (!response.ok) throw new Error(`Dështoi ngarkimi: ${response.status}`);
+    const { listRarEntries } = await import("../lib/rar-listing");
+    const fileList = listRarEntries(new Uint8Array(await response.arrayBuffer()))
+      .filter((entry) => !entry.dir)
+      .map((entry) => ({ name: entry.path, size: entry.size || 0, isFolder: false }));
+    if (fileList.length === 0) throw new Error("Arkivi është bosh");
+    fileList.sort((a, b) => a.name.localeCompare(b.name));
+    setFiles(fileList);
   };
 
   const downloadFile = async (file) => {
