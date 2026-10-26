@@ -53,7 +53,6 @@ async function main() {
     "/kerkesat",
     "/fakultetet",
     "/universitetet",
-    "/erasmus",
     "/informacione",
     "/statistikat",
     "/rreth-nesh/pyetje-te-shpeshta",
