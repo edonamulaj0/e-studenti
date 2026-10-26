@@ -1,4 +1,7 @@
 const materials = {
+  "Shpërndaje": "Share",
+  "Shpërndaje në Viber": "Share on Viber",
+  "Shpërndaje në WhatsApp": "Share on WhatsApp",
   "Nuk e gjetët “{q}”? Kërkojeni — dikush mund ta ketë dhe ta ngarkojë.": "Didn't find “{q}”? Request it. Someone may have it and upload it.",
   "Kërkojeni": "Request it",
   // Filters

@@ -43,14 +43,12 @@ export const metadata = {
     title: "E-Studenti — Materiale dhe burime për studentët në Kosovë",
     description:
       "Platformë komunitare me materiale studimore, afate, ligjërata dhe burime për studentët e universiteteve në Kosovë.",
-    images: [{ url: "/logo-color.svg", alt: "E-Studenti" }],
   },
   twitter: {
-    card: "summary",
+    card: "summary_large_image",
     title: "E-Studenti",
     description:
       "Materiale, provime dhe burime studimore për studentët e universiteteve në Kosovë.",
-    images: ["/logo-color.svg"],
   },
   icons: {
     icon: "/favicon.svg",

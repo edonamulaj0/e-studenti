@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Download, Link2, Check } from "lucide-react";
+import ShareRow from "./ShareRow";
 import { DEFAULT_UNIVERSITY, universityName, universityShort } from "../lib/placement";
 import ReportButton from "./ReportButton";
 import MaterialViewTracker from "./MaterialViewTracker";
@@ -272,6 +273,7 @@ export default function MaterialDetail({ material, slug }) {
                 {copied ? <Check className="h-4 w-4" aria-hidden /> : <Link2 className="h-4 w-4" aria-hidden />}
                 {copied ? t("U kopjua") : t("Kopjo lidhjen")}
               </button>
+              <ShareRow title={material.title} slug={slug} />
               <p className="text-xs text-gray-600">
                 {t("{n} shikime", { n: formatStatCount(Number(material.view_count || 0)) })}
                 <span className="mx-2 text-gray-400">·</span>
