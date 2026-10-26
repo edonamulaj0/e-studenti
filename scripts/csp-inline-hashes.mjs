@@ -21,7 +21,7 @@ const OUT = path.resolve(process.argv[2] || "out");
 /** Must match the script-src hosts in public/_headers. */
 const SCRIPT_HOSTS = ["'self'", "https://static.cloudflareinsights.com"];
 
-const INLINE_SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
+const INLINE_SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script\b[^>]*>/gi;
 /** Data blocks are never executed, so CSP does not apply to them. */
 const DATA_TYPE = /\btype\s*=\s*["']?(application\/(ld\+)?json|application\/json)["']?/i;
 
